@@ -1,0 +1,10 @@
+# Proyecto Laravel temporal (no versionar)
+_tmp_laravel/
+
+# Dependencias y artefactos de build (sistema/)
+sistema/vendor/
+sistema/node_modules/
+sistema/.env
+sistema/storage/
+sistema/public/build/
+sistema/public/hot/

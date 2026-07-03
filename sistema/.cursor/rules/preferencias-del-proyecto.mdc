@@ -1,0 +1,36 @@
+---
+description: Preferencias globales del proyecto SILAVET (laboratorios veterinarios)
+globs:
+alwaysApply: true
+---
+
+# SILAVET — Preferencias del proyecto
+
+Proyecto Laravel 11 + Livewire 4 sobre BD MySQL legacy (NeoLab).
+
+## Documentación obligatoria
+
+Leer antes de implementar módulos:
+
+- `docs/01-descripcion-general.md`
+- `docs/02-modelo-de-datos.md`
+- `docs/05-preferencias-y-convenciones.md`
+- `docs/06-reglas-de-seguridad.md`
+- `AGENTS.md`
+
+## Reglas clave
+
+1. **NO modificar tablas legacy.** Solo migraciones aditivas con guards `hasTable`/`hasColumn`.
+2. **NO ejecutar escrituras en BD** desde el agente. Entregar SQL al cierre.
+3. Modelos Eloquent: `$table` explícito, `$timestamps = false`, `$fillable` explícito.
+4. Contexto de sesión: `labCtx()` — filtrar consultas por rol y `idClientes` cuando aplique.
+5. Permisos: `tienePermiso(N)` + middleware `permiso:N`.
+6. Prefijo CSS: `vl-*` (no `se-*`).
+7. Terminología: `pacientes` = protocolo/caso analítico, no paciente humano.
+8. SweetAlert2 vía helpers `vlSwal*`, no `alert()`/`confirm()`.
+9. Paginación: 50/página, vista `vendor.pagination.vl-compact`.
+10. PDFs nuevos: TCPDF + Arial. Informes respetan `entorno`.
+
+## Referencia de arquitectura
+
+Misma lógica que Sistemas Escolares (`D:\SCRIPTCASE_DEPLOY\ia\sistema`), adaptada al dominio vet lab.

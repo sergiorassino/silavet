@@ -1,0 +1,14 @@
+Options -Indexes
+
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+
+    RewriteRule ^(app|bootstrap|config|database|resources|routes|vendor)(/|$) - [F,L]
+    RewriteRule ^(\.env|artisan|composer\.(json|lock)|package(-lock)?\.json|vite\.config\.js|webpack\.mix\.js)$ - [F,L]
+
+    RewriteRule ^public/ - [L]
+
+    RewriteCond %{REQUEST_FILENAME} !-f
+    RewriteCond %{REQUEST_FILENAME} !-d
+    RewriteRule ^(.*)$ public/$1 [L]
+</IfModule>

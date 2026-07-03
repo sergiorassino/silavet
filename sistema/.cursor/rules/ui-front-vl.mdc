@@ -1,0 +1,34 @@
+---
+description: Design system UI SILAVET (prefijo vl-*)
+globs:
+  - "resources/**/*.css"
+  - "resources/**/*.blade.php"
+  - "resources/**/*.js"
+alwaysApply: false
+---
+
+# UI Front SILAVET
+
+Prefijo de clases: **`vl-*`** (vet lab).
+
+## Paleta (propuesta inicial)
+
+- Primario: `#2D6A6A` → Tailwind `primary-*`
+- Texto/sidebar: `#2C3333` → `neutral-*`
+- Apoyo: `#5E8A8A`
+- Fondo suave: `#D4E4E4` → `accent-*`
+
+## Componentes
+
+- Auth: `vl-auth-card`, `vl-auth-input`, `vl-auth-btn`
+- Páginas: `vl-page`, `vl-hero`, `vl-card`, `vl-toolbar`
+- Listados: `vl-matriz-list-footer`, paginación `vl-compact`
+
+## Criterios
+
+- Portal clientes: mobile-first.
+- Menú laboratorio/admin: desktop-first, sidebar responsivo.
+- Modales: `@teleport('body')`, `rounded-2xl`.
+- Tooltips en sidebar: `title` con nombre de módulo.
+
+Ver `docs/04-identidad-visual.md`.

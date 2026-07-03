@@ -1,0 +1,41 @@
+---
+description: Baseline de seguridad PHP/MySQL/Laravel para SILAVET
+globs:
+  - "**/*.php"
+  - "**/*.blade.php"
+alwaysApply: false
+---
+
+# Seguridad SILAVET
+
+Aplicar en todo módulo nuevo o modificado.
+
+## Auth y alcance
+
+- Rutas internas: middleware `auth` (+ `lab.context` en gestión).
+- Usuarios cliente: **siempre** filtrar por `labCtx()->idClientes`.
+- Editar/eliminar por ID: reconsultar registro con mismo filtro de alcance.
+- Permisos: `abort_unless(tienePermiso(N), 403)` en Livewire `mount()` y acciones sensibles.
+
+## Validación y datos
+
+- Validación server-side obligatoria.
+- `$fillable` explícito; no `$guarded = []`.
+- Blade: `{{ }}` siempre; evitar `{!! !!}`.
+- Sin `DB::raw()` con input de usuario.
+
+## Rate limiting
+
+- Save/update: máx 30/min por usuario.
+- Delete: máx 10/min por usuario.
+
+## URLs
+
+- Portal clientes y PDFs: tokens opacos (`OpaqueRouteToken`), no IDs en URL.
+
+## Base de datos
+
+- Prohibido ejecutar migrate/seed/SQL destructivo desde el agente.
+- Al cerrar tareas con cambio de esquema: bloque SQL listo para copiar.
+
+Ver `docs/06-reglas-de-seguridad.md`.
