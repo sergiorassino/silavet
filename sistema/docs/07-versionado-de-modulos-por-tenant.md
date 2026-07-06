@@ -17,7 +17,7 @@ Cada laboratorio es un **tenant** identificado por `TENANT_SLUG` en `.env`:
 No usamos multi-tenant en una sola BD con `tenant_id` en cada fila: el aislamiento
 fuerte es **instalación (o entorno) + BD separada**.
 
-En desarrollo local: `php artisan vl:switch {slug}` cambia `TENANT_SLUG` y
+En desarrollo local: `php artisan lb:switch {slug}` cambia `TENANT_SLUG` y
 `DB_DATABASE` en el `.env` activo (por implementar).
 
 ---
@@ -74,6 +74,10 @@ laboratorio), usar clave `implementacion` en config y registry PHP:
 
 No bifurcar lógica en vistas.
 
+**Ejemplo implementado:** número de protocolo al alta (`fecha_diaria`,
+`dual_corto_largo`, …). Detalle completo de formatos, reglas y cómo agregar
+variantes: [10-numero-de-protocolo.md](10-numero-de-protocolo.md).
+
 ---
 
 ## 4. Identidad por tenant
@@ -89,5 +93,5 @@ No bifurcar lógica en vistas.
 1. Crear `config/tenants/{slug}.php` con solo diferencias.
 2. Configurar `.env`: `TENANT_SLUG`, `DB_DATABASE`, `APP_URL`.
 3. Cargar esquema desde `estructura_bd.sql` o BD legacy existente.
-4. Ejecutar migraciones aditivas (`vl:migrate-legacy`) — manualmente, no desde agente.
+4. Ejecutar migraciones aditivas (`lb:migrate-legacy`) — manualmente, no desde agente.
 5. Sincronizar catálogo de permisos si aplica.

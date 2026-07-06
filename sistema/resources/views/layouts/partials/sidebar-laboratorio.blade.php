@@ -9,6 +9,13 @@
            title="Panel principal (v1.0)">
             Inicio
         </a>
+        @if (tienePermiso(\App\Support\PermisosIaCatalog::PROTOCOLOS))
+            <a href="{{ route('protocolos.index') }}"
+               class="block rounded-xl px-3 py-2 hover:bg-white/10 {{ request()->routeIs('protocolos.*') ? 'bg-white/15 font-semibold' : '' }}"
+               title="Pacientes (v1.0)">
+                Pacientes
+            </a>
+        @endif
         @if (tienePermiso(\App\Support\PermisosIaCatalog::CLIENTES))
             <a href="{{ route('abm.clientes.index') }}"
                class="block rounded-xl px-3 py-2 hover:bg-white/10 {{ request()->routeIs('abm.clientes.*') ? 'bg-white/15 font-semibold' : '' }}"

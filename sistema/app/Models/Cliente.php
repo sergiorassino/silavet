@@ -20,5 +20,13 @@ class Cliente extends Model
         'email',
         'whatsapp',
         'cuit',
+        'descuento',
     ];
+
+    protected function casts(): array
+    {
+        return [
+            'descuento' => 'float',
+        ];
+    }
 }

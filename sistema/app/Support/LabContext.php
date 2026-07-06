@@ -52,7 +52,7 @@ class LabContext
 
     public function esCliente(): bool
     {
-        return (int) ($this->idClientes ?? 0) > 0;
+        return UsuarioMenuPortal::esCliente($this->idRoles, $this->idClientes);
     }
 
     public function esAdministracion(): bool

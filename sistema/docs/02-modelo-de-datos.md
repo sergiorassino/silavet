@@ -101,7 +101,7 @@ Equivalente funcional de la tabla `ento` en Sistemas Escolares.
 |----------------|-------------------------------------------------------------|
 | `apenom`       | Nombre del usuario                                          |
 | `dni`          | Identificador de login                                      |
-| `password`     | Contraseña (legacy texto plano o bcrypt)                    |
+| `password`     | Contraseña en texto plano (`varchar(10)`)                   |
 | `idRoles`      | Rol → menú y permisos                                       |
 | `idClientes`   | Si el usuario es cliente veterinario, FK a `clientes`       |
 | `permisoAfip`  | Flag legacy para operaciones de facturación                 |

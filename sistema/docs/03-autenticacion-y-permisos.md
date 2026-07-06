@@ -11,7 +11,7 @@ y **dos logins** previstos:
 |------|--------|
 | **Menú de Laboratorio** | `/login` → `usuarios` (roles operativos) |
 | **Menú de Administración** | Mismo login; redirección por rol |
-| **Menú de Clientes** | `/loginCliente` → `usuarios` con `idClientes` > 0 |
+| **Menú de Clientes** | `/loginCliente` → `usuarios` con `idRoles` = 1 |
 
 ---
 
@@ -37,7 +37,7 @@ Aplica a: bioquímicos, técnicos, administrativos del laboratorio.
 |------------|-----------------|
 | Operativo / técnico | **Menú de Laboratorio** |
 | Administración / facturación | **Menú de Administración** |
-| Cliente veterinario (`idClientes` > 0) | **Menú de Clientes** (login separado) |
+| Cliente veterinario (`idRoles` = 1) | **Menú de Clientes** (login separado) |
 
 Middleware `menu.portal` impide cruzar portales por URL directa.
 
@@ -61,31 +61,35 @@ Portal para veterinarias y clínicas que consultan protocolos e informes.
 
 ---
 
-## 2. Manejo de Contraseñas — Modo Híbrido
+## 2. Manejo de Contraseñas — Texto plano
 
-El sistema legacy usa contraseñas en **texto plano** (`varchar(10)`). La versión
-nueva adoptará el mismo esquema híbrido que Sistemas Escolares:
+Las contraseñas se almacenan en **texto plano** en `usuarios.password` (`varchar(10)`),
+alineado con el sistema NeoLab legacy y con la misma convención acordada en Sistemas Escolares.
 
 ```
 ┌─────────────────────┐     ┌──────────────────────────────┐
-│ Usuarios existentes │────►│ Contraseña en texto plano    │
-│ (legacy)            │     │ Comparación: hash_equals()   │
+│ Alta / edición /    │────►│ Texto plano en `password`    │
+│ blanqueo de clave   │     │ (sin bcrypt ni otro hash)    │
 └─────────────────────┘     └──────────────────────────────┘
-
-┌─────────────────────┐     ┌──────────────────────────────┐
-│ Usuarios nuevos o   │────►│ Hash bcrypt ($2y$ / $2a$)    │
-│ blanqueo de clave   │     │ Comparación: password_verify()│
-└─────────────────────┘     └──────────────────────────────┘
+                                       │
+                                       ▼
+                             ┌──────────────────────────────┐
+                             │ Login: hash_equals()         │
+                             │ (UsuarioUserProvider)        │
+                             └──────────────────────────────┘
 ```
 
 **Lógica de validación** (en `UsuarioUserProvider::validateCredentials`):
 
-1. Si `$stored` empieza con `$2y$` o `$2a$` → usar `password_verify()`.
-2. Si no → comparar con `hash_equals()` (texto plano legacy).
+- Comparar la contraseña ingresada con el valor almacenado usando `hash_equals()`.
 
 **Regla para código nuevo:**
 
-- Al crear usuario nuevo o blanquear contraseña → guardar con `bcrypt()`.
+- Al crear usuario, blanquear o cambiar contraseña → guardar **siempre en texto plano**.
+- **No** usar bcrypt ni migración automática a hash en el login.
+
+**Motivo operativo:** administración informa la clave al usuario; debe poder consultarse
+y restablecerse cuando corresponda, igual que en el sistema escolar.
 
 ---
 

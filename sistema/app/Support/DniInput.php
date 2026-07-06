@@ -4,8 +4,13 @@ namespace App\Support;
 
 class DniInput
 {
-    public static function digitsOnly(string $value): string
+    public const MAX_LENGTH = 10;
+
+    /** Normaliza el usuario de login: solo alfanumérico ASCII, sin espacios. */
+    public static function normalize(string $value, int $maxLength = self::MAX_LENGTH): string
     {
-        return preg_replace('/\D+/', '', $value) ?? '';
+        $normalized = preg_replace('/[^a-zA-Z0-9]+/', '', $value) ?? '';
+
+        return substr($normalized, 0, $maxLength);
     }
 }

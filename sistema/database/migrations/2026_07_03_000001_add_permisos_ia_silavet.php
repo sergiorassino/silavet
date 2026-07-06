@@ -1,5 +1,10 @@
 <?php
 
+/**
+ * Catálogo permisos_ia y columna usuarios.permisos_ia.
+ * Se aplica con: php artisan lb:migrate-legacy --force
+ */
+
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;

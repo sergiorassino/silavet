@@ -6,7 +6,7 @@ use Illuminate\Console\Command;
 
 class SwitchTenantCommand extends Command
 {
-    protected $signature = 'vl:switch
+    protected $signature = 'lb:switch
                             {slug? : Slug del laboratorio destino}
                             {--db= : Nombre explícito de la BD}
                             {--list : Listar tenants conocidos}';
@@ -15,7 +15,11 @@ class SwitchTenantCommand extends Command
 
     /** @var array<string, string> */
     private array $dbMap = [
+        'civetfranca' => 'lb_civetfranca',
+        'labvetciudad' => 'lb_labvetciudad',
         'neolab' => 'lb_neolab',
+        'alqu' => 'lb_alqu',
+        'laboratoriosiv' => 'lb_laboratoriosiv',
     ];
 
     public function handle(): int
@@ -30,7 +34,7 @@ class SwitchTenantCommand extends Command
             $current = env('TENANT_SLUG', '(no definido)');
             $db = env('DB_DATABASE', '(no definido)');
             $this->info("Tenant activo: {$current}  |  BD: {$db}");
-            $this->line('Uso: php artisan vl:switch <slug>');
+            $this->line('Uso: php artisan lb:switch <slug>');
 
             return self::SUCCESS;
         }
@@ -77,7 +81,7 @@ class SwitchTenantCommand extends Command
     private function showList(): int
     {
         $current = env('TENANT_SLUG', '—');
-        $known = array_unique(array_merge(array_keys($this->dbMap), ['neolab', 'default']));
+        $known = array_unique(array_merge(array_keys($this->dbMap), ['default']));
         sort($known);
 
         foreach ($known as $slug) {

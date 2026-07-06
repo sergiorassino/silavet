@@ -4,6 +4,7 @@ namespace App\Livewire\Abm\Clientes;
 
 use App\Models\Cliente;
 use App\Support\PermisosIaCatalog;
+use App\Support\UsuarioMenuPortal;
 use Livewire\Component;
 use Livewire\WithPagination;
 
@@ -41,6 +42,6 @@ class ClienteIndex extends Component
             ->paginate(self::POR_PAGINA);
 
         return view('livewire.abm.clientes.cliente-index', compact('clientes'))
-            ->layout('layouts.laboratorio');
+            ->layout('layouts.staff', UsuarioMenuPortal::staffLayoutParams(labCtx()->idRoles));
     }
 }

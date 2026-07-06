@@ -1,7 +1,10 @@
 <div class="vl-page">
     <div class="vl-hero mb-4">
         <div class="vl-hero-inner">
-            <h1 class="text-2xl font-bold text-neutral-800">{{ $titulo }}</h1>
+            <div>
+                <p class="vl-eyebrow">ABM</p>
+                <h1 class="text-2xl font-bold sm:text-3xl">{{ $titulo }}</h1>
+            </div>
         </div>
     </div>
 
@@ -10,6 +13,12 @@
             <label class="form-label" for="nombre">Nombre *</label>
             <input wire:model="nombre" id="nombre" type="text" class="form-input">
             @error('nombre') <p class="form-error">{{ $message }}</p> @enderror
+        </div>
+
+        <div>
+            <label class="form-label" for="cuit">CUIT</label>
+            <input wire:model.live="cuit" id="cuit" type="text" maxlength="13" inputmode="numeric" class="form-input max-w-xs" placeholder="99-99999999-9">
+            @error('cuit') <p class="form-error">{{ $message }}</p> @enderror
         </div>
 
         <div>
@@ -45,9 +54,9 @@
         </div>
 
         <div>
-            <label class="form-label" for="cuit">CUIT</label>
-            <input wire:model="cuit" id="cuit" type="text" maxlength="11" inputmode="numeric" class="form-input max-w-xs">
-            @error('cuit') <p class="form-error">{{ $message }}</p> @enderror
+            <label class="form-label" for="descuento">Descuento (%)</label>
+            <input wire:model="descuento" id="descuento" type="text" inputmode="decimal" class="form-input max-w-xs" placeholder="0">
+            @error('descuento') <p class="form-error">{{ $message }}</p> @enderror
         </div>
 
         <div class="flex flex-wrap gap-3 pt-2">

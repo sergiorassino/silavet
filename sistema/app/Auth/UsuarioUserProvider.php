@@ -3,6 +3,7 @@
 namespace App\Auth;
 
 use App\Models\Usuario;
+use App\Support\UsuarioMenuPortal;
 use Illuminate\Contracts\Auth\Authenticatable;
 use Illuminate\Contracts\Auth\UserProvider;
 
@@ -33,10 +34,12 @@ class UsuarioUserProvider implements UserProvider
 
         if (array_key_exists('portal', $credentials)) {
             if ($credentials['portal'] === 'cliente') {
-                $query->where('idClientes', '>', 0);
+                $query->where('idRoles', UsuarioMenuPortal::ID_ROL_CLIENTE)
+                    ->where('idClientes', '>', 0);
             } else {
                 $query->where(function ($q) {
-                    $q->whereNull('idClientes')->orWhere('idClientes', '<=', 0);
+                    $q->whereNull('idRoles')
+                        ->orWhere('idRoles', '!=', UsuarioMenuPortal::ID_ROL_CLIENTE);
                 });
             }
         }
@@ -51,13 +54,7 @@ class UsuarioUserProvider implements UserProvider
 
     public static function verificarPassword(Authenticatable $user, string $plain): bool
     {
-        $stored = $user->getAuthPassword();
-
-        if (str_starts_with($stored, '$2y$') || str_starts_with($stored, '$2a$')) {
-            return password_verify($plain, $stored);
-        }
-
-        return hash_equals((string) $stored, (string) $plain);
+        return hash_equals((string) $user->getAuthPassword(), $plain);
     }
 
     public function rehashPasswordIfRequired(Authenticatable $user, array $credentials, bool $force = false): void

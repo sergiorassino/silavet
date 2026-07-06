@@ -1,12 +1,51 @@
 <div class="vl-page">
-    <div class="vl-hero mb-6">
+    <div class="vl-hero">
         <div class="vl-hero-inner">
-            <h1 class="text-2xl font-bold text-neutral-800">Administración</h1>
-            <p class="mt-1 text-sm text-neutral-600">Facturación, stock y parámetros del laboratorio.</p>
+            <div>
+                <p class="vl-eyebrow">Administración</p>
+                <h1 class="text-2xl font-bold sm:text-3xl">{{ config('tenant.nombre') }}</h1>
+                <p class="mt-2 max-w-xl text-sm text-white/80 sm:text-base">
+                    Facturación, stock y parámetros del laboratorio.
+                </p>
+            </div>
         </div>
     </div>
 
-    <div class="vl-card p-6 text-sm text-neutral-600">
-        Módulos de administración en desarrollo.
+    <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <a href="{{ route('protocolos.index') }}" class="vl-dash-access">
+            <span class="vl-dash-access-icon">PA</span>
+            <span>
+                <strong class="block text-neutral-800">Pacientes</strong>
+                <span class="text-sm text-neutral-600">Protocolos analíticos</span>
+            </span>
+        </a>
+        <a href="{{ route('abm.clientes.index') }}" class="vl-dash-access">
+            <span class="vl-dash-access-icon">CL</span>
+            <span>
+                <strong class="block text-neutral-800">Clientes</strong>
+                <span class="text-sm text-neutral-600">Veterinarias y clínicas</span>
+            </span>
+        </a>
+        <a href="{{ route('admin.determinaciones.index') }}" class="vl-dash-access">
+            <span class="vl-dash-access-icon">DT</span>
+            <span>
+                <strong class="block text-neutral-800">Gestión Determinaciones</strong>
+                <span class="text-sm text-neutral-600">Tipos de análisis y listas de precios</span>
+            </span>
+        </a>
+        <a href="{{ route('admin.grupos.index') }}" class="vl-dash-access">
+            <span class="vl-dash-access-icon">GR</span>
+            <span>
+                <strong class="block text-neutral-800">Gestión de Grupos</strong>
+                <span class="text-sm text-neutral-600">Agrupación de ítems en informes</span>
+            </span>
+        </a>
+        <a href="{{ route('admin.det-por-grupo.index') }}" class="vl-dash-access">
+            <span class="vl-dash-access-icon">DG</span>
+            <span>
+                <strong class="block text-neutral-800">Det. por Grupo (Inf)</strong>
+                <span class="text-sm text-neutral-600">Plantilla de ítems por determinación</span>
+            </span>
+        </a>
     </div>
 </div>

@@ -167,7 +167,7 @@ a todos los módulos. Ver [06-reglas-de-seguridad.md](06-reglas-de-seguridad.md)
 
 ## 14. Comandos Artisan de tenant
 
-- `php artisan vl:switch {slug}` — cambia `TENANT_SLUG` y `DB_DATABASE` en `.env`.
-- `php artisan vl:migrate-legacy` — aplica migraciones aditivas sobre BD existente.
-
-(Por implementar en Etapa 1.)
+- `php artisan lb:switch {slug}` — cambia `TENANT_SLUG` y `DB_DATABASE` en `.env`.
+- `php artisan lb:migrate-legacy` — aplica migraciones aditivas sobre BD legacy existente.
+  - `php artisan lb:migrate-legacy --dry-run` — vista previa sin ejecutar.
+  - `php artisan lb:migrate-legacy --force` — sin confirmación interactiva.

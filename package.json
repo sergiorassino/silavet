@@ -1,0 +1,11 @@
+{
+    "private": true,
+    "name": "silavet",
+    "description": "Scripts de desarrollo en la raíz del repo (el proyecto Laravel está en sistema/)",
+    "scripts": {
+        "dev": "npm run dev --prefix sistema",
+        "dev:all": "npm run dev:all --prefix sistema",
+        "build": "npm run build --prefix sistema",
+        "postinstall": "npm install --prefix sistema"
+    }
+}

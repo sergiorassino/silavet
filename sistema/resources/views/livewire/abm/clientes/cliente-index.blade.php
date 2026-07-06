@@ -2,10 +2,11 @@
     <div class="vl-hero mb-4">
         <div class="vl-hero-inner flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <div>
-                <h1 class="text-2xl font-bold text-neutral-800">Clientes</h1>
-                <p class="mt-1 text-sm text-neutral-600">Veterinarias y clínicas del laboratorio.</p>
+                <p class="vl-eyebrow">ABM</p>
+                <h1 class="text-2xl font-bold sm:text-3xl">Clientes</h1>
+                <p class="mt-2 text-sm text-white/80">Veterinarias y clínicas del laboratorio.</p>
             </div>
-            <a href="{{ route('abm.clientes.create') }}" class="btn-primary">Nuevo cliente</a>
+            <a href="{{ route('abm.clientes.create') }}" class="btn-primary shrink-0 bg-white text-primary-700 hover:bg-accent-50">Nuevo cliente</a>
         </div>
     </div>
 

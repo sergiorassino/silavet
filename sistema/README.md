@@ -49,21 +49,51 @@ SILAVET/
 
 Políticas versionadas en el repo: ver **`AGENTS.md`** en esta carpeta.
 
-## Setup local (cuando Laravel esté inicializado)
+## Setup local
+
+Desde la **raíz del repo** (`D:\SILAVET`) o desde `sistema/`:
 
 ```bash
-# En sistema/
+# Primera vez (dependencias PHP + Node)
+cd sistema
 composer install
 npm install
+
+# Copiar entorno y clave (en sistema/)
 cp .env.example .env
 php artisan key:generate
+# Configurar DB_* en .env → MySQL lb_neolab (WAMP)
 
-# Configurar BD en .env (apuntar a MySQL existente)
-# La estructura base está en ../estructura_bd.sql
-
-php artisan serve
-npm run dev
+# Arrancar Laravel (8001) + Vite (5174) juntos
+npm run dev:all
 ```
+
+También desde Cursor: **Terminal → Run Task → Dev: Laravel + Vite (SILAVET)**  
+(o `Ctrl+Shift+B` si la tarea de build está por defecto).
+
+URLs locales (conviven con Sistemas Escolares en 8000 / 5173):
+
+- Laravel: http://127.0.0.1:8001
+- Vite: http://127.0.0.1:5174
+
+Si Vite dice *Port 5174 is already in use*, ejecutá de nuevo `npm run dev:all`: el script `predev:all` libera automáticamente los puertos 8001 y 5174 antes de arrancar.
+
+## Migraciones en BD legacy
+
+Tras configurar el tenant y la BD en `.env`:
+
+```bash
+# Cambiar de laboratorio (opcional)
+php artisan lb:switch neolab
+
+# Vista previa (no escribe en BD)
+php artisan lb:migrate-legacy --dry-run
+
+# Aplicar migraciones aditivas (precio2/precio3, permisos_ia, etc.)
+php artisan lb:migrate-legacy --force
+```
+
+Equivalente a `php artisan se:migrate-legacy --force` en Sistemas Escolares.
 
 ## Referencia de arquitectura
 

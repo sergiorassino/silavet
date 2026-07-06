@@ -19,29 +19,45 @@ class Login extends Component
 
     public function mount(): void
     {
-        if (request()->hasAny(['password', 'pwrd'])) {
+        $request = request();
+
+        if ($request->hasAny(['password', 'pwrd'])) {
             session()->flash(
                 'error',
-                'Por seguridad no se puede iniciar sesión con contraseña en la dirección web.',
+                'Por seguridad no se puede iniciar sesión con contraseña en la dirección web. Ingrese sus datos nuevamente.',
             );
 
             $this->redirectRoute('login', navigate: false);
+
+            return;
+        }
+
+        if ($this->dni === '' && $request->filled('username')) {
+            $dni = DniInput::normalize((string) $request->query('username'));
+            if ($dni !== '') {
+                $this->dni = $dni;
+            }
         }
     }
 
     public function updatedDni(string $value): void
     {
         $this->resetErrorBag('dni');
-        $digits = DniInput::digitsOnly($value);
-        if ($digits !== $this->dni) {
-            $this->dni = $digits;
+        $normalized = DniInput::normalize($value);
+        if ($normalized !== $this->dni) {
+            $this->dni = $normalized;
         }
+    }
+
+    public function updatedPassword(): void
+    {
+        $this->resetErrorBag('dni');
     }
 
     public function rules(): array
     {
         return [
-            'dni' => ['required', 'digits_between:7,11'],
+            'dni' => ['required', 'string', 'alpha_num', 'min:1', 'max:'.DniInput::MAX_LENGTH],
             'password' => ['required', 'min:1'],
         ];
     }
@@ -49,22 +65,23 @@ class Login extends Component
     public function messages(): array
     {
         return [
-            'dni.required' => 'El DNI es obligatorio.',
-            'dni.digits_between' => 'El DNI debe tener entre 7 y 11 dígitos.',
+            'dni.required' => 'El usuario es obligatorio.',
+            'dni.alpha_num' => 'El usuario solo puede contener letras y números.',
+            'dni.max' => 'El usuario no puede superar '.DniInput::MAX_LENGTH.' caracteres.',
             'password.required' => 'La contraseña es obligatoria.',
         ];
     }
 
     public function login()
     {
-        $this->dni = DniInput::digitsOnly($this->dni);
+        $this->dni = DniInput::normalize($this->dni);
         $this->validate();
 
         $throttleKey = 'login:'.request()->ip();
 
         if (RateLimiter::tooManyAttempts($throttleKey, 5)) {
             throw ValidationException::withMessages([
-                'dni' => 'Demasiados intentos. Intente nuevamente en '.RateLimiter::availableIn($throttleKey).' segundos.',
+                'dni' => 'Demasiados intentos de acceso. Intente nuevamente en '.RateLimiter::availableIn($throttleKey).' segundos.',
             ]);
         }
 
@@ -95,7 +112,7 @@ class Login extends Component
         }
 
         RateLimiter::hit($throttleKey, 60);
-        $this->addError('dni', 'DNI o contraseña incorrectos.');
+        $this->addError('dni', 'DNI o contraseña incorrectos. Verifique sus datos.');
     }
 
     public function render()

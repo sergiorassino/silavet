@@ -1,34 +1,28 @@
----
-description: Design system UI SILAVET (prefijo vl-*)
-globs:
-  - "resources/**/*.css"
-  - "resources/**/*.blade.php"
-  - "resources/**/*.js"
-alwaysApply: false
----
-
 # UI Front SILAVET
 
-Prefijo de clases: **`vl-*`** (vet lab).
+Prefijo de clases: **`vl-*`** (vet lab). Misma estructura visual que Sistemas Escolares (`se-*`).
 
-## Paleta (propuesta inicial)
+## Paleta — celeste intenso
 
-- Primario: `#2D6A6A` → Tailwind `primary-*`
-- Texto/sidebar: `#2C3333` → `neutral-*`
-- Apoyo: `#5E8A8A`
-- Fondo suave: `#D4E4E4` → `accent-*`
+- Primario: `#0EA5E9` → `primary-*` (acciones, sidebar, hero)
+- Primario oscuro: `#0284C7` / `#0369A1` → `primary-600` / `primary-700`
+- Texto/sidebar base: `#333333` → `neutral-*`
+- Celeste claro: `#BAE6FD` → `accent-*`
+- Fondo app: `#F0F9FF`
 
 ## Componentes
 
 - Auth: `vl-auth-card`, `vl-auth-input`, `vl-auth-btn`
-- Páginas: `vl-page`, `vl-hero`, `vl-card`, `vl-toolbar`
-- Listados: `vl-matriz-list-footer`, paginación `vl-compact`
+- Layout staff: `vl-sidebar--bosque`, `vl-main`, `vl-sidebar-link`
+- Páginas: `vl-page`, `vl-hero`, `vl-eyebrow`, `vl-card`, `vl-toolbar`, `vl-pill`
+- Dashboard: `vl-dash-access`, `vl-dash-access-icon`
+- Listados: paginación `vl-compact`
 
 ## Criterios
 
-- Portal clientes: mobile-first.
-- Menú laboratorio/admin: desktop-first, sidebar responsivo.
+- Misma tipografía que SE: **Source Sans 3** (Google Fonts en `sidebar-bosque-head`).
+- Hero con degradé `from-primary-600 via-primary-700 to-neutral-800`.
+- Sidebar colapsable en desktop (rail + hover), drawer en móvil.
 - Modales: `@teleport('body')`, `rounded-2xl`.
-- Tooltips en sidebar: `title` con nombre de módulo.
 
 Ver `docs/04-identidad-visual.md`.

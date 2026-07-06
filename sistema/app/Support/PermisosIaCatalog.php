@@ -36,6 +36,11 @@ class PermisosIaCatalog
             return false;
         }
 
+        if (config('tenant.acceso.temporal_todos_modulos', false)
+            && ! UsuarioMenuPortal::esCliente($usuario->idRoles, $usuario->idClientes)) {
+            return true;
+        }
+
         $cadena = '';
 
         if (\Illuminate\Support\Facades\Schema::hasColumn('usuarios', 'permisos_ia')) {

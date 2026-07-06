@@ -49,6 +49,8 @@ return Application::configure(basePath: dirname(__DIR__))
             'lab.context' => EnsureLabContext::class,
             'permiso' => \App\Http\Middleware\CheckPermiso::class,
             'menu.portal' => EnsureMenuPortal::class,
+            'login.limpiar-sesion' => \App\Http\Middleware\LimpiarSesionEnPaginaLogin::class,
+            'no-store' => \App\Http\Middleware\NoStoreResponse::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {

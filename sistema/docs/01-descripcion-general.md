@@ -105,7 +105,7 @@ Detalle: [07-versionado-de-modulos-por-tenant.md](07-versionado-de-modulos-por-t
 - `LabContext` + middleware `EnsureLabContext`
 - Menú de Laboratorio y Menú de Administración (layouts + `menu.portal`)
 - Dashboard + ABM Clientes (`clientes`)
-- Tenant: `config/tenant.php`, `vl:switch`, merge por slug
+- Tenant: `config/tenant.php`, `lb:switch`, merge por slug
 - Design system `vl-*`, SweetAlert2, paginación compacta
 
 **Pendiente en Etapa 1:**
