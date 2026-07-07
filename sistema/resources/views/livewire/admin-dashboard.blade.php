@@ -47,5 +47,12 @@
                 <span class="text-sm text-neutral-600">Plantilla de ítems por determinación</span>
             </span>
         </a>
+        <a href="{{ route('admin.automatizacion.script') }}" class="vl-dash-access">
+            <span class="vl-dash-access-icon">JS</span>
+            <span>
+                <strong class="block text-neutral-800">Script de Automatización</strong>
+                <span class="text-sm text-neutral-600">Editar entorno.formulas</span>
+            </span>
+        </a>
     </div>
 </div>

@@ -45,8 +45,20 @@ if (! function_exists('tienePermiso')) {
 if (! function_exists('labLogoUrl')) {
     function labLogoUrl(): ?string
     {
-        $logo = trim((string) config('tenant.institucional.logo_fallback', ''));
+        return \App\Support\Entorno\LabInstitucional::logoUrl();
+    }
+}
 
-        return $logo !== '' ? asset($logo) : null;
+if (! function_exists('labListaPreciosUrl')) {
+    function labListaPreciosUrl(): ?string
+    {
+        if (\Illuminate\Support\Facades\Schema::hasTable('entorno')) {
+            $entorno = \App\Models\Entorno::query()->find(1);
+            if ($entorno !== null) {
+                return \App\Support\Entorno\EntornoArchivos::urlPublica($entorno->listaPreciosPdf ?? null);
+            }
+        }
+
+        return null;
     }
 }

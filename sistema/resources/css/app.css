@@ -8,7 +8,7 @@
 
 @theme {
     /* Celeste intenso — misma estructura de tokens que Sistemas Escolares */
-    --color-primary-50:  #f0f9ff;
+    --color-primary-50: #f0f9ff;
     --color-primary-100: #e0f2fe;
     --color-primary-200: #bae6fd;
     --color-primary-300: #7dd3fc;
@@ -19,7 +19,7 @@
     --color-primary-800: #075985;
     --color-primary-900: #0c4a6e;
 
-    --color-neutral-50:  #f5f5f5;
+    --color-neutral-50: #f5f5f5;
     --color-neutral-100: #e5e5e5;
     --color-neutral-200: #cccccc;
     --color-neutral-300: #b3b3b3;
@@ -30,7 +30,7 @@
     --color-neutral-800: #333333;
     --color-neutral-900: #1a1a1a;
 
-    --color-accent-50:  #f0f9ff;
+    --color-accent-50: #f0f9ff;
     --color-accent-100: #e0f2fe;
     --color-accent-200: #bae6fd;
     --color-accent-300: #7dd3fc;
@@ -39,6 +39,7 @@
 }
 
 @layer base {
+
     input[type="radio"],
     input[type="checkbox"] {
         accent-color: var(--color-primary-600);
@@ -49,25 +50,32 @@
     .btn-primary {
         @apply inline-flex items-center justify-center rounded-xl border border-transparent bg-primary-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition-colors duration-150 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed;
     }
+
     .btn-secondary {
         @apply inline-flex items-center justify-center rounded-xl border border-accent-200 bg-white px-4 py-2 text-sm font-semibold text-primary-700 shadow-sm transition-colors duration-150 hover:bg-accent-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed;
     }
+
     .btn-sm {
         @apply px-3 py-1.5 text-xs;
     }
+
     .form-label {
         @apply mb-1.5 block text-[11px] font-semibold uppercase tracking-[0.12em] text-neutral-600;
     }
+
     .form-input,
     .form-select {
         @apply block w-full rounded-xl border-accent-200 bg-accent-50/50 shadow-sm transition-colors focus:border-primary-500 focus:ring-primary-500 sm:text-sm;
     }
+
     .form-error {
         @apply mt-1 text-xs text-red-600;
     }
+
     .table-header {
         @apply border-b border-accent-200 px-4 py-3 text-left text-[11px] font-bold uppercase tracking-[0.12em] text-neutral-500;
     }
+
     .table-cell {
         @apply px-4 py-3 text-sm text-neutral-900;
     }
@@ -77,28 +85,55 @@
         @apply rounded-3xl border bg-white shadow-lg shadow-neutral-900/5;
         border-color: var(--color-accent-200);
     }
+
     .vl-auth-label {
         @apply mb-1.5 block text-[11px] font-semibold uppercase tracking-[0.14em];
         color: rgba(51, 51, 51, 0.72);
     }
+
     .vl-auth-input,
     .vl-auth-select {
         @apply block w-full rounded-xl text-sm shadow-sm transition-colors duration-150;
         background-color: rgba(186, 230, 253, 0.35);
         border: 1px solid var(--color-accent-200);
     }
+
     .vl-auth-input:focus,
     .vl-auth-select:focus {
         @apply outline-none ring-2 ring-offset-0;
         border-color: var(--color-primary-500);
         --tw-ring-color: rgba(14, 165, 233, 0.35);
     }
+
     .vl-auth-btn {
         @apply inline-flex w-full cursor-pointer items-center justify-center rounded-xl bg-primary-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition-colors duration-150 hover:bg-primary-700 disabled:cursor-not-allowed disabled:opacity-60;
     }
+
     .vl-auth-btn:focus-visible {
         @apply outline-none ring-2 ring-offset-2;
         --tw-ring-color: rgba(14, 165, 233, 0.45);
+    }
+
+    .vl-auth-logo {
+        @apply mx-auto block h-auto w-auto max-w-[min(100%,20rem)] object-contain;
+        max-height: 9.5rem;
+    }
+
+    .vl-auth-logo--panel {
+        @apply rounded-2xl bg-white p-4 shadow-xl ring-1 ring-white/40;
+        box-shadow: 0 18px 40px -16px rgba(0, 0, 0, 0.45);
+    }
+
+    .vl-auth-logo-fallback {
+        @apply mx-auto flex items-center justify-center rounded-2xl font-bold;
+        height: 7.5rem;
+        width: 7.5rem;
+        font-size: 2rem;
+    }
+
+    .vl-auth-logo-fallback--panel {
+        @apply bg-white text-primary-700 shadow-xl ring-1 ring-white/40;
+        box-shadow: 0 18px 40px -16px rgba(0, 0, 0, 0.45);
     }
 
     /* Dashboard */
@@ -106,11 +141,13 @@
         @apply flex items-center gap-4 rounded-2xl border bg-white p-5 shadow-sm transition-all duration-200;
         border-color: var(--color-accent-200);
     }
+
     .vl-dash-access:hover {
         @apply -translate-y-0.5 shadow-md;
         border-color: var(--color-primary-500);
         box-shadow: 0 10px 25px -12px rgba(51, 51, 51, 0.12);
     }
+
     .vl-dash-access-icon {
         @apply flex h-11 w-11 shrink-0 items-center justify-center rounded-xl text-sm font-bold;
         background-color: rgba(186, 230, 253, 0.45);
@@ -121,111 +158,185 @@
     .vl-page {
         @apply mx-auto max-w-7xl space-y-6;
     }
+
     .vl-hero {
         @apply relative overflow-hidden rounded-3xl bg-gradient-to-br from-primary-600 via-primary-700 to-neutral-800 text-white shadow-lg shadow-neutral-900/10;
     }
+
     .vl-hero::before {
         content: '';
         @apply pointer-events-none absolute inset-0;
         background: radial-gradient(ellipse 80% 70% at 100% 0%, rgba(255, 255, 255, 0.14), transparent 58%);
     }
+
     .vl-hero-inner {
         @apply relative flex flex-col gap-5 p-6 sm:p-7 lg:flex-row lg:items-center lg:justify-between;
     }
+
     .vl-eyebrow {
         @apply text-[11px] font-semibold uppercase tracking-[0.18em] text-white/60;
     }
+
     .vl-card {
         @apply rounded-2xl border bg-white shadow-sm shadow-neutral-900/5;
         border-color: var(--color-accent-200);
     }
+
     .vl-toolbar {
         @apply flex flex-col gap-3 rounded-2xl border bg-white/90 p-4 shadow-sm sm:flex-row sm:items-center sm:justify-between;
         border-color: var(--color-accent-200);
     }
+
     .vl-pill {
         @apply inline-flex items-center rounded-full border border-accent-200 bg-accent-50 px-2.5 py-0.5 text-[11px] font-semibold uppercase tracking-wide text-primary-800;
     }
+
     .vl-matriz-list-footer {
         @apply bg-accent-50/50;
     }
 
     .vl-page--wide {
-        @apply max-w-none;
+        @apply mx-0 w-full max-w-none;
+    }
+
+    /* Listado matriz a pantalla completa (scroll H+V, sin paginación) */
+    .vl-main:has(.vl-matriz-list-fill) {
+        height: 100dvh;
+        max-height: 100dvh;
+        min-height: 0;
+        overflow: hidden;
+    }
+
+    main:has(.vl-matriz-list-fill) {
+        @apply flex min-h-0 flex-1 flex-col overflow-hidden !p-3 md:!p-4;
+    }
+
+    .vl-matriz-list-fill {
+        @apply flex min-h-0 flex-1 flex-col overflow-hidden;
+        margin: 0 !important;
+        width: 100%;
+        max-width: none;
+        height: 100%;
+    }
+
+    .vl-matriz-list-fill.vl-page {
+        @apply space-y-2;
+    }
+
+    .vl-matriz-list-fill>.vl-matriz-list-card {
+        @apply flex min-h-0 flex-1 flex-col overflow-hidden;
+    }
+
+    .vl-matriz-list-scroll {
+        @apply min-h-0 flex-1 overflow-auto overscroll-contain;
+        scrollbar-gutter: stable;
     }
 
     /* Formularios comprimidos (ABM protocolo, etc.) */
     .vl-hero--compact .vl-hero-inner {
         @apply gap-2 p-4 sm:p-5;
     }
+
     .vl-hero--compact h1 {
         @apply text-xl font-bold sm:text-2xl;
     }
+
     .vl-form--compact {
         @apply p-4 sm:p-5;
     }
+
     .vl-form--compact .vl-form-grid {
         @apply grid gap-x-4 gap-y-2.5 sm:grid-cols-2 xl:grid-cols-3;
     }
+
     .vl-form--compact .vl-form-field {
         @apply min-w-0;
     }
+
     .vl-form--compact .form-label {
         @apply mb-0.5 text-[10px] tracking-[0.08em] text-neutral-500;
     }
+
     .vl-form--compact .form-input,
     .vl-form--compact .form-select,
     .vl-form--compact textarea.form-input {
         @apply rounded-lg px-2.5 py-1.5 text-xs leading-snug;
     }
+
     .vl-form--compact .form-error {
         @apply mt-0.5 text-[10px] leading-tight;
     }
+
     .vl-form--compact .vl-form-span-2 {
         @apply sm:col-span-2;
     }
+
     .vl-form--compact .vl-form-span-full {
         @apply sm:col-span-2 xl:col-span-3;
     }
+
     .vl-form--compact .vl-form-actions {
         @apply mb-3 flex flex-wrap gap-2 border-b border-accent-200 pb-3;
     }
+
     .vl-form--compact .vl-form-actions .btn-primary,
     .vl-form--compact .vl-form-actions .btn-secondary {
         @apply rounded-lg px-3 py-1.5 text-xs;
     }
 
+    .vl-pacientes-vista-toggle {
+        @apply inline-flex rounded-xl border border-accent-200 bg-white p-0.5;
+    }
+
+    .vl-pacientes-vista-toggle-btn {
+        @apply rounded-[0.65rem] px-3 py-1.5 text-xs font-semibold text-neutral-600 transition-colors hover:bg-accent-50 hover:text-primary-700;
+    }
+
+    .vl-pacientes-vista-toggle-btn.is-active {
+        @apply bg-primary-600 text-white shadow-sm hover:bg-primary-700 hover:text-white;
+    }
+
     .vl-pacientes-grid {
         @apply border-collapse;
     }
+
     .vl-pacientes-th {
         @apply border-b border-accent-200 px-2 py-2 text-left text-[10px] font-bold uppercase tracking-[0.08em] text-neutral-500 whitespace-nowrap;
     }
+
     .vl-pacientes-th--num,
     .vl-pacientes-th--icon {
         @apply text-center;
     }
+
     .vl-pacientes-td {
-        @apply px-2 py-1.5 text-xs text-neutral-900 align-middle;
+        @apply border-b border-neutral-300 px-2 py-1.5 text-xs text-neutral-900 align-middle;
     }
+
     .vl-pacientes-td--num {
         @apply text-right tabular-nums;
     }
+
     .vl-pacientes-td--icon {
         @apply text-center;
     }
+
     .vl-pacientes-row--en-proc {
         @apply bg-white;
     }
+
     .vl-pacientes-row--parcial {
         background-color: #fef9c3;
     }
+
     .vl-pacientes-row--final {
         background-color: #dcfce7;
     }
+
     .vl-pacientes-row:hover {
         filter: brightness(0.98);
     }
+
     .vl-grid-icon-btn {
         @apply inline-flex h-7 w-7 cursor-pointer items-center justify-center rounded-lg transition-colors duration-150 disabled:cursor-not-allowed disabled:opacity-40;
     }
@@ -233,195 +344,550 @@
     .vl-determinaciones-grid {
         @apply w-auto table-auto border-collapse;
     }
+
     .vl-determinaciones-th {
         @apply border-b border-accent-200 px-2 py-2 text-left text-[10px] font-bold uppercase tracking-[0.08em] text-neutral-500 whitespace-nowrap;
     }
+
     .vl-determinaciones-col--acciones {
         @apply w-0 whitespace-nowrap text-center;
     }
+
     .vl-determinaciones-col--orden {
         @apply w-0 whitespace-nowrap text-center;
     }
+
     .vl-determinaciones-col--nombre {
         @apply whitespace-nowrap;
     }
+
     .vl-determinaciones-col--precio {
         @apply w-0 whitespace-nowrap text-right;
     }
+
     .vl-determinaciones-col--bool {
         @apply w-0 whitespace-nowrap text-center;
     }
+
     .vl-determinaciones-col--derivacion {
         @apply w-0 whitespace-nowrap;
     }
+
     .vl-determinaciones-td {
         @apply px-2 py-1.5 text-xs text-neutral-900 align-middle;
     }
+
     .vl-determinaciones-row:hover {
         @apply bg-accent-50/40;
     }
+
     .vl-determinaciones-input {
         field-sizing: content;
         @apply max-w-full rounded-lg border border-accent-200 bg-white px-2 py-1 text-xs text-neutral-900 focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500;
     }
+
     .vl-determinaciones-input--orden {
         @apply min-w-[3.5rem] max-w-[5rem] text-center tabular-nums;
     }
+
     .vl-determinaciones-input--nombre {
         @apply min-w-[8ch] max-w-[52ch];
     }
+
     .vl-determinaciones-input--precio {
         @apply min-w-[5.5rem] max-w-[8rem] text-right tabular-nums;
     }
+
     .vl-determinaciones-select {
         @apply w-auto min-w-[3.25rem] rounded-lg border border-accent-200 bg-white px-2 py-1 text-xs text-neutral-900 focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500;
     }
+
     .vl-determinaciones-select--catalogo {
         @apply min-w-[8rem] max-w-[16rem];
+    }
+
+    .vl-prot-det-wrap {
+        @apply flex justify-center overflow-x-auto px-5 py-4;
+    }
+
+    .vl-prot-det-header {
+        @apply rounded-xl bg-neutral-700 text-white shadow-sm;
+    }
+
+    .vl-prot-det-header-inner {
+        @apply flex flex-col gap-2 px-5 py-3 sm:flex-row sm:flex-wrap sm:items-center sm:justify-center sm:gap-x-8 sm:gap-y-1;
+    }
+
+    .vl-prot-det-header-item {
+        @apply flex flex-wrap items-baseline gap-x-2 text-sm;
+    }
+
+    .vl-prot-det-header-label {
+        @apply font-semibold text-white/80;
+    }
+
+    .vl-prot-det-header-value {
+        @apply font-medium;
+    }
+
+    .vl-prot-det-grid {
+        @apply w-auto mx-auto border-collapse;
+    }
+
+    .vl-prot-det-grid .vl-determinaciones-th,
+    .vl-prot-det-grid .vl-determinaciones-td {
+        @apply px-1.5;
+    }
+
+    .vl-prot-det-col--tipo {
+        @apply w-auto whitespace-nowrap pr-0.5;
+    }
+
+    .vl-prot-det-col--precio {
+        @apply w-0 whitespace-nowrap pl-1 pr-0.5 text-right;
+    }
+
+    .vl-prot-det-col--descuento {
+        @apply w-0 whitespace-nowrap pl-0.5 pr-0.5 text-right;
+    }
+
+    .vl-prot-det-col--derivacion {
+        @apply w-0 whitespace-nowrap pl-0.5;
+    }
+
+    .vl-prot-det-select--tipo {
+        @apply min-w-[10rem] max-w-[18rem] w-auto;
+    }
+
+    .vl-prot-det-input--precio {
+        @apply min-w-[4.5rem] max-w-[6.5rem] text-right tabular-nums;
+    }
+
+    .vl-prot-det-select--derivacion {
+        @apply min-w-[4.5rem] max-w-[10rem];
+    }
+
+    .vl-prot-det-footer-label {
+        @apply pr-1;
+    }
+
+    .vl-prot-det-footer-total {
+        @apply pl-1 text-left;
     }
 
     .vl-grupos-grid {
         @apply w-auto table-auto border-collapse;
     }
+
     .vl-grupos-th {
         @apply border-b border-accent-200 px-2 py-1.5 text-left text-[10px] font-bold uppercase tracking-[0.08em] text-neutral-500 whitespace-nowrap;
     }
+
     .vl-grupos-col--orden {
         @apply w-0 whitespace-nowrap text-center;
     }
+
     .vl-grupos-col--nombre {
         @apply whitespace-nowrap;
     }
+
     .vl-grupos-col--acciones {
         @apply w-0 whitespace-nowrap text-center;
     }
+
     .vl-grupos-td {
         @apply px-2 py-1 text-xs text-neutral-900 align-middle;
     }
+
     .vl-grupos-row:hover {
         @apply bg-accent-50/40;
+    }
+
+    /* Grilla comprimida (estilo matriz / Sistemas Escolares) */
+    .vl-matriz-list-card {
+        @apply overflow-hidden;
+    }
+
+    .vl-matriz-list-toolbar {
+        @apply flex flex-wrap items-center gap-2 border-b border-accent-200 px-2 py-1.5;
+    }
+
+    .vl-matriz-list-toolbar .form-input {
+        @apply py-1 text-[11px];
+    }
+
+    .vl-matriz-list-toolbar .vl-ii-filtro-grupo {
+        min-width: 22rem;
+        width: auto;
+        max-width: 100%;
+        padding-right: calc(0.75rem + 3mm);
+    }
+
+    .vl-matriz-grid {
+        @apply w-max max-w-none border-collapse border-spacing-0 text-[11px] leading-tight text-neutral-900;
+    }
+
+    .vl-matriz-grid thead th {
+        position: sticky;
+        top: 0;
+        z-index: 2;
+        @apply border border-accent-300 bg-accent-100 px-1 py-0.5 text-[9px] font-semibold uppercase tracking-wide text-neutral-600 whitespace-nowrap;
+        line-height: 1.15;
+        box-shadow: 0 1px 0 rgba(0, 0, 0, 0.05);
+    }
+
+    .vl-matriz-grid thead th.vl-ii-th-multiline {
+        white-space: normal;
+        vertical-align: bottom;
+        height: auto;
+        min-height: 3.25rem;
+        padding-top: 0.25rem;
+        padding-bottom: 0.25rem;
+    }
+
+    .vl-ii-th-sub {
+        @apply block font-normal normal-case tracking-normal text-neutral-500;
+        font-size: 8px;
+        line-height: 1.25;
+        white-space: normal;
+        overflow-wrap: anywhere;
+    }
+
+    .vl-matriz-grid tbody td {
+        @apply border border-accent-200 px-1 py-0 align-middle;
+        height: 1.5rem;
+        line-height: 1.15;
+    }
+
+    .vl-matriz-grid tbody tr:hover td {
+        @apply bg-primary-50/35;
+    }
+
+    .vl-matriz-grid tbody tr.vl-ii-row-focus td {
+        @apply bg-accent-100;
+        box-shadow: inset 0 0 0 2px rgba(45, 106, 106, 0.45);
+    }
+
+    .vl-grid-inline {
+        @apply m-0 block w-full max-w-full border-0 bg-transparent p-0 text-[11px] text-inherit outline-none;
+        box-sizing: border-box;
+        font: inherit;
+        line-height: inherit;
+        min-width: 0;
+    }
+
+    .vl-grid-inline:focus {
+        @apply bg-white/90;
+        box-shadow: inset 0 -2px 0 rgba(45, 106, 106, 0.65);
+    }
+
+    .vl-grid-inline-select {
+        @apply m-0 block w-full max-w-full cursor-pointer appearance-none border-0 bg-transparent p-0 pr-3 text-[11px] text-inherit outline-none;
+        box-sizing: border-box;
+        font: inherit;
+        line-height: inherit;
+        min-width: 0;
+    }
+
+    .vl-grid-inline-select:focus {
+        @apply bg-white/90;
+        box-shadow: inset 0 -2px 0 rgba(45, 106, 106, 0.65);
+    }
+
+    .vl-grid-icon-btn--xs {
+        @apply h-5 w-5;
+    }
+
+    .vl-grid-icon-btn--xs svg {
+        @apply h-3 w-3;
+    }
+
+    .vl-matriz-grid.vl-itemsinforme-matriz {
+        width: 100%;
+        max-width: 100%;
+        table-layout: auto;
+    }
+
+    .vl-matriz-list-fill:has(.vl-itemsinforme-matriz) .vl-matriz-list-scroll {
+        overflow-x: auto;
+    }
+
+    .vl-itemsinforme-matriz .vl-ii-col--acc {
+        width: 3.4rem;
+        min-width: 3.4rem;
+        max-width: 3.4rem;
+    }
+
+    .vl-itemsinforme-matriz .vl-ii-col--id {
+        width: 2.1rem;
+        min-width: 2.1rem;
+        max-width: 2.1rem;
+        @apply text-center tabular-nums;
+    }
+
+    .vl-itemsinforme-matriz .vl-ii-col--item,
+    .vl-itemsinforme-matriz .vl-ii-col--grupo,
+    .vl-itemsinforme-matriz .vl-ii-col--modo,
+    .vl-itemsinforme-matriz .vl-ii-col--textos,
+    .vl-itemsinforme-matriz .vl-ii-col--um,
+    .vl-itemsinforme-matriz .vl-ii-col--ref,
+    .vl-itemsinforme-matriz .vl-ii-col--fmt,
+    .vl-itemsinforme-matriz .vl-ii-col--auto,
+    .vl-itemsinforme-matriz .vl-ii-col--an {
+        width: auto;
+        min-width: 0;
+        max-width: none;
+    }
+
+    .vl-itemsinforme-matriz .vl-ii-col--item {
+        min-width: 7rem;
+    }
+
+    .vl-itemsinforme-matriz .vl-ii-col--grupo {
+        min-width: 4.5rem;
+    }
+
+    .vl-itemsinforme-matriz .vl-ii-col--modo {
+        width: 4.75rem;
+        min-width: 4.5rem;
+        max-width: 5.25rem;
+    }
+
+    .vl-itemsinforme-matriz thead .vl-ii-col--modo.vl-ii-th-multiline {
+        width: 4.75rem;
+        max-width: 4.75rem;
+        min-width: 4.75rem;
+    }
+
+    .vl-itemsinforme-matriz thead .vl-ii-col--modo .vl-ii-th-sub {
+        max-width: 4.75rem;
+        line-height: 1.2;
+    }
+
+    .vl-itemsinforme-matriz .vl-ii-col--textos {
+        min-width: 5rem;
+    }
+
+    .vl-itemsinforme-matriz .vl-ii-col--um {
+        min-width: 2.4rem;
+    }
+
+    .vl-itemsinforme-matriz .vl-ii-col--ref {
+        min-width: 4rem;
+    }
+
+    .vl-itemsinforme-matriz .vl-ii-col--fmt {
+        min-width: 3.4rem;
+    }
+
+    .vl-itemsinforme-matriz .vl-ii-col--auto {
+        min-width: 2.2rem;
+    }
+
+    .vl-itemsinforme-matriz .vl-ii-col--an {
+        min-width: 2.2rem;
+    }
+
+    .vl-itemsinforme-matriz thead th {
+        white-space: normal;
+        overflow-wrap: anywhere;
+        padding-top: 1mm;
+        padding-bottom: 1mm;
+    }
+
+    .vl-itemsinforme-matriz tbody td {
+        padding-top: 1mm;
+        padding-bottom: 1mm;
+        height: auto;
+        min-height: 1.5rem;
+        white-space: normal;
+        vertical-align: top;
+        overflow: visible;
+    }
+
+    .vl-itemsinforme-matriz .vl-ii-col--auto {
+        @apply text-center;
+    }
+
+    .vl-itemsinforme-matriz .vl-ii-col--an {
+        @apply uppercase;
+    }
+
+    .vl-itemsinforme-matriz .vl-ii-col-editable {
+        cursor: pointer;
+    }
+
+    .vl-itemsinforme-matriz .vl-ii-col-editable:hover {
+        @apply bg-primary-50/50;
+    }
+
+    .vl-itemsinforme-matriz .vl-grid-readonly {
+        display: block;
+        width: 100%;
+        overflow: visible;
+        overflow-wrap: anywhere;
+        word-break: break-word;
+        white-space: normal;
+        text-overflow: clip;
+        line-height: 1.35;
+        @apply text-[11px] text-neutral-900;
     }
 
     .vl-det-grupo-layout {
         @apply grid gap-4 lg:grid-cols-[minmax(15rem,22rem)_1fr];
     }
+
     .vl-det-grupo-master-sort-btn {
         @apply rounded-md px-1 py-0.5 text-left text-[10px] font-bold uppercase tracking-[0.06em] text-neutral-500 transition-colors hover:bg-accent-50 hover:text-primary-700;
     }
+
     .vl-det-grupo-master-sort-btn.is-active {
         @apply bg-primary-50 text-primary-700;
     }
+
     .vl-det-grupo-master-sort-hint {
         @apply text-[9px] text-neutral-400;
     }
+
     .vl-det-grupo-master-list {
         @apply max-h-[min(70vh,36rem)] overflow-y-auto divide-y divide-accent-100;
     }
+
     .vl-det-grupo-master-item {
         @apply flex w-full items-center gap-2 px-3 py-2.5 text-left text-sm transition-colors hover:bg-accent-50/70;
     }
+
     .vl-det-grupo-master-item.is-active {
         @apply border-l-4 border-primary-500 bg-primary-50/80 pl-2;
     }
+
     .vl-det-grupo-master-orden {
         @apply w-8 shrink-0 text-center text-xs text-neutral-500;
     }
+
     .vl-det-grupo-grid {
         @apply w-full table-auto border-collapse;
     }
+
     .vl-det-grupo-th {
         @apply border-b border-accent-200 px-2 py-2 text-left text-[10px] font-bold uppercase tracking-[0.08em] text-neutral-500 whitespace-nowrap;
     }
+
     .vl-det-grupo-col--reordenar {
         @apply w-0 whitespace-nowrap text-center;
     }
+
     .vl-det-grupo-col--acciones {
         @apply w-0 whitespace-nowrap text-center;
     }
+
     .vl-det-grupo-col--orden {
         @apply w-0 whitespace-nowrap text-center;
     }
+
     .vl-det-grupo-col--grupo {
         @apply w-0 whitespace-nowrap;
     }
+
     .vl-det-grupo-grupo-text {
         @apply text-[10px] leading-snug text-neutral-600;
     }
+
     .vl-det-grupo-col--item {
         @apply min-w-[12rem];
     }
+
     .vl-det-grupo-col--unidad {
         @apply w-0 whitespace-nowrap;
     }
+
     .vl-det-grupo-td {
         @apply px-2 py-1.5 text-xs text-neutral-900 align-middle;
     }
+
     .vl-det-grupo-row:hover {
         @apply bg-accent-50/40;
     }
+
     .vl-det-grupo-input {
         field-sizing: content;
         @apply max-w-full rounded-lg border border-accent-200 bg-white px-2 py-1 text-xs text-neutral-900 focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500;
     }
+
     .vl-det-grupo-input--orden {
         @apply min-w-[3.5rem] max-w-[5rem] text-center tabular-nums;
     }
+
     .vl-det-grupo-item-picker {
         @apply flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm transition-colors hover:bg-primary-50;
     }
 }
 
-/* Sidebar Bosque VL — mismo patrón que .se-sidebar--bosque */
+/* Sidebar Bosque VL — degradé celeste puro + capas de luz */
 .vl-sidebar--bosque {
     color: #fff;
     font-family: "Source Sans 3", "Noto Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
     width: var(--vl-sidebar-w);
     overflow-x: hidden;
-    background-color: var(--color-primary-700);
-    background-image: linear-gradient(
-        to bottom right,
-        var(--color-primary-600) 0%,
-        var(--color-primary-700) 42%,
-        var(--color-neutral-800) 100%
-    );
+    background-color: var(--vl-sidebar-bg-bottom);
+    background-image: linear-gradient(168deg,
+            var(--vl-sidebar-bg-top) 0%,
+            var(--vl-sidebar-bg-mid) 46%,
+            var(--vl-sidebar-bg-bottom) 100%);
+    box-shadow: inset -1px 0 0 rgba(186, 230, 253, 0.10);
 }
+
 .vl-sidebar--bosque::before {
     content: '';
     position: absolute;
     inset: 0;
     pointer-events: none;
-    background: radial-gradient(ellipse 80% 70% at 100% 0%, rgba(255, 255, 255, 0.14), transparent 58%);
+    background:
+        radial-gradient(ellipse 90% 60% at 100% -8%, rgba(186, 230, 253, 0.20), transparent 56%),
+        radial-gradient(ellipse 55% 42% at 0% 100%, rgba(14, 165, 233, 0.14), transparent 52%);
 }
+
+.vl-sidebar--bosque::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.04) 0%, transparent 28%, transparent 72%, rgba(12, 74, 110, 0.22) 100%);
+}
+
 @media (min-width: 768px) {
     .vl-sidebar--bosque.is-collapsed {
         width: var(--vl-sidebar-w-collapsed);
     }
 }
+
 .vl-sidebar--bosque .vl-sidebar-sep {
     border-color: var(--vl-sep);
 }
+
 .vl-sidebar--bosque .vl-sidebar-link {
-    @apply flex min-w-0 items-center gap-2 rounded-xl px-3 py-2 text-sm transition-colors duration-150;
+    @apply flex min-w-0 items-center gap-2 rounded-xl px-3 py-2 text-sm transition-[background,color,box-shadow] duration-150;
     color: var(--vl-sidebar-text);
 }
+
 .vl-sidebar--bosque .vl-sidebar-link:hover {
     background: var(--vl-hover-bg);
     color: #fff;
 }
+
 .vl-sidebar--bosque.vl-sidebar--active-typography .vl-sidebar-link.is-active {
-    background: transparent;
+    background: var(--vl-link-active-bg);
     color: #fff;
-    font-weight: 700;
-    font-size: 0.9375rem;
-    box-shadow: none;
-    text-decoration: underline;
-    text-decoration-color: var(--vl-light-blue);
-    text-underline-offset: 0.2em;
-    text-decoration-thickness: 2px;
+    font-weight: 600;
+    font-size: 0.875rem;
+    box-shadow: inset 3px 0 0 var(--vl-link-active-border);
+    text-decoration: none;
 }
+
 .vl-sidebar--bosque.vl-sidebar--active-typography .vl-sidebar-link.is-active:hover {
-    background: var(--vl-hover-bg);
+    background: var(--vl-hover-bg-strong);
 }
+
 @media (min-width: 768px) {
     .vl-sidebar--bosque.is-collapsed .vl-sidebar-link {
         justify-content: center;
@@ -429,10 +895,77 @@
         padding-left: 0.35rem;
         padding-right: 0.35rem;
     }
+
     .vl-sidebar--bosque.is-collapsed .vl-sidebar-link span.truncate {
         display: none;
     }
+
     .vl-sidebar--bosque.vl-sidebar--active-typography.is-collapsed .vl-sidebar-link.is-active {
-        text-decoration: none;
+        box-shadow: none;
+        background: var(--vl-link-active-bg);
+    }
+}
+
+/* Sidebar: títulos de grupo; opciones hijas con sangría */
+.vl-sidebar:not(.is-collapsed) .vl-sidebar-groupbtn {
+    justify-content: flex-start;
+}
+
+.vl-sidebar:not(.is-collapsed) .vl-sidebar-groupbtn .vl-sidebar-group-label {
+    flex: 1 1 0%;
+    min-width: 0;
+    text-align: left;
+}
+
+.vl-sidebar--bosque .vl-sidebar-groupbtn {
+    font-size: 0.6875rem;
+    letter-spacing: 0.07em;
+    color: var(--vl-group-text);
+    background: var(--vl-group-bg);
+    border: 1px solid var(--vl-group-border);
+    backdrop-filter: blur(6px);
+}
+
+.vl-sidebar--bosque .vl-sidebar-groupbtn:hover {
+    background: var(--vl-hover-bg);
+    border-color: rgba(186, 230, 253, 0.30);
+    color: #fff;
+}
+
+.vl-sidebar--bosque .vl-sidebar-groupbtn.is-open {
+    background: var(--vl-group-open-bg);
+    border-color: var(--vl-group-open-border);
+    color: #fff;
+    box-shadow: 0 1px 0 rgba(255, 255, 255, 0.06);
+}
+
+.vl-sidebar-group-items > .vl-sidebar-link {
+    padding-left: 5mm;
+    padding-right: 0.625rem;
+    font-size: 0.8125rem;
+    color: rgba(255, 255, 255, 0.80);
+}
+
+.vl-sidebar-group-items > .vl-sidebar-link.is-active {
+    color: #fff;
+}
+
+@media (min-width: 768px) {
+    .vl-sidebar--bosque.is-collapsed .vl-sidebar-groupbtn {
+        justify-content: center;
+        gap: 0;
+        padding-left: 0.35rem;
+        padding-right: 0.35rem;
+    }
+
+    .vl-sidebar--bosque.is-collapsed .vl-sidebar-groupbtn .vl-sidebar-group-label,
+    .vl-sidebar--bosque.is-collapsed .vl-sidebar-groupbtn > .vl-sidebar-group-chevron {
+        display: none;
+    }
+
+    .vl-sidebar--bosque.is-collapsed .vl-sidebar-group-icon svg {
+        display: block;
+        height: 1.25rem;
+        width: 1.25rem;
     }
 }

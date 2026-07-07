@@ -9,6 +9,7 @@
         "laravel/framework": "^11.0",
         "laravel/tinker": "^2.9",
         "livewire/livewire": "^4.2",
+        "phpoffice/phpspreadsheet": "5.7",
         "setasign/fpdi-tcpdf": "^2.3",
         "tecnickcom/tcpdf": "^6.5"
     },

@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Paciente extends Model
 {
@@ -76,6 +77,11 @@ class Paciente extends Model
     public function medicoSolicitante(): BelongsTo
     {
         return $this->belongsTo(Usuario::class, 'idUsuarios', 'idUsuarios');
+    }
+
+    public function determinaciones(): HasMany
+    {
+        return $this->hasMany(Determinacion::class, 'idPacientes', 'idPacientes');
     }
 
     public function filaClaseCss(): string

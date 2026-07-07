@@ -16,11 +16,34 @@
      x-data="{
         sidebarOpen: false,
         sidebarCollapsed: false,
+        groups: {
+            gestion: {{ request()->routeIs('protocolos.*') ? 'true' : 'false' }},
+            clientes: {{ request()->routeIs('abm.clientes.*', 'clientes.cuenta-corriente*') ? 'true' : 'false' }},
+            tesoreria: false,
+            gestionStock: false,
+            parametrosGenerales: {{ request()->routeIs('admin.parametros-sistema.*') ? 'true' : 'false' }},
+            parametrosDeterminaciones: {{ request()->routeIs('admin.determinaciones.*', 'admin.grupos.*', 'admin.det-por-grupo.*', 'admin.items-informe.*', 'admin.automatizacion.*') ? 'true' : 'false' }},
+            listadosEstadisticos: false,
+            procedimientosTomaMuestras: false,
+        },
         init() {
             if (window.matchMedia('(min-width: 768px)').matches) {
                 this.sidebarCollapsed = {{ ($collapsedSidebar ?? true) ? 'true' : 'false' }};
             }
-        }
+            const raw = localStorage.getItem('vlSidebarGroups');
+            if (raw) {
+                try {
+                    const parsed = JSON.parse(raw);
+                    if (parsed && typeof parsed === 'object') {
+                        this.groups = { ...this.groups, ...parsed };
+                    }
+                } catch (e) {}
+            }
+        },
+        toggleGroup(key) {
+            this.groups[key] = !this.groups[key];
+            localStorage.setItem('vlSidebarGroups', JSON.stringify(this.groups));
+        },
      }">
 
     <div x-show="sidebarOpen"
@@ -42,9 +65,12 @@
             <a href="{{ $homeRoute }}"
                class="flex min-w-0 items-center gap-2 rounded-lg no-underline transition-colors hover:bg-[var(--vl-hover-bg)]"
                :class="sidebarCollapsed ? 'justify-center' : ''">
-                <span class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-white/15 text-sm font-bold text-white ring-1 ring-white/20">SV</span>
+                <x-vl-lab-logo
+                    size="md"
+                    monogram-class="bg-white/12 text-white ring-1 ring-[rgba(186,230,253,0.35)] backdrop-blur-sm"
+                />
                 <div x-show="!sidebarCollapsed" x-cloak class="min-w-0">
-                    <p class="text-[11px] font-semibold uppercase tracking-[0.16em] text-white/60">{{ $menuLabel }}</p>
+                    <p class="text-[11px] font-semibold uppercase tracking-[0.16em] text-[rgba(224,247,255,0.72)]">{{ $menuLabel }}</p>
                     <p class="truncate text-sm font-bold text-white">{{ config('tenant.nombre') }}</p>
                 </div>
             </a>
@@ -73,6 +99,7 @@
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
                     </svg>
                 </button>
+                <x-vl-lab-logo size="sm" class="md:hidden" monogram-class="bg-primary-100 text-primary-700 ring-1 ring-primary-200" />
                 <span class="text-sm font-semibold text-neutral-800">{{ $menuLabel }}</span>
             </div>
         </header>

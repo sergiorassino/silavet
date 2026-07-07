@@ -4,7 +4,13 @@
             <div>
                 <p class="vl-eyebrow">Protocolos</p>
                 <h1 class="text-2xl font-bold sm:text-3xl">Pacientes</h1>
-                <p class="mt-2 text-sm text-white/80">Listado de protocolos analíticos del laboratorio.</p>
+                <p class="mt-2 text-sm text-white/80">
+                    @if ($vista === 'hoy')
+                        Protocolos con fecha de hoy ({{ now()->format('d/m/Y') }}).
+                    @else
+                        Historial completo de protocolos del laboratorio.
+                    @endif
+                </p>
             </div>
             <a href="{{ route('protocolos.create') }}"
                class="btn-primary shrink-0 bg-white text-primary-700 hover:bg-accent-50">
@@ -14,11 +20,25 @@
     </div>
 
     <div class="vl-card overflow-hidden">
-        <div class="vl-toolbar border-b border-accent-200 px-5 py-3">
+        <div class="vl-toolbar border-b border-accent-200 px-5 py-3 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <input wire:model.live.debounce.300ms="busqueda"
                    type="search"
                    placeholder="Buscar por protocolo, paciente, tutor, cliente o email…"
-                   class="form-input max-w-xl">
+                   class="form-input max-w-xl w-full sm:flex-1">
+            <div class="vl-pacientes-vista-toggle shrink-0" role="group" aria-label="Vista del listado">
+                <button type="button"
+                        wire:click="$set('vista', 'hoy')"
+                        class="vl-pacientes-vista-toggle-btn {{ $vista === 'hoy' ? 'is-active' : '' }}"
+                        aria-pressed="{{ $vista === 'hoy' ? 'true' : 'false' }}">
+                    Pacientes de hoy
+                </button>
+                <button type="button"
+                        wire:click="$set('vista', 'historial')"
+                        class="vl-pacientes-vista-toggle-btn {{ $vista === 'historial' ? 'is-active' : '' }}"
+                        aria-pressed="{{ $vista === 'historial' ? 'true' : 'false' }}">
+                    Historial
+                </button>
+            </div>
         </div>
 
         <div class="overflow-x-auto">
@@ -36,7 +56,7 @@
                         <th class="vl-pacientes-th">Raza</th>
                         <th class="vl-pacientes-th">Sexo</th>
                         <th class="vl-pacientes-th">Edad</th>
-                        <th class="vl-pacientes-th vl-pacientes-th--icon" title="Ver">Ver</th>
+                        <th class="vl-pacientes-th vl-pacientes-th--icon" title="Determinaciones">Determ</th>
                         <th class="vl-pacientes-th vl-pacientes-th--num">Precio</th>
                         <th class="vl-pacientes-th">Est</th>
                         <th class="vl-pacientes-th vl-pacientes-th--icon" title="Cargar resultados">Cargar</th>
@@ -51,7 +71,7 @@
                         <th class="vl-pacientes-th vl-pacientes-th--icon" title="Asistente IA">IA</th>
                     </tr>
                 </thead>
-                <tbody class="divide-y divide-accent-100">
+                <tbody>
                     @forelse ($pacientes as $paciente)
                         <tr class="vl-pacientes-row {{ $paciente->filaClaseCss() }}">
                             <td class="vl-pacientes-td vl-pacientes-td--num">
@@ -78,12 +98,15 @@
                             <td class="vl-pacientes-td">{{ $paciente->sexo ?: '—' }}</td>
                             <td class="vl-pacientes-td">{{ $paciente->edad ?: '—' }}</td>
                             <td class="vl-pacientes-td vl-pacientes-td--icon">
-                                <x-vl-grid-icon-btn title="Ver protocolo" variant="primary">
+                                <a href="{{ route('protocolos.determinaciones', $paciente->idPacientes) }}"
+                                   title="Determinaciones solicitadas"
+                                   aria-label="Determinaciones solicitadas"
+                                   class="vl-grid-icon-btn text-primary-700 hover:bg-primary-50">
                                     <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.75"
                                               d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
                                     </svg>
-                                </x-vl-grid-icon-btn>
+                                </a>
                             </td>
                             <td class="vl-pacientes-td vl-pacientes-td--num whitespace-nowrap">{{ $paciente->precioFormateado() }}</td>
                             <td class="vl-pacientes-td whitespace-nowrap">{{ $paciente->estado ?: '—' }}</td>
@@ -156,7 +179,11 @@
                     @empty
                         <tr>
                             <td colspan="24" class="vl-pacientes-td text-center text-neutral-500 py-10">
-                                No hay protocolos registrados.
+                                @if ($vista === 'hoy')
+                                    No hay protocolos registrados para hoy.
+                                @else
+                                    No hay protocolos registrados.
+                                @endif
                             </td>
                         </tr>
                     @endforelse

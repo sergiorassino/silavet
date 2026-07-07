@@ -24,5 +24,8 @@ Prefijo de clases: **`vl-*`** (vet lab). Misma estructura visual que Sistemas Es
 - Hero con degradé `from-primary-600 via-primary-700 to-neutral-800`.
 - Sidebar colapsable en desktop (rail + hover), drawer en móvil.
 - Modales: `@teleport('body')`, `rounded-2xl`.
+- **Iconos del sidebar:** sin repeticiones en todo el menú (grupos + opciones + Inicio).
+  Grupos → prefijo `grupo-*`; opciones → nombre semántico. Catálogo en
+  `resources/views/components/vl-sidebar-icon.blade.php`. Ver `docs/08-menus-de-navegacion.md` §6.
 
 Ver `docs/04-identidad-visual.md`.

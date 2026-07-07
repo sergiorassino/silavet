@@ -20,11 +20,9 @@
              aria-hidden="true"></div>
 
         <div class="relative z-10 flex w-full flex-col gap-8">
-            <div class="flex w-full justify-center md:justify-start">
-                <span class="flex h-16 w-16 items-center justify-center rounded-full bg-white/15 text-2xl font-bold ring-2 ring-white/25">SV</span>
-            </div>
+            <x-vl-lab-logo variant="login" />
 
-            <div class="mx-auto w-full max-w-lg md:mx-0">
+            <div class="mx-auto w-full max-w-lg text-center md:text-left">
                 <p class="text-xs font-semibold uppercase tracking-[0.22em] text-white/65">{{ config('app.name') }}</p>
                 <h1 class="mt-3 text-3xl font-bold leading-tight tracking-tight xl:text-[2rem]">
                     {{ config('tenant.login.titulo_staff', 'Portal del personal') }}
@@ -47,9 +45,6 @@
 
     <div class="flex flex-1 flex-col bg-[#F0F9FF] md:bg-white">
         <div class="flex flex-1 flex-col items-center justify-center px-4 py-8 sm:px-8 md:py-14">
-            <div class="mb-7 flex w-full justify-center md:hidden">
-                <span class="flex h-14 w-14 items-center justify-center rounded-full bg-primary-100 text-lg font-bold text-primary-700 ring-2 ring-primary-200">SV</span>
-            </div>
             <div class="w-full max-w-md">{{ $slot }}</div>
         </div>
     </div>

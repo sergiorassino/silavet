@@ -30,7 +30,8 @@ Leer antes de implementar módulos:
 7. Terminología: `pacientes` = protocolo/caso analítico, no paciente humano.
 8. SweetAlert2 vía helpers `vlSwal*`, no `alert()`/`confirm()`.
 9. Paginación: 50/página, vista `vendor.pagination.vl-compact`.
-10. PDFs nuevos: TCPDF + Arial. Informes respetan `entorno`.
+10. PDFs nuevos: TCPDF + Arial + **A4 vertical por defecto**. Informes respetan `entorno`.
+11. Menú lateral: iconos únicos (grupos `grupo-*` ≠ opciones). Catálogo: `vl-sidebar-icon`. Ver `docs/08-menus-de-navegacion.md` §6.
 
 ## Referencia de arquitectura
 

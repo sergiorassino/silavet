@@ -5,11 +5,13 @@ namespace App\Livewire\Abm\DetPorGrupo;
 use App\Models\Itemsinforme;
 use App\Models\Renglonesxdeterminacion;
 use App\Models\Tipodeterminacion;
+use App\Support\Itemsinforme\ItemsinformeCatalog;
 use App\Support\PermisosIaCatalog;
 use App\Support\UsuarioMenuPortal;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\RateLimiter;
+use Illuminate\Support\Facades\Schema;
 use Livewire\Component;
 
 class DetPorGrupoIndex extends Component
@@ -272,15 +274,28 @@ class DetPorGrupoIndex extends Component
 
         return Itemsinforme::query()
             ->with('grupo')
-            ->when($idsEnPlantilla->isNotEmpty(), fn ($q) => $q->whereNotIn('idItems', $idsEnPlantilla))
+            ->leftJoin('grupos', 'itemsinforme.idGrupos', '=', 'grupos.idGrupos')
+            ->when(Schema::hasTable('renglonesxdeterminacion'), function ($query) {
+                $query->leftJoinSub(
+                    ItemsinformeCatalog::subconsultaOrdenPlantilla($this->idDeterminacionSeleccionada),
+                    'rxd_orden',
+                    function ($join) {
+                        $join->on('itemsinforme.idItems', '=', 'rxd_orden.idItemsinforme');
+                    }
+                );
+            })
+            ->when($idsEnPlantilla->isNotEmpty(), fn ($q) => $q->whereNotIn('itemsinforme.idItems', $idsEnPlantilla))
             ->when($term !== '', function ($q) use ($term) {
                 $q->where(function ($inner) use ($term) {
-                    $inner->whereRaw('LOWER(nombreItem) LIKE ?', ["%{$term}%"])
+                    $inner->whereRaw('LOWER(itemsinforme.nombreItem) LIKE ?', ["%{$term}%"])
                         ->orWhereHas('grupo', fn ($g) => $g->whereRaw('LOWER(nombreGrupo) LIKE ?', ["%{$term}%"]));
                 });
             })
-            ->orderBy('idGrupos')
-            ->orderBy('nombreItem')
+            ->orderByRaw('itemsinforme.idGrupos IS NULL')
+            ->orderBy('itemsinforme.idGrupos')
+            ->orderByRaw('rxd_orden.orden_plantilla IS NULL')
+            ->orderBy('rxd_orden.orden_plantilla')
+            ->orderBy('itemsinforme.nombreItem')
             ->limit(80)
             ->get();
     }

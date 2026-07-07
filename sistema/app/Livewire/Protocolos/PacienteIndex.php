@@ -14,7 +14,13 @@ class PacienteIndex extends Component
 
     public const POR_PAGINA = 50;
 
+    public const VISTA_HOY = 'hoy';
+
+    public const VISTA_HISTORIAL = 'historial';
+
     public string $busqueda = '';
+
+    public string $vista = self::VISTA_HOY;
 
     public function mount(): void
     {
@@ -22,6 +28,11 @@ class PacienteIndex extends Component
     }
 
     public function updatingBusqueda(): void
+    {
+        $this->resetPage();
+    }
+
+    public function updatingVista(): void
     {
         $this->resetPage();
     }
@@ -35,6 +46,9 @@ class PacienteIndex extends Component
             ->with(['cliente', 'especie', 'raza'])
             ->when($ctx->esCliente() && $ctx->idClientes, function ($q) use ($ctx) {
                 $q->where('pacientes.idClientes', $ctx->idClientes);
+            })
+            ->when($this->vista === self::VISTA_HOY, function ($q) {
+                $q->whereDate('pacientes.fechhoy', now()->toDateString());
             })
             ->when($term !== '', function ($q) use ($term) {
                 $q->where(function ($inner) use ($term) {

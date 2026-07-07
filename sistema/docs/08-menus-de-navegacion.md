@@ -88,7 +88,47 @@ Implementación prevista: `App\Support\UsuarioMenuPortal` y middleware `menu.por
 
 ---
 
-## 6. Equivalencia con Sistemas Escolares
+## 6. Iconos del sidebar (regla obligatoria)
+
+**Ningún icono puede repetirse** en el menú lateral del mismo portal: ni entre
+grupos, ni entre opciones, ni entre un grupo y una opción de otro grupo.
+
+### Reglas
+
+1. Los **grupos** usan iconos del prefijo `grupo-*` (sección / categoría).
+2. Las **opciones** usan iconos semánticos del módulo (`pacientes`, `determinaciones`, etc.).
+3. Un icono de grupo **nunca** puede ser igual al de una opción, aunque el grupo
+   tenga una sola opción visible.
+4. Al agregar un módulo nuevo, registrar el icono en el catálogo antes de usarlo.
+5. No incrustar SVG sueltos en partials del menú: usar siempre `<x-vl-sidebar-icon name="…" />`.
+
+### Catálogo único
+
+Fuente de verdad: `resources/views/components/vl-sidebar-icon.blade.php`.
+
+| Clave | Uso |
+|-------|-----|
+| `inicio` | Enlace Inicio (fuera de grupos) |
+| `grupo-gestion` | Grupo Gestión |
+| `grupo-clientes` | Grupo Clientes |
+| `grupo-tesoreria` | Grupo Tesorería |
+| `grupo-stock` | Grupo Gestión de Stock |
+| `grupo-parametros-generales` | Grupo Parámetros Generales |
+| `grupo-parametros-determinaciones` | Grupo Parámetros Determinaciones |
+| `grupo-listados-estadisticos` | Grupo Listados Estadísticos |
+| `grupo-procedimientos-muestras` | Grupo Procedimientos Toma de Muestras |
+| `pacientes` | Gestión de Pacientes |
+| `determinaciones` | Gestión de Determinaciones (Administ) |
+| `grupos-determinacion` | Gestión de Grupos |
+| `det-por-grupo` | Det. por Grupo (Inf) |
+| `items-informe` | Parametrización de Items |
+| `automatizacion` | Script de Automatización |
+
+Al sumar filas a esta tabla, verificar que el `name` nuevo no exista ya en el componente.
+
+---
+
+## 7. Equivalencia con Sistemas Escolares
 
 | SE | SILAVET |
 |----|---------|

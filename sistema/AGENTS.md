@@ -43,6 +43,8 @@ Referencia: `docs/09-despliegue-sin-public-en-url.md`.
 - **Nuevos:** **TCPDF** (`tecnickcom/tcpdf`), clase en `app/Support/`, controlador
   `*PdfController`. Fuente **Arial** vía `App\Support\Pdf\TcpdfFuenteArial`
   (`storage/fonts/arial.ttf`). Regla: `.cursor/rules/pdf-tcpdf-nuevos.mdc`.
+- **Papel por defecto:** **A4 vertical** (`'P', 'mm', 'A4'`). Otra orientación o
+  formato solo si se indica explícitamente en la tarea o el requisito funcional.
 - **Legacy (DomPDF):** tablas con columnas de distinto ancho: **porcentaje inline**
   en cada `th` y `td`. Regla: `.cursor/rules/pdf-dompdf-columnas.mdc`.
 
@@ -58,6 +60,10 @@ autorizado.
 Usar siempre: **Menú de Laboratorio** (`layouts/laboratorio`), **Menú de
 Administración** (`layouts/administracion`), **Menú de Clientes**
 (`layouts/cliente`). Detalle: `docs/08-menus-de-navegacion.md`.
+
+**Iconos del menú:** no repetir iconos entre grupos y opciones. Usar
+`<x-vl-sidebar-icon name="…" />` y registrar cada nombre nuevo en el catálogo del
+componente (ver `docs/08-menus-de-navegacion.md` §6).
 
 ## Diálogos al usuario (SweetAlert2)
 

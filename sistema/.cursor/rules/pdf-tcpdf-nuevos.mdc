@@ -1,0 +1,41 @@
+---
+description: PDFs nuevos — TCPDF, A4 vertical por defecto
+globs:
+  - app/Http/Controllers/**/*Pdf*.php
+  - app/Support/**/*Tcpdf.php
+  - app/Support/**/*Pdf*.php
+alwaysApply: true
+---
+
+# PDFs nuevos — TCPDF obligatorio
+
+**Todo PDF nuevo** del sistema debe generarse con **[TCPDF](https://tcpdf.org/)** (`tecnickcom/tcpdf`), **no** con Barryvdh DomPDF.
+
+Los PDFs **ya existentes** en DomPDF se mantienen hasta una migración explícita.
+
+## Papel y orientación (obligatorio)
+
+- **Por defecto:** hoja **A4 vertical** (`parent::__construct('P', 'mm', 'A4', …)`).
+- **Horizontal u otro formato** solo si el usuario o la tarea lo indican explícitamente (documentar en el docblock de la clase `*Tcpdf`).
+
+## Patrón del repo
+
+1. **Clase de maquetación** en `app/Support/.../` que extiende `TCPDF` (coordenadas en mm).
+2. **Encabezado institucional:** `App\Support\Pdf\TcpdfHeaderInstitucional` + datos en `App\Support\Entorno\LabInstitucional`.
+3. **Fuente Arial:** `App\Support\Pdf\TcpdfFuenteArial::aplicar($pdf, $style, $size)`. TTF en `storage/fonts/`.
+4. **Controlador** `*PdfController` que arma datos, llama a `generar()` y devuelve `Response` con `Content-Type: application/pdf`.
+5. Respetar `entorno` / `tenant` para logo y datos institucionales.
+Referencia: `App\Support\CuentaCorriente\CuentaCorrienteClientesTcpdf`, `CuentaCorrienteDetalleTcpdf`.
+
+## Convenciones
+
+- Márgenes, anchos de columna y alturas de fila en **constantes** (mm).
+- `setPrintHeader(false)` / `setPrintFooter(false)` si no hay membrete TCPDF estándar.
+- Fechas en PDF: formato español `d/m/Y`.
+- Rutas con `auth`, contexto `labCtx()`, rate-limit en descargas.
+
+## Prohibido en PDFs nuevos
+
+- `use Barryvdh\DomPDF\Facade\Pdf;`
+- Nuevas vistas Blade solo para renderizar el documento PDF.
+- Orientación horizontal por defecto sin requisito explícito.

@@ -15,6 +15,7 @@ class Entorno extends Model
     protected $fillable = [
         'formulas',
         'nombreListaPrecio',
+        'listaPreciosPdf',
         'carpeta',
         'logo',
         'fondo',

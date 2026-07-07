@@ -117,6 +117,8 @@ a todos los módulos. Ver [06-reglas-de-seguridad.md](06-reglas-de-seguridad.md)
 
 - Clase en `app/Support/`, controlador `*PdfController`.
 - Fuente Arial (`storage/fonts/arial.ttf`).
+- **Papel por defecto: A4 vertical** (`parent::__construct('P', 'mm', 'A4', …)`).
+  Usar horizontal u otro formato solo cuando el requisito lo indique explícitamente.
 - Respetar `entorno`: logo, color, firmas, pie de página.
 - No usar DomPDF para informes nuevos.
 
