@@ -18,6 +18,7 @@ class ItemsinformeCatalog
             7 => 'Fórmula',
             8 => 'Texto Largo',
             9 => 'Dos Valores',
+            10 => 'Imagen',
         ];
     }
 

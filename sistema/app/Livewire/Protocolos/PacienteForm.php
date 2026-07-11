@@ -10,6 +10,7 @@ use App\Models\Usuario;
 use App\Support\DniInput;
 use App\Support\PermisosIaCatalog;
 use App\Support\ProtocoloNumero;
+use App\Support\Resultados\ResultadosEstadosCatalog;
 use App\Support\SexoCatalog;
 use App\Support\UsuarioMenuPortal;
 use Illuminate\Support\Facades\RateLimiter;
@@ -215,7 +216,7 @@ class PacienteForm extends Component
                     Paciente::create(array_merge($payload, [
                         'nombreProtocolo' => $numero,
                         'tipoRegistro' => 1,
-                        'estado' => '',
+                        'estado' => ResultadosEstadosCatalog::EN_PROC,
                     ]));
                 }, $tipo);
             } catch (RuntimeException $e) {

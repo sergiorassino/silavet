@@ -9,6 +9,7 @@ use App\Models\Tipodeterminacion;
 use App\Support\PermisosIaCatalog;
 use App\Support\PrecioInput;
 use App\Support\Precios\PrecioDeterminacionResolver;
+use App\Support\Resultados\RenglonesMaterializer;
 use App\Support\Tipodeterminaciones\TipodeterminacionesGridConfig;
 use App\Support\UsuarioMenuPortal;
 use Illuminate\Support\Facades\RateLimiter;
@@ -126,6 +127,12 @@ class PacienteDeterminaciones extends Component
             'idDerivaciones' => $this->derivacionParaGuardar($validated['idDerivaciones']),
         ]);
 
+        (new RenglonesMaterializer)->asegurarParaDeterminacion(
+            $paciente,
+            $idTipo,
+            (int) $paciente->idClientes
+        );
+
         $this->filaNueva = null;
         $this->sincronizarFilasDesdeBd();
         $this->actualizarTotalProtocolo();
@@ -205,10 +212,22 @@ class PacienteDeterminaciones extends Component
         abort_if(RateLimiter::tooManyAttempts($key, 20), 429);
         RateLimiter::hit($key, 60);
 
-        Determinacion::query()
+        $registro = Determinacion::query()
             ->where('idPacientes', $this->idPacientes)
             ->whereKey($id)
-            ->delete();
+            ->first();
+
+        if ($registro === null) {
+            $this->dispatch('vl-swal-error', mensaje: 'No se encontró la determinación.');
+
+            return;
+        }
+
+        $idTipo = (int) $registro->idTipodeterminaciones;
+
+        $registro->delete();
+
+        (new RenglonesMaterializer)->eliminarParaDeterminacion($this->idPacientes, $idTipo);
 
         unset($this->filas[$id]);
         $this->actualizarTotalProtocolo();

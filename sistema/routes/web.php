@@ -4,6 +4,7 @@ use App\Http\Controllers\Clientes\CuentaCorrienteClientesExcelController;
 use App\Http\Controllers\Clientes\CuentaCorrienteClientesPdfController;
 use App\Http\Controllers\Clientes\CuentaCorrienteDetalleExcelController;
 use App\Http\Controllers\Clientes\CuentaCorrienteDetallePdfController;
+use App\Http\Controllers\Protocolos\InformePacientePdfController;
 use App\Livewire\Abm\Clientes\ClienteForm;
 use App\Livewire\Abm\Clientes\ClienteIndex;
 use App\Livewire\Clientes\CuentaCorrienteDetalle;
@@ -21,6 +22,7 @@ use App\Livewire\Dashboard;
 use App\Livewire\Protocolos\PacienteDeterminaciones;
 use App\Livewire\Protocolos\PacienteForm;
 use App\Livewire\Protocolos\PacienteIndex;
+use App\Livewire\Protocolos\PacienteResultados;
 use App\Support\Auth\CerrarSesionAplicacion;
 use Illuminate\Support\Facades\Route;
 
@@ -91,5 +93,15 @@ Route::middleware(['auth', 'lab.context'])->group(function () {
         Route::get('/nuevo', PacienteForm::class)->name('protocolos.create');
         Route::get('/{id}/editar', PacienteForm::class)->name('protocolos.edit');
         Route::get('/{id}/determinaciones', PacienteDeterminaciones::class)->name('protocolos.determinaciones');
+    });
+
+    Route::prefix('protocolos')->middleware(['menu.portal:staff', 'permiso:4'])->group(function () {
+        Route::get('/{id}/resultados', PacienteResultados::class)->name('protocolos.resultados');
+    });
+
+    Route::prefix('protocolos')->middleware(['menu.portal:staff', 'permiso:5', 'no-store'])->group(function () {
+        Route::get('/informe/{ref}', InformePacientePdfController::class)
+            ->where('ref', '[A-Za-z0-9_-]+')
+            ->name('protocolos.informe');
     });
 });

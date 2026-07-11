@@ -85,9 +85,9 @@ final class LabInstitucional
     }
 
     /**
-     * Formato legacy para controladores PDF existentes.
+     * Formato para controladores PDF (membrete institucional).
      *
-     * @return array{nombre: string, direccion: string, telefono: string, logo_file: ?string}
+     * @return array{nombre: string, direccion: string, telefono: string, email: string, logo_file: ?string}
      */
     public static function datosParaPdf(): array
     {
@@ -97,6 +97,7 @@ final class LabInstitucional
             'nombre' => $datos['nombre'],
             'direccion' => $datos['direccion'],
             'telefono' => $datos['telefono'],
+            'email' => $datos['email'],
             'logo_file' => $datos['logo_file'],
         ];
     }

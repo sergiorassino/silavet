@@ -84,11 +84,17 @@ class Paciente extends Model
         return $this->hasMany(Determinacion::class, 'idPacientes', 'idPacientes');
     }
 
+    public function renglones(): HasMany
+    {
+        return $this->hasMany(Renglon::class, 'idPacientes', 'idPacientes');
+    }
+
     public function filaClaseCss(): string
     {
-        return match ($this->estado) {
+        return match (\App\Support\Resultados\ResultadosEstadosCatalog::normalizar($this->estado)) {
             'Parcial' => 'vl-pacientes-row--parcial',
-            'Final/Env' => 'vl-pacientes-row--final',
+            'Final' => 'vl-pacientes-row--final',
+            'Final/Env' => 'vl-pacientes-row--final-env',
             default => 'vl-pacientes-row--en-proc',
         };
     }
