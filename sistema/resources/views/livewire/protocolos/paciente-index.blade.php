@@ -180,16 +180,24 @@
                                     </span>
                                 @endif
                             </td>
-                            <td class="vl-pacientes-td vl-pacientes-td--icon">
-                                <x-vl-grid-icon-btn title="Adjunto" variant="warning">
+                            <td class="vl-pacientes-td vl-pacientes-td--icon {{ $paciente->tieneAdjunto() ? 'vl-pacientes-td--carga-ok' : '' }}">
+                                <x-vl-grid-icon-btn
+                                    :title="$paciente->tieneAdjunto() ? 'Adjunto PDF (cargado)' : 'Adjuntar PDF'"
+                                    :variant="$paciente->tieneAdjunto() ? 'success' : 'neutral'"
+                                    wire:click="abrirModalAdjunto({{ $paciente->idPacientes }})"
+                                >
                                     <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.75"
                                               d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"/>
                                     </svg>
                                 </x-vl-grid-icon-btn>
                             </td>
-                            <td class="vl-pacientes-td vl-pacientes-td--icon">
-                                <x-vl-grid-icon-btn title="Notificaciones">
+                            <td class="vl-pacientes-td vl-pacientes-td--icon {{ $paciente->tieneNotificacion() ? 'vl-pacientes-td--carga-ok' : '' }}">
+                                <x-vl-grid-icon-btn
+                                    :title="$paciente->tieneNotificacion() ? 'Notificación (cargada)' : 'Notificaciones'"
+                                    :variant="$paciente->tieneNotificacion() ? 'success' : 'neutral'"
+                                    wire:click="abrirModalAviso({{ $paciente->idPacientes }})"
+                                >
                                     <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.75"
                                               d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/>
@@ -209,7 +217,11 @@
                                 </x-vl-grid-icon-btn>
                             </td>
                             <td class="vl-pacientes-td vl-pacientes-td--icon">
-                                <x-vl-grid-icon-btn title="Asistente IA" variant="primary">
+                                <x-vl-grid-icon-btn
+                                    title="Asistente IA"
+                                    variant="primary"
+                                    wire:click="abrirModalIa({{ $paciente->idPacientes }})"
+                                >
                                     <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.75"
                                               d="M4 5a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1H5a1 1 0 01-1-1V5zm10 0a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1h-4a1 1 0 01-1-1V5zM4 15a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1H5a1 1 0 01-1-1v-4zm10 0a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1h-4a1 1 0 01-1-1v-4z"/>
@@ -504,6 +516,284 @@
                                 class="btn-primary rounded-xl px-4 py-2 text-sm">
                             <span wire:loading.remove wire:target="guardarObservaciones">Guardar</span>
                             <span wire:loading wire:target="guardarObservaciones">Guardando…</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        @endteleport
+    @endif
+
+    @if ($modalAdjuntoAbierto)
+        @teleport('body')
+            <div class="fixed inset-0 z-[120] flex items-end justify-center p-4 sm:items-center"
+                 wire:keydown.escape.window="cerrarModalAdjunto">
+                <button type="button"
+                        class="absolute inset-0 bg-neutral-900/50"
+                        wire:click="cerrarModalAdjunto"
+                        aria-label="Cerrar"></button>
+                <div class="relative z-10 flex max-h-[90vh] w-full max-w-lg flex-col overflow-hidden rounded-2xl bg-white shadow-xl"
+                     role="dialog"
+                     aria-modal="true"
+                     aria-labelledby="modal-adjunto-titulo">
+                    <div class="border-b border-accent-200 px-5 py-4">
+                        <h3 id="modal-adjunto-titulo" class="text-lg font-bold text-neutral-900">Adjunto PDF</h3>
+                        <p class="mt-1 text-sm text-neutral-600">
+                            Protocolo <strong>{{ $adjuntoProtocolo }}</strong>
+                            · {{ $adjuntoNombrePaciente }}
+                        </p>
+                        <p class="mt-1 text-[11px] text-neutral-500">
+                            El PDF se agrega al final del informe, con todas sus páginas.
+                        </p>
+                    </div>
+
+                    <div class="min-h-0 flex-1 space-y-4 overflow-y-auto px-5 py-4">
+                        @if ($adjuntoNombreActual !== '')
+                            <div class="rounded-lg border border-emerald-200 bg-emerald-50/70 px-3 py-2.5">
+                                <p class="text-[10px] font-bold uppercase tracking-[0.08em] text-emerald-800">Archivo actual</p>
+                                <p class="mt-1 break-all text-sm font-medium text-neutral-900">{{ $adjuntoNombreActual }}</p>
+                            </div>
+                            <p class="text-sm text-neutral-600">
+                                Para subir otro PDF, primero eliminá el actual. Al eliminarlo se borra también del servidor.
+                            </p>
+                        @else
+                            <p class="rounded-lg border border-dashed border-accent-200 bg-accent-50/40 px-3 py-3 text-sm text-neutral-600">
+                                Este protocolo aún no tiene un PDF adjunto.
+                            </p>
+
+                            <div class="vl-form-field">
+                                <label class="form-label" for="adjuntoArchivo">Seleccionar PDF</label>
+                                <input wire:model="adjuntoArchivo"
+                                       id="adjuntoArchivo"
+                                       type="file"
+                                       accept=".pdf,application/pdf"
+                                       class="form-input">
+                                <p class="mt-1 text-[11px] text-neutral-500">Solo PDF · máximo 10 MB</p>
+                                @error('adjuntoArchivo') <p class="form-error">{{ $message }}</p> @enderror
+                                <div wire:loading wire:target="adjuntoArchivo" class="mt-1 text-xs text-primary-700">
+                                    Cargando archivo…
+                                </div>
+                            </div>
+                        @endif
+                    </div>
+
+                    <div class="flex flex-wrap items-center justify-between gap-2 border-t border-accent-200 px-5 py-3">
+                        <div>
+                            @if ($adjuntoNombreActual !== '')
+                                <button type="button"
+                                        x-on:click="window.vlSwalConfirmar('¿Eliminar el PDF adjunto? Se borrará también del servidor.', 'Eliminar adjunto', { confirmButtonText: 'Sí, eliminar', icon: 'warning' }).then(ok => ok && $wire.eliminarAdjunto())"
+                                        wire:loading.attr="disabled"
+                                        wire:target="eliminarAdjunto"
+                                        class="rounded-xl border border-red-200 px-4 py-2 text-sm font-medium text-red-700 hover:bg-red-50">
+                                    <span wire:loading.remove wire:target="eliminarAdjunto">Eliminar</span>
+                                    <span wire:loading wire:target="eliminarAdjunto">Eliminando…</span>
+                                </button>
+                            @endif
+                        </div>
+                        <div class="flex flex-wrap gap-2">
+                            <button type="button"
+                                    wire:click="cerrarModalAdjunto"
+                                    class="rounded-xl border border-accent-200 px-4 py-2 text-sm font-medium text-neutral-700 hover:bg-accent-50">
+                                {{ $adjuntoNombreActual !== '' ? 'Cerrar' : 'Cancelar' }}
+                            </button>
+                            @if ($adjuntoNombreActual === '')
+                                <button type="button"
+                                        wire:click="guardarAdjunto"
+                                        wire:loading.attr="disabled"
+                                        wire:target="guardarAdjunto,adjuntoArchivo"
+                                        class="btn-primary rounded-xl px-4 py-2 text-sm">
+                                    <span wire:loading.remove wire:target="guardarAdjunto">Guardar</span>
+                                    <span wire:loading wire:target="guardarAdjunto">Guardando…</span>
+                                </button>
+                            @endif
+                        </div>
+                    </div>
+                </div>
+            </div>
+        @endteleport
+    @endif
+
+    @if ($modalAvisoAbierto)
+        @teleport('body')
+            <div class="fixed inset-0 z-[120] flex items-end justify-center p-4 sm:items-center"
+                 wire:keydown.escape.window="cerrarModalAviso">
+                <div class="absolute inset-0 bg-neutral-900/50"
+                     wire:click="cerrarModalAviso"
+                     aria-hidden="true"></div>
+                <div class="relative z-10 flex max-h-[90vh] w-full max-w-lg flex-col overflow-visible rounded-2xl bg-white shadow-xl"
+                     role="dialog"
+                     aria-modal="true"
+                     aria-labelledby="modal-aviso-titulo"
+                     @click.stop>
+                    <div class="shrink-0 border-b border-accent-200 px-5 py-4">
+                        <h3 id="modal-aviso-titulo" class="text-lg font-bold text-neutral-900">Aviso al cliente</h3>
+                        <p class="mt-1 text-sm text-neutral-600">
+                            Protocolo <strong>{{ $avisoProtocolo }}</strong>
+                            · {{ $avisoNombrePaciente }}
+                        </p>
+                    </div>
+
+                    <div class="min-h-0 flex-1 overflow-visible px-5 py-4">
+                        <div class="vl-form-field"
+                             x-data="vlRichTextEditor({
+                                 initial: @js($avisoTexto),
+                                 maxLength: 255,
+                                 label: 'Texto del aviso',
+                                 placeholder: 'Escriba el aviso…'
+                             })"
+                             @click.outside="colorPickerOpen = false">
+                            <label class="form-label" id="avisoTexto-label">Texto del aviso</label>
+
+                            <div class="vl-rich-editor" wire:ignore>
+                                <div class="vl-rich-editor-toolbar" role="toolbar" aria-label="Formato del aviso">
+                                    <button type="button" class="vl-rich-editor-btn" title="Negrita"
+                                            @mousedown.prevent="aplicar('bold')"><span class="font-bold">B</span></button>
+                                    <button type="button" class="vl-rich-editor-btn italic" title="Cursiva"
+                                            @mousedown.prevent="aplicar('italic')"><span class="italic">I</span></button>
+                                    <button type="button" class="vl-rich-editor-btn" title="Subrayado"
+                                            @mousedown.prevent="aplicar('underline')"><span class="underline">U</span></button>
+                                    <span class="vl-rich-editor-sep" aria-hidden="true"></span>
+                                    <div class="relative">
+                                        <button type="button" class="vl-rich-editor-btn" title="Color de texto"
+                                                @mousedown.prevent="colorPickerOpen = !colorPickerOpen">
+                                            <span class="flex flex-col items-center leading-none">
+                                                <span class="text-[11px] font-bold">A</span>
+                                                <span class="mt-0.5 h-0.5 w-3 rounded bg-red-600"></span>
+                                            </span>
+                                        </button>
+                                        <div x-show="colorPickerOpen" x-cloak
+                                             class="vl-rich-editor-colors"
+                                             @mousedown.prevent>
+                                            <template x-for="color in colors" :key="color">
+                                                <button type="button"
+                                                        class="vl-rich-editor-color"
+                                                        :style="`background-color: ${color}`"
+                                                        :title="color"
+                                                        @mousedown.prevent="aplicar('foreColor', color)"></button>
+                                            </template>
+                                        </div>
+                                    </div>
+                                    <button type="button" class="vl-rich-editor-btn" title="Quitar formato"
+                                            @mousedown.prevent="aplicar('removeFormat')">✕</button>
+                                </div>
+                                <div x-ref="editor"
+                                     class="vl-rich-editor-surface"
+                                     contenteditable="true"
+                                     role="textbox"
+                                     aria-multiline="true"
+                                     aria-labelledby="avisoTexto-label"
+                                     @input="actualizarContador()"
+                                     @keydown.escape.stop></div>
+                            </div>
+
+                            <p class="mt-1 text-[11px]"
+                               :class="htmlLength > maxLength ? 'text-red-600' : 'text-neutral-500'">
+                                <span x-text="htmlLength"></span> / <span x-text="maxLength"></span> caracteres (HTML).
+                            </p>
+                            @error('avisoTexto') <p class="form-error">{{ $message }}</p> @enderror
+
+                            <div class="mt-4 flex flex-wrap items-center justify-between gap-2 border-t border-accent-200 pt-3">
+                                <div>
+                                    @if ($avisoIdNotificacion !== null)
+                                        <button type="button"
+                                                x-on:click="window.vlSwalConfirmar('¿Eliminar este aviso al cliente?', 'Eliminar aviso', { confirmButtonText: 'Sí, eliminar', icon: 'warning' }).then(ok => ok && $wire.eliminarAviso())"
+                                                wire:loading.attr="disabled"
+                                                wire:target="eliminarAviso"
+                                                class="rounded-xl border border-red-200 px-4 py-2 text-sm font-medium text-red-700 hover:bg-red-50">
+                                            <span wire:loading.remove wire:target="eliminarAviso">Eliminar</span>
+                                            <span wire:loading wire:target="eliminarAviso">Eliminando…</span>
+                                        </button>
+                                    @endif
+                                </div>
+                                <div class="flex flex-wrap gap-2">
+                                    <button type="button"
+                                            wire:click="cerrarModalAviso"
+                                            class="rounded-xl border border-accent-200 px-4 py-2 text-sm font-medium text-neutral-700 hover:bg-accent-50">
+                                        Cancelar
+                                    </button>
+                                    <button type="button"
+                                            @click="guardar()"
+                                            wire:loading.attr="disabled"
+                                            wire:target="guardarAviso"
+                                            class="btn-primary rounded-xl px-4 py-2 text-sm">
+                                        <span wire:loading.remove wire:target="guardarAviso">Guardar</span>
+                                        <span wire:loading wire:target="guardarAviso">Guardando…</span>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        @endteleport
+    @endif
+
+    @if ($modalIaAbierto)
+        @teleport('body')
+            <div class="fixed inset-0 z-[120] flex items-end justify-center p-4 sm:items-center"
+                 wire:keydown.escape.window="cerrarModalIa">
+                <button type="button"
+                        class="absolute inset-0 bg-neutral-900/50"
+                        wire:click="cerrarModalIa"
+                        aria-label="Cerrar"></button>
+                <div class="relative z-10 flex max-h-[90vh] w-full max-w-2xl flex-col overflow-hidden rounded-2xl bg-white shadow-xl"
+                     role="dialog"
+                     aria-modal="true"
+                     aria-labelledby="modal-ia-titulo">
+                    <div class="border-b border-accent-200 px-5 py-4">
+                        <h3 id="modal-ia-titulo" class="text-lg font-bold text-neutral-900">Asistente IA</h3>
+                        <p class="mt-1 text-sm text-neutral-600">
+                            Protocolo <strong>{{ $iaProtocolo }}</strong>
+                            · {{ $iaNombrePaciente }}
+                            · {{ $iaEspecie }}
+                        </p>
+                    </div>
+
+                    <div class="min-h-0 flex-1 space-y-4 overflow-y-auto px-5 py-4">
+                        <div class="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-950"
+                             role="note">
+                            <p class="font-semibold text-amber-900">Aviso importante</p>
+                            <p class="mt-1 leading-relaxed">
+                                {{ \App\Support\Protocolos\DiagnosticoIaPromptBuilder::DISCLAIMER }}
+                            </p>
+                        </div>
+
+                        <div class="vl-form-field">
+                            <label class="form-label" for="iaClinica">Síntomas clínicos</label>
+                            <p class="mb-2 text-xs text-neutral-500">
+                                Describí el cuadro clínico del paciente. Estos datos se guardan en el protocolo y se incluyen en el prompt enviado a ChatGPT junto con los resultados de laboratorio.
+                            </p>
+                            <textarea wire:model="iaClinica"
+                                      id="iaClinica"
+                                      rows="8"
+                                      class="form-input"
+                                      placeholder="Ej.: anorexia de 3 días, vómitos intermitentes, debilidad, mucosas pálidas…"></textarea>
+                            @error('iaClinica') <p class="form-error">{{ $message }}</p> @enderror
+                        </div>
+                    </div>
+
+                    <div class="flex flex-wrap justify-end gap-2 border-t border-accent-200 px-5 py-3">
+                        <button type="button"
+                                wire:click="cerrarModalIa"
+                                class="rounded-xl border border-accent-200 px-4 py-2 text-sm font-medium text-neutral-700 hover:bg-accent-50">
+                            Cerrar
+                        </button>
+                        <button type="button"
+                                wire:click="guardarClinicaIa"
+                                wire:loading.attr="disabled"
+                                wire:target="guardarClinicaIa,consultarChatGpt"
+                                class="rounded-xl border border-primary-200 px-4 py-2 text-sm font-medium text-primary-700 hover:bg-primary-50">
+                            <span wire:loading.remove wire:target="guardarClinicaIa">Guardar síntomas</span>
+                            <span wire:loading wire:target="guardarClinicaIa">Guardando…</span>
+                        </button>
+                        <button type="button"
+                                x-data
+                                x-on:click="window.__vlIaChatWin = window.open('about:blank', '_blank')"
+                                wire:click="consultarChatGpt"
+                                wire:loading.attr="disabled"
+                                wire:target="guardarClinicaIa,consultarChatGpt"
+                                class="btn-primary rounded-xl px-4 py-2 text-sm">
+                            <span wire:loading.remove wire:target="consultarChatGpt">Consultar ChatGPT</span>
+                            <span wire:loading wire:target="consultarChatGpt">Preparando…</span>
                         </button>
                     </div>
                 </div>

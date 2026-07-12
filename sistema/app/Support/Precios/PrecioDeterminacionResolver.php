@@ -28,19 +28,28 @@ class PrecioDeterminacionResolver
         return round((float) $tipo->precio, 2);
     }
 
-    /** Calcula el descuento en pesos a partir del porcentaje del cliente. */
-    public static function calcularDescuento(float $precio, float $porcentajeCliente): float
+    /** Calcula el descuento en pesos a partir del porcentaje del cliente sobre el neto (lista). */
+    public static function calcularDescuento(float $neto, float $porcentajeCliente): float
     {
-        if ($precio <= 0 || $porcentajeCliente <= 0) {
+        if ($neto <= 0 || $porcentajeCliente <= 0) {
             return 0.0;
         }
 
-        return round($precio * ($porcentajeCliente / 100), 2);
+        return round($neto * ($porcentajeCliente / 100), 2);
     }
 
-    /** Valor neto de una línea (precio − descuento). */
+    /** Precio con descuento: neto (lista) − descuento en pesos. */
+    public static function precioConDescuento(float $neto, float $descuento): float
+    {
+        return round(max(0, $neto - $descuento), 2);
+    }
+
+    /**
+     * @deprecated Preferir precioConDescuento(). Conservado por cuenta corriente y código legacy
+     *             donde el primer argumento era el importe de lista.
+     */
     public static function neto(float $precio, float $descuento): float
     {
-        return round(max(0, $precio - $descuento), 2);
+        return self::precioConDescuento($precio, $descuento);
     }
 }

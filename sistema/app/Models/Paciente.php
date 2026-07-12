@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class Paciente extends Model
 {
@@ -31,6 +32,7 @@ class Paciente extends Model
         'fechnaci',
         'edad',
         'estado',
+        'neto',
         'precio',
         'fechaEnvioDeriv',
         'cadete',
@@ -51,6 +53,7 @@ class Paciente extends Model
         return [
             'fechhoy' => 'date',
             'fechaEnvioDeriv' => 'date',
+            'neto' => 'decimal:2',
             'precio' => 'decimal:2',
             'cadete' => 'decimal:2',
             'pagado' => 'decimal:2',
@@ -89,6 +92,16 @@ class Paciente extends Model
         return $this->hasMany(Renglon::class, 'idPacientes', 'idPacientes');
     }
 
+    public function notificaciones(): HasMany
+    {
+        return $this->hasMany(Notificacion::class, 'idPacientes', 'idPacientes');
+    }
+
+    public function notificacion(): HasOne
+    {
+        return $this->hasOne(Notificacion::class, 'idPacientes', 'idPacientes')->latestOfMany('id');
+    }
+
     public function filaClaseCss(): string
     {
         return match (\App\Support\Resultados\ResultadosEstadosCatalog::normalizar($this->estado)) {
@@ -107,5 +120,33 @@ class Paciente extends Model
     public function fechhoyFormateada(): string
     {
         return $this->fechhoy?->format('d/m/Y') ?? '—';
+    }
+
+    public function tieneAdjunto(): bool
+    {
+        return trim((string) ($this->adjunto ?? '')) !== '';
+    }
+
+    public function tieneNotificacion(): bool
+    {
+        if ($this->relationLoaded('notificacion')) {
+            return $this->getRelation('notificacion') !== null
+                && trim((string) ($this->getRelation('notificacion')->notificacion ?? '')) !== '';
+        }
+
+        if ($this->relationLoaded('notificaciones')) {
+            return $this->notificaciones->contains(
+                fn (Notificacion $n) => trim((string) ($n->notificacion ?? '')) !== ''
+            );
+        }
+
+        if (! \Illuminate\Support\Facades\Schema::hasTable('notificaciones')) {
+            return false;
+        }
+
+        return $this->notificaciones()
+            ->whereNotNull('notificacion')
+            ->where('notificacion', '!=', '')
+            ->exists();
     }
 }

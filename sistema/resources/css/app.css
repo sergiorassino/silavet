@@ -321,6 +321,52 @@
         @apply text-center;
     }
 
+    .vl-pacientes-td--carga-ok {
+        @apply bg-emerald-100;
+    }
+
+    .vl-rich-editor {
+        @apply relative overflow-visible rounded-lg border border-accent-200 bg-white;
+    }
+
+    .vl-rich-editor-toolbar {
+        @apply flex flex-wrap items-center gap-1 rounded-t-lg border-b border-accent-200 bg-accent-50/50 px-2 py-1.5;
+    }
+
+    .vl-rich-editor-btn {
+        @apply inline-flex h-7 min-w-7 items-center justify-center rounded border-0 bg-transparent px-1.5 text-sm text-neutral-700 shadow-none;
+    }
+
+    .vl-rich-editor-btn:hover {
+        @apply bg-accent-100;
+    }
+
+    .vl-rich-editor-sep {
+        @apply mx-1 h-5 w-px bg-accent-200;
+    }
+
+    .vl-rich-editor-surface {
+        @apply min-h-[10rem] px-3 py-2 text-sm text-neutral-900 outline-none;
+        word-break: break-word;
+    }
+
+    .vl-rich-editor-surface:empty::before {
+        content: 'Escriba el aviso…';
+        @apply pointer-events-none text-neutral-400;
+    }
+
+    .vl-rich-editor-colors {
+        @apply absolute left-0 top-full z-[210] mt-1 grid w-[9.5rem] grid-cols-7 gap-1 rounded-lg border border-accent-200 bg-white p-2 shadow-lg;
+    }
+
+    .vl-rich-editor-color {
+        @apply h-4 w-4 rounded-sm border border-neutral-300 p-0 shadow-none;
+    }
+
+    .vl-rich-editor-color:hover {
+        @apply ring-2 ring-primary-400 ring-offset-1;
+    }
+
     /* Colores de fila por estado (legado NeoLab) */
     .vl-pacientes-row--en-proc {
         background-color: #ffffff;
@@ -338,8 +384,9 @@
         background-color: #c8e6c9;
     }
 
-    .vl-pacientes-row:hover {
-        filter: brightness(0.97);
+    /* No usar filter en <tr>: con border-collapse borra los bordes al hover */
+    .vl-pacientes-row:hover > .vl-pacientes-td {
+        background-image: linear-gradient(rgba(0, 0, 0, 0.03), rgba(0, 0, 0, 0.03));
     }
 
     .vl-pacientes-estado-btn {
@@ -520,11 +567,15 @@
         @apply w-auto whitespace-nowrap pr-0.5;
     }
 
-    .vl-prot-det-col--precio {
+    .vl-prot-det-col--neto {
         @apply w-0 whitespace-nowrap pl-1 pr-0.5 text-right;
     }
 
     .vl-prot-det-col--descuento {
+        @apply w-0 whitespace-nowrap pl-0.5 pr-0.5 text-right;
+    }
+
+    .vl-prot-det-col--precio {
         @apply w-0 whitespace-nowrap pl-0.5 pr-0.5 text-right;
     }
 

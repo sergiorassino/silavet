@@ -1,4 +1,146 @@
-<div class="vl-page">
+<div class="vl-page"
+     x-data="{
+        init() {
+            this._onEnterCapture = (event) => {
+                if (event.key !== 'Enter') {
+                    return;
+                }
+                if (document.querySelector('.swal2-container')) {
+                    return;
+                }
+                const select = document.getElementById('vl-prot-det-select-tipo');
+                if (!select || !select.value) {
+                    return;
+                }
+                const active = document.activeElement;
+                if (active && active !== select) {
+                    const tag = active.tagName;
+                    // No interceptar Enter si el usuario escribe neto, descuento, búsqueda, etc.
+                    if (tag === 'INPUT' || tag === 'TEXTAREA') {
+                        return;
+                    }
+                    if (tag === 'SELECT') {
+                        return;
+                    }
+                    if (active.isContentEditable) {
+                        return;
+                    }
+                }
+                // Capture: en Chrome/Windows el Enter del <select> no llega al keyup del elemento.
+                event.preventDefault();
+                event.stopPropagation();
+                $wire.confirmarNueva(select.value);
+            };
+            document.addEventListener('keydown', this._onEnterCapture, true);
+            this.$el.addEventListener('alpine:destroying', () => {
+                document.removeEventListener('keydown', this._onEnterCapture, true);
+            });
+        },
+        camposNav() {
+            return Array.from(this.$el.querySelectorAll('.vl-prot-det-nav'));
+        },
+        enfocarCampo(el) {
+            if (! el) {
+                return;
+            }
+            el.focus({ preventScroll: true });
+            el.select();
+            el.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+        },
+        caretAlInicio(el) {
+            const start = el.selectionStart ?? 0;
+            const end = el.selectionEnd ?? 0;
+            return start === 0 && end === 0;
+        },
+        caretAlFinal(el) {
+            const len = String(el.value ?? '').length;
+            const start = el.selectionStart ?? 0;
+            const end = el.selectionEnd ?? 0;
+            return start === len && end === len;
+        },
+        todoSeleccionado(el) {
+            const len = String(el.value ?? '').length;
+            const start = el.selectionStart ?? 0;
+            const end = el.selectionEnd ?? 0;
+            return len === 0 || (start === 0 && end === len);
+        },
+        navegarCampos(event) {
+            const keys = ['Enter', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'];
+            if (! keys.includes(event.key)) {
+                return;
+            }
+
+            const actual = event.target;
+            if (! actual || ! actual.classList.contains('vl-prot-det-nav')) {
+                return;
+            }
+
+            const campos = this.camposNav();
+            const idx = campos.indexOf(actual);
+            if (idx < 0) {
+                return;
+            }
+
+            const col = actual.dataset.navCol || '';
+            let destino = null;
+
+            if (event.key === 'Enter' || event.key === 'ArrowRight') {
+                if (event.key === 'ArrowRight' && ! this.todoSeleccionado(actual) && ! this.caretAlFinal(actual)) {
+                    return;
+                }
+                destino = campos[idx + 1] || null;
+            } else if (event.key === 'ArrowLeft') {
+                if (! this.todoSeleccionado(actual) && ! this.caretAlInicio(actual)) {
+                    return;
+                }
+                destino = campos[idx - 1] || null;
+            } else if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
+                const paso = event.key === 'ArrowDown' ? 1 : -1;
+                for (let i = idx + paso; i >= 0 && i < campos.length; i += paso) {
+                    if ((campos[i].dataset.navCol || '') === col) {
+                        destino = campos[i];
+                        break;
+                    }
+                }
+            }
+
+            if (! destino) {
+                return;
+            }
+
+            event.preventDefault();
+            actual.blur();
+            this.$nextTick(() => this.enfocarCampo(destino));
+        },
+        enfocarTipo() {
+            this.$nextTick(() => {
+                window.setTimeout(() => {
+                    const el = document.getElementById('vl-prot-det-select-tipo');
+                    if (!el) {
+                        return;
+                    }
+                    el.focus({ preventScroll: true });
+                    el.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+                }, 30);
+            });
+        },
+        onTeclado(event) {
+            if (document.querySelector('.swal2-container')) {
+                return;
+            }
+            if (event.key === 'F2' || event.key === 'Insert') {
+                event.preventDefault();
+                $wire.agregarDeterminacion();
+                return;
+            }
+            if (event.key === 'Escape' && document.getElementById('vl-prot-det-select-tipo')) {
+                event.preventDefault();
+                $wire.cancelarNueva();
+            }
+        }
+     }"
+     @keydown.window="onTeclado($event)"
+     @vl-prot-det-focus-tipo.window="enfocarTipo()">
     <div class="vl-prot-det-header mb-4">
         <div class="vl-prot-det-header-inner">
             <div class="vl-prot-det-header-item">
@@ -30,8 +172,9 @@
                 <button type="button"
                         wire:click="agregarDeterminacion"
                         @disabled($filaNueva !== null)
+                        title="Agregar determinación (F2)"
                         class="btn-primary text-sm disabled:opacity-50 disabled:cursor-not-allowed">
-                    Agregar Determinación
+                    Agregar Determinación (F2)
                 </button>
                 <a href="{{ route('protocolos.index') }}"
                    class="btn-secondary text-sm">
@@ -40,14 +183,24 @@
             </div>
         </div>
 
-        <div class="vl-prot-det-wrap">
+        <p class="border-b border-accent-200 bg-accent-50/40 px-5 py-2 text-xs text-neutral-600">
+            Puede cargar determinaciones solo con teclado:
+            <strong class="font-semibold text-neutral-700">F2</strong> agregar,
+            letras o flechas para elegir,
+            <strong class="font-semibold text-neutral-700">Enter</strong> confirmar,
+            <strong class="font-semibold text-neutral-700">Esc</strong> cancelar.
+            En Neto/Descuento: <strong class="font-semibold text-neutral-700">Enter</strong> y <strong class="font-semibold text-neutral-700">flechas</strong> para navegar.
+        </p>
+
+        <div class="vl-prot-det-wrap" @keydown="navegarCampos($event)">
             <table class="vl-determinaciones-grid vl-prot-det-grid text-sm">
                 <thead class="bg-accent-50/80">
                     <tr>
                         <th class="vl-determinaciones-th vl-determinaciones-col--acciones" title="Acciones"></th>
                         <th class="vl-determinaciones-th vl-prot-det-col--tipo">Tipo Determinaciones</th>
-                        <th class="vl-determinaciones-th vl-prot-det-col--precio">Precio</th>
-                        <th class="vl-determinaciones-th vl-prot-det-col--descuento">Descuento</th>
+                        <th class="vl-determinaciones-th vl-prot-det-col--neto" title="Precio de lista">Neto</th>
+                        <th class="vl-determinaciones-th vl-prot-det-col--descuento" title="Importe de descuento según % del cliente">Descuento</th>
+                        <th class="vl-determinaciones-th vl-prot-det-col--precio" title="Neto menos descuento">Precio (con descuento)</th>
                         <th class="vl-determinaciones-th vl-prot-det-col--derivacion">Derivación</th>
                     </tr>
                 </thead>
@@ -71,15 +224,24 @@
                             <td class="vl-determinaciones-td vl-prot-det-col--tipo">
                                 <span class="text-xs font-medium text-neutral-900">{{ $fila['nombre'] }}</span>
                             </td>
-                            <td class="vl-determinaciones-td vl-prot-det-col--precio">
+                            <td class="vl-determinaciones-td vl-prot-det-col--neto">
                                 <input type="text"
-                                       wire:model.blur="filas.{{ $id }}.precio"
+                                       wire:model.blur="filas.{{ $id }}.neto"
                                        wire:blur="guardarFila({{ $id }})"
-                                       class="vl-determinaciones-input vl-prot-det-input--precio"
+                                       class="vl-determinaciones-input vl-prot-det-input--precio vl-prot-det-nav"
+                                       data-nav-col="neto"
                                        inputmode="decimal">
                             </td>
                             <td class="vl-determinaciones-td vl-prot-det-col--descuento">
-                                <span class="text-xs tabular-nums text-neutral-700">{{ $fila['descuento'] }}</span>
+                                <input type="text"
+                                       wire:model.blur="filas.{{ $id }}.descuento"
+                                       wire:blur="guardarFila({{ $id }})"
+                                       class="vl-determinaciones-input vl-prot-det-input--precio vl-prot-det-nav"
+                                       data-nav-col="descuento"
+                                       inputmode="decimal">
+                            </td>
+                            <td class="vl-determinaciones-td vl-prot-det-col--precio">
+                                <span class="text-xs tabular-nums text-neutral-800">{{ $fila['precio'] }}</span>
                             </td>
                             <td class="vl-determinaciones-td vl-prot-det-col--derivacion">
                                 @if ($derivacionEsCatalogo)
@@ -130,8 +292,10 @@
                                 </div>
                             </td>
                             <td class="vl-determinaciones-td vl-prot-det-col--tipo">
-                                <select wire:model.live="filaNueva.idTipodeterminaciones"
-                                        class="vl-determinaciones-select vl-prot-det-select--tipo">
+                                <select id="vl-prot-det-select-tipo"
+                                        wire:model.live="filaNueva.idTipodeterminaciones"
+                                        class="vl-determinaciones-select vl-prot-det-select--tipo"
+                                        title="Elija el tipo y pulse Enter para confirmar">
                                     <option value="">Seleccione</option>
                                     @foreach ($tiposDisponibles as $tipo)
                                         @if (! in_array((int) $tipo->idTipodeterminaciones, $idsCargados, true))
@@ -140,14 +304,22 @@
                                     @endforeach
                                 </select>
                             </td>
-                            <td class="vl-determinaciones-td vl-prot-det-col--precio">
+                            <td class="vl-determinaciones-td vl-prot-det-col--neto">
                                 <input type="text"
-                                       wire:model="filaNueva.precio"
-                                       class="vl-determinaciones-input vl-prot-det-input--precio"
+                                       wire:model.live="filaNueva.neto"
+                                       class="vl-determinaciones-input vl-prot-det-input--precio vl-prot-det-nav"
+                                       data-nav-col="neto"
                                        inputmode="decimal">
                             </td>
                             <td class="vl-determinaciones-td vl-prot-det-col--descuento">
-                                <span class="text-xs tabular-nums text-neutral-700">{{ $filaNueva['descuento'] ?: '—' }}</span>
+                                <input type="text"
+                                       wire:model.live="filaNueva.descuento"
+                                       class="vl-determinaciones-input vl-prot-det-input--precio vl-prot-det-nav"
+                                       data-nav-col="descuento"
+                                       inputmode="decimal">
+                            </td>
+                            <td class="vl-determinaciones-td vl-prot-det-col--precio">
+                                <span class="text-xs tabular-nums text-neutral-800">{{ $filaNueva['precio'] ?: '—' }}</span>
                             </td>
                             <td class="vl-determinaciones-td vl-prot-det-col--derivacion">
                                 @if ($derivacionEsCatalogo)
@@ -171,8 +343,8 @@
 
                     @if (count($filas) === 0 && $filaNueva === null)
                         <tr>
-                            <td colspan="5" class="vl-determinaciones-td text-center text-neutral-500 py-10">
-                                No hay determinaciones solicitadas. Presione <strong>Agregar Determinación</strong> para comenzar.
+                            <td colspan="6" class="vl-determinaciones-td text-center text-neutral-500 py-10">
+                                No hay determinaciones solicitadas. Presione <strong>Agregar Determinación</strong> o <strong>F2</strong> para comenzar.
                             </td>
                         </tr>
                     @endif
@@ -180,12 +352,13 @@
                 @if (count($filas) > 0 || $filaNueva !== null)
                     <tfoot class="border-t border-accent-200 bg-accent-50/50">
                         <tr>
-                            <td colspan="2" class="vl-determinaciones-td vl-prot-det-footer-label text-right text-xs font-semibold text-neutral-600 py-2">
+                            <td colspan="4" class="vl-determinaciones-td vl-prot-det-footer-label text-right text-xs font-semibold text-neutral-600 py-2">
                                 Total protocolo
                             </td>
-                            <td colspan="3" class="vl-determinaciones-td vl-prot-det-footer-total text-xs font-bold text-neutral-900 tabular-nums py-2">
+                            <td class="vl-determinaciones-td vl-prot-det-footer-total text-xs font-bold text-neutral-900 tabular-nums py-2">
                                 {{ $totalProtocolo }}
                             </td>
+                            <td class="vl-determinaciones-td"></td>
                         </tr>
                     </tfoot>
                 @endif

@@ -9,7 +9,7 @@
             <button type="button"
                     wire:click="agregarFila"
                     class="btn-primary shrink-0 bg-white text-primary-700 hover:bg-accent-50">
-                Nueva fila
+                Nueva determinación
             </button>
         </div>
     </div>

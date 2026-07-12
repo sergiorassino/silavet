@@ -3,6 +3,26 @@ import Swal from 'sweetalert2';
 
 window.Swal = Swal;
 
+function vlNormalizarHtmlEditor(html) {
+    const limpio = String(html || '')
+        .replace(/<div><br><\/div>/gi, '')
+        .replace(/<p><br><\/p>/gi, '')
+        .replace(/&nbsp;/gi, ' ')
+        .trim();
+
+    if (limpio === '' || limpio === '<p></p>' || limpio === '<br>' || limpio === '<div></div>') {
+        return '';
+    }
+
+    return limpio;
+}
+
+const VL_EDITOR_COLORS = [
+    '#000000', '#e60000', '#ff9900', '#ffff00', '#008a00', '#0066cc', '#9933ff',
+    '#ffffff', '#bbbbbb', '#f06666', '#ffc266', '#66b966', '#66a3e0', '#c285ff',
+];
+
+
 window.vlSwalExito = (mensaje, titulo = 'Listo') => {
     return Swal.fire({
         icon: 'success',
@@ -56,9 +76,99 @@ document.addEventListener('livewire:init', () => {
         }
         window.open(url, '_blank', 'noopener,noreferrer');
     });
+
+    Livewire.on('vl-ia-chatgpt', ({ prompt, url }) => {
+        if (!prompt || typeof prompt !== 'string') {
+            return;
+        }
+
+        const base = (url && typeof url === 'string') ? url : 'https://chatgpt.com';
+        const maxUrl = 16000;
+        const encoded = encodeURIComponent(prompt);
+        let destino = `${base}/#?q=${encoded}`;
+        if (destino.length > maxUrl) {
+            destino = `${base}/?q=${encoded}`;
+        }
+        if (destino.length > maxUrl) {
+            destino = base;
+        }
+
+        const preabierta = window.__vlIaChatWin;
+        window.__vlIaChatWin = null;
+
+        if (preabierta && !preabierta.closed) {
+            preabierta.location = destino;
+        } else {
+            window.open(destino, '_blank', 'noopener,noreferrer');
+        }
+
+        if (navigator.clipboard && typeof navigator.clipboard.writeText === 'function') {
+            navigator.clipboard.writeText(prompt).catch(() => {});
+        }
+    });
+
+    Livewire.on('vl-ia-chatgpt-cancelar', () => {
+        if (window.__vlIaChatWin && !window.__vlIaChatWin.closed) {
+            window.__vlIaChatWin.close();
+        }
+        window.__vlIaChatWin = null;
+    });
 });
 
 document.addEventListener('alpine:init', () => {
+    Alpine.data('vlRichTextEditor', (config = {}) => ({
+        maxLength: Number(config.maxLength ?? 255),
+        htmlLength: 0,
+        colors: VL_EDITOR_COLORS,
+        colorPickerOpen: false,
+        placeholder: config.placeholder || 'Escriba el aviso…',
+
+        init() {
+            this.$nextTick(() => {
+                const ed = this.$refs.editor;
+                if (!ed) {
+                    return;
+                }
+                const inicial = String(config.initial || '').trim();
+                if (inicial !== '') {
+                    ed.innerHTML = inicial;
+                }
+                this.actualizarContador();
+            });
+        },
+
+        actualizarContador() {
+            const ed = this.$refs.editor;
+            this.htmlLength = ed ? vlNormalizarHtmlEditor(ed.innerHTML).length : 0;
+        },
+
+        htmlActual() {
+            const ed = this.$refs.editor;
+            if (!ed) {
+                return String(config.initial || '');
+            }
+
+            return vlNormalizarHtmlEditor(ed.innerHTML);
+        },
+
+        aplicar(comando, valor = null) {
+            const ed = this.$refs.editor;
+            if (!ed) {
+                return;
+            }
+            ed.focus();
+            document.execCommand(comando, false, valor);
+            this.actualizarContador();
+            this.colorPickerOpen = false;
+        },
+
+        async guardar() {
+            const html = this.htmlActual();
+            await this.$wire.set('avisoTexto', html);
+            await this.$wire.guardarAviso();
+        },
+    }));
+
     Alpine.data('vlCargaResultados', (config) => ({
         estadoPaciente: config.estadoInicial || 'En Proc.',
 

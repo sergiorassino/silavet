@@ -2,21 +2,27 @@
 
 namespace App\Livewire\Protocolos;
 
+use App\Models\Notificacion;
 use App\Models\Paciente;
 use App\Models\Renglon;
 use App\Support\Envio\InformeEnvioServicio;
 use App\Support\PermisosIaCatalog;
+use App\Support\Protocolos\DiagnosticoIaPromptBuilder;
+use App\Support\Protocolos\PacienteAdjuntoStorage;
 use App\Support\Resultados\InformeVisibilidadConsulta;
 use App\Support\Resultados\RenglonesMaterializer;
 use App\Support\Resultados\ResultadosEstadosCatalog;
 use App\Support\UsuarioMenuPortal;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Validation\ValidationException;
 use Livewire\Component;
+use Livewire\WithFileUploads;
 use Livewire\WithPagination;
 
 class PacienteIndex extends Component
 {
+    use WithFileUploads;
     use WithPagination;
 
     public const POR_PAGINA = 50;
@@ -68,6 +74,43 @@ class PacienteIndex extends Component
     public string $obsNombrePaciente = '';
 
     public string $obsTexto = '';
+
+    public bool $modalAdjuntoAbierto = false;
+
+    public ?int $adjuntoIdPaciente = null;
+
+    public string $adjuntoProtocolo = '';
+
+    public string $adjuntoNombrePaciente = '';
+
+    public string $adjuntoNombreActual = '';
+
+    /** @var \Livewire\Features\SupportFileUploads\TemporaryUploadedFile|null */
+    public $adjuntoArchivo = null;
+
+    public bool $modalAvisoAbierto = false;
+
+    public ?int $avisoIdPaciente = null;
+
+    public ?int $avisoIdNotificacion = null;
+
+    public string $avisoProtocolo = '';
+
+    public string $avisoNombrePaciente = '';
+
+    public string $avisoTexto = '';
+
+    public bool $modalIaAbierto = false;
+
+    public ?int $iaIdPaciente = null;
+
+    public string $iaProtocolo = '';
+
+    public string $iaNombrePaciente = '';
+
+    public string $iaEspecie = '';
+
+    public string $iaClinica = '';
 
     public function mount(): void
     {
@@ -340,6 +383,437 @@ class PacienteIndex extends Component
         $this->cerrarModalObs();
     }
 
+    public function abrirModalAdjunto(int $id): void
+    {
+        abort_unless(tienePermiso(PermisosIaCatalog::PROTOCOLOS), 403);
+
+        $paciente = $this->pacienteEnAlcance($id);
+        if ($paciente === null) {
+            $this->dispatch('vl-swal-error', mensaje: 'No se encontró el protocolo.');
+
+            return;
+        }
+
+        $this->adjuntoIdPaciente = (int) $paciente->idPacientes;
+        $this->adjuntoProtocolo = $paciente->nombreProtocolo !== null && $paciente->nombreProtocolo !== ''
+            ? (string) $paciente->nombreProtocolo
+            : '—';
+        $this->adjuntoNombrePaciente = $paciente->nombre !== null && $paciente->nombre !== ''
+            ? (string) $paciente->nombre
+            : '—';
+        $this->adjuntoNombreActual = trim((string) ($paciente->adjunto ?? ''));
+        $this->adjuntoArchivo = null;
+        $this->modalAdjuntoAbierto = true;
+        $this->resetErrorBag();
+    }
+
+    public function cerrarModalAdjunto(): void
+    {
+        $this->modalAdjuntoAbierto = false;
+        $this->adjuntoIdPaciente = null;
+        $this->adjuntoProtocolo = '';
+        $this->adjuntoNombrePaciente = '';
+        $this->adjuntoNombreActual = '';
+        $this->adjuntoArchivo = null;
+        $this->resetErrorBag();
+    }
+
+    public function guardarAdjunto(): void
+    {
+        abort_unless(tienePermiso(PermisosIaCatalog::PROTOCOLOS), 403);
+
+        $uid = labCtx()->idUsuarios ?? 0;
+        $key = 'protocolos-adjunto-up:'.$uid;
+        abort_if(RateLimiter::tooManyAttempts($key, 20), 429);
+
+        if ($this->adjuntoIdPaciente === null) {
+            $this->dispatch('vl-swal-error', mensaje: 'No hay protocolo seleccionado.');
+
+            return;
+        }
+
+        $this->validate([
+            'adjuntoArchivo' => [
+                'required',
+                'file',
+                'mimes:'.PacienteAdjuntoStorage::EXTENSION,
+                'max:'.PacienteAdjuntoStorage::MAX_KB,
+            ],
+        ], [
+            'adjuntoArchivo.required' => 'Seleccione un archivo PDF.',
+            'adjuntoArchivo.mimes' => 'Solo se permiten archivos PDF.',
+            'adjuntoArchivo.max' => 'El PDF no puede superar 10 MB.',
+        ]);
+
+        $paciente = $this->pacienteEnAlcance($this->adjuntoIdPaciente);
+        if ($paciente === null) {
+            $this->dispatch('vl-swal-error', mensaje: 'No se encontró el protocolo.');
+            $this->cerrarModalAdjunto();
+
+            return;
+        }
+
+        $actual = trim((string) ($paciente->adjunto ?? ''));
+        if ($actual !== '') {
+            $this->adjuntoNombreActual = $actual;
+            $this->adjuntoArchivo = null;
+            $this->dispatch(
+                'vl-swal-error',
+                mensaje: 'Ya hay un PDF adjunto. Eliminalo primero para subir otro.'
+            );
+
+            return;
+        }
+
+        RateLimiter::hit($key, 60);
+
+        try {
+            $nombreNuevo = PacienteAdjuntoStorage::guardar($this->adjuntoArchivo);
+        } catch (ValidationException $e) {
+            $mensaje = collect($e->errors())->flatten()->first() ?: 'No se pudo guardar el PDF.';
+            $this->dispatch('vl-swal-error', mensaje: $mensaje);
+            $this->adjuntoArchivo = null;
+
+            return;
+        }
+
+        $paciente->update(['adjunto' => $nombreNuevo]);
+
+        $this->cerrarModalAdjunto();
+    }
+
+    public function eliminarAdjunto(): void
+    {
+        abort_unless(tienePermiso(PermisosIaCatalog::PROTOCOLOS), 403);
+
+        $uid = labCtx()->idUsuarios ?? 0;
+        $key = 'protocolos-adjunto-del:'.$uid;
+        abort_if(RateLimiter::tooManyAttempts($key, 10), 429);
+
+        if ($this->adjuntoIdPaciente === null) {
+            $this->dispatch('vl-swal-error', mensaje: 'No hay protocolo seleccionado.');
+
+            return;
+        }
+
+        $paciente = $this->pacienteEnAlcance($this->adjuntoIdPaciente);
+        if ($paciente === null) {
+            $this->dispatch('vl-swal-error', mensaje: 'No se encontró el protocolo.');
+            $this->cerrarModalAdjunto();
+
+            return;
+        }
+
+        RateLimiter::hit($key, 60);
+
+        $anterior = trim((string) ($paciente->adjunto ?? ''));
+        $paciente->update(['adjunto' => '']);
+        if ($anterior !== '') {
+            PacienteAdjuntoStorage::eliminarArchivo($anterior);
+        }
+
+        $this->adjuntoNombreActual = '';
+        $this->adjuntoArchivo = null;
+        $this->resetErrorBag();
+    }
+
+    public function abrirModalAviso(int $id): void
+    {
+        abort_unless(tienePermiso(PermisosIaCatalog::PROTOCOLOS), 403);
+
+        if (! Schema::hasTable('notificaciones')) {
+            $this->dispatch('vl-swal-error', mensaje: 'La tabla de notificaciones no está disponible.');
+
+            return;
+        }
+
+        $paciente = $this->pacienteEnAlcance($id);
+        if ($paciente === null) {
+            $this->dispatch('vl-swal-error', mensaje: 'No se encontró el protocolo.');
+
+            return;
+        }
+
+        $registro = Notificacion::query()
+            ->where('idPacientes', $paciente->idPacientes)
+            ->orderByDesc('id')
+            ->first();
+
+        $this->avisoIdPaciente = (int) $paciente->idPacientes;
+        $this->avisoIdNotificacion = $registro !== null ? (int) $registro->id : null;
+        $this->avisoProtocolo = $paciente->nombreProtocolo !== null && $paciente->nombreProtocolo !== ''
+            ? (string) $paciente->nombreProtocolo
+            : '—';
+        $this->avisoNombrePaciente = $paciente->nombre !== null && $paciente->nombre !== ''
+            ? (string) $paciente->nombre
+            : '—';
+        $this->avisoTexto = ($registro !== null && trim((string) ($registro->notificacion ?? '')) !== '')
+            ? (string) $registro->notificacion
+            : Notificacion::leyendaPorDefecto($paciente);
+        $this->modalAvisoAbierto = true;
+        $this->resetErrorBag();
+    }
+
+    public function cerrarModalAviso(): void
+    {
+        $this->modalAvisoAbierto = false;
+        $this->avisoIdPaciente = null;
+        $this->avisoIdNotificacion = null;
+        $this->avisoProtocolo = '';
+        $this->avisoNombrePaciente = '';
+        $this->avisoTexto = '';
+        $this->resetErrorBag();
+    }
+
+    public function guardarAviso(): void
+    {
+        abort_unless(tienePermiso(PermisosIaCatalog::PROTOCOLOS), 403);
+
+        if (! Schema::hasTable('notificaciones')) {
+            $this->dispatch('vl-swal-error', mensaje: 'La tabla de notificaciones no está disponible.');
+
+            return;
+        }
+
+        $uid = labCtx()->idUsuarios ?? 0;
+        $key = 'protocolos-aviso:'.$uid;
+        abort_if(RateLimiter::tooManyAttempts($key, 30), 429);
+
+        $this->validate([
+            'avisoTexto' => ['required', 'string', 'max:255'],
+        ], [
+            'avisoTexto.required' => 'Escriba el texto del aviso.',
+            'avisoTexto.max' => 'El aviso no puede superar 255 caracteres.',
+        ]);
+
+        if ($this->avisoIdPaciente === null) {
+            $this->dispatch('vl-swal-error', mensaje: 'No hay protocolo seleccionado.');
+
+            return;
+        }
+
+        $paciente = $this->pacienteEnAlcance($this->avisoIdPaciente);
+        if ($paciente === null) {
+            $this->dispatch('vl-swal-error', mensaje: 'No se encontró el protocolo.');
+            $this->cerrarModalAviso();
+
+            return;
+        }
+
+        if ($paciente->idClientes === null) {
+            $this->dispatch('vl-swal-error', mensaje: 'El protocolo no tiene cliente asociado.');
+
+            return;
+        }
+
+        RateLimiter::hit($key, 60);
+
+        $texto = trim($this->avisoTexto);
+
+        if ($this->avisoIdNotificacion !== null) {
+            $registro = Notificacion::query()
+                ->where('id', $this->avisoIdNotificacion)
+                ->where('idPacientes', $paciente->idPacientes)
+                ->first();
+
+            if ($registro === null) {
+                $this->dispatch('vl-swal-error', mensaje: 'No se encontró la notificación.');
+                $this->cerrarModalAviso();
+
+                return;
+            }
+
+            $registro->update([
+                'idClientes' => (int) $paciente->idClientes,
+                'notificacion' => $texto,
+            ]);
+        } else {
+            Notificacion::query()->create([
+                'fechaCreacion' => now(),
+                'idPacientes' => (int) $paciente->idPacientes,
+                'idClientes' => (int) $paciente->idClientes,
+                'notificacion' => $texto,
+                'leido' => 0,
+            ]);
+        }
+
+        $this->cerrarModalAviso();
+    }
+
+    public function eliminarAviso(): void
+    {
+        abort_unless(tienePermiso(PermisosIaCatalog::PROTOCOLOS), 403);
+
+        if (! Schema::hasTable('notificaciones')) {
+            $this->dispatch('vl-swal-error', mensaje: 'La tabla de notificaciones no está disponible.');
+
+            return;
+        }
+
+        $uid = labCtx()->idUsuarios ?? 0;
+        $key = 'protocolos-aviso-del:'.$uid;
+        abort_if(RateLimiter::tooManyAttempts($key, 10), 429);
+
+        if ($this->avisoIdPaciente === null || $this->avisoIdNotificacion === null) {
+            $this->dispatch('vl-swal-error', mensaje: 'No hay aviso para eliminar.');
+
+            return;
+        }
+
+        $paciente = $this->pacienteEnAlcance($this->avisoIdPaciente);
+        if ($paciente === null) {
+            $this->dispatch('vl-swal-error', mensaje: 'No se encontró el protocolo.');
+            $this->cerrarModalAviso();
+
+            return;
+        }
+
+        $registro = Notificacion::query()
+            ->where('id', $this->avisoIdNotificacion)
+            ->where('idPacientes', $paciente->idPacientes)
+            ->first();
+
+        if ($registro === null) {
+            $this->dispatch('vl-swal-error', mensaje: 'No se encontró la notificación.');
+            $this->cerrarModalAviso();
+
+            return;
+        }
+
+        RateLimiter::hit($key, 60);
+        $registro->delete();
+
+        $this->cerrarModalAviso();
+    }
+
+    public function abrirModalIa(int $id): void
+    {
+        abort_unless(tienePermiso(PermisosIaCatalog::PROTOCOLOS), 403);
+
+        $paciente = $this->pacienteEnAlcance($id);
+        if ($paciente === null) {
+            $this->dispatch('vl-swal-error', mensaje: 'No se encontró el protocolo.');
+
+            return;
+        }
+
+        $paciente->loadMissing(['especie']);
+
+        $this->iaIdPaciente = (int) $paciente->idPacientes;
+        $this->iaProtocolo = $paciente->nombreProtocolo !== null && $paciente->nombreProtocolo !== ''
+            ? (string) $paciente->nombreProtocolo
+            : '—';
+        $this->iaNombrePaciente = $paciente->nombre !== null && $paciente->nombre !== ''
+            ? (string) $paciente->nombre
+            : '—';
+        $this->iaEspecie = $paciente->especie?->nombre !== null && $paciente->especie->nombre !== ''
+            ? (string) $paciente->especie->nombre
+            : '—';
+        $this->iaClinica = (string) ($paciente->clinica ?? '');
+        $this->modalIaAbierto = true;
+        $this->resetErrorBag();
+    }
+
+    public function cerrarModalIa(): void
+    {
+        $this->modalIaAbierto = false;
+        $this->iaIdPaciente = null;
+        $this->iaProtocolo = '';
+        $this->iaNombrePaciente = '';
+        $this->iaEspecie = '';
+        $this->iaClinica = '';
+        $this->resetErrorBag();
+    }
+
+    public function guardarClinicaIa(): void
+    {
+        abort_unless(tienePermiso(PermisosIaCatalog::PROTOCOLOS), 403);
+
+        $uid = labCtx()->idUsuarios ?? 0;
+        $key = 'protocolos-ia-clinica:'.$uid;
+        abort_if(RateLimiter::tooManyAttempts($key, 30), 429);
+
+        $this->validate([
+            'iaClinica' => ['nullable', 'string', 'max:32767'],
+        ], [
+            'iaClinica.max' => 'Los síntomas clínicos no pueden superar 32767 caracteres.',
+        ]);
+
+        if ($this->iaIdPaciente === null) {
+            $this->dispatch('vl-swal-error', mensaje: 'No hay protocolo seleccionado.');
+
+            return;
+        }
+
+        $paciente = $this->pacienteEnAlcance($this->iaIdPaciente);
+        if ($paciente === null) {
+            $this->dispatch('vl-swal-error', mensaje: 'No se encontró el protocolo.');
+            $this->cerrarModalIa();
+
+            return;
+        }
+
+        RateLimiter::hit($key, 60);
+        $paciente->update([
+            'clinica' => trim($this->iaClinica),
+        ]);
+
+        $this->dispatch('vl-swal-exito', mensaje: 'Síntomas clínicos guardados.');
+    }
+
+    public function consultarChatGpt(): void
+    {
+        abort_unless(tienePermiso(PermisosIaCatalog::PROTOCOLOS), 403);
+
+        $uid = labCtx()->idUsuarios ?? 0;
+        $key = 'protocolos-ia-chatgpt:'.$uid;
+        abort_if(RateLimiter::tooManyAttempts($key, 20), 429);
+
+        $clinica = trim($this->iaClinica);
+        if ($clinica === '') {
+            $this->dispatch('vl-ia-chatgpt-cancelar');
+            $this->addError('iaClinica', 'Cargue los síntomas clínicos del paciente antes de consultar a la IA.');
+
+            return;
+        }
+
+        if (mb_strlen($clinica) > 32767) {
+            $this->dispatch('vl-ia-chatgpt-cancelar');
+            $this->addError('iaClinica', 'Los síntomas clínicos no pueden superar 32767 caracteres.');
+
+            return;
+        }
+
+        if ($this->iaIdPaciente === null) {
+            $this->dispatch('vl-ia-chatgpt-cancelar');
+            $this->dispatch('vl-swal-error', mensaje: 'No hay protocolo seleccionado.');
+
+            return;
+        }
+
+        $paciente = $this->pacienteEnAlcance($this->iaIdPaciente);
+        if ($paciente === null) {
+            $this->dispatch('vl-ia-chatgpt-cancelar');
+            $this->dispatch('vl-swal-error', mensaje: 'No se encontró el protocolo.');
+            $this->cerrarModalIa();
+
+            return;
+        }
+
+        RateLimiter::hit($key, 60);
+
+        $this->iaClinica = $clinica;
+        $paciente->update(['clinica' => $clinica]);
+
+        $prompt = DiagnosticoIaPromptBuilder::armar($paciente, $clinica);
+
+        $this->dispatch(
+            'vl-ia-chatgpt',
+            prompt: $prompt,
+            url: DiagnosticoIaPromptBuilder::CHATGPT_URL,
+        );
+    }
+
     public function setMostrarRenglon(int $idRenglones, mixed $mostrar): void
     {
         abort_unless(tienePermiso(PermisosIaCatalog::PROTOCOLOS), 403);
@@ -389,8 +863,13 @@ class PacienteIndex extends Component
         $term = trim($this->busqueda);
         $ctx = labCtx();
 
+        $with = ['cliente', 'especie', 'raza'];
+        if (Schema::hasTable('notificaciones')) {
+            $with[] = 'notificacion';
+        }
+
         $pacientes = Paciente::query()
-            ->with(['cliente', 'especie', 'raza'])
+            ->with($with)
             ->when($ctx->esCliente() && $ctx->idClientes, function ($q) use ($ctx) {
                 $q->where('pacientes.idClientes', $ctx->idClientes);
             })

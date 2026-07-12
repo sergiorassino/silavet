@@ -555,17 +555,41 @@ final class InformePacienteTcpdf extends Fpdi
             return;
         }
 
+        // Marco legacy (NeoLab / Malvina): rectángulo negro de puntas redondeadas bajo el membrete.
+        $marcoX = 15.0;
+        $marcoY = 65.0;
+        $marcoW = 180.0;
+        $marcoH = 220.0;
+        $radio = 5.5;
+        $contenidoX = 20.0;
+        $contenidoW = 160.0;
+
         for ($n = 1; $n <= $pageCount; $n++) {
-            $this->AddPage();
-            $this->SetDrawColor(0, 64, 128);
-            $this->RoundedRect(15, 20, 180, 240, 4, '1111', 'D');
+            $this->AddPage('P', [self::PAGE_W, self::PAGE_H]);
+            $this->dibujarMembrete();
+
+            $this->SetDrawColor(0, 0, 0);
+            $this->SetFillColor(255, 255, 255);
+            $this->SetLineWidth(0.5);
+            $this->RoundedRect($marcoX, $marcoY, $marcoW, $marcoH, $radio, '1111', 'DF');
+            $this->SetLineWidth(0.2);
+
             try {
                 $pageId = $this->importPage($n);
-                $this->useImportedPage($pageId, 20, 25, 170);
+                $size = $this->getTemplateSize($pageId);
+                $srcW = max(1.0, (float) ($size['width'] ?? $contenidoW));
+                $srcH = max(1.0, (float) ($size['height'] ?? $marcoH));
+
+                // Encajar dentro del marco (máx. 160×220 mm), alineado arriba como el legado.
+                $innerH = $marcoH;
+                $scale = min($contenidoW / $srcW, $innerH / $srcH);
+                $w = $srcW * $scale;
+                $x = $marcoX + (($marcoW - $w) / 2.0);
+                $this->useImportedPage($pageId, $x, $marcoY, $w);
             } catch (Throwable) {
                 TcpdfFuenteArial::aplicar($this, '', 10);
-                $this->SetXY(20, 40);
-                $this->Cell(0, 6, 'No se pudo incorporar la página del adjunto.', 0, 1, 'C');
+                $this->SetXY($contenidoX, $marcoY + 20);
+                $this->Cell($contenidoW, 6, 'No se pudo incorporar la página '.$n.' del adjunto.', 0, 1, 'C');
             }
         }
     }

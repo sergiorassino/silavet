@@ -50,16 +50,20 @@ class PacienteDeterminaciones extends Component
         abort_unless(tienePermiso(PermisosIaCatalog::PROTOCOLOS), 403);
 
         if ($this->filaNueva !== null) {
+            $this->dispatch('vl-prot-det-focus-tipo');
+
             return;
         }
 
         $this->filaNueva = [
             'idTipodeterminaciones' => '',
-            'precio' => '',
+            'neto' => '',
             'descuento' => '',
+            'precio' => '',
             'idDerivaciones' => '0',
         ];
         $this->busquedaRapida = '';
+        $this->dispatch('vl-prot-det-focus-tipo');
     }
 
     public function updatedFilaNuevaIdTipodeterminaciones(mixed $value): void
@@ -69,6 +73,27 @@ class PacienteDeterminaciones extends Component
         }
 
         $this->aplicarPrecioYDescuentoDesdeTipo((int) $value, $this->filaNueva);
+        // El morph de Livewire saca el foco del <select>; lo devolvemos para poder confirmar con Enter.
+        $this->dispatch('vl-prot-det-focus-tipo');
+    }
+
+    public function updatedFilaNuevaNeto(mixed $value): void
+    {
+        if ($this->filaNueva === null) {
+            return;
+        }
+
+        $this->recalcularDescuentoDesdePorcentaje($this->filaNueva);
+        $this->recalcularPrecioConDescuento($this->filaNueva);
+    }
+
+    public function updatedFilaNuevaDescuento(mixed $value): void
+    {
+        if ($this->filaNueva === null) {
+            return;
+        }
+
+        $this->recalcularPrecioConDescuento($this->filaNueva);
     }
 
     public function updatedFilas(mixed $value, string $key): void
@@ -78,23 +103,24 @@ class PacienteDeterminaciones extends Component
         }
 
         [$id, $campo] = explode('.', $key, 2);
-
-        if ($campo !== 'precio') {
-            return;
-        }
-
         $idInt = (int) $id;
         if (! isset($this->filas[$idInt])) {
             return;
         }
 
-        $precio = PrecioInput::parse((string) ($this->filas[$idInt]['precio'] ?? '0'));
-        $this->filas[$idInt]['descuento'] = PrecioInput::format(
-            PrecioDeterminacionResolver::calcularDescuento($precio, $this->porcentajeDescuentoCliente())
-        );
+        if ($campo === 'neto') {
+            $this->recalcularDescuentoDesdePorcentaje($this->filas[$idInt]);
+            $this->recalcularPrecioConDescuento($this->filas[$idInt]);
+
+            return;
+        }
+
+        if ($campo === 'descuento') {
+            $this->recalcularPrecioConDescuento($this->filas[$idInt]);
+        }
     }
 
-    public function confirmarNueva(): void
+    public function confirmarNueva(mixed $idTipodeterminaciones = null): void
     {
         abort_unless(tienePermiso(PermisosIaCatalog::PROTOCOLOS), 403);
 
@@ -105,6 +131,18 @@ class PacienteDeterminaciones extends Component
         $key = 'prot-det-save:'.auth()->id();
         abort_if(RateLimiter::tooManyAttempts($key, 40), 429);
         RateLimiter::hit($key, 60);
+
+        if ($idTipodeterminaciones !== null && $idTipodeterminaciones !== '') {
+            $this->filaNueva['idTipodeterminaciones'] = (string) $idTipodeterminaciones;
+        }
+
+        $idTipoElegido = (int) ($this->filaNueva['idTipodeterminaciones'] ?? 0);
+        $netoActual = PrecioInput::parse((string) ($this->filaNueva['neto'] ?? ''));
+        if ($idTipoElegido > 0 && $netoActual <= 0) {
+            $this->aplicarPrecioYDescuentoDesdeTipo($idTipoElegido, $this->filaNueva);
+        } else {
+            $this->recalcularPrecioConDescuento($this->filaNueva);
+        }
 
         $validated = validator($this->filaNueva, $this->reglasFila(), $this->mensajesValidacion())->validate();
 
@@ -117,15 +155,24 @@ class PacienteDeterminaciones extends Component
         }
 
         $paciente = $this->paciente();
+        $neto = PrecioInput::parse($validated['neto']);
+        $descuento = PrecioInput::parse($validated['descuento']);
+        $precio = PrecioDeterminacionResolver::precioConDescuento($neto, $descuento);
 
-        Determinacion::query()->create([
+        $payload = [
             'idClientes' => $paciente->idClientes,
             'idPacientes' => $paciente->idPacientes,
             'idTipodeterminaciones' => $idTipo,
-            'precio' => PrecioInput::parse($validated['precio']),
-            'descuento' => PrecioInput::parse($validated['descuento']),
+            'precio' => $precio,
+            'descuento' => $descuento,
             'idDerivaciones' => $this->derivacionParaGuardar($validated['idDerivaciones']),
-        ]);
+        ];
+
+        if ($this->tieneColumnaDeterminacionesNeto()) {
+            $payload['neto'] = $neto;
+        }
+
+        Determinacion::query()->create($payload);
 
         (new RenglonesMaterializer)->asegurarParaDeterminacion(
             $paciente,
@@ -136,8 +183,8 @@ class PacienteDeterminaciones extends Component
         $this->filaNueva = null;
         $this->sincronizarFilasDesdeBd();
         $this->actualizarTotalProtocolo();
-
-        $this->dispatch('vl-swal-exito', mensaje: 'Determinación agregada.');
+        // Deja lista otra fila nueva para cargar en serie con teclado.
+        $this->agregarDeterminacion();
     }
 
     public function cancelarNueva(): void
@@ -161,6 +208,9 @@ class PacienteDeterminaciones extends Component
             return;
         }
 
+        $this->recalcularPrecioConDescuento($fila);
+        $this->filas[$id] = $fila;
+
         $validated = validator($fila, $this->reglasFilaEdicion(), $this->mensajesValidacion())->validate();
 
         $registro = Determinacion::query()
@@ -168,11 +218,21 @@ class PacienteDeterminaciones extends Component
             ->whereKey($id)
             ->firstOrFail();
 
-        $registro->update([
-            'precio' => PrecioInput::parse($validated['precio']),
-            'descuento' => PrecioInput::parse($validated['descuento']),
-            'idDerivaciones' => $this->derivacionParaGuardar($validated['idDerivaciones']),
-        ]);
+        $neto = PrecioInput::parse($validated['neto']);
+        $descuento = PrecioInput::parse($validated['descuento']);
+        $precio = PrecioDeterminacionResolver::precioConDescuento($neto, $descuento);
+
+        $payload = [
+            'precio' => $precio,
+            'descuento' => $descuento,
+            'idDerivaciones' => $this->derivacionParaGuardar($validated['idDerivaciones'] ?? $fila['idDerivaciones']),
+        ];
+
+        if ($this->tieneColumnaDeterminacionesNeto()) {
+            $payload['neto'] = $neto;
+        }
+
+        $registro->update($payload);
 
         $this->filas[$id] = $this->filaDesdeModelo($registro->fresh(['tipodeterminacion']));
         $this->actualizarTotalProtocolo();
@@ -231,8 +291,6 @@ class PacienteDeterminaciones extends Component
 
         unset($this->filas[$id]);
         $this->actualizarTotalProtocolo();
-
-        $this->dispatch('vl-swal-exito', mensaje: 'Determinación eliminada.');
     }
 
     public function render()
@@ -261,7 +319,7 @@ class PacienteDeterminaciones extends Component
             'idsCargados' => $idsCargados,
             'derivacionEsCatalogo' => TipodeterminacionesGridConfig::derivacionEsCatalogo(),
             'centrosDerivacion' => $this->centrosDerivacion(),
-            'totalProtocolo' => PrecioInput::format($this->totalNeto()),
+            'totalProtocolo' => PrecioInput::format($this->totalPrecioConDescuento()),
         ])->layout('layouts.staff', UsuarioMenuPortal::staffLayoutParams(labCtx()->idRoles));
     }
 
@@ -300,11 +358,26 @@ class PacienteDeterminaciones extends Component
     /** @return array<string, mixed> */
     private function filaDesdeModelo(Determinacion $registro): array
     {
+        $descuento = (float) ($registro->descuento ?? 0);
+        $neto = $this->tieneColumnaDeterminacionesNeto()
+            ? (float) ($registro->neto ?? 0)
+            : 0.0;
+        $precio = (float) ($registro->precio ?? 0);
+
+        // Datos legacy: precio era lista y neto aún no estaba cargado.
+        if ($neto <= 0 && $precio > 0) {
+            $neto = $precio;
+            $precio = PrecioDeterminacionResolver::precioConDescuento($neto, $descuento);
+        } elseif ($precio <= 0 && $neto > 0) {
+            $precio = PrecioDeterminacionResolver::precioConDescuento($neto, $descuento);
+        }
+
         return [
             'idTipodeterminaciones' => (int) $registro->idTipodeterminaciones,
             'nombre' => (string) ($registro->tipodeterminacion?->nombre ?? '—'),
-            'precio' => PrecioInput::format($registro->precio),
-            'descuento' => PrecioInput::format($registro->descuento),
+            'neto' => PrecioInput::format($neto),
+            'descuento' => PrecioInput::format($descuento),
+            'precio' => PrecioInput::format($precio),
             'idDerivaciones' => $this->derivacionParaFormulario((int) $registro->idDerivaciones),
         ];
     }
@@ -317,12 +390,33 @@ class PacienteDeterminaciones extends Component
         }
 
         $paciente = $this->paciente();
-        $precio = PrecioDeterminacionResolver::resolverPrecioLista1((int) $paciente->idClientes, $tipo);
-        $descuento = PrecioDeterminacionResolver::calcularDescuento($precio, $this->porcentajeDescuentoCliente());
+        $neto = PrecioDeterminacionResolver::resolverPrecioLista1((int) $paciente->idClientes, $tipo);
+        $descuento = PrecioDeterminacionResolver::calcularDescuento($neto, $this->porcentajeDescuentoCliente());
+        $precio = PrecioDeterminacionResolver::precioConDescuento($neto, $descuento);
 
-        $fila['precio'] = PrecioInput::format($precio);
+        $fila['neto'] = PrecioInput::format($neto);
         $fila['descuento'] = PrecioInput::format($descuento);
+        $fila['precio'] = PrecioInput::format($precio);
         $fila['idDerivaciones'] = $this->derivacionParaFormulario((int) $tipo->destino);
+    }
+
+    /** @param array<string, mixed> $fila */
+    private function recalcularDescuentoDesdePorcentaje(array &$fila): void
+    {
+        $neto = PrecioInput::parse((string) ($fila['neto'] ?? '0'));
+        $fila['descuento'] = PrecioInput::format(
+            PrecioDeterminacionResolver::calcularDescuento($neto, $this->porcentajeDescuentoCliente())
+        );
+    }
+
+    /** @param array<string, mixed> $fila */
+    private function recalcularPrecioConDescuento(array &$fila): void
+    {
+        $neto = PrecioInput::parse((string) ($fila['neto'] ?? '0'));
+        $descuento = PrecioInput::parse((string) ($fila['descuento'] ?? '0'));
+        $fila['precio'] = PrecioInput::format(
+            PrecioDeterminacionResolver::precioConDescuento($neto, $descuento)
+        );
     }
 
     private function porcentajeDescuentoCliente(): float
@@ -343,28 +437,74 @@ class PacienteDeterminaciones extends Component
 
     private function actualizarTotalProtocolo(): void
     {
-        $total = Determinacion::query()
+        $columnas = ['precio', 'descuento'];
+        if ($this->tieneColumnaDeterminacionesNeto()) {
+            $columnas[] = 'neto';
+        }
+
+        $lineas = Determinacion::query()
             ->where('idPacientes', $this->idPacientes)
-            ->get(['precio', 'descuento'])
-            ->sum(fn (Determinacion $d) => PrecioDeterminacionResolver::neto((float) $d->precio, (float) $d->descuento));
+            ->get($columnas);
+
+        $totalPrecio = 0.0;
+        $totalNeto = 0.0;
+
+        foreach ($lineas as $linea) {
+            $descuento = (float) ($linea->descuento ?? 0);
+            $neto = $this->tieneColumnaDeterminacionesNeto()
+                ? (float) ($linea->neto ?? 0)
+                : 0.0;
+            $precio = (float) ($linea->precio ?? 0);
+
+            if ($neto <= 0 && $precio > 0) {
+                $neto = $precio;
+                $precio = PrecioDeterminacionResolver::precioConDescuento($neto, $descuento);
+            } elseif ($precio <= 0) {
+                $precio = PrecioDeterminacionResolver::precioConDescuento($neto, $descuento);
+            }
+
+            $totalNeto += $neto;
+            $totalPrecio += $precio;
+        }
+
+        $totalNeto = round($totalNeto, 2);
+        $totalPrecio = round($totalPrecio, 2);
+
+        $payload = [
+            'precio' => $totalPrecio,
+        ];
+
+        if ($this->tieneColumnaPacientesNeto()) {
+            $payload['neto'] = $totalNeto;
+        }
 
         Paciente::query()
             ->whereKey($this->idPacientes)
-            ->update(['precio' => round($total, 2)]);
+            ->update($payload);
 
         if ($this->pacienteCache !== null) {
-            $this->pacienteCache->precio = round($total, 2);
+            $this->pacienteCache->precio = $totalPrecio;
+            if ($this->tieneColumnaPacientesNeto()) {
+                $this->pacienteCache->neto = $totalNeto;
+            }
         }
     }
 
-    private function totalNeto(): float
+    private function totalPrecioConDescuento(): float
     {
         return collect($this->filas)->sum(function (array $fila) {
-            return PrecioDeterminacionResolver::neto(
-                PrecioInput::parse((string) ($fila['precio'] ?? '0')),
-                PrecioInput::parse((string) ($fila['descuento'] ?? '0'))
-            );
+            return PrecioInput::parse((string) ($fila['precio'] ?? '0'));
         });
+    }
+
+    private function tieneColumnaDeterminacionesNeto(): bool
+    {
+        return Schema::hasColumn('determinaciones', 'neto');
+    }
+
+    private function tieneColumnaPacientesNeto(): bool
+    {
+        return Schema::hasColumn('pacientes', 'neto');
     }
 
     /** @return array<string, mixed> */
@@ -372,7 +512,7 @@ class PacienteDeterminaciones extends Component
     {
         return [
             'idTipodeterminaciones' => ['required', 'integer', 'exists:tipodeterminaciones,idTipodeterminaciones'],
-            'precio' => ['required', 'string'],
+            'neto' => ['required', 'string'],
             'descuento' => ['required', 'string'],
             'idDerivaciones' => $this->reglaDerivacion(),
         ];
@@ -382,7 +522,7 @@ class PacienteDeterminaciones extends Component
     private function reglasFilaEdicion(): array
     {
         return [
-            'precio' => ['required', 'string'],
+            'neto' => ['required', 'string'],
             'descuento' => ['required', 'string'],
             'idDerivaciones' => $this->reglaDerivacion(),
         ];
@@ -417,7 +557,7 @@ class PacienteDeterminaciones extends Component
         return [
             'idTipodeterminaciones.required' => 'Seleccione una determinación.',
             'idTipodeterminaciones.exists' => 'La determinación seleccionada no es válida.',
-            'precio.required' => 'El precio es obligatorio.',
+            'neto.required' => 'El neto es obligatorio.',
             'descuento.required' => 'El descuento es obligatorio.',
         ];
     }

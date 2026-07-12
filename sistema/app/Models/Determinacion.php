@@ -17,6 +17,7 @@ class Determinacion extends Model
         'idClientes',
         'idPacientes',
         'idTipodeterminaciones',
+        'neto',
         'precio',
         'descuento',
         'idDerivaciones',
@@ -25,6 +26,7 @@ class Determinacion extends Model
     protected function casts(): array
     {
         return [
+            'neto' => 'decimal:2',
             'precio' => 'decimal:2',
             'descuento' => 'decimal:2',
             'idDerivaciones' => 'integer',

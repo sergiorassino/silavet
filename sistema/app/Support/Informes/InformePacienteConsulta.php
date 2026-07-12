@@ -8,6 +8,7 @@ use App\Models\Paciente;
 use App\Models\Renglon;
 use App\Support\Entorno\EntornoArchivos;
 use App\Support\Entorno\LabInstitucional;
+use App\Support\Protocolos\PacienteAdjuntoStorage;
 use App\Support\Resultados\RenglonImagenesStorage;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Schema;
@@ -315,16 +316,12 @@ final class InformePacienteConsulta
 
     private static function rutaAdjuntoPdf(Paciente $paciente): ?string
     {
-        $nombre = RenglonImagenesStorage::nombreSeguro((string) ($paciente->adjunto ?? ''));
+        $nombre = PacienteAdjuntoStorage::nombreSeguro((string) ($paciente->adjunto ?? ''));
         if ($nombre === null) {
             return null;
         }
 
-        if (! str_ends_with(strtolower($nombre), '.pdf')) {
-            return null;
-        }
-
-        $ruta = RenglonImagenesStorage::rutaAbsoluta($nombre);
+        $ruta = PacienteAdjuntoStorage::rutaAbsoluta($nombre);
 
         return is_file($ruta) ? $ruta : null;
     }
