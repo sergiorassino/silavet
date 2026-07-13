@@ -1,11 +1,25 @@
 {
     "private": true,
-    "name": "silavet",
-    "description": "Scripts de desarrollo en la raíz del repo (el proyecto Laravel está en sistema/)",
+    "type": "module",
     "scripts": {
-        "dev": "npm run dev --prefix sistema",
-        "dev:all": "npm run dev:all --prefix sistema",
-        "build": "npm run build --prefix sistema",
-        "postinstall": "npm install --prefix sistema"
+        "dev": "vite",
+        "serve": "php artisan serve --host=127.0.0.1 --port=8001",
+        "predev:all": "kill-port 8001 5174",
+        "dev:all": "concurrently --kill-others-on-fail -n php,vite -c blue,green \"npm run serve\" \"npm run dev\"",
+        "build": "vite build"
+    },
+    "devDependencies": {
+        "@tailwindcss/forms": "^0.5.11",
+        "@tailwindcss/vite": "^4.2.4",
+        "autoprefixer": "^10.5.0",
+        "axios": "^1.6.4",
+        "concurrently": "^9.2.1",
+        "kill-port": "^2.0.1",
+        "laravel-vite-plugin": "^1.0",
+        "tailwindcss": "^4.2.4",
+        "vite": "^5.4.21"
+    },
+    "dependencies": {
+        "sweetalert2": "^11.26.25"
     }
 }

@@ -53,7 +53,7 @@ Tres **menús de navegación** (sidebar). Nomenclatura oficial:
 
 | Archivo / Carpeta  | Descripción                                                     |
 |--------------------|-----------------------------------------------------------------|
-| `estructura_bd.sql`| Estructura completa de todas las tablas de la BD legacy           |
+| `schema_lb_neolab.sql` | Estructura completa de todas las tablas de la BD legacy        |
 | `public/img/`      | Logos y paleta del laboratorio (a definir en Etapa 1)           |
 
 ---
@@ -61,27 +61,27 @@ Tres **menús de navegación** (sidebar). Nomenclatura oficial:
 ## 5. Estructura del proyecto Laravel
 
 ```
-SILAVET/
-├── estructura_bd.sql            # Esquema completo de BD
-└── sistema/                     # Proyecto Laravel 11
-    ├── app/
-    │   ├── Auth/                # UsuarioUserProvider (auth custom)
-    │   ├── Http/Middleware/     # EnsureLabContext, EnsureMenuPortal
-    │   ├── Livewire/
-    │   │   ├── Auth/Login.php   # Login de gestión
-    │   │   └── Abm/             # Módulos ABM por dominio
-    │   ├── Models/              # Eloquent models (legacy tables)
-    │   └── Support/             # LabContext, helpers
-    ├── docs/                    # ← Documentación del proyecto
-    ├── resources/views/
-    │   ├── layouts/             # laboratorio, administracion, cliente, guest
-    │   └── livewire/            # Vistas Livewire
-    └── routes/web.php           # Rutas (guest + auth + lab.context)
+SILAVET/                         # Laravel en la raíz (igual que sistema_ia)
+├── schema_lb_neolab.sql         # Esquema completo de BD (referencia)
+├── app/
+│   ├── Auth/                    # UsuarioUserProvider (auth custom)
+│   ├── Http/Middleware/         # EnsureLabContext, EnsureMenuPortal
+│   ├── Livewire/
+│   │   ├── Auth/Login.php       # Login de gestión
+│   │   └── Abm/                 # Módulos ABM por dominio
+│   ├── Models/                  # Eloquent models (legacy tables)
+│   └── Support/                 # LabContext, helpers
+├── docs/                        # ← Documentación del proyecto
+├── resources/views/
+│   ├── layouts/                 # laboratorio, administracion, cliente, guest
+│   └── livewire/                # Vistas Livewire
+├── routes/web.php               # Rutas (guest + auth + lab.context)
+└── artisan
 ```
 
 ### Varios laboratorios (tenants)
 
-Mismo código en `sistema/`, **una BD por laboratorio**, identificador
+Mismo código en la raíz del repo, **una BD por laboratorio**, identificador
 `TENANT_SLUG` en `.env` y overrides en `config/tenants/{slug}.php`.
 Detalle: [07-versionado-de-modulos-por-tenant.md](07-versionado-de-modulos-por-tenant.md).
 
@@ -94,7 +94,7 @@ Detalle: [07-versionado-de-modulos-por-tenant.md](07-versionado-de-modulos-por-t
 - Estructura de carpetas del proyecto Laravel
 - Documentación numerada (`docs/01` … `docs/09`)
 - Reglas para asistentes de código (`AGENTS.md`, `.cursor/rules/`)
-- Esquema de BD de referencia (`estructura_bd.sql`)
+- Esquema de BD de referencia (`schema_lb_neolab.sql`)
 
 ### Etapa 1 — Núcleo (en curso)
 

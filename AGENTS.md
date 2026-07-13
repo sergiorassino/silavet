@@ -30,7 +30,7 @@ Detalle: `docs/06-reglas-de-seguridad.md` sección **9**.
 Si el cambio implica **código o vistas**, al **final** debe figurar un bloque
 **Archivos para producción** con:
 
-1. **Lista de rutas** relativas a `sistema/` (una por línea).
+1. **Lista de rutas** relativas a la raíz del repo (una por línea).
 2. **Assets compilados**, si aplica: `npm run build` o subir `public/build/`.
 3. **Comandos post-despliegue** opcionales (`php artisan view:clear`, etc.),
    **sin ejecutarlos** desde la herramienta del asistente.

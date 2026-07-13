@@ -11,7 +11,7 @@
 Cada laboratorio es un **tenant** identificado por `TENANT_SLUG` en `.env`:
 
 - **Base de datos propia** (`DB_DATABASE`, habitualmente `lb_{slug}` o nombre legacy).
-- **Mismo código** Laravel en `sistema/` (monorepo compartido).
+- **Mismo código** Laravel en la raíz del repo (una instalación / carpeta por laboratorio).
 - **Overrides livianos** versionados en `config/tenants/{slug}.php`.
 
 No usamos multi-tenant en una sola BD con `tenant_id` en cada fila: el aislamiento

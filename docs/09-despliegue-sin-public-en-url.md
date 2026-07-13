@@ -10,22 +10,33 @@ Adaptado desde Sistemas Escolares. Mismas reglas técnicas; reemplazar referenci
 | Entorno | Qué ocurre |
 |---------|------------|
 | `php artisan serve` | El document root **es** `public/`. `APP_URL` suele ser `http://127.0.0.1:8000`. |
-| Producción (subcarpeta) | El navegador pide `https://dominio.com/lab/neolab/login`. Apache debe tener el **document root en `sistema/`** (padre de `public/`), con `.htaccess` en la raíz reenviando a `public/`. |
+| Producción (subcarpeta) | El navegador pide `https://dominio.com/silavet/login`. Apache debe tener el **document root en la carpeta del lab** (padre de `public/`, donde está `artisan`), con `.htaccess` en esa raíz reenviando a `public/`. |
 
 ---
 
 ## Checklist en el servidor
 
-1. **Subir** toda la carpeta `sistema/` (no solo `public/`).
+1. **Clonar el repo** en la carpeta del lab (p. ej. `public_html/silavet`), rama **`main`** — igual que Sistemas Escolares.
 2. **Document root** = carpeta que contiene `artisan`, `app/` y `public/`.
-3. **`.htaccess` en la raíz** de `sistema/` (incluir al inicializar Laravel).
+3. **`.htaccess` en la raíz** del proyecto (junto a `artisan`).
 4. **`APP_URL` en `.env`** = URL pública exacta, **con** subcarpeta si aplica:
-   - Subcarpeta: `https://dominio.com/lab/neolab` (sin barra final; sin `/public`).
+   - Subcarpeta: `https://dominio.com/silavet` (sin barra final; sin `/public`).
    - Subdominio: `https://lab.ejemplo.com`.
 5. **`php artisan config:clear`** tras cambiar `.env`.
 6. **Assets:** `npm run build` o subir `public/build/`. **Borrar** `public/hot` en producción.
 7. **Apache:** `mod_rewrite` activo y `AllowOverride All`.
 8. **HTTPS:** coherente con `SESSION_SECURE_COOKIE=true`.
+
+### Actualización (igual que colegios)
+
+```bash
+cd ~/public_html/silavet   # carpeta con artisan y .git
+git pull --ff-only
+php artisan config:clear
+php artisan view:clear
+php artisan route:clear
+php artisan lb:migrate-legacy --force
+```
 
 ---
 
@@ -59,9 +70,9 @@ Checklist:
 
 ## Archivos implicados (al inicializar Laravel)
 
-- `sistema/.htaccess` — reescritura raíz → `public/`
-- `sistema/public/.htaccess` — front controller Laravel
-- `sistema/public/index.php` — ajuste de `REQUEST_URI` según `APP_URL`
+- `.htaccess` — reescritura raíz → `public/`
+- `public/.htaccess` — front controller Laravel
+- `public/index.php` — ajuste de `REQUEST_URI` según `APP_URL`
 - `AppServiceProvider` — `session.path`, `asset_url`, Livewire en subcarpeta
 - `resources/views/layouts/partials/livewire-scripts.blade.php`
 
