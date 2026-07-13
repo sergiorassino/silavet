@@ -29,6 +29,7 @@ class PacienteResultados extends Component
         abort_unless(Schema::hasTable('renglones'), 404, 'La tabla de resultados no está disponible.');
 
         $paciente = $this->pacienteEnAlcance($id);
+        abort_if($paciente->esPagoGlobal(), 404);
         $this->idPacientes = $paciente->idPacientes;
 
         $origen = request()->query('origen', 'pacientes');

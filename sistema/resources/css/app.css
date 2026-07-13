@@ -384,6 +384,18 @@
         background-color: #c8e6c9;
     }
 
+    .vl-pacientes-row--pago-global {
+        background-color: #e3f2fd;
+    }
+
+    .vl-pacientes-row--pago-global > .vl-pacientes-td {
+        font-weight: 500;
+    }
+
+    .vl-pacientes-pago-global-badge {
+        @apply inline-flex items-center rounded px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-[0.06em] text-sky-800 bg-sky-100 ring-1 ring-inset ring-sky-300;
+    }
+
     /* No usar filter en <tr>: con border-collapse borra los bordes al hover */
     .vl-pacientes-row:hover > .vl-pacientes-td {
         background-image: linear-gradient(rgba(0, 0, 0, 0.03), rgba(0, 0, 0, 0.03));

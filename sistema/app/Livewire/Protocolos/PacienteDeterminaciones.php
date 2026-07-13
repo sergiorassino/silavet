@@ -36,6 +36,7 @@ class PacienteDeterminaciones extends Component
         abort_unless(Schema::hasTable('determinaciones'), 404, 'La tabla de determinaciones no está disponible.');
 
         $this->pacienteCache = $this->pacienteEnAlcance($id);
+        abort_if($this->pacienteCache->esPagoGlobal(), 404);
         $this->idPacientes = $this->pacienteCache->idPacientes;
         $this->sincronizarFilasDesdeBd();
     }

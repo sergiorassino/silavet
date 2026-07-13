@@ -2,6 +2,8 @@
 
 namespace App\Livewire\Protocolos;
 
+use App\Models\Cliente;
+use App\Models\MedioDePago;
 use App\Models\Notificacion;
 use App\Models\Paciente;
 use App\Models\Renglon;
@@ -115,10 +117,25 @@ class PacienteIndex extends Component
 
     public string $iaClinica = '';
 
+    public bool $modalPagoGlobalAbierto = false;
+
+    public ?int $pagoGlobalIdPacientes = null;
+
+    public ?int $pagoGlobalIdClientes = null;
+
+    public string $pagoGlobalImporte = '';
+
+    public ?int $pagoGlobalIdMediodepago = null;
+
     public function mount(): void
     {
         abort_unless(tienePermiso(PermisosIaCatalog::PROTOCOLOS), 403);
         $this->fechaVista = now()->toDateString();
+
+        $ctx = labCtx();
+        if ($ctx->esCliente() && $ctx->idClientes) {
+            $this->pagoGlobalIdClientes = $ctx->idClientes;
+        }
     }
 
     public function updatingBusqueda(): void
@@ -153,6 +170,118 @@ class PacienteIndex extends Component
         return $fecha;
     }
 
+    public function abrirModalPagoGlobal(): void
+    {
+        abort_unless(tienePermiso(PermisosIaCatalog::PROTOCOLOS), 403);
+
+        $ctx = labCtx();
+        $this->pagoGlobalIdPacientes = null;
+        $this->pagoGlobalImporte = '';
+        $this->pagoGlobalIdMediodepago = null;
+        $this->pagoGlobalIdClientes = ($ctx->esCliente() && $ctx->idClientes)
+            ? $ctx->idClientes
+            : null;
+        $this->modalPagoGlobalAbierto = true;
+        $this->resetErrorBag();
+    }
+
+    public function abrirModalEditarPagoGlobal(int $id): void
+    {
+        abort_unless(tienePermiso(PermisosIaCatalog::PROTOCOLOS), 403);
+
+        $paciente = $this->pacienteEnAlcance($id);
+        if ($paciente === null || ! $paciente->esPagoGlobal()) {
+            $this->dispatch('vl-swal-error', mensaje: 'No se encontró el pago global.');
+
+            return;
+        }
+
+        $this->pagoGlobalIdPacientes = (int) $paciente->idPacientes;
+        $this->pagoGlobalIdClientes = (int) $paciente->idClientes;
+        $this->pagoGlobalImporte = number_format((float) $paciente->pagado, 2, ',', '');
+        $this->pagoGlobalIdMediodepago = (int) ($paciente->idMediodepago ?: 0) ?: null;
+        $this->modalPagoGlobalAbierto = true;
+        $this->resetErrorBag();
+    }
+
+    public function cerrarModalPagoGlobal(): void
+    {
+        $this->modalPagoGlobalAbierto = false;
+        $this->pagoGlobalIdPacientes = null;
+        $this->pagoGlobalImporte = '';
+        $this->pagoGlobalIdMediodepago = null;
+        $this->resetErrorBag();
+    }
+
+    public function guardarPagoGlobal(): void
+    {
+        abort_unless(tienePermiso(PermisosIaCatalog::PROTOCOLOS), 403);
+
+        $uid = labCtx()->idUsuarios ?? 0;
+        $key = 'protocolos-pago-global:'.$uid;
+        abort_if(RateLimiter::tooManyAttempts($key, 30), 429);
+
+        $this->pagoGlobalImporte = $this->normalizarImporte($this->pagoGlobalImporte);
+
+        $this->validate([
+            'pagoGlobalIdClientes' => ['required', 'integer', 'exists:clientes,idClientes'],
+            'pagoGlobalImporte' => ['required', 'numeric', 'gt:0'],
+            'pagoGlobalIdMediodepago' => ['required', 'integer', 'exists:mediodepago,id'],
+        ], [
+            'pagoGlobalIdClientes.required' => 'Seleccione el cliente.',
+            'pagoGlobalIdClientes.exists' => 'El cliente seleccionado no es válido.',
+            'pagoGlobalImporte.required' => 'Ingrese el importe.',
+            'pagoGlobalImporte.numeric' => 'El importe no es válido.',
+            'pagoGlobalImporte.gt' => 'El importe debe ser mayor a cero.',
+            'pagoGlobalIdMediodepago.required' => 'Seleccione el medio de pago.',
+            'pagoGlobalIdMediodepago.exists' => 'El medio de pago seleccionado no es válido.',
+        ]);
+
+        $ctx = labCtx();
+        if ($ctx->esCliente() && $ctx->idClientes) {
+            abort_unless((int) $this->pagoGlobalIdClientes === $ctx->idClientes, 403);
+        }
+
+        $payload = [
+            'idClientes' => (int) $this->pagoGlobalIdClientes,
+            'pagado' => round((float) $this->pagoGlobalImporte, 2),
+            'idMediodepago' => (int) $this->pagoGlobalIdMediodepago,
+        ];
+
+        RateLimiter::hit($key, 60);
+
+        if ($this->pagoGlobalIdPacientes !== null) {
+            $paciente = $this->pacienteEnAlcance($this->pagoGlobalIdPacientes);
+            if ($paciente === null || ! $paciente->esPagoGlobal()) {
+                $this->dispatch('vl-swal-error', mensaje: 'No se encontró el pago global.');
+                $this->cerrarModalPagoGlobal();
+
+                return;
+            }
+
+            if ($ctx->esCliente() && $ctx->idClientes) {
+                abort_unless((int) $paciente->idClientes === $ctx->idClientes, 403);
+            }
+
+            $paciente->update($payload);
+            $mensaje = 'Pago global actualizado correctamente.';
+        } else {
+            Paciente::create(array_merge($payload, [
+                'tipoRegistro' => Paciente::TIPO_PAGO_GLOBAL,
+                'fechhoy' => $this->fechaVistaEfectiva(),
+                'nombre' => 'Pago global',
+                'precio' => 0,
+                'descuento' => 0,
+                'saldo' => 0,
+                'estado' => '',
+            ]));
+            $mensaje = 'Pago global registrado correctamente.';
+        }
+
+        $this->cerrarModalPagoGlobal();
+        $this->dispatch('vl-swal-exito', mensaje: $mensaje);
+    }
+
     public function avanzarEstado(int $id): void
     {
         abort_unless(tienePermiso(PermisosIaCatalog::PROTOCOLOS), 403);
@@ -161,10 +290,8 @@ class PacienteIndex extends Component
         $key = 'protocolos-estado:'.$uid;
         abort_if(RateLimiter::tooManyAttempts($key, 60), 429);
 
-        $paciente = $this->pacienteEnAlcance($id);
+        $paciente = $this->pacienteGestionable($id);
         if ($paciente === null) {
-            $this->dispatch('vl-swal-error', mensaje: 'No se encontró el protocolo.');
-
             return;
         }
 
@@ -176,10 +303,8 @@ class PacienteIndex extends Component
 
     public function abrirModalEnvio(int $id): void
     {
-        $paciente = $this->pacienteEnAlcance($id);
+        $paciente = $this->pacienteGestionable($id);
         if ($paciente === null) {
-            $this->dispatch('vl-swal-error', mensaje: 'No se encontró el protocolo.');
-
             return;
         }
 
@@ -315,10 +440,8 @@ class PacienteIndex extends Component
             return;
         }
 
-        $paciente = $this->pacienteEnAlcance($id);
+        $paciente = $this->pacienteGestionable($id);
         if ($paciente === null) {
-            $this->dispatch('vl-swal-error', mensaje: 'No se encontró el protocolo.');
-
             return;
         }
 
@@ -346,10 +469,8 @@ class PacienteIndex extends Component
     {
         abort_unless(tienePermiso(PermisosIaCatalog::PROTOCOLOS), 403);
 
-        $paciente = $this->pacienteEnAlcance($id);
+        $paciente = $this->pacienteGestionable($id);
         if ($paciente === null) {
-            $this->dispatch('vl-swal-error', mensaje: 'No se encontró el protocolo.');
-
             return;
         }
 
@@ -413,10 +534,8 @@ class PacienteIndex extends Component
     {
         abort_unless(tienePermiso(PermisosIaCatalog::PROTOCOLOS), 403);
 
-        $paciente = $this->pacienteEnAlcance($id);
+        $paciente = $this->pacienteGestionable($id);
         if ($paciente === null) {
-            $this->dispatch('vl-swal-error', mensaje: 'No se encontró el protocolo.');
-
             return;
         }
 
@@ -553,10 +672,8 @@ class PacienteIndex extends Component
             return;
         }
 
-        $paciente = $this->pacienteEnAlcance($id);
+        $paciente = $this->pacienteGestionable($id);
         if ($paciente === null) {
-            $this->dispatch('vl-swal-error', mensaje: 'No se encontró el protocolo.');
-
             return;
         }
 
@@ -716,10 +833,8 @@ class PacienteIndex extends Component
     {
         abort_unless(tienePermiso(PermisosIaCatalog::PROTOCOLOS), 403);
 
-        $paciente = $this->pacienteEnAlcance($id);
+        $paciente = $this->pacienteGestionable($id);
         if ($paciente === null) {
-            $this->dispatch('vl-swal-error', mensaje: 'No se encontró el protocolo.');
-
             return;
         }
 
@@ -889,7 +1004,7 @@ class PacienteIndex extends Component
         $term = trim($this->busqueda);
         $ctx = labCtx();
 
-        $with = ['cliente', 'especie', 'raza'];
+        $with = ['cliente', 'especie', 'raza', 'medioDePago'];
         if (Schema::hasTable('notificaciones')) {
             $with[] = 'notificacion';
         }
@@ -911,6 +1026,7 @@ class PacienteIndex extends Component
                         ->orWhereHas('cliente', fn ($c) => $c->where('nombre', 'like', "%{$term}%"));
                 });
             })
+            ->orderByDesc('pacientes.tipoRegistro')
             ->orderByDesc('pacientes.fechhoy')
             ->orderByDesc('pacientes.nombreProtocolo')
             ->paginate(self::POR_PAGINA);
@@ -923,9 +1039,26 @@ class PacienteIndex extends Component
             }
         }
 
+        $clientesPagoGlobal = collect();
+        $mediosPago = collect();
+        if ($this->modalPagoGlobalAbierto) {
+            $clientesPagoGlobal = Cliente::query()
+                ->when($ctx->esCliente() && $ctx->idClientes, fn ($q) => $q->where('idClientes', $ctx->idClientes))
+                ->orderBy('nombre')
+                ->get(['idClientes', 'nombre']);
+
+            if (Schema::hasTable('mediodepago')) {
+                $mediosPago = MedioDePago::query()
+                    ->orderBy('nombreMedioPago')
+                    ->get(['id', 'nombreMedioPago']);
+            }
+        }
+
         return view('livewire.protocolos.paciente-index', [
             'pacientes' => $pacientes,
             'edInfRenglones' => $edInfRenglones,
+            'clientesPagoGlobal' => $clientesPagoGlobal,
+            'mediosPago' => $mediosPago,
         ])->layout('layouts.staff', UsuarioMenuPortal::staffLayoutParams(labCtx()->idRoles));
     }
 
@@ -940,6 +1073,45 @@ class PacienteIndex extends Component
             })
             ->where('pacientes.idPacientes', $id)
             ->first();
+    }
+
+    /**
+     * Protocolo gestionable (excluye pagos globales). Emite error vía Swal si no aplica.
+     */
+    protected function pacienteGestionable(int $id): ?Paciente
+    {
+        $paciente = $this->pacienteEnAlcance($id);
+        if ($paciente === null) {
+            $this->dispatch('vl-swal-error', mensaje: 'No se encontró el protocolo.');
+
+            return null;
+        }
+
+        if ($paciente->esPagoGlobal()) {
+            $this->dispatch('vl-swal-error', mensaje: 'Los pagos globales no admiten gestión de protocolo.');
+
+            return null;
+        }
+
+        return $paciente;
+    }
+
+    private function normalizarImporte(string $valor): string
+    {
+        $valor = trim(str_replace(' ', '', $valor));
+        if ($valor === '') {
+            return $valor;
+        }
+
+        // Formato AR: 1.234,56 → 1234.56; también acepta 1234.56
+        if (str_contains($valor, ',') && str_contains($valor, '.')) {
+            $valor = str_replace('.', '', $valor);
+            $valor = str_replace(',', '.', $valor);
+        } elseif (str_contains($valor, ',')) {
+            $valor = str_replace(',', '.', $valor);
+        }
+
+        return $valor;
     }
 
     private function guardarContactoCliente(): void

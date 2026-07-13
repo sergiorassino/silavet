@@ -72,7 +72,7 @@
                 </thead>
                 <tbody class="divide-y divide-accent-100">
                     @forelse ($filas as $fila)
-                        <tr class="vl-pacientes-row hover:bg-accent-50/40">
+                        <tr class="vl-pacientes-row {{ $fila->esPagoGlobal ? 'vl-pacientes-row--pago-global' : 'hover:bg-accent-50/40' }}">
                             <td class="vl-pacientes-td vl-pacientes-td--num">{{ $loop->iteration }}</td>
                             <td class="vl-pacientes-td">{{ $fila->nombre ?: '—' }}</td>
                             <td class="vl-pacientes-td vl-pacientes-td--num">{{ $fila->idClientes ?: '—' }}</td>
@@ -82,7 +82,13 @@
                                 {{ $fila->fechhoy !== '' ? \Carbon\Carbon::parse($fila->fechhoy)->format('d/m/Y') : '—' }}
                             </td>
                             <td class="vl-pacientes-td font-semibold whitespace-nowrap">{{ $fila->nombreProtocolo ?: '—' }}</td>
-                            <td class="vl-pacientes-td">{{ $fila->nombre ?: '—' }}</td>
+                            <td class="vl-pacientes-td">
+                                @if ($fila->esPagoGlobal)
+                                    <span class="vl-pacientes-pago-global-badge">Pago global</span>
+                                @else
+                                    {{ $fila->nombre ?: '—' }}
+                                @endif
+                            </td>
                             <td class="vl-pacientes-td">{{ $fila->propietario ?: '—' }}</td>
                             <td class="vl-pacientes-td whitespace-nowrap">{{ $fila->estado ?: '—' }}</td>
                             <td class="vl-pacientes-td vl-pacientes-td--num whitespace-nowrap">

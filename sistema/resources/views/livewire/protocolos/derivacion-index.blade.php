@@ -47,6 +47,12 @@
                             aria-pressed="{{ $agrupacion === 'cliente' ? 'true' : 'false' }}">
                         Por cliente
                     </button>
+                    <button type="button"
+                            wire:click="$set('agrupacion', 'fecha')"
+                            class="vl-pacientes-vista-toggle-btn {{ $agrupacion === 'fecha' ? 'is-active' : '' }}"
+                            aria-pressed="{{ $agrupacion === 'fecha' ? 'true' : 'false' }}">
+                        Por fecha
+                    </button>
                 </div>
             </div>
         </div>
@@ -95,7 +101,14 @@
                             $grupoActual = match ($agrupacion) {
                                 'centro' => (string) ($determinacion->derivacion?->derivacion ?: 'Sin centro'),
                                 'cliente' => (string) ($determinacion->cliente?->nombre ?: ($paciente?->cliente?->nombre ?: 'Sin cliente')),
+                                'fecha' => $paciente?->fechhoy ? $paciente->fechhoyFormateada() : 'Sin fecha',
                                 default => null,
+                            };
+                            $grupoEtiqueta = match ($agrupacion) {
+                                'centro' => 'Centro',
+                                'cliente' => 'Cliente',
+                                'fecha' => 'Fecha',
+                                default => '',
                             };
                         @endphp
 
@@ -103,7 +116,7 @@
                             @php $grupoAnterior = $grupoActual; @endphp
                             <tr class="vl-derivaciones-grupo-row">
                                 <td colspan="{{ $colspan }}" class="vl-pacientes-td vl-derivaciones-grupo-td">
-                                    {{ $agrupacion === 'centro' ? 'Centro' : 'Cliente' }}:
+                                    {{ $grupoEtiqueta }}:
                                     <strong>{{ $grupoActual }}</strong>
                                 </td>
                             </tr>

@@ -199,6 +199,7 @@ final class CuentaCorrienteConsulta
      *   precio: float,
      *   pagado: float,
      *   saldo: float,
+     *   esPagoGlobal: bool,
      * }>
      */
     public static function protocolosCliente(int $idClientes, ?string $fechaDesde = null, ?string $fechaHasta = null): Collection
@@ -236,6 +237,7 @@ final class CuentaCorrienteConsulta
                 'precio' => $precio,
                 'pagado' => $pagado,
                 'saldo' => $saldosAcumulados[(int) $paciente->idPacientes] ?? 0.0,
+                'esPagoGlobal' => $paciente->esPagoGlobal(),
             ];
         });
     }

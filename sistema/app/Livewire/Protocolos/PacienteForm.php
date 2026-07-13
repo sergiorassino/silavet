@@ -61,6 +61,8 @@ class PacienteForm extends Component
 
         if ($id) {
             $paciente = $this->pacienteEnAlcance($id);
+            abort_if($paciente->esPagoGlobal(), 404);
+
             $this->idPacientes = $paciente->idPacientes;
             $this->idClientes = $paciente->idClientes;
             $this->idUsuarios = $paciente->idUsuarios ?: null;

@@ -18,6 +18,8 @@ class DerivacionIndex extends PacienteIndex
 
     public const AGRUPACION_CLIENTE = 'cliente';
 
+    public const AGRUPACION_FECHA = 'fecha';
+
     public string $agrupacion = self::AGRUPACION_CENTRO;
 
     public bool $incluirFinalizados = false;
@@ -96,6 +98,9 @@ class DerivacionIndex extends PacienteIndex
             $query->leftJoin('clientes', 'clientes.idClientes', '=', 'determinaciones.idClientes')
                 ->orderBy('clientes.nombre')
                 ->orderByDesc('pacientes.fechhoy')
+                ->orderByDesc('pacientes.nombreProtocolo');
+        } elseif ($this->agrupacion === self::AGRUPACION_FECHA) {
+            $query->orderByDesc('pacientes.fechhoy')
                 ->orderByDesc('pacientes.nombreProtocolo');
         } else {
             $query->orderByDesc('pacientes.fechhoy')

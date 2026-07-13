@@ -9,6 +9,12 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class Paciente extends Model
 {
+    /** Protocolo / caso analítico habitual. */
+    public const TIPO_PROTOCOLO = 1;
+
+    /** Pago global (no pertenece a un paciente; solo cliente + importe + medio). */
+    public const TIPO_PAGO_GLOBAL = 2;
+
     protected $table = 'pacientes';
 
     protected $primaryKey = 'idPacientes';
@@ -53,6 +59,7 @@ class Paciente extends Model
         return [
             'fechhoy' => 'date',
             'fechaEnvioDeriv' => 'date',
+            'tipoRegistro' => 'integer',
             'neto' => 'decimal:2',
             'precio' => 'decimal:2',
             'cadete' => 'decimal:2',
@@ -60,6 +67,11 @@ class Paciente extends Model
             'descuento' => 'decimal:2',
             'saldo' => 'decimal:2',
         ];
+    }
+
+    public function esPagoGlobal(): bool
+    {
+        return (int) ($this->tipoRegistro ?? 0) === self::TIPO_PAGO_GLOBAL;
     }
 
     public function cliente(): BelongsTo
@@ -80,6 +92,11 @@ class Paciente extends Model
     public function medicoSolicitante(): BelongsTo
     {
         return $this->belongsTo(Usuario::class, 'idUsuarios', 'idUsuarios');
+    }
+
+    public function medioDePago(): BelongsTo
+    {
+        return $this->belongsTo(MedioDePago::class, 'idMediodepago', 'id');
     }
 
     public function determinaciones(): HasMany
@@ -104,6 +121,10 @@ class Paciente extends Model
 
     public function filaClaseCss(): string
     {
+        if ($this->esPagoGlobal()) {
+            return 'vl-pacientes-row--pago-global';
+        }
+
         return match (\App\Support\Resultados\ResultadosEstadosCatalog::normalizar($this->estado)) {
             'Parcial' => 'vl-pacientes-row--parcial',
             'Final' => 'vl-pacientes-row--final',
@@ -115,6 +136,11 @@ class Paciente extends Model
     public function precioFormateado(): string
     {
         return number_format((float) $this->precio, 2, ',', '.');
+    }
+
+    public function pagadoFormateado(): string
+    {
+        return number_format((float) $this->pagado, 2, ',', '.');
     }
 
     public function fechhoyFormateada(): string
