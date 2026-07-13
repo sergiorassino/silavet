@@ -12,6 +12,10 @@ return [
         'administracion' => [3],
     ],
 
+    'tipodeterminaciones' => [
+        'derivacion' => 'catalogo',
+    ],
+
     'protocolos' => [
         'implementacion' => 'fecha_diaria',
     ],

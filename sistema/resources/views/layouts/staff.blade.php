@@ -17,7 +17,7 @@
         sidebarOpen: false,
         sidebarCollapsed: false,
         groups: {
-            gestion: {{ request()->routeIs('protocolos.*') ? 'true' : 'false' }},
+            gestion: {{ request()->routeIs('protocolos.*', 'derivaciones.*') ? 'true' : 'false' }},
             clientes: {{ request()->routeIs('abm.clientes.*', 'clientes.cuenta-corriente*') ? 'true' : 'false' }},
             tesoreria: false,
             gestionStock: false,

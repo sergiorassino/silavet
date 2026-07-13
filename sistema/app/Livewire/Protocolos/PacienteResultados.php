@@ -115,6 +115,7 @@ class PacienteResultados extends Component
     private function urlVolver(): string
     {
         return match ($this->origen) {
+            'derivaciones' => route('derivaciones.index'),
             default => route('protocolos.index'),
         };
     }

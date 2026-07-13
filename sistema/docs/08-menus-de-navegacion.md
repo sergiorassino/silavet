@@ -118,6 +118,7 @@ Fuente de verdad: `resources/views/components/vl-sidebar-icon.blade.php`.
 | `grupo-listados-estadisticos` | Grupo Listados Estadísticos |
 | `grupo-procedimientos-muestras` | Grupo Procedimientos Toma de Muestras |
 | `pacientes` | Gestión de Pacientes |
+| `derivaciones` | Gestión de Derivaciones |
 | `determinaciones` | Gestión de Determinaciones (Administ) |
 | `grupos-determinacion` | Gestión de Grupos |
 | `det-por-grupo` | Det. por Grupo (Inf) |

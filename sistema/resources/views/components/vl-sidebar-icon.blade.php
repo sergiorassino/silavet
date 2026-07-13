@@ -63,6 +63,10 @@
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.75"
                   d="M9 10a5 5 0 0 1 6 0v4a5 5 0 0 1-6 0v-4z"/>
             @break
+        @case('derivaciones')
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.75"
+                  d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"/>
+            @break
         @case('determinaciones')
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.75"
                   d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9h6m-6 4h6"/>

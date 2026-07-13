@@ -21,6 +21,8 @@ class Determinacion extends Model
         'precio',
         'descuento',
         'idDerivaciones',
+        'fechaEnvioDeriv',
+        'fechaDevolucDeterm',
     ];
 
     protected function casts(): array
@@ -30,7 +32,24 @@ class Determinacion extends Model
             'precio' => 'decimal:2',
             'descuento' => 'decimal:2',
             'idDerivaciones' => 'integer',
+            'fechaEnvioDeriv' => 'date',
+            'fechaDevolucDeterm' => 'date',
         ];
+    }
+
+    public function precioFormateado(): string
+    {
+        return number_format((float) $this->precio, 2, ',', '.');
+    }
+
+    public function fechaEnvioDerivFormateada(): string
+    {
+        return $this->fechaEnvioDeriv?->format('d/m/Y') ?? '—';
+    }
+
+    public function fechaDevolucDetermFormateada(): string
+    {
+        return $this->fechaDevolucDeterm?->format('d/m/Y') ?? '—';
     }
 
     public function paciente(): BelongsTo

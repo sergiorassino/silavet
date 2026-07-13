@@ -61,6 +61,8 @@ class PacienteDeterminaciones extends Component
             'descuento' => '',
             'precio' => '',
             'idDerivaciones' => '0',
+            'fechaEnvioDeriv' => '',
+            'fechaDevolucDeterm' => '',
         ];
         $this->busquedaRapida = '';
         $this->dispatch('vl-prot-det-focus-tipo');
@@ -94,6 +96,15 @@ class PacienteDeterminaciones extends Component
         }
 
         $this->recalcularPrecioConDescuento($this->filaNueva);
+    }
+
+    public function updatedFilaNuevaIdDerivaciones(mixed $value): void
+    {
+        if ($this->filaNueva === null) {
+            return;
+        }
+
+        $this->aplicarFechaEnvioAlCambiarDerivacion($this->filaNueva);
     }
 
     public function updatedFilas(mixed $value, string $key): void
@@ -172,6 +183,8 @@ class PacienteDeterminaciones extends Component
             $payload['neto'] = $neto;
         }
 
+        $this->aplicarFechasDerivacionAlPayload($payload, $validated);
+
         Determinacion::query()->create($payload);
 
         (new RenglonesMaterializer)->asegurarParaDeterminacion(
@@ -232,6 +245,8 @@ class PacienteDeterminaciones extends Component
             $payload['neto'] = $neto;
         }
 
+        $this->aplicarFechasDerivacionAlPayload($payload, $validated);
+
         $registro->update($payload);
 
         $this->filas[$id] = $this->filaDesdeModelo($registro->fresh(['tipodeterminacion']));
@@ -253,15 +268,34 @@ class PacienteDeterminaciones extends Component
             $this->mensajesValidacion()
         )->validate();
 
+        $this->aplicarFechaEnvioAlCambiarDerivacion($fila);
+        $this->filas[$id] = $fila;
+
+        $payload = [
+            'idDerivaciones' => $this->derivacionParaGuardar($validated['idDerivaciones']),
+        ];
+
+        if ($this->tieneColumnasFechasDerivacion()) {
+            $payload['fechaEnvioDeriv'] = $this->fechaDerivacionParaGuardar($fila['fechaEnvioDeriv'] ?? null);
+        }
+
         Determinacion::query()
             ->where('idPacientes', $this->idPacientes)
             ->whereKey($id)
-            ->update([
-                'idDerivaciones' => $this->derivacionParaGuardar($validated['idDerivaciones']),
-            ]);
+            ->update($payload);
 
         $registro = Determinacion::query()->with('tipodeterminacion')->findOrFail($id);
         $this->filas[$id] = $this->filaDesdeModelo($registro);
+    }
+
+    public function guardarFechaEnvioDeriv(int $id): void
+    {
+        $this->guardarFechaDerivacionFila($id, 'fechaEnvioDeriv');
+    }
+
+    public function guardarFechaDevolucDeterm(int $id): void
+    {
+        $this->guardarFechaDerivacionFila($id, 'fechaDevolucDeterm');
     }
 
     public function eliminar(int $id): void
@@ -320,6 +354,7 @@ class PacienteDeterminaciones extends Component
             'derivacionEsCatalogo' => TipodeterminacionesGridConfig::derivacionEsCatalogo(),
             'centrosDerivacion' => $this->centrosDerivacion(),
             'totalProtocolo' => PrecioInput::format($this->totalPrecioConDescuento()),
+            'tieneFechasDerivacion' => $this->tieneColumnasFechasDerivacion(),
         ])->layout('layouts.staff', UsuarioMenuPortal::staffLayoutParams(labCtx()->idRoles));
     }
 
@@ -379,6 +414,8 @@ class PacienteDeterminaciones extends Component
             'descuento' => PrecioInput::format($descuento),
             'precio' => PrecioInput::format($precio),
             'idDerivaciones' => $this->derivacionParaFormulario((int) $registro->idDerivaciones),
+            'fechaEnvioDeriv' => $this->fechaDerivacionParaFormulario($registro->fechaEnvioDeriv ?? null),
+            'fechaDevolucDeterm' => $this->fechaDerivacionParaFormulario($registro->fechaDevolucDeterm ?? null),
         ];
     }
 
@@ -398,6 +435,7 @@ class PacienteDeterminaciones extends Component
         $fila['descuento'] = PrecioInput::format($descuento);
         $fila['precio'] = PrecioInput::format($precio);
         $fila['idDerivaciones'] = $this->derivacionParaFormulario((int) $tipo->destino);
+        $this->aplicarFechaEnvioAlCambiarDerivacion($fila);
     }
 
     /** @param array<string, mixed> $fila */
@@ -507,25 +545,141 @@ class PacienteDeterminaciones extends Component
         return Schema::hasColumn('pacientes', 'neto');
     }
 
+    private function tieneColumnasFechasDerivacion(): bool
+    {
+        return Schema::hasColumn('determinaciones', 'fechaEnvioDeriv')
+            && Schema::hasColumn('determinaciones', 'fechaDevolucDeterm');
+    }
+
+    /** @return array<string, mixed> */
+    private function reglasFechasDerivacion(): array
+    {
+        if (! $this->tieneColumnasFechasDerivacion()) {
+            return [];
+        }
+
+        return [
+            'fechaEnvioDeriv' => ['nullable', 'date'],
+            'fechaDevolucDeterm' => ['nullable', 'date'],
+        ];
+    }
+
+    /**
+     * @param  array<string, mixed>  $payload
+     * @param  array<string, mixed>  $validated
+     */
+    private function aplicarFechasDerivacionAlPayload(array &$payload, array $validated): void
+    {
+        if (! $this->tieneColumnasFechasDerivacion()) {
+            return;
+        }
+
+        $payload['fechaEnvioDeriv'] = $this->fechaDerivacionParaGuardar($validated['fechaEnvioDeriv'] ?? null);
+        $payload['fechaDevolucDeterm'] = $this->fechaDerivacionParaGuardar($validated['fechaDevolucDeterm'] ?? null);
+    }
+
+    private function guardarFechaDerivacionFila(int $id, string $campo): void
+    {
+        abort_unless(tienePermiso(PermisosIaCatalog::PROTOCOLOS), 403);
+        abort_unless(in_array($campo, ['fechaEnvioDeriv', 'fechaDevolucDeterm'], true), 400);
+
+        if (! Schema::hasColumn('determinaciones', $campo)) {
+            return;
+        }
+
+        $fila = $this->filas[$id] ?? null;
+        if ($fila === null) {
+            return;
+        }
+
+        $valorRaw = $fila[$campo] ?? '';
+        $validated = validator(
+            [$campo => $valorRaw === '' ? null : $valorRaw],
+            [$campo => ['nullable', 'date']],
+            [
+                'fechaEnvioDeriv.date' => 'La fecha de envío no es válida.',
+                'fechaDevolucDeterm.date' => 'La fecha de devolución no es válida.',
+            ]
+        )->validate();
+
+        Determinacion::query()
+            ->where('idPacientes', $this->idPacientes)
+            ->whereKey($id)
+            ->update([
+                $campo => $this->fechaDerivacionParaGuardar($validated[$campo] ?? null),
+            ]);
+
+        $registro = Determinacion::query()->with('tipodeterminacion')->findOrFail($id);
+        $this->filas[$id] = $this->filaDesdeModelo($registro);
+    }
+
+    /**
+     * Si hay derivación (centro o Sí), completa fechaEnvioDeriv con hoy;
+     * si se limpia (Seleccione / No), deja la fecha de envío vacía.
+     *
+     * @param  array<string, mixed>  $fila
+     */
+    private function aplicarFechaEnvioAlCambiarDerivacion(array &$fila): void
+    {
+        if (! $this->tieneColumnasFechasDerivacion()) {
+            return;
+        }
+
+        if ($this->derivacionImplicaEnvio($fila['idDerivaciones'] ?? '0')) {
+            $fila['fechaEnvioDeriv'] = now()->format('Y-m-d');
+
+            return;
+        }
+
+        $fila['fechaEnvioDeriv'] = '';
+    }
+
+    private function derivacionImplicaEnvio(mixed $idDerivaciones): bool
+    {
+        return (int) $idDerivaciones > 0;
+    }
+
+    private function fechaDerivacionParaGuardar(mixed $valor): ?string
+    {
+        if ($valor === null || $valor === '') {
+            return null;
+        }
+
+        return (string) $valor;
+    }
+
+    private function fechaDerivacionParaFormulario(mixed $valor): string
+    {
+        if ($valor === null || $valor === '') {
+            return '';
+        }
+
+        if ($valor instanceof \Carbon\CarbonInterface) {
+            return $valor->format('Y-m-d');
+        }
+
+        return (string) $valor;
+    }
+
     /** @return array<string, mixed> */
     private function reglasFila(): array
     {
-        return [
+        return array_merge([
             'idTipodeterminaciones' => ['required', 'integer', 'exists:tipodeterminaciones,idTipodeterminaciones'],
             'neto' => ['required', 'string'],
             'descuento' => ['required', 'string'],
             'idDerivaciones' => $this->reglaDerivacion(),
-        ];
+        ], $this->reglasFechasDerivacion());
     }
 
     /** @return array<string, mixed> */
     private function reglasFilaEdicion(): array
     {
-        return [
+        return array_merge([
             'neto' => ['required', 'string'],
             'descuento' => ['required', 'string'],
             'idDerivaciones' => $this->reglaDerivacion(),
-        ];
+        ], $this->reglasFechasDerivacion());
     }
 
     /** @return array<int, mixed> */

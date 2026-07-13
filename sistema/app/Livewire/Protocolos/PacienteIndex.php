@@ -35,6 +35,9 @@ class PacienteIndex extends Component
 
     public string $vista = self::VISTA_HOY;
 
+    /** Fecha (Y-m-d) para filtrar la vista diaria; por defecto hoy. */
+    public string $fechaVista = '';
+
     public bool $modalEnvioAbierto = false;
 
     public ?int $envioIdPaciente = null;
@@ -115,6 +118,7 @@ class PacienteIndex extends Component
     public function mount(): void
     {
         abort_unless(tienePermiso(PermisosIaCatalog::PROTOCOLOS), 403);
+        $this->fechaVista = now()->toDateString();
     }
 
     public function updatingBusqueda(): void
@@ -125,6 +129,28 @@ class PacienteIndex extends Component
     public function updatingVista(): void
     {
         $this->resetPage();
+    }
+
+    public function updatingFechaVista(): void
+    {
+        $this->resetPage();
+    }
+
+    public function verPacientesDeHoy(): void
+    {
+        $this->vista = self::VISTA_HOY;
+        $this->fechaVista = now()->toDateString();
+        $this->resetPage();
+    }
+
+    public function fechaVistaEfectiva(): string
+    {
+        $fecha = trim($this->fechaVista);
+        if ($fecha === '' || ! preg_match('/^\d{4}-\d{2}-\d{2}$/', $fecha)) {
+            return now()->toDateString();
+        }
+
+        return $fecha;
     }
 
     public function avanzarEstado(int $id): void
@@ -874,7 +900,7 @@ class PacienteIndex extends Component
                 $q->where('pacientes.idClientes', $ctx->idClientes);
             })
             ->when($this->vista === self::VISTA_HOY, function ($q) {
-                $q->whereDate('pacientes.fechhoy', now()->toDateString());
+                $q->whereDate('pacientes.fechhoy', $this->fechaVistaEfectiva());
             })
             ->when($term !== '', function ($q) use ($term) {
                 $q->where(function ($inner) use ($term) {
@@ -903,7 +929,7 @@ class PacienteIndex extends Component
         ])->layout('layouts.staff', UsuarioMenuPortal::staffLayoutParams(labCtx()->idRoles));
     }
 
-    private function pacienteEnAlcance(int $id): ?Paciente
+    protected function pacienteEnAlcance(int $id): ?Paciente
     {
         $ctx = labCtx();
 

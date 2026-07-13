@@ -5,10 +5,16 @@
 
     @if (tienePermiso(\App\Support\PermisosIaCatalog::PROTOCOLOS))
         <a href="{{ route('protocolos.index') }}"
-           class="vl-sidebar-link {{ request()->routeIs('protocolos.*') ? 'is-active' : '' }}"
+           class="vl-sidebar-link {{ request()->routeIs('protocolos.index', 'protocolos.create', 'protocolos.edit', 'protocolos.determinaciones') ? 'is-active' : '' }}"
            title="Gestión de Pacientes (v1.0)">
             <x-vl-sidebar-icon name="pacientes" class="h-4 w-4 shrink-0 opacity-80" />
             <span class="truncate">Gestión de Pacientes</span>
+        </a>
+        <a href="{{ route('derivaciones.index') }}"
+           class="vl-sidebar-link {{ request()->routeIs('derivaciones.*') ? 'is-active' : '' }}"
+           title="Gestión de Derivaciones (v1.0)">
+            <x-vl-sidebar-icon name="derivaciones" class="h-4 w-4 shrink-0 opacity-80" />
+            <span class="truncate">Gestión de Derivaciones</span>
         </a>
     @endif
 </x-vl-sidebar-grupo>

@@ -583,6 +583,10 @@
         @apply w-0 whitespace-nowrap pl-0.5;
     }
 
+    .vl-prot-det-col--fecha-deriv {
+        @apply w-0 whitespace-nowrap pl-0.5;
+    }
+
     .vl-prot-det-select--tipo {
         @apply min-w-[10rem] max-w-[18rem] w-auto;
     }
@@ -593,6 +597,18 @@
 
     .vl-prot-det-select--derivacion {
         @apply min-w-[4.5rem] max-w-[10rem];
+    }
+
+    .vl-prot-det-input--fecha {
+        @apply min-w-[8.5rem] max-w-[10rem] text-xs;
+    }
+
+    .vl-derivaciones-grupo-row .vl-derivaciones-grupo-td {
+        @apply bg-accent-100/80 py-1.5 text-[11px] font-semibold uppercase tracking-wide text-primary-800;
+    }
+
+    .vl-derivaciones-fecha-input {
+        @apply rounded border border-accent-200 bg-white px-1 py-0.5 text-[11px] text-neutral-800;
     }
 
     .vl-prot-det-footer-label {

@@ -40,7 +40,7 @@ return [
     | Gestión de determinaciones (grid admin).
     | - mostrar_columna_perfil: tenant alqu = true; resto = false (default).
     | - derivacion: si_no (Sí/No en destino) | catalogo (select derivaciones).
-    |   laboratoriosiv usa catalogo; resto usa si_no.
+    |   neolab y laboratoriosiv usan catalogo; resto usa si_no.
     */
     'tipodeterminaciones' => [
         'mostrar_columna_perfil' => false,

@@ -202,6 +202,10 @@
                         <th class="vl-determinaciones-th vl-prot-det-col--descuento" title="Importe de descuento según % del cliente">Descuento</th>
                         <th class="vl-determinaciones-th vl-prot-det-col--precio" title="Neto menos descuento">Precio (con descuento)</th>
                         <th class="vl-determinaciones-th vl-prot-det-col--derivacion">Derivación</th>
+                        @if ($tieneFechasDerivacion)
+                            <th class="vl-determinaciones-th vl-prot-det-col--fecha-deriv" title="Fecha de envío a derivación">F. envío</th>
+                            <th class="vl-determinaciones-th vl-prot-det-col--fecha-deriv" title="Fecha de devolución">F. devol.</th>
+                        @endif
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-accent-100">
@@ -262,6 +266,22 @@
                                     </select>
                                 @endif
                             </td>
+                            @if ($tieneFechasDerivacion)
+                                <td class="vl-determinaciones-td vl-prot-det-col--fecha-deriv">
+                                    <input type="date"
+                                           wire:model="filas.{{ $id }}.fechaEnvioDeriv"
+                                           wire:change="guardarFechaEnvioDeriv({{ $id }})"
+                                           class="vl-determinaciones-input vl-prot-det-input--fecha"
+                                           title="Fecha de envío">
+                                </td>
+                                <td class="vl-determinaciones-td vl-prot-det-col--fecha-deriv">
+                                    <input type="date"
+                                           wire:model="filas.{{ $id }}.fechaDevolucDeterm"
+                                           wire:change="guardarFechaDevolucDeterm({{ $id }})"
+                                           class="vl-determinaciones-input vl-prot-det-input--fecha"
+                                           title="Fecha de devolución">
+                                </td>
+                            @endif
                         </tr>
                     @endforeach
 
@@ -323,7 +343,7 @@
                             </td>
                             <td class="vl-determinaciones-td vl-prot-det-col--derivacion">
                                 @if ($derivacionEsCatalogo)
-                                    <select wire:model="filaNueva.idDerivaciones"
+                                    <select wire:model.live="filaNueva.idDerivaciones"
                                             class="vl-determinaciones-select vl-prot-det-select--derivacion">
                                         <option value="0">Seleccione</option>
                                         @foreach ($centrosDerivacion as $centro)
@@ -331,19 +351,33 @@
                                         @endforeach
                                     </select>
                                 @else
-                                    <select wire:model="filaNueva.idDerivaciones"
+                                    <select wire:model.live="filaNueva.idDerivaciones"
                                             class="vl-determinaciones-select vl-prot-det-select--derivacion">
                                         <option value="0">No</option>
                                         <option value="1">Sí</option>
                                     </select>
                                 @endif
                             </td>
+                            @if ($tieneFechasDerivacion)
+                                <td class="vl-determinaciones-td vl-prot-det-col--fecha-deriv">
+                                    <input type="date"
+                                           wire:model="filaNueva.fechaEnvioDeriv"
+                                           class="vl-determinaciones-input vl-prot-det-input--fecha"
+                                           title="Fecha de envío">
+                                </td>
+                                <td class="vl-determinaciones-td vl-prot-det-col--fecha-deriv">
+                                    <input type="date"
+                                           wire:model="filaNueva.fechaDevolucDeterm"
+                                           class="vl-determinaciones-input vl-prot-det-input--fecha"
+                                           title="Fecha de devolución">
+                                </td>
+                            @endif
                         </tr>
                     @endif
 
                     @if (count($filas) === 0 && $filaNueva === null)
                         <tr>
-                            <td colspan="6" class="vl-determinaciones-td text-center text-neutral-500 py-10">
+                            <td colspan="{{ $tieneFechasDerivacion ? 8 : 6 }}" class="vl-determinaciones-td text-center text-neutral-500 py-10">
                                 No hay determinaciones solicitadas. Presione <strong>Agregar Determinación</strong> o <strong>F2</strong> para comenzar.
                             </td>
                         </tr>
@@ -359,6 +393,10 @@
                                 {{ $totalProtocolo }}
                             </td>
                             <td class="vl-determinaciones-td"></td>
+                            @if ($tieneFechasDerivacion)
+                                <td class="vl-determinaciones-td"></td>
+                                <td class="vl-determinaciones-td"></td>
+                            @endif
                         </tr>
                     </tfoot>
                 @endif

@@ -19,6 +19,7 @@ use App\Livewire\Admin\ScriptAutomatizacionForm;
 use App\Livewire\AdminDashboard;
 use App\Livewire\Auth\Login;
 use App\Livewire\Dashboard;
+use App\Livewire\Protocolos\DerivacionIndex;
 use App\Livewire\Protocolos\PacienteDeterminaciones;
 use App\Livewire\Protocolos\PacienteForm;
 use App\Livewire\Protocolos\PacienteIndex;
@@ -93,6 +94,10 @@ Route::middleware(['auth', 'lab.context'])->group(function () {
         Route::get('/nuevo', PacienteForm::class)->name('protocolos.create');
         Route::get('/{id}/editar', PacienteForm::class)->name('protocolos.edit');
         Route::get('/{id}/determinaciones', PacienteDeterminaciones::class)->name('protocolos.determinaciones');
+    });
+
+    Route::prefix('derivaciones')->middleware(['menu.portal:staff', 'permiso:3'])->group(function () {
+        Route::get('/', DerivacionIndex::class)->name('derivaciones.index');
     });
 
     Route::prefix('protocolos')->middleware(['menu.portal:staff', 'permiso:4'])->group(function () {
