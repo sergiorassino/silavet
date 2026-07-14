@@ -49,22 +49,42 @@ php artisan lb:migrate-legacy --force
 | Login no persiste | `APP_URL` sin path de subcarpeta → cookies mal scoped. |
 | Livewire 404 en AJAX | `APP_URL` mal; `URL::forceRootUrl` en `AppServiceProvider`. |
 | `livewire.js` 403 | Hosting bloquea `/vendor/`; usar ruta Laravel alternativa. |
-| Logo no se guarda | Permisos en `storage/`; `php artisan storage:link`. |
-| Livewire upload 401 | Firma HTTPS: ver middleware `ForceHttpsBehindProxy`. |
+| Logo no se guarda | Permisos en `public/entorno/` y `storage/app/livewire-tmp`. |
+| `The logoUpload failed to upload` / `upload-file` **401** | Firma HTTPS/subcarpeta: ver **Subida de archivos Livewire**. |
+
+---
+
+## Subida de archivos Livewire (`upload-file` 401)
+
+En Red (F12): si `livewire/update` es **200** y `livewire/upload-file` es **401**, no es tamaño
+ni login: la URL firmada no coincide con la que ve PHP.
+
+| Petición | Qué valida | Por qué falla en producción |
+|----------|------------|-----------------------------|
+| `…/update` | Sesión + CSRF | Suele andar si Livewire/AJAX general funciona. |
+| `…/upload-file` | **Firma** (host + https + path de `APP_URL`) | `public/index.php` recorta la subcarpeta; sin `X-Forwarded-Prefix` / HTTPS la firma no cuadra → **401** → mensaje *"failed to upload"*. |
+
+Checklist:
+
+1. **`APP_URL`** = URL exacta del navegador (`https://…` + subcarpeta, sin barra final).
+2. Desplegar `app/Http/Middleware/ForceHttpsBehindProxy.php` (HTTPS + `X-Forwarded-Prefix`).
+3. `php artisan config:clear`.
+4. Si Cloudflare: SSL **Full** (no Flexible).
+5. Permisos de escritura en `storage/app/livewire-tmp` (usuario del servidor web).
 
 ---
 
 ## Logo institucional
 
-Previsto en `storage/app/public/entorno/logos/{TENANT_SLUG}/` y campos en `entorno`
-(o columnas adicionales vía migración aditiva).
+Se guarda en `public/entorno/logos/{TENANT_SLUG}/` (campo `entorno.logo`). La subida
+temporal de Livewire usa `storage/app/livewire-tmp`.
 
 Checklist:
 
 1. **`TENANT_SLUG`** en `.env` antes de `config:cache`.
-2. Permisos de escritura en `storage/app/public` y `storage/app/livewire-tmp`.
-3. **`php artisan storage:link`**.
-4. **`APP_URL`** con path completo + `config:clear`.
+2. Permisos de escritura en `public/entorno` y `storage/app/livewire-tmp`.
+3. **`APP_URL`** con path completo + `config:clear`.
+4. Elegir archivo, esperar a que desaparezca «Subiendo logo…», luego **Guardar**.
 
 ---
 
