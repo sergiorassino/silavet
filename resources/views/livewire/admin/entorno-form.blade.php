@@ -176,7 +176,8 @@
                     </div>
                     <div>
                         <label class="form-label mb-1" for="fromMail">Remitente (From)</label>
-                        <input wire:model="fromMail" id="fromMail" type="email" maxlength="120" class="form-input py-1.5 text-sm">
+                        <input wire:model="fromMail" id="fromMail" type="text" maxlength="120" class="form-input py-1.5 text-sm">
+                        <p class="mt-1 text-xs text-neutral-500">Nombre que aparece como remitente (no es la cuenta SMTP).</p>
                         @error('fromMail') <p class="form-error">{{ $message }}</p> @enderror
                     </div>
                     <div>

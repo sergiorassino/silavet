@@ -80,19 +80,15 @@ final class InformeEnvioServicio
 
         $cta = trim((string) ($entorno->ctaEnvioMail ?? ''));
         $pass = (string) ($entorno->passEnvioMail ?? '');
-        $from = trim((string) ($entorno->fromMail ?? ''));
-
-        if ($from === '' || filter_var($from, FILTER_VALIDATE_EMAIL) === false) {
-            return ['ok' => false, 'error' => 'Configure el remitente (From) en Parámetros del Sistema.'];
-        }
+        $from = self::direccionRemitente($entorno);
+        $fromName = self::nombreRemitente($entorno);
 
         if ($cta === '' || $pass === '') {
             return ['ok' => false, 'error' => 'Configure la cuenta y contraseña de envío en Parámetros del Sistema.'];
         }
 
-        $fromName = trim((string) ($entorno->nombrePieMail ?? ''));
-        if ($fromName === '') {
-            $fromName = LabInstitucional::datos()['nombre'];
+        if ($from === '') {
+            return ['ok' => false, 'error' => 'Configure la cuenta de envío (email válido) en Parámetros del Sistema.'];
         }
 
         Config::set('mail.default', 'smtp');
@@ -114,6 +110,42 @@ final class InformeEnvioServicio
         }
 
         return ['ok' => true];
+    }
+
+    /**
+     * Dirección From: email en fromMail, o la cuenta de envío si fromMail es un nombre.
+     */
+    public static function direccionRemitente(Entorno $entorno): string
+    {
+        $from = trim((string) ($entorno->fromMail ?? ''));
+        if ($from !== '' && filter_var($from, FILTER_VALIDATE_EMAIL) !== false) {
+            return $from;
+        }
+
+        $cta = trim((string) ($entorno->ctaEnvioMail ?? ''));
+        if ($cta !== '' && filter_var($cta, FILTER_VALIDATE_EMAIL) !== false) {
+            return $cta;
+        }
+
+        return '';
+    }
+
+    /**
+     * Nombre visible del remitente: fromMail si no es email, si no nombrePieMail / lab.
+     */
+    public static function nombreRemitente(Entorno $entorno): string
+    {
+        $from = trim((string) ($entorno->fromMail ?? ''));
+        if ($from !== '' && filter_var($from, FILTER_VALIDATE_EMAIL) === false) {
+            return $from;
+        }
+
+        $nombre = trim((string) ($entorno->nombrePieMail ?? ''));
+        if ($nombre !== '') {
+            return $nombre;
+        }
+
+        return LabInstitucional::datos()['nombre'];
     }
 
     /**

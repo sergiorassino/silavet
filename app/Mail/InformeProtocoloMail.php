@@ -5,6 +5,7 @@ namespace App\Mail;
 use App\Models\Entorno;
 use App\Models\Paciente;
 use App\Support\Entorno\LabInstitucional;
+use App\Support\Envio\InformeEnvioServicio;
 use Illuminate\Bus\Queueable;
 use Illuminate\Mail\Mailable;
 use Illuminate\Mail\Mailables\Address;
@@ -35,18 +36,15 @@ class InformeProtocoloMail extends Mailable
 
     public function envelope(): Envelope
     {
-        $from = trim((string) ($this->entorno->fromMail ?? ''));
-        $fromName = trim((string) ($this->entorno->nombrePieMail ?? ''));
-        if ($fromName === '') {
-            $fromName = LabInstitucional::datos()['nombre'];
-        }
+        $from = InformeEnvioServicio::direccionRemitente($this->entorno);
+        $fromName = InformeEnvioServicio::nombreRemitente($this->entorno);
 
         $protocolo = $this->contactos['protocolo'] !== ''
             ? $this->contactos['protocolo']
             : (string) $this->paciente->idPacientes;
 
         return new Envelope(
-            from: new Address($from, $fromName),
+            from: new Address($from !== '' ? $from : 'noreply@localhost', $fromName),
             subject: 'Informe de laboratorio — Protocolo '.$protocolo,
         );
     }

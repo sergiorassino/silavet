@@ -141,7 +141,7 @@ class EntornoForm extends Component
             'texto2footerDer' => ['nullable', 'string', 'max:255'],
             'ctaEnvioMail' => ['nullable', 'string', 'max:120'],
             'passEnvioMail' => ['nullable', 'string', 'max:255'],
-            'fromMail' => ['nullable', 'email', 'max:120'],
+            'fromMail' => ['nullable', 'string', 'max:120'],
             'nombrePieMail' => ['nullable', 'string', 'max:120'],
             'direccionPieMail' => ['nullable', 'string', 'max:255'],
             'telefonoPieMail' => ['nullable', 'string', 'max:80'],
@@ -159,7 +159,6 @@ class EntornoForm extends Component
         return [
             'colorInforme.regex' => 'El color del informe debe ser un código hexadecimal válido (#RRGGBB).',
             'emailLabo.email' => 'El email del laboratorio no es válido.',
-            'fromMail.email' => 'El remitente de mail no es válido.',
             'emailPieMail.email' => 'El email del pie de mail no es válido.',
             'listaPreciosUpload.mimes' => 'La lista de precios debe ser un archivo PDF.',
             'listaPreciosUpload.max' => 'La lista de precios no puede superar 10 MB.',
