@@ -1011,6 +1011,10 @@ class PacienteIndex extends Component
 
         $pacientes = Paciente::query()
             ->with($with)
+            ->whereIn('pacientes.tipoRegistro', [
+                Paciente::TIPO_PROTOCOLO,
+                Paciente::TIPO_PAGO_GLOBAL,
+            ])
             ->when($ctx->esCliente() && $ctx->idClientes, function ($q) use ($ctx) {
                 $q->where('pacientes.idClientes', $ctx->idClientes);
             })
@@ -1026,8 +1030,8 @@ class PacienteIndex extends Component
                         ->orWhereHas('cliente', fn ($c) => $c->where('nombre', 'like', "%{$term}%"));
                 });
             })
-            ->orderByDesc('pacientes.tipoRegistro')
             ->orderByDesc('pacientes.fechhoy')
+            ->orderBy('pacientes.tipoRegistro')
             ->orderByDesc('pacientes.nombreProtocolo')
             ->paginate(self::POR_PAGINA);
 
@@ -1068,6 +1072,10 @@ class PacienteIndex extends Component
 
         return Paciente::query()
             ->with('cliente')
+            ->whereIn('pacientes.tipoRegistro', [
+                Paciente::TIPO_PROTOCOLO,
+                Paciente::TIPO_PAGO_GLOBAL,
+            ])
             ->when($ctx->esCliente() && $ctx->idClientes, function ($q) use ($ctx) {
                 $q->where('pacientes.idClientes', $ctx->idClientes);
             })

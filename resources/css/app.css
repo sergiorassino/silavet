@@ -154,6 +154,180 @@
         color: var(--color-primary-600);
     }
 
+    .vl-dash-hero .vl-hero-inner {
+        @apply gap-6;
+    }
+
+    .vl-dash-cta {
+        @apply relative flex shrink-0 flex-col justify-center rounded-2xl px-5 py-4 text-left transition-all duration-200;
+        min-width: 14rem;
+        background: rgba(255, 255, 255, 0.12);
+        border: 1px solid rgba(255, 255, 255, 0.22);
+        box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.12);
+    }
+
+    .vl-dash-cta:hover {
+        @apply -translate-y-0.5;
+        background: rgba(255, 255, 255, 0.18);
+        border-color: rgba(255, 255, 255, 0.35);
+    }
+
+    .vl-dash-cta-kicker {
+        @apply text-[10px] font-semibold uppercase tracking-[0.16em] text-white/55;
+    }
+
+    .vl-dash-cta-title {
+        @apply mt-1 text-xl font-bold text-white;
+    }
+
+    .vl-dash-cta-desc {
+        @apply mt-0.5 text-sm text-white/70;
+    }
+
+    .vl-dash-grid {
+        @apply grid gap-4 lg:grid-cols-2;
+    }
+
+    .vl-dash-metric {
+        @apply relative overflow-hidden p-5 sm:p-6;
+    }
+
+    .vl-dash-metric--wide {
+        @apply lg:col-span-2;
+    }
+
+    .vl-dash-metric-head {
+        @apply flex items-start justify-between gap-3;
+    }
+
+    .vl-dash-metric-label {
+        @apply text-[11px] font-semibold uppercase tracking-[0.16em] text-primary-600/70;
+    }
+
+    .vl-dash-metric-title {
+        @apply mt-1 text-lg font-bold text-neutral-800;
+    }
+
+    .vl-dash-kpi {
+        @apply mt-4 text-4xl font-bold tabular-nums tracking-tight text-neutral-800;
+    }
+
+    .vl-dash-kpi-pair {
+        @apply mt-4 grid gap-4 sm:grid-cols-2;
+    }
+
+    .vl-dash-kpi-item .vl-dash-kpi {
+        @apply mt-0;
+    }
+
+    .vl-dash-kpi-caption {
+        @apply mt-1 text-sm font-semibold text-neutral-700;
+    }
+
+    .vl-dash-metric-hint {
+        @apply mt-2 max-w-sm text-sm text-neutral-500;
+    }
+
+    .vl-dash-kpi-item .vl-dash-metric-hint {
+        @apply mt-1;
+    }
+
+    .vl-dash-metric-link {
+        @apply mt-4 inline-flex text-sm font-semibold text-primary-600 transition-colors hover:text-primary-700;
+    }
+
+    .vl-dash-metric-accent {
+        @apply pointer-events-none absolute -right-8 -top-8 h-28 w-28 rounded-full opacity-40;
+    }
+
+    .vl-dash-metric-accent--amber {
+        background: radial-gradient(circle, #fbbf24 0%, transparent 70%);
+    }
+
+    .vl-dash-metric-accent--sky {
+        background: radial-gradient(circle, #38bdf8 0%, transparent 70%);
+    }
+
+    .vl-dash-hoy {
+        @apply mt-5 flex flex-col items-center gap-6 sm:flex-row sm:items-stretch sm:gap-8;
+    }
+
+    .vl-dash-donut-wrap {
+        @apply flex shrink-0 items-center justify-center;
+    }
+
+    .vl-dash-donut {
+        @apply relative flex h-36 w-36 items-center justify-center rounded-full sm:h-40 sm:w-40;
+        box-shadow: 0 12px 28px -18px rgba(14, 165, 233, 0.45);
+    }
+
+    .vl-dash-donut-hole {
+        @apply flex h-[4.75rem] w-[4.75rem] flex-col items-center justify-center rounded-full bg-white sm:h-20 sm:w-20;
+        box-shadow: inset 0 0 0 1px rgba(186, 230, 253, 0.55);
+    }
+
+    .vl-dash-donut-num {
+        @apply text-2xl font-bold leading-none tabular-nums text-neutral-800;
+    }
+
+    .vl-dash-donut-cap {
+        @apply mt-0.5 text-[10px] font-semibold uppercase tracking-wider text-neutral-400;
+    }
+
+    .vl-dash-estado-list {
+        @apply flex w-full flex-1 flex-col justify-center gap-2.5;
+    }
+
+    .vl-dash-estado-item {
+        @apply grid items-center gap-x-3 gap-y-1;
+        grid-template-columns: auto 1fr auto;
+        grid-template-areas:
+            'swatch name stats'
+            '.      bar  stats';
+    }
+
+    @media (min-width: 640px) {
+        .vl-dash-estado-item {
+            grid-template-columns: auto 6.5rem 1fr auto;
+            grid-template-areas: 'swatch name bar stats';
+        }
+    }
+
+    .vl-dash-estado-swatch {
+        grid-area: swatch;
+        @apply h-2.5 w-2.5 rounded-full;
+    }
+
+    .vl-dash-estado-name {
+        grid-area: name;
+        @apply text-sm font-medium text-neutral-700;
+    }
+
+    .vl-dash-estado-bar {
+        grid-area: bar;
+        @apply h-1.5 overflow-hidden rounded-full bg-accent-100;
+    }
+
+    .vl-dash-estado-bar-fill {
+        @apply block h-full rounded-full transition-[width] duration-500;
+        min-width: 0;
+    }
+
+    .vl-dash-estado-stats {
+        grid-area: stats;
+        @apply flex items-baseline justify-end gap-2 text-sm tabular-nums;
+    }
+
+    .vl-dash-estado-stats strong {
+        @apply font-bold text-neutral-800;
+    }
+
+    .vl-dash-estado-stats span {
+        @apply text-neutral-500;
+        min-width: 3.25rem;
+        text-align: right;
+    }
+
     /* Pantallas internas */
     .vl-page {
         @apply mx-auto max-w-7xl space-y-6;
@@ -192,7 +366,58 @@
     }
 
     .vl-matriz-list-footer {
-        @apply bg-accent-50/50;
+        @apply shrink-0 border-t border-accent-200 bg-white/95 px-2 py-1 backdrop-blur-sm;
+    }
+
+    .vl-pagination-btn {
+        @apply inline-flex items-center gap-1.5 rounded-xl border px-3 py-2 text-sm font-semibold transition;
+        border-color: var(--color-accent-200);
+        color: var(--color-primary-700);
+        background-color: #fff;
+    }
+    .vl-pagination-btn-nav:hover {
+        border-color: var(--color-primary-500);
+        background-color: color-mix(in srgb, var(--color-primary-200) 45%, transparent);
+    }
+    .vl-pagination-btn-nav:focus-visible {
+        @apply outline-none ring-2 ring-primary-500/40;
+    }
+    .vl-pagination-btn-disabled {
+        @apply cursor-not-allowed opacity-45;
+        background-color: color-mix(in srgb, var(--color-accent-50) 90%, transparent);
+        color: var(--color-neutral-400);
+    }
+    .vl-pagination-page {
+        @apply inline-flex h-9 min-w-9 items-center justify-center rounded-lg border px-2 text-sm font-semibold transition;
+        border-color: transparent;
+        color: var(--color-primary-700);
+    }
+    .vl-pagination-page:hover {
+        border-color: var(--color-accent-200);
+        background-color: color-mix(in srgb, var(--color-primary-200) 45%, transparent);
+    }
+    .vl-pagination-page-active {
+        border-color: var(--color-primary-500);
+        background-color: var(--color-primary-600);
+        color: #fff;
+    }
+    .vl-pagination-ellipsis {
+        @apply inline-flex h-9 min-w-6 items-center justify-center px-1 text-sm text-neutral-400;
+    }
+    .vl-pagination--compact .vl-pagination-btn {
+        @apply gap-0 rounded-md border-accent-200 px-1.5 py-1 text-[11px] font-semibold;
+    }
+    .vl-pagination--compact .vl-pagination-btn--icon {
+        @apply px-1.5;
+    }
+    .vl-pagination--compact .vl-pagination-page {
+        @apply h-7 min-w-7 rounded-md px-1.5 text-[11px];
+    }
+    .vl-pagination--compact .vl-pagination-page-active {
+        @apply min-w-7;
+    }
+    .vl-pagination--compact .vl-pagination-ellipsis {
+        @apply h-7 min-w-5 text-[11px];
     }
 
     .vl-page--wide {
@@ -1132,6 +1357,133 @@
 
 .vl-sidebar--bosque .vl-sidebar-sep {
     border-color: var(--vl-sep);
+}
+
+.vl-sidebar--bosque .vl-sidebar-iconbtn {
+    color: var(--vl-sidebar-text);
+}
+
+.vl-sidebar--bosque .vl-sidebar-iconbtn:hover {
+    background: var(--vl-hover-bg);
+    color: #fff;
+}
+
+/* Encabezado de marca del sidebar — placa cristal + tipografía refinada */
+.vl-sidebar-brand {
+    padding: 0.85rem 0.85rem 0.95rem;
+    border-bottom: 1px solid var(--vl-sep);
+}
+
+.vl-sidebar-brand__link {
+    display: flex;
+    min-width: 0;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.55rem 0.65rem;
+    border-radius: 1rem;
+    text-decoration: none;
+    background:
+        linear-gradient(145deg, rgba(255, 255, 255, 0.12) 0%, rgba(255, 255, 255, 0.05) 55%, rgba(14, 165, 233, 0.08) 100%);
+    border: 1px solid rgba(186, 230, 253, 0.22);
+    box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.18),
+        0 8px 20px -14px rgba(7, 89, 133, 0.55);
+    transition: background 160ms ease, border-color 160ms ease, box-shadow 160ms ease;
+}
+
+.vl-sidebar-brand__link:hover {
+    background:
+        linear-gradient(145deg, rgba(255, 255, 255, 0.16) 0%, rgba(255, 255, 255, 0.07) 55%, rgba(14, 165, 233, 0.12) 100%);
+    border-color: rgba(186, 230, 253, 0.36);
+    box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.22),
+        0 10px 22px -12px rgba(7, 89, 133, 0.6);
+}
+
+.vl-sidebar-brand__mark {
+    display: flex;
+    width: 2.85rem;
+    height: 2.85rem;
+    flex-shrink: 0;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    border-radius: 0.85rem;
+    background: rgba(255, 255, 255, 0.96);
+    box-shadow:
+        0 0 0 1px rgba(186, 230, 253, 0.28),
+        0 4px 10px -4px rgba(12, 74, 110, 0.45);
+}
+
+.vl-sidebar-brand__logo {
+    max-height: 2.35rem !important;
+    max-width: 2.35rem !important;
+    width: auto;
+    height: auto;
+    border-radius: 0.5rem;
+    object-fit: contain;
+}
+
+.vl-sidebar-brand__monogram {
+    display: flex !important;
+    height: 100% !important;
+    width: 100% !important;
+    align-items: center;
+    justify-content: center;
+    border-radius: 0.8rem;
+    background: linear-gradient(160deg, #0ea5e9 0%, #0369a1 100%);
+    color: #fff;
+    font-size: 0.8rem;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    box-shadow: none;
+}
+
+.vl-sidebar-brand__copy {
+    display: flex;
+    min-width: 0;
+    flex: 1 1 auto;
+    align-items: center;
+    padding-right: 0.15rem;
+}
+
+.vl-sidebar-brand__name {
+    margin: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: 1.05rem;
+    font-weight: 700;
+    letter-spacing: -0.015em;
+    line-height: 1.2;
+    color: #fff;
+    text-shadow: 0 1px 0 rgba(7, 89, 133, 0.25);
+}
+
+@media (min-width: 768px) {
+    .vl-sidebar-brand.is-collapsed {
+        display: flex;
+        justify-content: center;
+        padding: 0.7rem 0.4rem 0.8rem;
+    }
+
+    .vl-sidebar-brand.is-collapsed .vl-sidebar-brand__link {
+        justify-content: center;
+        gap: 0;
+        padding: 0.4rem;
+        border-radius: 0.9rem;
+    }
+
+    .vl-sidebar-brand.is-collapsed .vl-sidebar-brand__mark {
+        width: 2.35rem;
+        height: 2.35rem;
+        border-radius: 0.72rem;
+    }
+
+    .vl-sidebar-brand.is-collapsed .vl-sidebar-brand__logo {
+        max-height: 1.9rem !important;
+        max-width: 1.9rem !important;
+    }
 }
 
 .vl-sidebar--bosque .vl-sidebar-link {

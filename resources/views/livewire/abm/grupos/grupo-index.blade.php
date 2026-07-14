@@ -67,7 +67,7 @@
         </div>
 
         @if ($grupos->hasPages())
-            <div class="vl-matriz-list-footer border-t border-accent-200 px-3 py-2">
+            <div class="vl-matriz-list-footer px-3 py-1.5 sm:px-4">
                 {{ $grupos->links('vendor.pagination.vl-compact') }}
             </div>
         @endif

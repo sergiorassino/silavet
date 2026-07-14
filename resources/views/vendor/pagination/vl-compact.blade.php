@@ -1,20 +1,83 @@
 @if ($paginator->hasPages())
-    <nav role="navigation" aria-label="Paginación" class="flex items-center justify-between gap-3 text-sm">
-        <p class="text-neutral-600">
-            {{ $paginator->firstItem() }}–{{ $paginator->lastItem() }} de {{ $paginator->total() }}
-        </p>
-        <div class="flex items-center gap-1">
-            @if ($paginator->onFirstPage())
-                <span class="rounded-lg px-3 py-1.5 text-neutral-400">Anterior</span>
-            @else
-                <button type="button" wire:click="previousPage('{{ $paginator->getPageName() }}')" class="rounded-lg px-3 py-1.5 hover:bg-accent-100">Anterior</button>
+    <nav role="navigation" aria-label="Paginación" class="vl-pagination vl-pagination--compact">
+        <div class="flex flex-wrap items-center justify-between gap-x-3 gap-y-1.5">
+            @if ($paginator->total() > 0)
+                <p class="text-[11px] leading-tight text-neutral-600 tabular-nums">
+                    <span class="font-semibold text-neutral-800">{{ $paginator->firstItem() }}–{{ $paginator->lastItem() }}</span>
+                    <span class="text-neutral-400"> de </span>
+                    <span class="font-semibold text-neutral-800">{{ $paginator->total() }}</span>
+                    <span class="mx-1 text-neutral-300" aria-hidden="true">·</span>
+                    <span class="font-medium text-primary-700">pág. {{ $paginator->currentPage() }}/{{ $paginator->lastPage() }}</span>
+                </p>
             @endif
 
-            @if ($paginator->hasMorePages())
-                <button type="button" wire:click="nextPage('{{ $paginator->getPageName() }}')" class="rounded-lg px-3 py-1.5 hover:bg-accent-100">Siguiente</button>
-            @else
-                <span class="rounded-lg px-3 py-1.5 text-neutral-400">Siguiente</span>
-            @endif
+            <div class="flex items-center gap-0.5" aria-label="Controles de página">
+                @if ($paginator->onFirstPage())
+                    <span class="vl-pagination-btn vl-pagination-btn-disabled vl-pagination-btn--icon" aria-disabled="true" title="Anterior">
+                        <svg class="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+                        </svg>
+                        <span class="sr-only">Anterior</span>
+                    </span>
+                @else
+                    <a href="{{ $paginator->previousPageUrl() }}" rel="prev"
+                       class="vl-pagination-btn vl-pagination-btn-nav vl-pagination-btn--icon"
+                       wire:click.prevent="previousPage('{{ $paginator->getPageName() }}')"
+                       wire:loading.attr="disabled"
+                       title="Anterior">
+                        <svg class="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+                        </svg>
+                        <span class="sr-only">Anterior</span>
+                    </a>
+                @endif
+
+                <div class="hidden items-center gap-px px-0.5 md:flex" aria-label="Números de página">
+                    @foreach ($elements as $element)
+                        @if (is_string($element))
+                            <span class="vl-pagination-ellipsis">{{ $element }}</span>
+                        @endif
+
+                        @if (is_array($element))
+                            @foreach ($element as $page => $url)
+                                @if ($page == $paginator->currentPage())
+                                    <span class="vl-pagination-page vl-pagination-page-active"
+                                          aria-current="page">{{ $page }}</span>
+                                @else
+                                    <a href="{{ $url }}"
+                                       class="vl-pagination-page"
+                                       wire:click.prevent="gotoPage({{ $page }}, '{{ $paginator->getPageName() }}')"
+                                       wire:loading.attr="disabled"
+                                       aria-label="Ir a la página {{ $page }}">{{ $page }}</a>
+                                @endif
+                            @endforeach
+                        @endif
+                    @endforeach
+                </div>
+
+                <span class="vl-pagination-page vl-pagination-page-active min-w-[1.75rem] px-2 md:hidden tabular-nums"
+                      aria-current="page">{{ $paginator->currentPage() }}</span>
+
+                @if ($paginator->hasMorePages())
+                    <a href="{{ $paginator->nextPageUrl() }}" rel="next"
+                       class="vl-pagination-btn vl-pagination-btn-nav vl-pagination-btn--icon"
+                       wire:click.prevent="nextPage('{{ $paginator->getPageName() }}')"
+                       wire:loading.attr="disabled"
+                       title="Siguiente">
+                        <svg class="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                        </svg>
+                        <span class="sr-only">Siguiente</span>
+                    </a>
+                @else
+                    <span class="vl-pagination-btn vl-pagination-btn-disabled vl-pagination-btn--icon" aria-disabled="true" title="Siguiente">
+                        <svg class="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                        </svg>
+                        <span class="sr-only">Siguiente</span>
+                    </span>
+                @endif
+            </div>
         </div>
     </nav>
 @endif

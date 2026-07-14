@@ -309,7 +309,7 @@
         </div>
 
         @if ($registros->hasPages())
-            <div class="vl-matriz-list-footer border-t border-accent-200 px-5 py-3">
+            <div class="vl-matriz-list-footer px-3 py-1.5 sm:px-4">
                 {{ $registros->links('vendor.pagination.vl-compact') }}
             </div>
         @endif
