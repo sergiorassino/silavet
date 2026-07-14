@@ -38,7 +38,7 @@
     <div {{ $attributes->class(['flex w-full justify-center']) }}>
         @if ($datos['logo_url'])
             <div class="vl-auth-logo-frame"
-                 x-data="vlAuthLogoFrame({ shape: @js($logoShape) })"
+                 x-data="vlAuthLogoFrame({ shape: @js($logoShape), variant: 'login' })"
                  x-bind:class="frameClass"
                  x-bind:style="frameStyle">
                 <img src="{{ $datos['logo_url'] }}"
@@ -52,6 +52,24 @@
             </span>
         @endif
     </div>
+@elseif ($variant === 'sidebar')
+    @if ($datos['logo_url'])
+        <span {{ $attributes->class(['vl-sidebar-brand__mark']) }}
+              x-data="vlAuthLogoFrame({ shape: @js($logoShape), variant: 'sidebar' })"
+              x-bind:class="frameClass"
+              x-bind:style="frameStyle">
+            <img src="{{ $datos['logo_url'] }}"
+                 alt="{{ $datos['nombre'] }}"
+                 class="vl-sidebar-brand__logo"
+                 @load="onLoad($event)">
+        </span>
+    @else
+        <span {{ $attributes->class(['vl-sidebar-brand__mark']) }}>
+            <span class="vl-sidebar-brand__monogram {{ $monogramClass }}">
+                {{ $datos['iniciales'] }}
+            </span>
+        </span>
+    @endif
 @elseif ($datos['logo_url'])
     <img src="{{ $datos['logo_url'] }}"
          alt="{{ $datos['nombre'] }}"

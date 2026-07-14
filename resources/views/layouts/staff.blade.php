@@ -222,13 +222,7 @@
             <a href="{{ $homeRoute }}"
                class="vl-sidebar-brand__link"
                title="{{ config('tenant.nombre') }} — {{ $menuLabel }}">
-                <span class="vl-sidebar-brand__mark">
-                    <x-vl-lab-logo
-                        size="md"
-                        class="vl-sidebar-brand__logo"
-                        monogram-class="vl-sidebar-brand__monogram"
-                    />
-                </span>
+                <x-vl-lab-logo variant="sidebar" />
                 <span x-show="!sidebarCollapsed" x-cloak class="vl-sidebar-brand__copy">
                     <span class="vl-sidebar-brand__name">{{ config('tenant.nombre') }}</span>
                 </span>

@@ -83,7 +83,7 @@
             <div class="vl-dash-metric-head">
                 <div>
                     <p class="vl-dash-metric-label">Flujo</p>
-                    <h2 id="dash-pend-title" class="vl-dash-metric-title">Pendientes de cierre</h2>
+                    <h2 id="dash-pend-title" class="vl-dash-metric-title">Pendientes de Finalización en días anteriores</h2>
                 </div>
             </div>
             <div class="vl-dash-kpi-pair">

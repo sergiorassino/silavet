@@ -261,17 +261,18 @@ document.addEventListener('alpine:init', () => {
     }));
 
     /**
-     * Marco del logo en login: adapta wide/square/tall y, si el PNG es
-     * cuadrado con marca horizontal (márgenes blancos), recorta al contenido.
+     * Marco adaptativo del logo (login / sidebar): wide/square/tall y recorte
+     * si el PNG es cuadrado con marca horizontal (márgenes blancos).
      */
     Alpine.data('vlAuthLogoFrame', (config = {}) => ({
         shape: config.shape || 'square',
         cropped: false,
         contentAr: null,
+        variant: config.variant || 'login',
 
         init() {
             this.$nextTick(() => {
-                const img = this.$el.querySelector('img.vl-auth-logo');
+                const img = this.$el.querySelector('img');
                 if (img && img.complete && img.naturalWidth > 0) {
                     this.onLoad({ target: img });
                 }
@@ -279,11 +280,15 @@ document.addEventListener('alpine:init', () => {
         },
 
         get frameClass() {
+            const prefix = this.variant === 'sidebar'
+                ? 'vl-sidebar-brand__mark'
+                : 'vl-auth-logo-frame';
+
             return {
-                'vl-auth-logo-frame--wide': this.shape === 'wide',
-                'vl-auth-logo-frame--square': this.shape === 'square',
-                'vl-auth-logo-frame--tall': this.shape === 'tall',
-                'vl-auth-logo-frame--cropped': this.cropped,
+                [`${prefix}--wide`]: this.shape === 'wide',
+                [`${prefix}--square`]: this.shape === 'square',
+                [`${prefix}--tall`]: this.shape === 'tall',
+                [`${prefix}--cropped`]: this.cropped,
             };
         },
 
