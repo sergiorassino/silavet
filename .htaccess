@@ -2,10 +2,13 @@ Options -Indexes
 
 <IfModule mod_rewrite.c>
     RewriteEngine On
+    # Hostinger (subcarpeta): descomentar y poner el path de la carpeta del lab.
+    # RewriteBase /silavet/
 
     RewriteRule ^(app|bootstrap|config|database|resources|routes|vendor)(/|$) - [F,L]
     RewriteRule ^(\.env|artisan|composer\.(json|lock)|package(-lock)?\.json|vite\.config\.js|webpack\.mix\.js)$ - [F,L]
 
+    # URLs que ya apuntan a public/ (enlaces antiguos): no reescribir de nuevo
     RewriteRule ^public/ - [L]
 
     RewriteCond %{REQUEST_FILENAME} !-f
