@@ -172,3 +172,4 @@ Los órdenes definitivos se fijarán al implementar el catálogo. Referencia ini
 | 7 | Reactivos | Stock de reactivos |
 | 8 | Parámetros | Configuración del laboratorio (`entorno`) |
 | 9 | Usuarios | ABM usuarios y roles |
+| 10 | Listados estadísticos | Estimación de costos y listados estadísticos |

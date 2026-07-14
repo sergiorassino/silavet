@@ -20,7 +20,8 @@ INSERT IGNORE INTO `permisos_ia` (`orden`, `tema`, `descripcion`) VALUES
 (6, 'Facturación', 'Comprobantes y cobranza'),
 (7, 'Reactivos', 'Stock de reactivos'),
 (8, 'Parámetros', 'Configuración del laboratorio'),
-(9, 'Usuarios', 'ABM usuarios y roles');
+(9, 'Usuarios', 'ABM usuarios y roles'),
+(10, 'Listados estadísticos', 'Estimación de costos y listados estadísticos');
 
 -- Columna permisos_ia en usuarios (si no existe)
 SET @col_exists := (

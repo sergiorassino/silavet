@@ -34,6 +34,33 @@
 
 <x-vl-sidebar-grupo group-key="tesoreria" label="Tesorería" title="Tesorería v1.0">
     <x-slot:icon><x-vl-sidebar-icon name="grupo-tesoreria" /></x-slot:icon>
+
+    @if (tienePermiso(\App\Support\PermisosIaCatalog::FACTURACION))
+        <a href="{{ route('tesoreria.movimientos.index') }}"
+           class="vl-sidebar-link {{ request()->routeIs('tesoreria.movimientos.*') ? 'is-active' : '' }}"
+           title="Movimientos (v1.0)">
+            <x-vl-sidebar-icon name="movimientos" class="h-4 w-4 shrink-0 opacity-80" />
+            <span class="truncate">Movimientos</span>
+        </a>
+        <a href="{{ route('tesoreria.transferencias.index') }}"
+           class="vl-sidebar-link {{ request()->routeIs('tesoreria.transferencias.*') ? 'is-active' : '' }}"
+           title="Transferencias Intercuenta (v1.0)">
+            <x-vl-sidebar-icon name="transferencias-intercuenta" class="h-4 w-4 shrink-0 opacity-80" />
+            <span class="truncate">Transferencias Intercuenta</span>
+        </a>
+        <a href="{{ route('tesoreria.cuentas.index') }}"
+           class="vl-sidebar-link {{ request()->routeIs('tesoreria.cuentas.*') ? 'is-active' : '' }}"
+           title="Gestión de Cuentas Contables (v1.0)">
+            <x-vl-sidebar-icon name="cuentas-contables" class="h-4 w-4 shrink-0 opacity-80" />
+            <span class="truncate">Gestión de Cuentas Contables</span>
+        </a>
+        <a href="{{ route('tesoreria.cuentas-detalle.index') }}"
+           class="vl-sidebar-link {{ request()->routeIs('tesoreria.cuentas-detalle.*') ? 'is-active' : '' }}"
+           title="Gestión de Cuentas Detalle (v1.0)">
+            <x-vl-sidebar-icon name="cuentas-detalle" class="h-4 w-4 shrink-0 opacity-80" />
+            <span class="truncate">Gestión de Cuentas Detalle</span>
+        </a>
+    @endif
 </x-vl-sidebar-grupo>
 
 <x-vl-sidebar-grupo group-key="gestionStock" label="Gestión de Stock" title="Gestión de Stock v1.0">
@@ -43,7 +70,46 @@
 <x-vl-sidebar-grupo group-key="parametrosGenerales" label="Parámetros Generales" title="Parámetros Generales v1.0">
     <x-slot:icon><x-vl-sidebar-icon name="grupo-parametros-generales" /></x-slot:icon>
 
+    @if (tienePermiso(\App\Support\PermisosIaCatalog::CLIENTES))
+        <a href="{{ route('abm.clientes.index') }}"
+           class="vl-sidebar-link {{ request()->routeIs('abm.clientes.*') ? 'is-active' : '' }}"
+           title="Gestión de Clientes (v1.0)">
+            <x-vl-sidebar-icon name="gestion-clientes" class="h-4 w-4 shrink-0 opacity-80" />
+            <span class="truncate">Gestión de Clientes</span>
+        </a>
+    @endif
+
+    @if (tienePermiso(\App\Support\PermisosIaCatalog::ESPECIES))
+        <a href="{{ route('abm.especies.index') }}"
+           class="vl-sidebar-link {{ request()->routeIs('abm.especies.*') ? 'is-active' : '' }}"
+           title="Gestión de Especies (v1.0)">
+            <x-vl-sidebar-icon name="especies" class="h-4 w-4 shrink-0 opacity-80" />
+            <span class="truncate">Gestión de Especies</span>
+        </a>
+        <a href="{{ route('abm.razas.index') }}"
+           class="vl-sidebar-link {{ request()->routeIs('abm.razas.*') ? 'is-active' : '' }}"
+           title="Gestión de Razas (v1.0)">
+            <x-vl-sidebar-icon name="razas" class="h-4 w-4 shrink-0 opacity-80" />
+            <span class="truncate">Gestión de Razas</span>
+        </a>
+    @endif
+
+    @if (tienePermiso(\App\Support\PermisosIaCatalog::USUARIOS))
+        <a href="{{ route('abm.usuarios.index') }}"
+           class="vl-sidebar-link {{ request()->routeIs('abm.usuarios.*') ? 'is-active' : '' }}"
+           title="Gestión de Usuarios (v1.0)">
+            <x-vl-sidebar-icon name="gestion-usuarios" class="h-4 w-4 shrink-0 opacity-80" />
+            <span class="truncate">Gestión de Usuarios</span>
+        </a>
+    @endif
+
     @if (tienePermiso(\App\Support\PermisosIaCatalog::PARAMETROS))
+        <a href="{{ route('abm.derivaciones.index') }}"
+           class="vl-sidebar-link {{ request()->routeIs('abm.derivaciones.*') ? 'is-active' : '' }}"
+           title="Gestión de Centros de Derivación (v1.0)">
+            <x-vl-sidebar-icon name="centros-derivacion" class="h-4 w-4 shrink-0 opacity-80" />
+            <span class="truncate">Gestión de Centros de Derivación</span>
+        </a>
         <a href="{{ route('admin.parametros-sistema.edit') }}"
            class="vl-sidebar-link {{ request()->routeIs('admin.parametros-sistema.*') ? 'is-active' : '' }}"
            title="Parámetros del Sistema (v1.0)">
@@ -95,8 +161,49 @@
 
 <x-vl-sidebar-grupo group-key="listadosEstadisticos" label="Listados Estadísticos" title="Listados Estadísticos v1.0">
     <x-slot:icon><x-vl-sidebar-icon name="grupo-listados-estadisticos" /></x-slot:icon>
+
+    @if (tienePermiso(\App\Support\PermisosIaCatalog::LISTADOS_ESTADISTICOS))
+        <a href="{{ route('listados.estimacion-costos') }}"
+           class="vl-sidebar-link {{ request()->routeIs('listados.estimacion-costos') ? 'is-active' : '' }}"
+           title="Estimación de Costos (v1.0)">
+            <x-vl-sidebar-icon name="estimacion-costos" class="h-4 w-4 shrink-0 opacity-80" />
+            <span class="truncate">Estimación de Costos</span>
+        </a>
+        <a href="{{ route('listados.estadistico-pacientes') }}"
+           class="vl-sidebar-link {{ request()->routeIs('listados.estadistico-pacientes*') ? 'is-active' : '' }}"
+           title="Listado Estadístico de Pacientes (v1.0)">
+            <x-vl-sidebar-icon name="estadistico-pacientes" class="h-4 w-4 shrink-0 opacity-80" />
+            <span class="truncate">Listado Estadístico de Pacientes</span>
+        </a>
+        <a href="{{ route('listados.historial-determinaciones') }}"
+           class="vl-sidebar-link {{ request()->routeIs('listados.historial-determinaciones*') ? 'is-active' : '' }}"
+           title="Historial de Determinaciones (v1.0)">
+            <x-vl-sidebar-icon name="historial-determinaciones" class="h-4 w-4 shrink-0 opacity-80" />
+            <span class="truncate">Historial de Determinaciones</span>
+        </a>
+        <a href="{{ route('listados.cantidad-determinaciones-comparac') }}"
+           class="vl-sidebar-link {{ request()->routeIs('listados.cantidad-determinaciones-comparac*') ? 'is-active' : '' }}"
+           title="Cantidad Determinaciones (comparac.) (v1.0)">
+            <x-vl-sidebar-icon name="cantidad-determinaciones-comparac" class="h-4 w-4 shrink-0 opacity-80" />
+            <span class="truncate">Cantidad Determinaciones (comparac.)</span>
+        </a>
+    @endif
 </x-vl-sidebar-grupo>
 
 <x-vl-sidebar-grupo group-key="procedimientosTomaMuestras" label="Procedimientos Toma de Muestras" title="Procedimientos Toma de Muestras v1.0">
     <x-slot:icon><x-vl-sidebar-icon name="grupo-procedimientos-muestras" /></x-slot:icon>
+    @if (tienePermiso(\App\Support\PermisosIaCatalog::PARAMETROS))
+        <a href="{{ route('abm.requerimientos.index') }}"
+           class="vl-sidebar-link {{ request()->routeIs('abm.requerimientos.*') ? 'is-active' : '' }}"
+           title="Gestión de Procedimientos (v1.0)">
+            <x-vl-sidebar-icon name="gestion-procedimientos" class="h-4 w-4 shrink-0 opacity-80" />
+            <span class="truncate">Gestión de Procedimientos</span>
+        </a>
+        <a href="{{ route('abm.muestras-por-determinacion.index') }}"
+           class="vl-sidebar-link {{ request()->routeIs('abm.muestras-por-determinacion.*') ? 'is-active' : '' }}"
+           title="Muestras por Determinación (v1.0)">
+            <x-vl-sidebar-icon name="muestras-por-determinacion" class="h-4 w-4 shrink-0 opacity-80" />
+            <span class="truncate">Muestras por Determinación</span>
+        </a>
+    @endif
 </x-vl-sidebar-grupo>

@@ -7,6 +7,17 @@ use App\Http\Controllers\Clientes\CuentaCorrienteDetallePdfController;
 use App\Http\Controllers\Protocolos\InformePacientePdfController;
 use App\Livewire\Abm\Clientes\ClienteForm;
 use App\Livewire\Abm\Clientes\ClienteIndex;
+use App\Livewire\Abm\Derivaciones\DerivacionForm;
+use App\Livewire\Abm\Derivaciones\DerivacionIndex as CentrosDerivacionIndex;
+use App\Livewire\Abm\Especies\EspecieForm;
+use App\Livewire\Abm\Especies\EspecieIndex;
+use App\Livewire\Abm\Razas\RazaForm;
+use App\Livewire\Abm\Razas\RazaIndex;
+use App\Livewire\Abm\MuestrasPorDeterminacion\MuestrasPorDeterminacionIndex;
+use App\Livewire\Abm\Requerimientos\RequerimientoForm;
+use App\Livewire\Abm\Requerimientos\RequerimientoIndex;
+use App\Livewire\Abm\Usuarios\UsuarioForm;
+use App\Livewire\Abm\Usuarios\UsuarioIndex;
 use App\Livewire\Clientes\CuentaCorrienteDetalle;
 use App\Livewire\Clientes\CuentaCorrienteIndex;
 use App\Livewire\Abm\DetPorGrupo\DetPorGrupoIndex;
@@ -24,6 +35,23 @@ use App\Livewire\Protocolos\PacienteDeterminaciones;
 use App\Livewire\Protocolos\PacienteForm;
 use App\Livewire\Protocolos\PacienteIndex;
 use App\Livewire\Protocolos\PacienteResultados;
+use App\Livewire\Tesoreria\CuentaDetalleForm;
+use App\Livewire\Tesoreria\CuentaDetalleIndex;
+use App\Livewire\Tesoreria\CuentaForm;
+use App\Livewire\Tesoreria\CuentaIndex;
+use App\Livewire\Tesoreria\MovimientoIndex;
+use App\Livewire\Tesoreria\TransferenciaIntercuenta;
+use App\Http\Controllers\Listados\CantidadDeterminacionesComparacChartPdfController;
+use App\Http\Controllers\Listados\CantidadDeterminacionesComparacExcelController;
+use App\Http\Controllers\Listados\CantidadDeterminacionesComparacPdfController;
+use App\Http\Controllers\Listados\HistorialDeterminacionesExcelController;
+use App\Http\Controllers\Listados\HistorialDeterminacionesPdfController;
+use App\Http\Controllers\Listados\ListadoEstadisticoPacientesExcelController;
+use App\Http\Controllers\Listados\ListadoEstadisticoPacientesPdfController;
+use App\Livewire\Listados\CantidadDeterminacionesComparac;
+use App\Livewire\Listados\EstimacionCostos;
+use App\Livewire\Listados\HistorialDeterminaciones;
+use App\Livewire\Listados\ListadoEstadisticoPacientes;
 use App\Support\Auth\CerrarSesionAplicacion;
 use Illuminate\Support\Facades\Route;
 
@@ -80,6 +108,40 @@ Route::middleware(['auth', 'lab.context'])->group(function () {
         Route::get('/{id}/editar', ClienteForm::class)->name('abm.clientes.edit');
     });
 
+    Route::prefix('abm/especies')->middleware(['menu.portal:laboratorio', 'permiso:1'])->group(function () {
+        Route::get('/', EspecieIndex::class)->name('abm.especies.index');
+        Route::get('/nuevo', EspecieForm::class)->name('abm.especies.create');
+        Route::get('/{id}/editar', EspecieForm::class)->name('abm.especies.edit');
+    });
+
+    Route::prefix('abm/razas')->middleware(['menu.portal:laboratorio', 'permiso:1'])->group(function () {
+        Route::get('/', RazaIndex::class)->name('abm.razas.index');
+        Route::get('/nuevo', RazaForm::class)->name('abm.razas.create');
+        Route::get('/{id}/editar', RazaForm::class)->name('abm.razas.edit');
+    });
+
+    Route::prefix('abm/usuarios')->middleware(['menu.portal:staff', 'permiso:9'])->group(function () {
+        Route::get('/', UsuarioIndex::class)->name('abm.usuarios.index');
+        Route::get('/nuevo', UsuarioForm::class)->name('abm.usuarios.create');
+        Route::get('/{id}/editar', UsuarioForm::class)->name('abm.usuarios.edit');
+    });
+
+    Route::prefix('abm/derivaciones')->middleware(['menu.portal:laboratorio', 'permiso:8'])->group(function () {
+        Route::get('/', CentrosDerivacionIndex::class)->name('abm.derivaciones.index');
+        Route::get('/nuevo', DerivacionForm::class)->name('abm.derivaciones.create');
+        Route::get('/{id}/editar', DerivacionForm::class)->name('abm.derivaciones.edit');
+    });
+
+    Route::prefix('abm/procedimientos')->middleware(['menu.portal:laboratorio', 'permiso:8'])->group(function () {
+        Route::get('/', RequerimientoIndex::class)->name('abm.requerimientos.index');
+        Route::get('/nuevo', RequerimientoForm::class)->name('abm.requerimientos.create');
+        Route::get('/{id}/editar', RequerimientoForm::class)->name('abm.requerimientos.edit');
+    });
+
+    Route::prefix('abm/muestras-por-determinacion')->middleware(['menu.portal:laboratorio', 'permiso:8'])->group(function () {
+        Route::get('/', MuestrasPorDeterminacionIndex::class)->name('abm.muestras-por-determinacion.index');
+    });
+
     Route::prefix('clientes/cuenta-corriente')->middleware(['menu.portal:laboratorio', 'permiso:6'])->group(function () {
         Route::get('/', CuentaCorrienteIndex::class)->name('clientes.cuenta-corriente.index');
         Route::get('/pdf', CuentaCorrienteClientesPdfController::class)->name('clientes.cuenta-corriente.pdf');
@@ -87,6 +149,26 @@ Route::middleware(['auth', 'lab.context'])->group(function () {
         Route::get('/{id}', CuentaCorrienteDetalle::class)->name('clientes.cuenta-corriente.detalle');
         Route::get('/{id}/pdf', CuentaCorrienteDetallePdfController::class)->name('clientes.cuenta-corriente.detalle.pdf');
         Route::get('/{id}/excel', CuentaCorrienteDetalleExcelController::class)->name('clientes.cuenta-corriente.detalle.excel');
+    });
+
+    Route::prefix('tesoreria/movimientos')->middleware(['menu.portal:staff', 'permiso:6'])->group(function () {
+        Route::get('/', MovimientoIndex::class)->name('tesoreria.movimientos.index');
+    });
+
+    Route::prefix('tesoreria/transferencias')->middleware(['menu.portal:staff', 'permiso:6'])->group(function () {
+        Route::get('/', TransferenciaIntercuenta::class)->name('tesoreria.transferencias.index');
+    });
+
+    Route::prefix('tesoreria/cuentas')->middleware(['menu.portal:staff', 'permiso:6'])->group(function () {
+        Route::get('/', CuentaIndex::class)->name('tesoreria.cuentas.index');
+        Route::get('/nuevo', CuentaForm::class)->name('tesoreria.cuentas.create');
+        Route::get('/{id}/editar', CuentaForm::class)->name('tesoreria.cuentas.edit');
+    });
+
+    Route::prefix('tesoreria/cuentas-detalle')->middleware(['menu.portal:staff', 'permiso:6'])->group(function () {
+        Route::get('/', CuentaDetalleIndex::class)->name('tesoreria.cuentas-detalle.index');
+        Route::get('/nuevo', CuentaDetalleForm::class)->name('tesoreria.cuentas-detalle.create');
+        Route::get('/{id}/editar', CuentaDetalleForm::class)->name('tesoreria.cuentas-detalle.edit');
     });
 
     Route::prefix('protocolos')->middleware(['menu.portal:staff', 'permiso:3'])->group(function () {
@@ -98,6 +180,35 @@ Route::middleware(['auth', 'lab.context'])->group(function () {
 
     Route::prefix('derivaciones')->middleware(['menu.portal:staff', 'permiso:3'])->group(function () {
         Route::get('/', DerivacionIndex::class)->name('derivaciones.index');
+    });
+
+    Route::prefix('listados')->middleware(['menu.portal:staff', 'permiso:10'])->group(function () {
+        Route::get('/estimacion-costos', EstimacionCostos::class)->name('listados.estimacion-costos');
+        Route::get('/estadistico-pacientes', ListadoEstadisticoPacientes::class)->name('listados.estadistico-pacientes');
+        Route::get('/estadistico-pacientes/pdf', ListadoEstadisticoPacientesPdfController::class)
+            ->middleware('throttle:15,1')
+            ->name('listados.estadistico-pacientes.pdf');
+        Route::get('/estadistico-pacientes/excel', ListadoEstadisticoPacientesExcelController::class)
+            ->middleware('throttle:10,1')
+            ->name('listados.estadistico-pacientes.excel');
+        Route::get('/historial-determinaciones', HistorialDeterminaciones::class)->name('listados.historial-determinaciones');
+        Route::get('/historial-determinaciones/pdf', HistorialDeterminacionesPdfController::class)
+            ->middleware('throttle:15,1')
+            ->name('listados.historial-determinaciones.pdf');
+        Route::get('/historial-determinaciones/excel', HistorialDeterminacionesExcelController::class)
+            ->middleware('throttle:10,1')
+            ->name('listados.historial-determinaciones.excel');
+        Route::get('/cantidad-determinaciones-comparac', CantidadDeterminacionesComparac::class)
+            ->name('listados.cantidad-determinaciones-comparac');
+        Route::get('/cantidad-determinaciones-comparac/pdf', CantidadDeterminacionesComparacPdfController::class)
+            ->middleware('throttle:15,1')
+            ->name('listados.cantidad-determinaciones-comparac.pdf');
+        Route::get('/cantidad-determinaciones-comparac/excel', CantidadDeterminacionesComparacExcelController::class)
+            ->middleware('throttle:10,1')
+            ->name('listados.cantidad-determinaciones-comparac.excel');
+        Route::post('/cantidad-determinaciones-comparac/chart-pdf', CantidadDeterminacionesComparacChartPdfController::class)
+            ->middleware('throttle:10,1')
+            ->name('listados.cantidad-determinaciones-comparac.chart-pdf');
     });
 
     Route::prefix('protocolos')->middleware(['menu.portal:staff', 'permiso:4'])->group(function () {

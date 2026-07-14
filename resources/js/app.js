@@ -1,5 +1,6 @@
 import './bootstrap';
 import Swal from 'sweetalert2';
+import './cantidad-determinaciones-comparac';
 
 window.Swal = Swal;
 
@@ -121,7 +122,9 @@ document.addEventListener('alpine:init', () => {
         htmlLength: 0,
         colors: VL_EDITOR_COLORS,
         colorPickerOpen: false,
-        placeholder: config.placeholder || 'Escriba el aviso…',
+        placeholder: config.placeholder || 'Escriba el texto…',
+        wireProperty: config.wireProperty || 'avisoTexto',
+        saveMethod: config.saveMethod || null,
 
         init() {
             this.$nextTick(() => {
@@ -129,6 +132,7 @@ document.addEventListener('alpine:init', () => {
                 if (!ed) {
                     return;
                 }
+                ed.setAttribute('data-placeholder', this.placeholder);
                 const inicial = String(config.initial || '').trim();
                 if (inicial !== '') {
                     ed.innerHTML = inicial;
@@ -162,10 +166,14 @@ document.addEventListener('alpine:init', () => {
             this.colorPickerOpen = false;
         },
 
+        async syncToLivewire() {
+            await this.$wire.set(this.wireProperty, this.htmlActual());
+        },
+
         async guardar() {
-            const html = this.htmlActual();
-            await this.$wire.set('avisoTexto', html);
-            await this.$wire.guardarAviso();
+            await this.syncToLivewire();
+            const method = this.saveMethod || 'guardarAviso';
+            await this.$wire[method]();
         },
     }));
 

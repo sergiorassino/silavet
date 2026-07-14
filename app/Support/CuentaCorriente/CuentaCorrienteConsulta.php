@@ -58,6 +58,7 @@ final class CuentaCorrienteConsulta
         $saldoSubquery = DB::table('pacientes as p')
             ->select('p.idClientes')
             ->selectRaw("SUM({$expresionSaldo}) as saldo_total")
+            ->where('p.tipoRegistro', '!=', Paciente::TIPO_EGRESO)
             ->groupBy('p.idClientes');
 
         return Cliente::query()
@@ -99,6 +100,7 @@ final class CuentaCorrienteConsulta
     {
         $protocolos = Paciente::query()
             ->where('idClientes', $idClientes)
+            ->where('tipoRegistro', '!=', Paciente::TIPO_EGRESO)
             ->orderBy('fechhoy')
             ->orderBy('nombreProtocolo')
             ->orderBy('idPacientes')
@@ -124,6 +126,7 @@ final class CuentaCorrienteConsulta
     {
         $protocolos = Paciente::query()
             ->where('idClientes', $idClientes)
+            ->where('tipoRegistro', '!=', Paciente::TIPO_EGRESO)
             ->orderBy('fechhoy')
             ->orderBy('idPacientes')
             ->get(['idPacientes', 'fechhoy', 'precio', 'pagado', 'descuento']);
@@ -170,6 +173,7 @@ final class CuentaCorrienteConsulta
 
         $protocolos = Paciente::query()
             ->where('idClientes', $idClientes)
+            ->where('tipoRegistro', '!=', Paciente::TIPO_EGRESO)
             ->whereDate('fechhoy', '<', $fechaCorte)
             ->orderBy('fechhoy')
             ->orderBy('nombreProtocolo')
@@ -210,6 +214,7 @@ final class CuentaCorrienteConsulta
         $protocolos = Paciente::query()
             ->with(['especie:idEspecies,nombre', 'raza:idRazas,nombre'])
             ->where('idClientes', $idClientes)
+            ->where('tipoRegistro', '!=', Paciente::TIPO_EGRESO)
             ->when($desde !== '', fn ($q) => $q->whereDate('fechhoy', '>=', Carbon::parse($desde)->toDateString()))
             ->when($hasta !== '', fn ($q) => $q->whereDate('fechhoy', '<=', Carbon::parse($hasta)->toDateString()))
             ->orderByDesc('fechhoy')
@@ -261,6 +266,7 @@ final class CuentaCorrienteConsulta
 
         return round((float) DB::table('pacientes')
             ->where('idClientes', $idClientes)
+            ->where('tipoRegistro', '!=', Paciente::TIPO_EGRESO)
             ->selectRaw("COALESCE(SUM({$expresionSaldo}), 0) AS saldo_total")
             ->value('saldo_total'), 2);
     }

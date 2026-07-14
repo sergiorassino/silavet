@@ -5,6 +5,12 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
+/**
+ * Modelo legacy de la tabla estimacioncostos.
+ *
+ * En la versión nueva no se lee ni escribe: se conserva solo por
+ * compatibilidad con el sistema anterior (carrito temporal de estimaciones).
+ */
 class Estimacioncosto extends Model
 {
     protected $table = 'estimacioncostos';

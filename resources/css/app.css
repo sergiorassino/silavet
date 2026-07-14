@@ -636,8 +636,12 @@
     }
 
     .vl-rich-editor-surface:empty::before {
-        content: 'Escriba el aviso…';
+        content: attr(data-placeholder);
         @apply pointer-events-none text-neutral-400;
+    }
+
+    .vl-rich-editor-surface--tall {
+        @apply min-h-[16rem];
     }
 
     .vl-rich-editor-colors {
@@ -675,6 +679,52 @@
 
     .vl-pacientes-row--pago-global > .vl-pacientes-td {
         font-weight: 500;
+    }
+
+    /* Tesorería / Movimientos — grilla condensada + colores NeoLab */
+    .vl-movimientos-grid {
+        @apply w-full border-collapse border border-neutral-300 text-[11px] leading-tight;
+    }
+
+    .vl-movimientos-th {
+        @apply border border-neutral-300 bg-white px-1.5 py-1 text-left text-[10px] font-bold uppercase tracking-[0.06em] text-neutral-700 whitespace-nowrap;
+    }
+
+    .vl-movimientos-th--num,
+    .vl-movimientos-th--icon {
+        @apply text-center;
+    }
+
+    .vl-movimientos-td {
+        @apply border border-neutral-300 px-1.5 py-0.5 text-[11px] text-neutral-900 align-middle;
+    }
+
+    .vl-movimientos-td--num {
+        @apply text-right tabular-nums;
+    }
+
+    .vl-movimientos-td--icon {
+        @apply text-center;
+    }
+
+    .vl-movimientos-row--ingreso > .vl-movimientos-td {
+        background-color: #ccffeb;
+    }
+
+    .vl-movimientos-row--egreso > .vl-movimientos-td {
+        background-color: #ffffcc;
+    }
+
+    .vl-movimientos-row:hover > .vl-movimientos-td {
+        background-image: linear-gradient(rgba(0, 0, 0, 0.04), rgba(0, 0, 0, 0.04));
+    }
+
+    .vl-movimientos-btn-edit {
+        @apply inline-flex h-5 w-5 items-center justify-center rounded border border-sky-300 bg-sky-50 text-sky-700 hover:bg-sky-100;
+    }
+
+    .vl-movimientos-btn-fact {
+        @apply inline-flex h-5 w-5 items-center justify-center rounded border border-neutral-300 bg-white text-neutral-600 hover:bg-accent-50;
     }
 
     .vl-pacientes-pago-global-badge {
@@ -1054,6 +1104,82 @@
     }
 
     .vl-grupos-row:hover {
+        @apply bg-accent-50/40;
+    }
+
+    .vl-especies-grid {
+        @apply w-auto table-auto border-collapse;
+    }
+
+    .vl-especies-th {
+        @apply border-b border-accent-200 px-2 py-1.5 text-left text-[10px] font-bold uppercase tracking-[0.08em] text-neutral-500 whitespace-nowrap;
+    }
+
+    .vl-especies-col--nombre {
+        @apply whitespace-nowrap min-w-[12rem];
+    }
+
+    .vl-especies-col--acciones {
+        @apply w-0 whitespace-nowrap text-center;
+    }
+
+    .vl-especies-td {
+        @apply px-2 py-1 text-xs text-neutral-900 align-middle;
+    }
+
+    .vl-especies-row:hover {
+        @apply bg-accent-50/40;
+    }
+
+    .vl-centros-derivacion-grid {
+        @apply w-auto table-auto border-collapse;
+    }
+
+    .vl-centros-derivacion-th {
+        @apply border-b border-accent-200 px-2 py-1.5 text-left text-[10px] font-bold uppercase tracking-[0.08em] text-neutral-500 whitespace-nowrap;
+    }
+
+    .vl-centros-derivacion-col--nombre {
+        @apply whitespace-nowrap min-w-[12rem];
+    }
+
+    .vl-centros-derivacion-col--acciones {
+        @apply w-0 whitespace-nowrap text-center;
+    }
+
+    .vl-centros-derivacion-td {
+        @apply px-2 py-1 text-xs text-neutral-900 align-middle;
+    }
+
+    .vl-centros-derivacion-row:hover {
+        @apply bg-accent-50/40;
+    }
+
+    .vl-razas-grid {
+        @apply w-auto table-auto border-collapse;
+    }
+
+    .vl-razas-th {
+        @apply border-b border-accent-200 px-2 py-1.5 text-left text-[10px] font-bold uppercase tracking-[0.08em] text-neutral-500 whitespace-nowrap;
+    }
+
+    .vl-razas-col--especie {
+        @apply whitespace-nowrap min-w-[8rem];
+    }
+
+    .vl-razas-col--nombre {
+        @apply whitespace-nowrap min-w-[12rem];
+    }
+
+    .vl-razas-col--acciones {
+        @apply w-0 whitespace-nowrap text-center;
+    }
+
+    .vl-razas-td {
+        @apply px-2 py-1 text-xs text-neutral-900 align-middle;
+    }
+
+    .vl-razas-row:hover {
         @apply bg-accent-50/40;
     }
 

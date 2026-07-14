@@ -428,7 +428,7 @@ class PacienteDeterminaciones extends Component
         }
 
         $paciente = $this->paciente();
-        $neto = PrecioDeterminacionResolver::resolverPrecioLista1((int) $paciente->idClientes, $tipo);
+        $neto = PrecioDeterminacionResolver::resolverPrecioLista1($tipo);
         $descuento = PrecioDeterminacionResolver::calcularDescuento($neto, $this->porcentajeDescuentoCliente());
         $precio = PrecioDeterminacionResolver::precioConDescuento($neto, $descuento);
 

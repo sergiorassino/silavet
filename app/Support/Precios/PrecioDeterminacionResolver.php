@@ -2,29 +2,18 @@
 
 namespace App\Support\Precios;
 
-use App\Models\Estimacioncosto;
 use App\Models\Tipodeterminacion;
-use Illuminate\Support\Facades\Schema;
 
 class PrecioDeterminacionResolver
 {
     /**
-     * Resuelve el precio de lista 1 para una determinación y cliente.
-     * Prioridad: estimacioncostos (precio especial) → tipodeterminaciones.precio.
+     * Precio de lista 1: tipodeterminaciones.precio.
+     *
+     * Nota: la tabla legacy estimacioncostos no se usa en la versión nueva
+     * (se mantiene solo por compatibilidad con el sistema viejo).
      */
-    public static function resolverPrecioLista1(int $idClientes, Tipodeterminacion $tipo): float
+    public static function resolverPrecioLista1(Tipodeterminacion $tipo): float
     {
-        if (Schema::hasTable('estimacioncostos')) {
-            $override = Estimacioncosto::query()
-                ->where('idClientes', $idClientes)
-                ->where('idTipodeterminaciones', $tipo->idTipodeterminaciones)
-                ->value('precio');
-
-            if ($override !== null) {
-                return round((float) $override, 2);
-            }
-        }
-
         return round((float) $tipo->precio, 2);
     }
 

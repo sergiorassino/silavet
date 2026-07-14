@@ -27,6 +27,8 @@ class PermisosIaCatalog
 
     public const USUARIOS = 9;
 
+    public const LISTADOS_ESTADISTICOS = 10;
+
     public static function usuarioTienePermiso(int $orden): bool
     {
         /** @var Usuario|null $usuario */

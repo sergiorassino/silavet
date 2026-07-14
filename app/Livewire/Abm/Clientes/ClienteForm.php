@@ -37,11 +37,11 @@ class ClienteForm extends Component
             $cliente = Cliente::findOrFail($id);
             $this->idClientes = $cliente->idClientes;
             $this->nombre = (string) $cliente->nombre;
-            $this->direccion = (string) $cliente->direccion;
-            $this->telefono1 = (string) $cliente->telefono1;
-            $this->telefono2 = (string) $cliente->telefono2;
-            $this->email = (string) $cliente->email;
-            $this->whatsapp = (string) $cliente->whatsapp;
+            $this->direccion = (string) ($cliente->direccion ?? '');
+            $this->telefono1 = (string) ($cliente->telefono1 ?? '');
+            $this->telefono2 = (string) ($cliente->telefono2 ?? '');
+            $this->email = (string) ($cliente->email ?? '');
+            $this->whatsapp = (string) ($cliente->whatsapp ?? '');
             $this->cuit = CuitInput::format((string) ($cliente->cuit ?? ''));
             $this->descuento = $cliente->descuento !== null
                 ? rtrim(rtrim(number_format((float) $cliente->descuento, 2, '.', ''), '0'), '.')
@@ -79,6 +79,23 @@ class ClienteForm extends Component
         ];
     }
 
+    public function messages(): array
+    {
+        return [
+            'nombre.required' => 'El nombre del cliente es obligatorio.',
+            'nombre.max' => 'El nombre no puede superar 200 caracteres.',
+            'direccion.max' => 'La dirección no puede superar 200 caracteres.',
+            'telefono1.max' => 'El teléfono 1 no puede superar 50 caracteres.',
+            'telefono2.max' => 'El teléfono 2 no puede superar 50 caracteres.',
+            'email.email' => 'Ingrese un email válido.',
+            'email.max' => 'El email no puede superar 150 caracteres.',
+            'whatsapp.max' => 'El WhatsApp no puede superar 20 caracteres.',
+            'descuento.numeric' => 'El descuento debe ser un número.',
+            'descuento.min' => 'El descuento no puede ser negativo.',
+            'descuento.max' => 'El descuento no puede superar 100%.',
+        ];
+    }
+
     public function save(): void
     {
         $key = 'cliente-save:'.auth()->id();
@@ -92,8 +109,11 @@ class ClienteForm extends Component
         $data['email'] = trim((string) ($data['email'] ?? ''));
         $data['whatsapp'] = trim((string) ($data['whatsapp'] ?? ''));
         $data['cuit'] = CuitInput::normalize(trim((string) ($data['cuit'] ?? '')));
+        if ($data['cuit'] === '') {
+            $data['cuit'] = null;
+        }
         $descuento = trim((string) ($data['descuento'] ?? ''));
-        $data['descuento'] = $descuento === '' ? 0.0 : (float) $descuento;
+        $data['descuento'] = $descuento === '' ? null : (float) $descuento;
 
         if ($this->idClientes) {
             $cliente = Cliente::findOrFail($this->idClientes);

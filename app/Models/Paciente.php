@@ -12,8 +12,22 @@ class Paciente extends Model
     /** Protocolo / caso analítico habitual. */
     public const TIPO_PROTOCOLO = 1;
 
-    /** Pago global (no pertenece a un paciente; solo cliente + importe + medio). */
-    public const TIPO_PAGO_GLOBAL = 2;
+    /**
+     * Ingreso de tesorería (pago global: cliente + importe + medio).
+     * Alias histórico: TIPO_PAGO_GLOBAL.
+     */
+    public const TIPO_INGRESO = 2;
+
+    /** @deprecated Usar TIPO_INGRESO */
+    public const TIPO_PAGO_GLOBAL = self::TIPO_INGRESO;
+
+    /** Egreso de tesorería (cuenta / proveedor + importe + medio). */
+    public const TIPO_EGRESO = 3;
+
+    /**
+     * Cliente interno usado por NeoLab al registrar egresos (`idClientes = 1`).
+     */
+    public const ID_CLIENTES_EGRESO = 1;
 
     protected $table = 'pacientes';
 
@@ -26,7 +40,7 @@ class Paciente extends Model
         'idUsuarios',
         'idEspecies',
         'idRazas',
-        'idCuentasDetalle',
+        'idCuentasdetalle',
         'tipoRegistro',
         'fechhoy',
         'nombreProtocolo',
@@ -57,7 +71,7 @@ class Paciente extends Model
     protected function casts(): array
     {
         return [
-            'fechhoy' => 'date',
+            'fechhoy' => 'datetime',
             'fechaEnvioDeriv' => 'date',
             'tipoRegistro' => 'integer',
             'neto' => 'decimal:2',
@@ -71,12 +85,41 @@ class Paciente extends Model
 
     public function esPagoGlobal(): bool
     {
-        return (int) ($this->tipoRegistro ?? 0) === self::TIPO_PAGO_GLOBAL;
+        return $this->esIngreso();
+    }
+
+    public function esIngreso(): bool
+    {
+        return (int) ($this->tipoRegistro ?? 0) === self::TIPO_INGRESO;
+    }
+
+    public function esEgreso(): bool
+    {
+        return (int) ($this->tipoRegistro ?? 0) === self::TIPO_EGRESO;
+    }
+
+    public function esMovimientoTesoreria(): bool
+    {
+        return $this->esIngreso() || $this->esEgreso();
+    }
+
+    public function etiquetaMovimiento(): string
+    {
+        return match ((int) ($this->tipoRegistro ?? 0)) {
+            self::TIPO_INGRESO => 'Ingreso',
+            self::TIPO_EGRESO => 'Egreso',
+            default => '—',
+        };
     }
 
     public function cliente(): BelongsTo
     {
         return $this->belongsTo(Cliente::class, 'idClientes', 'idClientes');
+    }
+
+    public function cuentaDetalle(): BelongsTo
+    {
+        return $this->belongsTo(CuentaDetalle::class, 'idCuentasdetalle', 'id');
     }
 
     public function especie(): BelongsTo

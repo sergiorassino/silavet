@@ -31,6 +31,8 @@ class Usuario extends Authenticatable
         'Concepto',
         'DocTipo',
         'CondicionIVAReceptorId',
+        'key',
+        'crt',
         'permisos_ia',
     ];
 

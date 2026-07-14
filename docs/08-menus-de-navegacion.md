@@ -31,7 +31,7 @@ login pero middleware `menu.portal` separa rutas sensibles.
 | **PROTOCOLOS** | Recepción · Búsqueda · Pendientes de resultado |
 | **RESULTADOS** | Carga por protocolo · Carga por analizador |
 | **INFORMES** | Emisión · Envío por mail |
-| **PARAMETRIZACIÓN** | Clientes · Especies · Tipos de determinación · Ítems de informe |
+| **PARAMETRIZACIÓN** | Clientes · Especies · Razas · Tipos de determinación · Ítems de informe |
 | **CONSULTAS** | Listados · Estadísticas |
 
 Orientación UI: **desktop-first**.
@@ -124,6 +124,23 @@ Fuente de verdad: `resources/views/components/vl-sidebar-icon.blade.php`.
 | `det-por-grupo` | Det. por Grupo (Inf) |
 | `items-informe` | Parametrización de Items |
 | `automatizacion` | Script de Automatización |
+| `centros-derivacion` | Gestión de Centros de Derivación |
+| `parametros-sistema` | Parámetros del Sistema |
+| `gestion-clientes` | Gestión de Clientes |
+| `gestion-usuarios` | Gestión de Usuarios |
+| `especies` | Gestión de Especies |
+| `razas` | Gestión de Razas |
+| `cuenta-corriente` | Cuenta Corriente |
+| `movimientos` | Movimientos (Tesorería) |
+| `transferencias-intercuenta` | Transferencias Intercuenta (Tesorería) |
+| `cuentas-contables` | Gestión de Cuentas Contables (Tesorería) |
+| `cuentas-detalle` | Gestión de Cuentas Detalle (Tesorería) |
+| `estimacion-costos` | Estimación de Costos (Listados Estadísticos) |
+| `estadistico-pacientes` | Listado Estadístico de Pacientes |
+| `historial-determinaciones` | Historial de Determinaciones |
+| `cantidad-determinaciones-comparac` | Cantidad Determinaciones (comparac.) |
+| `gestion-procedimientos` | Gestión de Procedimientos |
+| `muestras-por-determinacion` | Muestras por Determinación |
 
 Al sumar filas a esta tabla, verificar que el `name` nuevo no exista ya en el componente.
 

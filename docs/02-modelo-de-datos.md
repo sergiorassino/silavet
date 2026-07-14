@@ -62,7 +62,7 @@ pacientes ─1:N─► renglones
 determinaciones ──► tipodeterminaciones
 determinaciones ──► derivaciones
 renglones ──► itemsinforme / grupos / tipodeterminacion
-clientes ─1:N─► estimacioncostos (precios especiales por cliente)
+clientes ─1:N─► estimacioncostos (legacy; solo compatibilidad con sistema viejo)
 ```
 
 ---
@@ -116,7 +116,7 @@ Detalle de auth y permisos: [03-autenticacion-y-permisos.md](03-autenticacion-y-
 | Tabla              | Descripción                                    |
 |--------------------|------------------------------------------------|
 | `compafip`         | Comprobantes electrónicos AFIP                 |
-| `estimacioncostos` | Precios estimados por cliente × determinación  |
+| `estimacioncostos` | Legacy: carrito temporal de estimaciones (no usar en versión nueva) |
 | `reactivos`        | Stock de reactivos                             |
 | `reactivoxdeterminacion` | Consumo de reactivos por tipo de análisis |
 
@@ -159,7 +159,7 @@ class Paciente extends Model
 | `entorno` | Configuración |
 | `equipos` | Parametrización |
 | `especies` / `razas` | Parametrización |
-| `estimacioncostos` | Precios |
+| `estimacioncostos` | Legacy (compatibilidad) |
 | `grupos` | Informes |
 | `imagenesxrenglon` | Resultados |
 | `itemsinforme` | Informes |
