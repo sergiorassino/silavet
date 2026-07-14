@@ -47,6 +47,7 @@ final class EntornoArchivos
     {
         $directorio = trim($directorio, '/');
         $destinoDir = public_path($directorio);
+        $destino = $destinoDir.DIRECTORY_SEPARATOR.$nombreArchivo;
 
         File::ensureDirectoryExists($destinoDir);
 
@@ -56,7 +57,19 @@ final class EntornoArchivos
             }
         }
 
-        $archivo->move($destinoDir, $nombreArchivo);
+        $origen = $archivo->getRealPath();
+        // Livewire TemporaryUploadedFile ya no es un upload HTTP: move()/move_uploaded_file() falla.
+        if ($origen === false || ! is_file($origen)) {
+            throw new \RuntimeException('No se pudo leer el archivo temporal subido.');
+        }
+
+        if (! File::copy($origen, $destino) || ! is_file($destino)) {
+            throw new \RuntimeException(
+                'No se pudo guardar el archivo en '.$directorio.'. Verifique permisos de escritura en public/entorno.'
+            );
+        }
+
+        @chmod($destino, 0644);
 
         return $directorio.'/'.$nombreArchivo;
     }
