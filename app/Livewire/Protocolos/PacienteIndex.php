@@ -1030,8 +1030,11 @@ class PacienteIndex extends Component
                         ->orWhereHas('cliente', fn ($c) => $c->where('nombre', 'like', "%{$term}%"));
                 });
             })
-            ->orderByDesc('pacientes.fechhoy')
+            // Día calendario primero (ignora hora de pagos globales en algunos labos),
+            // luego tipoRegistro para que TIPO_PAGO_GLOBAL quede al final de cada día.
+            ->orderByRaw('DATE(pacientes.fechhoy) DESC')
             ->orderBy('pacientes.tipoRegistro')
+            ->orderByDesc('pacientes.fechhoy')
             ->orderByDesc('pacientes.nombreProtocolo')
             ->paginate(self::POR_PAGINA);
 
