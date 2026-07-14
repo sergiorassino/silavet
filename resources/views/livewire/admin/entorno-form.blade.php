@@ -197,7 +197,7 @@
                     </div>
                     <div>
                         <label class="form-label mb-1" for="emailPieMail">Email en pie de mail</label>
-                        <input wire:model="emailPieMail" id="emailPieMail" type="email" maxlength="120" class="form-input py-1.5 text-sm">
+                        <input wire:model="emailPieMail" id="emailPieMail" type="text" maxlength="120" class="form-input py-1.5 text-sm">
                         @error('emailPieMail') <p class="form-error">{{ $message }}</p> @enderror
                     </div>
                 </div>

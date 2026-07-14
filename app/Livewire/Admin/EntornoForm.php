@@ -145,7 +145,7 @@ class EntornoForm extends Component
             'nombrePieMail' => ['nullable', 'string', 'max:120'],
             'direccionPieMail' => ['nullable', 'string', 'max:255'],
             'telefonoPieMail' => ['nullable', 'string', 'max:80'],
-            'emailPieMail' => ['nullable', 'email', 'max:120'],
+            'emailPieMail' => ['nullable', 'string', 'max:120'],
             'listaPreciosUpload' => ['nullable', 'file', 'mimes:pdf', 'max:10240'],
             'logoUpload' => ['nullable', 'image', 'max:2048'],
             'firmaIzqUpload' => ['nullable', 'image', 'max:1024'],
@@ -159,7 +159,6 @@ class EntornoForm extends Component
         return [
             'colorInforme.regex' => 'El color del informe debe ser un código hexadecimal válido (#RRGGBB).',
             'emailLabo.email' => 'El email del laboratorio no es válido.',
-            'emailPieMail.email' => 'El email del pie de mail no es válido.',
             'listaPreciosUpload.mimes' => 'La lista de precios debe ser un archivo PDF.',
             'listaPreciosUpload.max' => 'La lista de precios no puede superar 10 MB.',
             'logoUpload.image' => 'El logo debe ser una imagen.',
