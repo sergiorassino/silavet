@@ -259,6 +259,124 @@ document.addEventListener('alpine:init', () => {
             await this.$wire.guardar(valores, valores2, this.estadoPaciente, !!salir);
         },
     }));
+
+    /**
+     * Marco del logo en login: adapta wide/square/tall y, si el PNG es
+     * cuadrado con marca horizontal (márgenes blancos), recorta al contenido.
+     */
+    Alpine.data('vlAuthLogoFrame', (config = {}) => ({
+        shape: config.shape || 'square',
+        cropped: false,
+        contentAr: null,
+
+        init() {
+            this.$nextTick(() => {
+                const img = this.$el.querySelector('img.vl-auth-logo');
+                if (img && img.complete && img.naturalWidth > 0) {
+                    this.onLoad({ target: img });
+                }
+            });
+        },
+
+        get frameClass() {
+            return {
+                'vl-auth-logo-frame--wide': this.shape === 'wide',
+                'vl-auth-logo-frame--square': this.shape === 'square',
+                'vl-auth-logo-frame--tall': this.shape === 'tall',
+                'vl-auth-logo-frame--cropped': this.cropped,
+            };
+        },
+
+        get frameStyle() {
+            if (!this.cropped || !this.contentAr) {
+                return {};
+            }
+
+            return { '--vl-logo-ar': this.contentAr };
+        },
+
+        onLoad(event) {
+            const img = event.target;
+            if (!img || !img.naturalWidth || !img.naturalHeight) {
+                return;
+            }
+
+            const ratio = img.naturalWidth / img.naturalHeight;
+            let shape = ratio >= 1.35 ? 'wide' : (ratio <= 0.75 ? 'tall' : 'square');
+            let cropped = false;
+            let contentAr = null;
+
+            if (shape === 'square') {
+                const bbox = this.contentBBox(img);
+                if (bbox && bbox.h > 0) {
+                    const contentRatio = bbox.w / bbox.h;
+                    if (contentRatio >= 1.4) {
+                        shape = 'wide';
+                        cropped = true;
+                        contentAr = `${bbox.w} / ${bbox.h}`;
+                    } else if (contentRatio <= 0.7) {
+                        shape = 'tall';
+                        cropped = true;
+                        contentAr = `${bbox.w} / ${bbox.h}`;
+                    }
+                }
+            }
+
+            this.shape = shape;
+            this.cropped = cropped;
+            this.contentAr = contentAr;
+        },
+
+        contentBBox(img) {
+            try {
+                const maxScan = 360;
+                const scale = Math.min(1, maxScan / Math.max(img.naturalWidth, img.naturalHeight));
+                const w = Math.max(1, Math.round(img.naturalWidth * scale));
+                const h = Math.max(1, Math.round(img.naturalHeight * scale));
+                const canvas = document.createElement('canvas');
+                canvas.width = w;
+                canvas.height = h;
+                const ctx = canvas.getContext('2d', { willReadFrequently: true });
+                if (!ctx) {
+                    return null;
+                }
+                ctx.drawImage(img, 0, 0, w, h);
+                const { data } = ctx.getImageData(0, 0, w, h);
+                let minX = w;
+                let minY = h;
+                let maxX = 0;
+                let maxY = 0;
+                let found = false;
+
+                for (let y = 0; y < h; y += 1) {
+                    for (let x = 0; x < w; x += 1) {
+                        const i = (y * w + x) * 4;
+                        const a = data[i + 3];
+                        const r = data[i];
+                        const g = data[i + 1];
+                        const b = data[i + 2];
+                        const nearWhite = r > 248 && g > 248 && b > 248;
+                        if (a < 18 || nearWhite) {
+                            continue;
+                        }
+                        found = true;
+                        if (x < minX) minX = x;
+                        if (y < minY) minY = y;
+                        if (x > maxX) maxX = x;
+                        if (y > maxY) maxY = y;
+                    }
+                }
+
+                if (!found) {
+                    return null;
+                }
+
+                return { w: maxX - minX + 1, h: maxY - minY + 1 };
+            } catch {
+                return null;
+            }
+        },
+    }));
 });
 
 window.comportamientoSelect = function (idItems, idItems2) {

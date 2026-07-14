@@ -114,14 +114,74 @@
         --tw-ring-color: rgba(14, 165, 233, 0.45);
     }
 
-    .vl-auth-logo {
-        @apply mx-auto block h-auto w-auto max-w-[min(100%,20rem)] object-contain;
-        max-height: 9.5rem;
+    .vl-auth-logo-frame {
+        @apply mx-auto flex max-w-full items-center justify-center rounded-2xl bg-white shadow-xl ring-1 ring-white/40;
+        box-shadow: 0 18px 40px -16px rgba(0, 0, 0, 0.45);
+        width: fit-content;
+        /* Fallback antes de Alpine / sin JS */
+        padding: 0.7rem 1rem;
+        max-width: min(100%, 24rem);
     }
 
-    .vl-auth-logo--panel {
-        @apply rounded-2xl bg-white p-4 shadow-xl ring-1 ring-white/40;
-        box-shadow: 0 18px 40px -16px rgba(0, 0, 0, 0.45);
+    .vl-auth-logo-frame--wide {
+        padding: 0.7rem 1.15rem;
+        max-width: min(100%, 24rem);
+    }
+
+    .vl-auth-logo-frame--square {
+        padding: 0.65rem;
+        max-width: min(100%, 12.5rem);
+    }
+
+    .vl-auth-logo-frame--tall {
+        padding: 0.85rem 0.65rem;
+        max-width: min(100%, 9.5rem);
+    }
+
+    .vl-auth-logo-frame--cropped.vl-auth-logo-frame--wide {
+        width: min(100%, 24rem);
+        aspect-ratio: var(--vl-logo-ar, 2.5 / 1);
+        padding: 0.65rem 1rem;
+        align-items: stretch;
+        overflow: hidden;
+    }
+
+    .vl-auth-logo-frame--cropped.vl-auth-logo-frame--tall {
+        width: min(100%, 9.5rem);
+        aspect-ratio: var(--vl-logo-ar, 1 / 1.6);
+        padding: 0.75rem 0.55rem;
+        align-items: stretch;
+        overflow: hidden;
+    }
+
+    .vl-auth-logo {
+        @apply block h-auto w-auto max-w-full object-contain;
+        max-height: 8rem;
+        max-width: min(100%, 22rem);
+    }
+
+    .vl-auth-logo-frame--wide .vl-auth-logo {
+        max-height: 6.75rem;
+        max-width: min(100%, 22rem);
+    }
+
+    .vl-auth-logo-frame--square .vl-auth-logo {
+        max-height: 10.5rem;
+        max-width: min(100%, 11rem);
+    }
+
+    .vl-auth-logo-frame--tall .vl-auth-logo {
+        max-height: 11rem;
+        max-width: min(100%, 8rem);
+    }
+
+    .vl-auth-logo-frame--cropped .vl-auth-logo {
+        width: 100%;
+        height: 100%;
+        max-height: none;
+        max-width: none;
+        object-fit: cover;
+        object-position: center;
     }
 
     .vl-auth-logo-fallback {
