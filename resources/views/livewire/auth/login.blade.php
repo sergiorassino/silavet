@@ -1,7 +1,7 @@
 <div>
-    <div class="vl-auth-card p-6 sm:p-8">
-        <h2 class="text-xl sm:text-2xl font-bold tracking-tight text-neutral-800">Iniciar sesión</h2>
-        <p class="mt-1.5 text-sm text-neutral-600">Ingrese su DNI y contraseña para acceder al laboratorio.</p>
+    <div class="vl-auth-card vl-auth-card--login">
+        <h2 class="font-bold tracking-tight text-neutral-800">Iniciar sesión</h2>
+        <p class="mt-1 text-sm text-neutral-600">Ingrese su DNI y contraseña para acceder al laboratorio.</p>
 
         @if (session('error'))
             <div class="mt-5 p-3 rounded-xl bg-red-50 border border-red-200 text-sm text-red-700">
@@ -15,7 +15,7 @@
             </p>
         </noscript>
 
-        <form wire:submit.prevent="login" class="mt-6 space-y-4" autocomplete="on">
+        <form wire:submit.prevent="login" class="vl-auth-form" autocomplete="on">
             <div>
                 <label class="vl-auth-label" for="dni">DNI (usuario)</label>
                 <input wire:model.live.debounce.400ms="dni"

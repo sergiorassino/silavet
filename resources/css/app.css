@@ -80,10 +80,59 @@
         @apply px-4 py-3 text-sm text-neutral-900;
     }
 
-    /* Login / auth */
+    /* Login / auth — escala fluida según altura del monitor */
+    .vl-auth-page {
+        --vl-auth-gap: clamp(0.85rem, 1.4dvh + 0.35rem, 1.85rem);
+        --vl-auth-panel-py: clamp(1rem, 3.2dvh, 3.75rem);
+        --vl-auth-panel-px: clamp(1rem, 2vw, 2.5rem);
+        --vl-auth-stack-max: clamp(24rem, 34vw, 30rem);
+        --vl-auth-card-pad: clamp(1.35rem, 1.6dvh + 0.85rem, 2.15rem);
+        --vl-auth-title: clamp(1.25rem, 0.55dvh + 1.05rem, 1.75rem);
+        --vl-auth-form-mt: clamp(1.1rem, 1.4dvh + 0.5rem, 1.75rem);
+        --vl-auth-field-gap: clamp(0.85rem, 1dvh + 0.45rem, 1.25rem);
+        --vl-auth-input-py: clamp(0.55rem, 0.35dvh + 0.4rem, 0.75rem);
+        --vl-auth-logo-h: clamp(7.25rem, 11dvh, 11rem);
+        --vl-auth-logo-h-wide: clamp(7.5rem, 12dvh, 11.5rem);
+        --vl-auth-logo-h-dense: clamp(8.75rem, 14dvh, 13.5rem);
+        --vl-auth-logo-h-square: clamp(8.5rem, 12.5dvh, 12rem);
+        --vl-auth-logo-h-tall: clamp(8.75rem, 13dvh, 12.5rem);
+        --vl-auth-logo-max-w: clamp(22rem, 30vw, 34rem);
+        min-height: 100dvh;
+    }
+
+    .vl-auth-page__panel-inner {
+        padding-top: var(--vl-auth-panel-py);
+        padding-bottom: var(--vl-auth-panel-py);
+        padding-left: var(--vl-auth-panel-px);
+        padding-right: var(--vl-auth-panel-px);
+    }
+
+    .vl-auth-page__stack {
+        gap: var(--vl-auth-gap);
+        max-width: var(--vl-auth-stack-max);
+    }
+
     .vl-auth-card {
         @apply rounded-3xl border bg-white shadow-lg shadow-neutral-900/5;
         border-color: var(--color-accent-200);
+    }
+
+    .vl-auth-card--login {
+        width: 100%;
+        padding: var(--vl-auth-card-pad);
+    }
+
+    .vl-auth-card--login h2 {
+        font-size: var(--vl-auth-title);
+        line-height: 1.3;
+    }
+
+    .vl-auth-form {
+        margin-top: var(--vl-auth-form-mt);
+    }
+
+    .vl-auth-form > * + * {
+        margin-top: var(--vl-auth-field-gap);
     }
 
     .vl-auth-label {
@@ -93,7 +142,9 @@
 
     .vl-auth-input,
     .vl-auth-select {
-        @apply block w-full rounded-xl text-sm shadow-sm transition-colors duration-150;
+        @apply block w-full rounded-xl px-3 text-sm shadow-sm transition-colors duration-150;
+        padding-top: var(--vl-auth-input-py);
+        padding-bottom: var(--vl-auth-input-py);
         background-color: rgba(186, 230, 253, 0.35);
         border: 1px solid var(--color-accent-200);
     }
@@ -106,7 +157,9 @@
     }
 
     .vl-auth-btn {
-        @apply inline-flex w-full cursor-pointer items-center justify-center rounded-xl bg-primary-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition-colors duration-150 hover:bg-primary-700 disabled:cursor-not-allowed disabled:opacity-60;
+        @apply inline-flex w-full cursor-pointer items-center justify-center rounded-xl bg-primary-600 px-4 text-sm font-semibold text-white shadow-sm transition-colors duration-150 hover:bg-primary-700 disabled:cursor-not-allowed disabled:opacity-60;
+        padding-top: var(--vl-auth-input-py);
+        padding-bottom: var(--vl-auth-input-py);
     }
 
     .vl-auth-btn:focus-visible {
@@ -120,17 +173,17 @@
         width: fit-content;
         /* Fallback antes de Alpine / sin JS */
         padding: 0.7rem 1rem;
-        max-width: min(100%, 24rem);
+        max-width: min(100%, var(--vl-auth-logo-max-w, 24rem));
     }
 
     .vl-auth-logo-frame--wide {
         padding: 0.75rem 1.15rem;
-        max-width: min(100%, 28rem);
+        max-width: min(100%, calc(var(--vl-auth-logo-max-w, 28rem) * 0.95));
     }
 
     .vl-auth-logo-frame--wide.vl-auth-logo-frame--dense {
         padding: 0.9rem 1.35rem;
-        max-width: min(100%, 34rem);
+        max-width: min(100%, var(--vl-auth-logo-max-w, 34rem));
     }
 
     .vl-auth-logo-frame--square {
@@ -144,7 +197,7 @@
     }
 
     .vl-auth-logo-frame--cropped.vl-auth-logo-frame--wide {
-        width: min(100%, 28rem);
+        width: min(100%, calc(var(--vl-auth-logo-max-w, 28rem) * 0.95));
         aspect-ratio: var(--vl-logo-ar, 2.5 / 1);
         padding: 0.65rem 1rem;
         align-items: stretch;
@@ -152,7 +205,7 @@
     }
 
     .vl-auth-logo-frame--cropped.vl-auth-logo-frame--wide.vl-auth-logo-frame--dense {
-        width: min(100%, 34rem);
+        width: min(100%, var(--vl-auth-logo-max-w, 34rem));
         padding: 0.75rem 1.15rem;
     }
 
@@ -166,27 +219,27 @@
 
     .vl-auth-logo {
         @apply block h-auto w-auto max-w-full object-contain;
-        max-height: 8rem;
+        max-height: var(--vl-auth-logo-h);
         max-width: min(100%, 22rem);
     }
 
     .vl-auth-logo-frame--wide .vl-auth-logo {
-        max-height: 8.5rem;
-        max-width: min(100%, 26rem);
+        max-height: var(--vl-auth-logo-h-wide);
+        max-width: min(100%, calc(var(--vl-auth-logo-max-w, 26rem) * 0.9));
     }
 
     .vl-auth-logo-frame--wide.vl-auth-logo-frame--dense .vl-auth-logo {
-        max-height: 12rem;
-        max-width: min(100%, 32rem);
+        max-height: var(--vl-auth-logo-h-dense);
+        max-width: min(100%, var(--vl-auth-logo-max-w, 32rem));
     }
 
     .vl-auth-logo-frame--square .vl-auth-logo {
-        max-height: 10.5rem;
+        max-height: var(--vl-auth-logo-h-square);
         max-width: min(100%, 11rem);
     }
 
     .vl-auth-logo-frame--tall .vl-auth-logo {
-        max-height: 11rem;
+        max-height: var(--vl-auth-logo-h-tall);
         max-width: min(100%, 8rem);
     }
 
@@ -209,6 +262,186 @@
     .vl-auth-logo-fallback--panel {
         @apply bg-white text-primary-700 shadow-xl ring-1 ring-white/40;
         box-shadow: 0 18px 40px -16px rgba(0, 0, 0, 0.45);
+    }
+
+    /* ~17" / viewport corto: sin scroll (fallback CSS + data-attr) */
+    @media (min-width: 768px) and (max-height: 920px) {
+        .vl-auth-page {
+            --vl-auth-gap: 0.75rem;
+            --vl-auth-panel-py: 0.75rem;
+            --vl-auth-stack-max: 26rem;
+            --vl-auth-card-pad: 1.25rem;
+            --vl-auth-title: 1.25rem;
+            --vl-auth-form-mt: 1rem;
+            --vl-auth-field-gap: 0.75rem;
+            --vl-auth-input-py: 0.5rem;
+            --vl-auth-logo-h: 7.25rem;
+            --vl-auth-logo-h-wide: 7.5rem;
+            --vl-auth-logo-h-dense: 9rem;
+            --vl-auth-logo-h-square: 8.5rem;
+            --vl-auth-logo-h-tall: 8.75rem;
+            --vl-auth-logo-max-w: 28rem;
+            height: 100dvh;
+            max-height: 100dvh;
+            overflow: hidden;
+        }
+
+        .vl-auth-label {
+            margin-bottom: 0.35rem;
+        }
+
+        .vl-auth-logo-frame--wide.vl-auth-logo-frame--dense {
+            padding: 0.65rem 1.1rem;
+        }
+    }
+
+    html[data-vl-auth-scale="compact"] .vl-auth-page {
+        --vl-auth-gap: 0.75rem;
+        --vl-auth-panel-py: 0.75rem;
+        --vl-auth-stack-max: 26rem;
+        --vl-auth-card-pad: 1.25rem;
+        --vl-auth-title: 1.25rem;
+        --vl-auth-form-mt: 1rem;
+        --vl-auth-field-gap: 0.75rem;
+        --vl-auth-input-py: 0.5rem;
+        --vl-auth-logo-h: 7.25rem;
+        --vl-auth-logo-h-wide: 7.5rem;
+        --vl-auth-logo-h-dense: 9rem;
+        --vl-auth-logo-h-square: 8.5rem;
+        --vl-auth-logo-h-tall: 8.75rem;
+        --vl-auth-logo-max-w: 28rem;
+        height: 100dvh;
+        max-height: 100dvh;
+        overflow: hidden;
+    }
+
+    html[data-vl-auth-scale="compact"] .vl-auth-label {
+        margin-bottom: 0.35rem;
+    }
+
+    html[data-vl-auth-scale="compact"] .vl-auth-logo-frame--wide.vl-auth-logo-frame--dense {
+        padding: 0.65rem 1.1rem;
+    }
+
+    /* Monitor amplio / 21"+ — contraste marcado vs 17" */
+    html[data-vl-auth-scale="roomy"] .vl-auth-page {
+        --vl-auth-gap: 1.85rem;
+        --vl-auth-panel-py: 3.25rem;
+        --vl-auth-panel-px: 2.25rem;
+        --vl-auth-stack-max: 34rem;
+        --vl-auth-card-pad: 2.25rem;
+        --vl-auth-title: 1.85rem;
+        --vl-auth-form-mt: 1.75rem;
+        --vl-auth-field-gap: 1.25rem;
+        --vl-auth-input-py: 0.8rem;
+        --vl-auth-logo-h: 11.5rem;
+        --vl-auth-logo-h-wide: 12rem;
+        --vl-auth-logo-h-dense: 14.5rem;
+        --vl-auth-logo-h-square: 12.5rem;
+        --vl-auth-logo-h-tall: 13rem;
+        --vl-auth-logo-max-w: 38rem;
+        height: auto;
+        max-height: none;
+        overflow: visible;
+    }
+
+    html[data-vl-auth-scale="roomy"] .vl-auth-logo-frame--wide.vl-auth-logo-frame--dense {
+        padding: 1.1rem 1.65rem;
+    }
+
+    html[data-vl-auth-scale="roomy"] .vl-auth-card--login .text-sm {
+        font-size: 0.98rem;
+    }
+
+    html[data-vl-auth-scale="roomy"] .vl-auth-btn {
+        font-size: 0.95rem;
+        min-height: 2.85rem;
+    }
+
+    /* Panel izquierdo (marca) — misma escala que el formulario */
+    .vl-auth-brand {
+        --vl-auth-brand-px: clamp(2rem, 3.2vw, 3.5rem);
+        --vl-auth-brand-pt: clamp(2rem, 5dvh, 4.5rem);
+        --vl-auth-brand-pb: clamp(1.25rem, 2.5dvh, 2.5rem);
+        --vl-auth-brand-footer-py: clamp(1.5rem, 3.5dvh, 3rem);
+        --vl-auth-brand-copy-max: clamp(22rem, 28vw, 34rem);
+        --vl-auth-brand-kicker: clamp(0.7rem, 0.2dvh + 0.62rem, 0.8rem);
+        --vl-auth-brand-kicker-track: 0.22em;
+        --vl-auth-brand-title: clamp(1.75rem, 1.2dvh + 1.35rem, 2.6rem);
+        --vl-auth-brand-title-mt: clamp(0.65rem, 1dvh, 1rem);
+        --vl-auth-brand-lead: clamp(0.95rem, 0.35dvh + 0.8rem, 1.2rem);
+        --vl-auth-brand-lead-mt: clamp(0.85rem, 1.2dvh, 1.35rem);
+        --vl-auth-brand-note: clamp(0.82rem, 0.25dvh + 0.7rem, 1.05rem);
+        --vl-auth-brand-note-mt: clamp(0.55rem, 0.8dvh, 0.9rem);
+    }
+
+    .vl-auth-brand__body {
+        padding-left: var(--vl-auth-brand-px);
+        padding-right: var(--vl-auth-brand-px);
+        padding-top: var(--vl-auth-brand-pt);
+        padding-bottom: var(--vl-auth-brand-pb);
+    }
+
+    .vl-auth-brand__copy {
+        max-width: var(--vl-auth-brand-copy-max);
+    }
+
+    .vl-auth-brand__kicker {
+        font-size: var(--vl-auth-brand-kicker);
+        letter-spacing: var(--vl-auth-brand-kicker-track);
+    }
+
+    .vl-auth-brand__title {
+        margin-top: var(--vl-auth-brand-title-mt);
+        font-size: var(--vl-auth-brand-title);
+    }
+
+    .vl-auth-brand__lead {
+        margin-top: var(--vl-auth-brand-lead-mt);
+        font-size: var(--vl-auth-brand-lead);
+    }
+
+    .vl-auth-brand__note {
+        margin-top: var(--vl-auth-brand-note-mt);
+        font-size: var(--vl-auth-brand-note);
+    }
+
+    .vl-auth-brand__footer {
+        padding-left: var(--vl-auth-brand-px);
+        padding-right: var(--vl-auth-brand-px);
+        padding-top: var(--vl-auth-brand-footer-py);
+        padding-bottom: var(--vl-auth-brand-footer-py);
+    }
+
+    html[data-vl-auth-scale="compact"] .vl-auth-brand {
+        --vl-auth-brand-px: 2rem;
+        --vl-auth-brand-pt: 2rem;
+        --vl-auth-brand-pb: 1rem;
+        --vl-auth-brand-footer-py: 1.35rem;
+        --vl-auth-brand-copy-max: 26rem;
+        --vl-auth-brand-kicker: 0.68rem;
+        --vl-auth-brand-title: 1.65rem;
+        --vl-auth-brand-title-mt: 0.55rem;
+        --vl-auth-brand-lead: 0.92rem;
+        --vl-auth-brand-lead-mt: 0.75rem;
+        --vl-auth-brand-note: 0.8rem;
+        --vl-auth-brand-note-mt: 0.45rem;
+    }
+
+    html[data-vl-auth-scale="roomy"] .vl-auth-brand {
+        --vl-auth-brand-px: 3.5rem;
+        --vl-auth-brand-pt: 4rem;
+        --vl-auth-brand-pb: 2.25rem;
+        --vl-auth-brand-footer-py: 2.85rem;
+        --vl-auth-brand-copy-max: 36rem;
+        --vl-auth-brand-kicker: 0.8rem;
+        --vl-auth-brand-kicker-track: 0.24em;
+        --vl-auth-brand-title: 2.55rem;
+        --vl-auth-brand-title-mt: 1rem;
+        --vl-auth-brand-lead: 1.2rem;
+        --vl-auth-brand-lead-mt: 1.35rem;
+        --vl-auth-brand-note: 1.05rem;
+        --vl-auth-brand-note-mt: 0.9rem;
     }
 
     /* Dashboard — compacto para pantallas ~17" */
