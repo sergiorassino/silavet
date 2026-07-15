@@ -7,11 +7,13 @@
     @if ($paso === 'filtros')
         <div class="vl-hero mb-4">
             <div class="vl-hero-inner">
-                <p class="vl-eyebrow">Listados estadísticos</p>
-                <h1 class="text-2xl font-bold sm:text-3xl">Cantidad determinaciones (comparac.)</h1>
-                <p class="mt-2 text-sm text-white/80">
-                    Seleccione determinaciones y dos períodos a comparar.
-                </p>
+                <x-vl-hero-heading>
+                    <p class="vl-eyebrow">Listados estadísticos</p>
+                    <h1 class="text-2xl font-bold sm:text-3xl">Cantidad determinaciones (comparac.)</h1>
+                    <p class="mt-2 text-sm text-white/80">
+                        Seleccione determinaciones y dos períodos a comparar.
+                    </p>
+                </x-vl-hero-heading>
             </div>
         </div>
 

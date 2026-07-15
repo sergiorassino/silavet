@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Cliente\ListaPreciosPdfController;
 use App\Http\Controllers\Clientes\CuentaCorrienteClientesExcelController;
 use App\Http\Controllers\Clientes\CuentaCorrienteClientesPdfController;
 use App\Http\Controllers\Clientes\CuentaCorrienteDetalleExcelController;
@@ -18,6 +19,8 @@ use App\Livewire\Abm\Requerimientos\RequerimientoForm;
 use App\Livewire\Abm\Requerimientos\RequerimientoIndex;
 use App\Livewire\Abm\Usuarios\UsuarioForm;
 use App\Livewire\Abm\Usuarios\UsuarioIndex;
+use App\Livewire\Cliente\ClienteHome;
+use App\Livewire\Cliente\ListaPrecios;
 use App\Livewire\Clientes\CuentaCorrienteDetalle;
 use App\Livewire\Clientes\CuentaCorrienteIndex;
 use App\Livewire\Abm\DetPorGrupo\DetPorGrupoIndex;
@@ -68,6 +71,20 @@ Route::post('/logout', function () {
 })->middleware('auth')->name('logout');
 
 Route::middleware(['auth', 'lab.context'])->group(function () {
+    Route::prefix('cliente')->middleware('menu.portal:cliente')->group(function () {
+        Route::get('/', ClienteHome::class)->name('cliente.home');
+        Route::get('/pacientes', PacienteIndex::class)->name('cliente.pacientes');
+        Route::get('/pacientes/informe/{ref}', InformePacientePdfController::class)
+            ->middleware('no-store')
+            ->where('ref', '[A-Za-z0-9_-]+')
+            ->name('cliente.pacientes.informe');
+        Route::get('/lista-precios', ListaPrecios::class)->name('cliente.lista-precios');
+        Route::get('/lista-precios/pdf', ListaPreciosPdfController::class)
+            ->middleware(['throttle:20,1', 'no-store'])
+            ->name('cliente.lista-precios.pdf');
+        Route::get('/estimacion-costos', EstimacionCostos::class)->name('cliente.estimacion-costos');
+    });
+
     Route::get('/dashboard', Dashboard::class)
         ->middleware('menu.portal:laboratorio')
         ->name('dashboard');

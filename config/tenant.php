@@ -52,6 +52,12 @@ return [
     | Ver docs/10-numero-de-protocolo.md (variantes, config por tenant, cómo extender).
     */
     'protocolos' => [
+        /*
+        | Estados del flujo del protocolo: 3 (En Proc., Parcial, Final) o 4 (+ Final/Env).
+        | neolab y la mayoría usan 4; alqu usa 3.
+        */
+        'estados_flujo' => 4,
+
         'implementacion' => 'fecha_diaria',
 
         'anual_consecutivo' => [

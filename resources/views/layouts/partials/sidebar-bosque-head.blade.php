@@ -9,7 +9,7 @@
         --vl-light-blue: #bae6fd;
         --vl-ice: #e0f7ff;
 
-        /* Fondo sidebar — solo gama celeste (sin gris oscuro) */
+        /* Fondo sidebar — degradé celeste (más oscuro arriba, más claro abajo) */
         --vl-sidebar-bg-top: #0c4a6e;
         --vl-sidebar-bg-mid: #075985;
         --vl-sidebar-bg-bottom: #0369a1;

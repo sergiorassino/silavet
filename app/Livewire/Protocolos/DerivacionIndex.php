@@ -62,10 +62,7 @@ class DerivacionIndex extends PacienteIndex
             ->select('determinaciones.*')
             ->where('determinaciones.idDerivaciones', '>', 0)
             ->when(! $this->incluirFinalizados, function ($q) {
-                $q->whereNotIn('pacientes.estado', [
-                    ResultadosEstadosCatalog::FINAL,
-                    ResultadosEstadosCatalog::FINAL_ENV,
-                ]);
+                $q->whereNotIn('pacientes.estado', ResultadosEstadosCatalog::estadosFinalizados());
             })
             ->with([
                 'paciente' => fn ($q) => $q->with($pacienteWith),

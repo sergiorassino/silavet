@@ -1,7 +1,7 @@
 <div class="vl-page vl-page--wide">
     <div class="vl-hero mb-4">
         <div class="vl-hero-inner flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-            <div>
+            <x-vl-hero-heading>
                 <p class="vl-eyebrow">Protocolos</p>
                 <h1 class="text-2xl font-bold sm:text-3xl">Pacientes</h1>
                 <p class="mt-2 text-sm text-white/80">
@@ -17,7 +17,7 @@
                         Historial completo de protocolos del laboratorio.
                     @endif
                 </p>
-            </div>
+            </x-vl-hero-heading>
             <div class="flex shrink-0 flex-col gap-2 sm:flex-row sm:items-center">
                 <button type="button"
                         wire:click="abrirModalPagoGlobal"
@@ -36,7 +36,7 @@
         <div class="vl-toolbar border-b border-accent-200 px-5 py-3 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <input wire:model.live.debounce.300ms="busqueda"
                    type="search"
-                   placeholder="Buscar por protocolo, paciente, tutor, cliente o email…"
+                   placeholder="Buscar por protocolo, paciente, tutor o cliente…"
                    class="form-input max-w-xl w-full sm:flex-1">
             <div class="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-3 shrink-0">
                 @if ($vista === 'hoy')

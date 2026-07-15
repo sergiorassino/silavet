@@ -38,10 +38,7 @@ return Application::configure(basePath: dirname(__DIR__))
 
             $path = trim($request->path(), '/');
 
-            if ($path === 'cliente' || str_starts_with($path, 'cliente/')) {
-                return vl_route_url('cliente.login');
-            }
-
+            // Login único para personal y autogestión de cliente.
             return vl_route_url('login');
         });
 

@@ -1,11 +1,11 @@
 <div class="vl-page vl-page--wide">
     <div class="vl-hero mb-3">
         <div class="vl-hero-inner flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-            <div>
+            <x-vl-hero-heading>
                 <p class="vl-eyebrow">Tesorería</p>
                 <h1 class="text-2xl font-bold sm:text-3xl">Movimientos</h1>
                 <p class="mt-1 text-sm text-white/80">Ingresos y egresos de caja.</p>
-            </div>
+            </x-vl-hero-heading>
             <button type="button"
                     wire:click="abrirFormularioNuevo"
                     class="btn-primary shrink-0 bg-white text-primary-700 hover:bg-accent-50">

@@ -29,7 +29,8 @@
         $sizeInfo = @getimagesize($logoFile);
         if (is_array($sizeInfo) && ($sizeInfo[1] ?? 0) > 0) {
             $ratio = $sizeInfo[0] / $sizeInfo[1];
-            $logoShape = $ratio >= 1.35 ? 'wide' : ($ratio <= 0.75 ? 'tall' : 'square');
+            // 1.2: logos horizontales con poco padding (p. ej. ALQU) no llegan a 1.35.
+            $logoShape = $ratio >= 1.2 ? 'wide' : ($ratio <= 0.75 ? 'tall' : 'square');
         }
     }
 @endphp
@@ -54,18 +55,39 @@
     </div>
 @elseif ($variant === 'sidebar')
     @if ($datos['logo_url'])
-        <span {{ $attributes->class(['vl-sidebar-brand__mark']) }}
+        <span {{ $attributes->class([
+                    'vl-sidebar-brand__mark',
+                    'vl-sidebar-brand__mark--'.$logoShape,
+                ]) }}
+              data-logo-shape="{{ $logoShape }}"
               x-data="vlAuthLogoFrame({ shape: @js($logoShape), variant: 'sidebar' })"
               x-bind:class="frameClass"
               x-bind:style="frameStyle">
             <img src="{{ $datos['logo_url'] }}"
                  alt="{{ $datos['nombre'] }}"
                  class="vl-sidebar-brand__logo"
+                 decoding="async"
                  @load="onLoad($event)">
         </span>
     @else
-        <span {{ $attributes->class(['vl-sidebar-brand__mark']) }}>
+        <span {{ $attributes->class(['vl-sidebar-brand__mark', 'vl-sidebar-brand__mark--square']) }}>
             <span class="vl-sidebar-brand__monogram {{ $monogramClass }}">
+                {{ $datos['iniciales'] }}
+            </span>
+        </span>
+    @endif
+@elseif ($variant === 'hero')
+    @if ($datos['logo_url'])
+        <span {{ $attributes->class(['vl-hero-logo', 'vl-hero-logo--'.$logoShape]) }}
+              data-logo-shape="{{ $logoShape }}">
+            <img src="{{ $datos['logo_url'] }}"
+                 alt="{{ $datos['nombre'] }}"
+                 class="vl-hero-logo__img"
+                 decoding="async">
+        </span>
+    @else
+        <span {{ $attributes->class(['vl-hero-logo', 'vl-hero-logo--square']) }}>
+            <span class="vl-hero-logo__monogram {{ $monogramClass }}">
                 {{ $datos['iniciales'] }}
             </span>
         </span>

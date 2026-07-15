@@ -1,7 +1,7 @@
 <div class="vl-page vl-page--wide">
     <div class="vl-hero mb-4">
         <div class="vl-hero-inner flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-            <div>
+            <x-vl-hero-heading>
                 <p class="vl-eyebrow">Clientes · Cuenta corriente</p>
                 <h1 class="text-2xl font-bold sm:text-3xl">{{ $cliente->nombre }}</h1>
                 <p class="mt-2 text-sm text-white/80">
@@ -9,7 +9,7 @@
                     Saldo total al día de hoy:
                     <span class="font-semibold tabular-nums">{{ \App\Support\CuentaCorriente\CuentaCorrienteConsulta::formatearMoneda($saldoHoy) }}</span>
                 </p>
-            </div>
+            </x-vl-hero-heading>
             <div class="flex flex-wrap items-center gap-2 shrink-0">
                 <a href="{{ route('clientes.cuenta-corriente.index') }}"
                    class="btn-secondary bg-white/10 text-white border-white/30 hover:bg-white/20">

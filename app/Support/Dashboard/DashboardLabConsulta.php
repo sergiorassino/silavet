@@ -24,13 +24,15 @@ final class DashboardLabConsulta
      *     },
      *     derivacionesPendientes: int,
      *     sinFinal: int,
-     *     sinFinalEnv: int
+     *     sinFinalEnv: int|null,
+     *     usaEstadoFinalEnv: bool
      * }
      */
     public static function metricas(?Carbon $fecha = null): array
     {
         $fecha = ($fecha ?? now())->startOfDay();
         $fechaSql = $fecha->toDateString();
+        $usaFinalEnv = ResultadosEstadosCatalog::usaFinalEnv();
 
         $porEstado = self::conteoEstadosHoy($fechaSql);
         $totalHoy = array_sum(array_column($porEstado, 'cantidad'));
@@ -50,13 +52,11 @@ final class DashboardLabConsulta
                 'conic' => self::conicGradient($porEstado, $totalHoy),
             ],
             'derivacionesPendientes' => self::conteoDerivacionesPendientes(),
-            'sinFinal' => self::conteoSinAlcanzarEstados([
-                ResultadosEstadosCatalog::FINAL,
-                ResultadosEstadosCatalog::FINAL_ENV,
-            ]),
-            'sinFinalEnv' => self::conteoSinAlcanzarEstados([
-                ResultadosEstadosCatalog::FINAL_ENV,
-            ]),
+            'sinFinal' => self::conteoSinAlcanzarEstados(ResultadosEstadosCatalog::estadosFinalizados()),
+            'sinFinalEnv' => $usaFinalEnv
+                ? self::conteoSinAlcanzarEstados([ResultadosEstadosCatalog::FINAL_ENV])
+                : null,
+            'usaEstadoFinalEnv' => $usaFinalEnv,
         ];
     }
 
@@ -65,32 +65,30 @@ final class DashboardLabConsulta
      */
     private static function conteoEstadosHoy(string $fechaSql): array
     {
-        $mapa = [
+        $definiciones = [
             ResultadosEstadosCatalog::EN_PROC => [
                 'etiqueta' => 'En proceso',
-                'cantidad' => 0,
-                'porcentaje' => 0.0,
-                'color' => '#94a3b8',
             ],
             ResultadosEstadosCatalog::PARCIAL => [
                 'etiqueta' => 'Parcial',
-                'cantidad' => 0,
-                'porcentaje' => 0.0,
-                'color' => '#f59e0b',
             ],
             ResultadosEstadosCatalog::FINAL => [
                 'etiqueta' => 'Final',
-                'cantidad' => 0,
-                'porcentaje' => 0.0,
-                'color' => '#ef4444',
             ],
             ResultadosEstadosCatalog::FINAL_ENV => [
                 'etiqueta' => 'Final/Env',
-                'cantidad' => 0,
-                'porcentaje' => 0.0,
-                'color' => '#22c55e',
             ],
         ];
+
+        $mapa = [];
+        foreach (ResultadosEstadosCatalog::valores() as $estado) {
+            $mapa[$estado] = [
+                'etiqueta' => $definiciones[$estado]['etiqueta'],
+                'cantidad' => 0,
+                'porcentaje' => 0.0,
+                'color' => ResultadosEstadosCatalog::colorDashboard($estado),
+            ];
+        }
 
         $filas = Paciente::query()
             ->selectRaw('estado, COUNT(*) as cantidad')
@@ -123,10 +121,7 @@ final class DashboardLabConsulta
             ->where('determinaciones.idDerivaciones', '>', 0)
             ->join('pacientes', 'pacientes.idPacientes', '=', 'determinaciones.idPacientes')
             ->where('pacientes.tipoRegistro', Paciente::TIPO_PROTOCOLO)
-            ->whereNotIn('pacientes.estado', [
-                ResultadosEstadosCatalog::FINAL,
-                ResultadosEstadosCatalog::FINAL_ENV,
-            ])
+            ->whereNotIn('pacientes.estado', ResultadosEstadosCatalog::estadosFinalizados())
             ->count('determinaciones.idDeterminaciones');
     }
 

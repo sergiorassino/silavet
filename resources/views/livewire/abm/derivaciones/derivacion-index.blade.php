@@ -1,11 +1,11 @@
 <div class="vl-page">
     <div class="vl-hero mb-4">
         <div class="vl-hero-inner flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-            <div>
+            <x-vl-hero-heading>
                 <p class="vl-eyebrow">ABM</p>
                 <h1 class="text-2xl font-bold sm:text-3xl">Gestión de Centros de Derivación</h1>
                 <p class="mt-2 text-sm text-white/80">Laboratorios y centros externos a los que se derivan análisis.</p>
-            </div>
+            </x-vl-hero-heading>
             <a href="{{ route('abm.derivaciones.create') }}" class="btn-primary shrink-0 bg-white text-primary-700 hover:bg-accent-50">Nuevo centro</a>
         </div>
     </div>

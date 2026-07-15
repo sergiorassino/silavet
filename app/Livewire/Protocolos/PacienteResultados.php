@@ -39,8 +39,7 @@ class PacienteResultados extends Component
 
         (new RenglonesMaterializer)->asegurarParaPaciente($paciente);
 
-        $estado = (string) ($paciente->estado ?: 'En Proc.');
-        $this->estadoPaciente = ResultadosEstadosCatalog::esValido($estado) ? $estado : 'En Proc.';
+        $this->estadoPaciente = ResultadosEstadosCatalog::normalizar($paciente->estado);
     }
 
     /**

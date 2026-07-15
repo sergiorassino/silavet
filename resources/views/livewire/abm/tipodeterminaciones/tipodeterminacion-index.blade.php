@@ -1,11 +1,11 @@
 <div class="vl-page">
     <div class="vl-hero mb-4">
         <div class="vl-hero-inner flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-            <div>
+            <x-vl-hero-heading>
                 <p class="vl-eyebrow">Administración</p>
                 <h1 class="text-2xl font-bold sm:text-3xl">Gestión Determinaciones</h1>
                 <p class="mt-2 text-sm text-white/80">Tipos de análisis, precios y parámetros de perfil / derivación.</p>
-            </div>
+            </x-vl-hero-heading>
             <button type="button"
                     wire:click="agregarFila"
                     class="btn-primary shrink-0 bg-white text-primary-700 hover:bg-accent-50">

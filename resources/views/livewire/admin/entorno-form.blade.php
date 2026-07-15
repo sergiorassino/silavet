@@ -1,13 +1,13 @@
 <div class="vl-page vl-page--wide">
     <div class="vl-hero vl-hero--compact shrink-0">
         <div class="vl-hero-inner">
-            <div>
+            <x-vl-hero-heading>
                 <p class="vl-eyebrow">Parámetros Generales</p>
                 <h1 class="text-xl font-bold sm:text-2xl">Parámetros del Sistema</h1>
                 <p class="mt-1 max-w-3xl text-xs text-white/80 sm:text-sm">
                     Configuración institucional del laboratorio: identidad visual, contacto, pie de informe, firmas y envío de mail.
                 </p>
-            </div>
+            </x-vl-hero-heading>
         </div>
     </div>
 

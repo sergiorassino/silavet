@@ -315,7 +315,7 @@ document.addEventListener('alpine:init', () => {
             }
 
             const ratio = img.naturalWidth / img.naturalHeight;
-            let shape = ratio >= 1.35 ? 'wide' : (ratio <= 0.75 ? 'tall' : 'square');
+            let shape = ratio >= 1.2 ? 'wide' : (ratio <= 0.75 ? 'tall' : 'square');
             let cropped = false;
             let contentAr = null;
 
@@ -323,7 +323,7 @@ document.addEventListener('alpine:init', () => {
                 const bbox = this.contentBBox(img);
                 if (bbox && bbox.h > 0) {
                     const contentRatio = bbox.w / bbox.h;
-                    if (contentRatio >= 1.4) {
+                    if (contentRatio >= 1.25) {
                         shape = 'wide';
                         cropped = true;
                         contentAr = `${bbox.w} / ${bbox.h}`;

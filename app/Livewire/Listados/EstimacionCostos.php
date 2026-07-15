@@ -145,7 +145,7 @@ class EstimacionCostos extends Component
             'sumaTotal' => $sumaTotal,
             'sumaTotalFormateada' => PrecioInput::format($sumaTotal),
             'requerimientos' => $requerimientos,
-        ])->layout('layouts.staff', UsuarioMenuPortal::staffLayoutParams(labCtx()->idRoles));
+        ])->layout('layouts.staff', UsuarioMenuPortal::layoutParamsDesdeContexto());
     }
 
     /** @return list<array{titulo: string, html: string}> */

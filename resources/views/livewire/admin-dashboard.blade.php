@@ -1,17 +1,17 @@
 <div class="vl-page">
     <div class="vl-hero">
         <div class="vl-hero-inner">
-            <div>
+            <x-vl-hero-heading>
                 <p class="vl-eyebrow">Administración</p>
-                <h1 class="text-2xl font-bold sm:text-3xl">{{ config('tenant.nombre') }}</h1>
-                <p class="mt-2 max-w-xl text-sm text-white/80 sm:text-base">
+                <h1 class="font-bold">{{ config('tenant.nombre') }}</h1>
+                <p class="mt-1.5 max-w-xl text-sm text-white/80">
                     Facturación, stock y parámetros del laboratorio.
                 </p>
-            </div>
+            </x-vl-hero-heading>
         </div>
     </div>
 
-    <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+    <div class="vl-dash-tiles">
         <a href="{{ route('protocolos.index') }}" class="vl-dash-access">
             <span class="vl-dash-access-icon">PA</span>
             <span>

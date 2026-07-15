@@ -1,17 +1,25 @@
 <div class="vl-page vl-page--wide">
     <div class="vl-hero mb-4">
         <div class="vl-hero-inner flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-            <div>
+            <x-vl-hero-heading>
                 <p class="vl-eyebrow">Protocolos</p>
                 <h1 class="text-2xl font-bold sm:text-3xl">Gestión de Derivaciones</h1>
                 <p class="mt-2 text-sm text-white/80">
                     @if ($incluirFinalizados)
-                        Todas las determinaciones derivadas, incluidos Final y Final/Env.
+                        @if (\App\Support\Resultados\ResultadosEstadosCatalog::usaFinalEnv())
+                            Todas las determinaciones derivadas, incluidos Final y Final/Env.
+                        @else
+                            Todas las determinaciones derivadas, incluidos Final.
+                        @endif
                     @else
-                        Determinaciones derivadas (devueltas o no). Se ocultan Final y Final/Env.
+                        @if (\App\Support\Resultados\ResultadosEstadosCatalog::usaFinalEnv())
+                            Determinaciones derivadas (devueltas o no). Se ocultan Final y Final/Env.
+                        @else
+                            Determinaciones derivadas (devueltas o no). Se ocultan Final.
+                        @endif
                     @endif
                 </p>
-            </div>
+            </x-vl-hero-heading>
             <button type="button"
                     wire:click="toggleIncluirFinalizados"
                     class="btn-primary shrink-0 bg-white text-primary-700 hover:bg-accent-50 {{ $incluirFinalizados ? 'ring-2 ring-white/80' : '' }}"

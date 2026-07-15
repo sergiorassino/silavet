@@ -11,7 +11,7 @@
 </head>
 @php
     /** En desktop el menú usa rail colapsado salvo el panel de inicio; hover/focus lo expanden (modo dinámico). */
-    $isSidebarPeekMode = ! request()->routeIs('dashboard', 'admin.dashboard');
+    $isSidebarPeekMode = ! request()->routeIs('dashboard', 'admin.dashboard', 'cliente.home');
 @endphp
 <body class="h-full antialiased text-neutral-800">
 
@@ -222,7 +222,6 @@
             <a href="{{ $homeRoute }}"
                class="vl-sidebar-brand__link"
                title="{{ config('tenant.nombre') }} — {{ $menuLabel }}">
-                <x-vl-lab-logo variant="sidebar" />
                 <span x-show="!sidebarCollapsed" x-cloak class="vl-sidebar-brand__copy">
                     <span class="vl-sidebar-brand__name">{{ config('tenant.nombre') }}</span>
                 </span>
@@ -255,7 +254,6 @@
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
                     </svg>
                 </button>
-                <x-vl-lab-logo size="sm" class="md:hidden" monogram-class="bg-primary-100 text-primary-700 ring-1 ring-primary-200" />
                 <span class="text-sm font-semibold text-neutral-800">{{ $menuLabel }}</span>
             </div>
         </header>

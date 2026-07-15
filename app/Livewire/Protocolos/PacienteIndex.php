@@ -138,6 +138,11 @@ class PacienteIndex extends Component
         }
     }
 
+    private function abortSiAutogestion(): void
+    {
+        abort_if(labCtx()->esCliente(), 403);
+    }
+
     public function updatingBusqueda(): void
     {
         $this->resetPage();
@@ -173,6 +178,7 @@ class PacienteIndex extends Component
     public function abrirModalPagoGlobal(): void
     {
         abort_unless(tienePermiso(PermisosIaCatalog::PROTOCOLOS), 403);
+        $this->abortSiAutogestion();
 
         $ctx = labCtx();
         $this->pagoGlobalIdPacientes = null;
@@ -188,6 +194,7 @@ class PacienteIndex extends Component
     public function abrirModalEditarPagoGlobal(int $id): void
     {
         abort_unless(tienePermiso(PermisosIaCatalog::PROTOCOLOS), 403);
+        $this->abortSiAutogestion();
 
         $paciente = $this->pacienteEnAlcance($id);
         if ($paciente === null || ! $paciente->esPagoGlobal()) {
@@ -215,6 +222,7 @@ class PacienteIndex extends Component
 
     public function guardarPagoGlobal(): void
     {
+        $this->abortSiAutogestion();
         abort_unless(tienePermiso(PermisosIaCatalog::PROTOCOLOS), 403);
 
         $uid = labCtx()->idUsuarios ?? 0;
@@ -285,6 +293,7 @@ class PacienteIndex extends Component
     public function avanzarEstado(int $id): void
     {
         abort_unless(tienePermiso(PermisosIaCatalog::PROTOCOLOS), 403);
+        $this->abortSiAutogestion();
 
         $uid = labCtx()->idUsuarios ?? 0;
         $key = 'protocolos-estado:'.$uid;
@@ -303,6 +312,7 @@ class PacienteIndex extends Component
 
     public function abrirModalEnvio(int $id): void
     {
+        $this->abortSiAutogestion();
         $paciente = $this->pacienteGestionable($id);
         if ($paciente === null) {
             return;
@@ -433,6 +443,7 @@ class PacienteIndex extends Component
     public function abrirModalEdInf(int $id): void
     {
         abort_unless(tienePermiso(PermisosIaCatalog::PROTOCOLOS), 403);
+        $this->abortSiAutogestion();
 
         if (! Schema::hasTable('renglones')) {
             $this->dispatch('vl-swal-error', mensaje: 'La tabla de renglones no está disponible.');
@@ -468,6 +479,7 @@ class PacienteIndex extends Component
     public function abrirModalObs(int $id): void
     {
         abort_unless(tienePermiso(PermisosIaCatalog::PROTOCOLOS), 403);
+        $this->abortSiAutogestion();
 
         $paciente = $this->pacienteGestionable($id);
         if ($paciente === null) {
@@ -533,6 +545,7 @@ class PacienteIndex extends Component
     public function abrirModalAdjunto(int $id): void
     {
         abort_unless(tienePermiso(PermisosIaCatalog::PROTOCOLOS), 403);
+        $this->abortSiAutogestion();
 
         $paciente = $this->pacienteGestionable($id);
         if ($paciente === null) {
@@ -665,6 +678,7 @@ class PacienteIndex extends Component
     public function abrirModalAviso(int $id): void
     {
         abort_unless(tienePermiso(PermisosIaCatalog::PROTOCOLOS), 403);
+        $this->abortSiAutogestion();
 
         if (! Schema::hasTable('notificaciones')) {
             $this->dispatch('vl-swal-error', mensaje: 'La tabla de notificaciones no está disponible.');
@@ -832,6 +846,7 @@ class PacienteIndex extends Component
     public function abrirModalIa(int $id): void
     {
         abort_unless(tienePermiso(PermisosIaCatalog::PROTOCOLOS), 403);
+        $this->abortSiAutogestion();
 
         $paciente = $this->pacienteGestionable($id);
         if ($paciente === null) {
@@ -1011,23 +1026,30 @@ class PacienteIndex extends Component
 
         $pacientes = Paciente::query()
             ->with($with)
-            ->whereIn('pacientes.tipoRegistro', [
-                Paciente::TIPO_PROTOCOLO,
-                Paciente::TIPO_PAGO_GLOBAL,
-            ])
-            ->when($ctx->esCliente() && $ctx->idClientes, function ($q) use ($ctx) {
-                $q->where('pacientes.idClientes', $ctx->idClientes);
-            })
+            ->when(
+                $ctx->esCliente() && $ctx->idClientes,
+                function ($q) use ($ctx) {
+                    $q->where('pacientes.tipoRegistro', Paciente::TIPO_PROTOCOLO)
+                        ->where('pacientes.idClientes', $ctx->idClientes);
+                },
+                function ($q) {
+                    $q->whereIn('pacientes.tipoRegistro', [
+                        Paciente::TIPO_PROTOCOLO,
+                        Paciente::TIPO_PAGO_GLOBAL,
+                    ]);
+                }
+            )
             ->when($this->vista === self::VISTA_HOY, function ($q) {
                 $q->whereDate('pacientes.fechhoy', $this->fechaVistaEfectiva());
             })
-            ->when($term !== '', function ($q) use ($term) {
-                $q->where(function ($inner) use ($term) {
+            ->when($term !== '', function ($q) use ($term, $ctx) {
+                $q->where(function ($inner) use ($term, $ctx) {
                     $inner->where('pacientes.nombreProtocolo', 'like', "%{$term}%")
                         ->orWhere('pacientes.nombre', 'like', "%{$term}%")
-                        ->orWhere('pacientes.propietario', 'like', "%{$term}%")
-                        ->orWhere('pacientes.email', 'like', "%{$term}%")
-                        ->orWhereHas('cliente', fn ($c) => $c->where('nombre', 'like', "%{$term}%"));
+                        ->orWhere('pacientes.propietario', 'like', "%{$term}%");
+                    if (! ($ctx->esCliente() && $ctx->idClientes)) {
+                        $inner->orWhereHas('cliente', fn ($c) => $c->where('nombre', 'like', "%{$term}%"));
+                    }
                 });
             })
             // Día calendario primero (ignora hora de pagos globales en algunos labos),
@@ -1061,12 +1083,18 @@ class PacienteIndex extends Component
             }
         }
 
-        return view('livewire.protocolos.paciente-index', [
+        $autogestion = $ctx->esCliente();
+        $vista = $autogestion
+            ? 'livewire.protocolos.paciente-index-autogestion'
+            : 'livewire.protocolos.paciente-index';
+
+        return view($vista, [
             'pacientes' => $pacientes,
             'edInfRenglones' => $edInfRenglones,
             'clientesPagoGlobal' => $clientesPagoGlobal,
             'mediosPago' => $mediosPago,
-        ])->layout('layouts.staff', UsuarioMenuPortal::staffLayoutParams(labCtx()->idRoles));
+            'rutaInforme' => $autogestion ? 'cliente.pacientes.informe' : 'protocolos.informe',
+        ])->layout('layouts.staff', UsuarioMenuPortal::layoutParamsDesdeContexto());
     }
 
     protected function pacienteEnAlcance(int $id): ?Paciente
@@ -1075,10 +1103,14 @@ class PacienteIndex extends Component
 
         return Paciente::query()
             ->with('cliente')
-            ->whereIn('pacientes.tipoRegistro', [
-                Paciente::TIPO_PROTOCOLO,
-                Paciente::TIPO_PAGO_GLOBAL,
-            ])
+            ->when(
+                $ctx->esCliente() && $ctx->idClientes,
+                fn ($q) => $q->where('pacientes.tipoRegistro', Paciente::TIPO_PROTOCOLO),
+                fn ($q) => $q->whereIn('pacientes.tipoRegistro', [
+                    Paciente::TIPO_PROTOCOLO,
+                    Paciente::TIPO_PAGO_GLOBAL,
+                ])
+            )
             ->when($ctx->esCliente() && $ctx->idClientes, function ($q) use ($ctx) {
                 $q->where('pacientes.idClientes', $ctx->idClientes);
             })

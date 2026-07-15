@@ -1,11 +1,11 @@
 <div class="vl-page">
     <div class="vl-hero mb-4">
         <div class="vl-hero-inner flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-            <div>
+            <x-vl-hero-heading>
                 <p class="vl-eyebrow">Clientes</p>
                 <h1 class="text-2xl font-bold sm:text-3xl">Cuenta corriente</h1>
                 <p class="mt-2 text-sm text-white/80">Saldo pendiente de cada cliente al día de hoy.</p>
-            </div>
+            </x-vl-hero-heading>
             <div class="flex flex-wrap items-center gap-2 shrink-0">
                 <a href="{{ $this->excelUrl }}"
                    class="btn-secondary bg-white/10 text-white border-white/30 hover:bg-white/20">

@@ -1,14 +1,14 @@
 <div class="vl-page vl-page--wide">
     <div class="vl-hero mb-4">
         <div class="vl-hero-inner flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-            <div>
+            <x-vl-hero-heading>
                 <p class="vl-eyebrow">Listados estadísticos</p>
                 <h1 class="text-2xl font-bold sm:text-3xl">Listado estadístico de pacientes</h1>
                 <p class="mt-2 text-sm text-white/80">
                     Protocolos filtrables por cliente, paciente, especie, raza y fecha.
                     Período: <span class="font-semibold">{{ $periodoTexto }}</span>
                 </p>
-            </div>
+            </x-vl-hero-heading>
             <div class="flex flex-wrap items-center gap-2 shrink-0">
                 <a href="{{ $this->excelUrl }}"
                    class="btn-secondary bg-white/10 text-white border-white/30 hover:bg-white/20">

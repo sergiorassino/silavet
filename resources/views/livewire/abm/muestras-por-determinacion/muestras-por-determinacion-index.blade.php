@@ -1,14 +1,14 @@
 <div class="vl-page">
     <div class="vl-hero mb-4">
         <div class="vl-hero-inner">
-            <div>
+            <x-vl-hero-heading>
                 <p class="vl-eyebrow">Procedimientos</p>
                 <h1 class="text-2xl font-bold sm:text-3xl">Muestras por Determinación</h1>
                 <p class="mt-2 max-w-2xl text-sm text-white/80">
                     Asocie a cada procedimiento de toma de muestra las determinaciones que lo requieren.
                     Estimación de costos reunirá estos vínculos automáticamente.
                 </p>
-            </div>
+            </x-vl-hero-heading>
         </div>
     </div>
 

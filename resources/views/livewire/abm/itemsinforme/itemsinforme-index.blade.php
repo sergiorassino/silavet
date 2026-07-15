@@ -18,10 +18,10 @@
      @itemsinf-enfocar-fila.window="enfocarFila($event.detail.id)">
     <div class="vl-hero vl-hero--compact shrink-0">
         <div class="vl-hero-inner flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-            <div>
+            <x-vl-hero-heading>
                 <p class="vl-eyebrow">Administración</p>
                 <h1 class="text-xl font-bold sm:text-2xl">Parametrización de Items</h1>
-            </div>
+            </x-vl-hero-heading>
             <button type="button"
                     wire:click="agregarItem"
                     class="btn-primary shrink-0 bg-white px-3 py-1.5 text-xs text-primary-700 hover:bg-accent-50">

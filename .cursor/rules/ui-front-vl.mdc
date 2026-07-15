@@ -21,7 +21,7 @@ Prefijo de clases: **`vl-*`** (vet lab). Misma estructura visual que Sistemas Es
 ## Criterios
 
 - Misma tipografía que SE: **Source Sans 3** (Google Fonts en `sidebar-bosque-head`).
-- Hero con degradé `from-primary-600 via-primary-700 to-neutral-800`.
+- Hero y menú lateral: mismo celeste con degradé (`primary-600` → `primary-700` → `primary-900` / `#0C4A6E` → `#075985` → `#0369A1`).
 - Sidebar colapsable en desktop (rail + hover), drawer en móvil.
 - Modales: `@teleport('body')`, `rounded-2xl`.
 - **Iconos del sidebar:** sin repeticiones en todo el menú (grupos + opciones + Inicio).

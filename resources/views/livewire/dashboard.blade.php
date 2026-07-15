@@ -6,14 +6,14 @@
 <div class="vl-page">
     <div class="vl-hero vl-dash-hero">
         <div class="vl-hero-inner">
-            <div class="min-w-0">
+            <x-vl-hero-heading>
                 <p class="vl-eyebrow">{{ config('tenant.nombre') }}</p>
-                <h1 class="text-2xl font-bold sm:text-3xl">Panel de laboratorio</h1>
-                <p class="mt-2 max-w-xl text-sm text-white/80 sm:text-base">
+                <h1 class="font-bold">Panel de laboratorio</h1>
+                <p class="mt-1.5 max-w-xl text-sm text-white/80">
                     Hola, {{ labCtx()->usuario()?->apenom ?? 'usuario' }}.
                     Resumen operativo del {{ $metricas['fechaFormato'] }}.
                 </p>
-            </div>
+            </x-vl-hero-heading>
             @if (tienePermiso(\App\Support\PermisosIaCatalog::PROTOCOLOS))
                 <a href="{{ route('protocolos.index') }}" class="vl-dash-cta">
                     <span class="vl-dash-cta-kicker">Acceso principal</span>
@@ -71,7 +71,13 @@
                 </div>
             </div>
             <p class="vl-dash-kpi">{{ $metricas['derivacionesPendientes'] }}</p>
-            <p class="vl-dash-metric-hint">Derivadas en protocolos que aún no están en Final ni Final/Env.</p>
+            <p class="vl-dash-metric-hint">
+                @if ($metricas['usaEstadoFinalEnv'])
+                    Derivadas en protocolos que aún no están en Final ni Final/Env.
+                @else
+                    Derivadas en protocolos que aún no están en Final.
+                @endif
+            </p>
             @if (tienePermiso(\App\Support\PermisosIaCatalog::PROTOCOLOS))
                 <a href="{{ route('derivaciones.index') }}" class="vl-dash-metric-link">Ver derivaciones</a>
             @endif
@@ -86,17 +92,19 @@
                     <h2 id="dash-pend-title" class="vl-dash-metric-title">Pendientes de Finalización en días anteriores</h2>
                 </div>
             </div>
-            <div class="vl-dash-kpi-pair">
+            <div class="{{ $metricas['usaEstadoFinalEnv'] ? 'vl-dash-kpi-pair' : '' }}">
                 <div class="vl-dash-kpi-item">
                     <p class="vl-dash-kpi">{{ $metricas['sinFinal'] }}</p>
                     <p class="vl-dash-kpi-caption">Sin Final</p>
                     <p class="vl-dash-metric-hint">Aún no alcanzaron el estado Final.</p>
                 </div>
-                <div class="vl-dash-kpi-item">
-                    <p class="vl-dash-kpi">{{ $metricas['sinFinalEnv'] }}</p>
-                    <p class="vl-dash-kpi-caption">Sin Final/Env</p>
-                    <p class="vl-dash-metric-hint">Aún no alcanzaron el estado Final/Env.</p>
-                </div>
+                @if ($metricas['usaEstadoFinalEnv'])
+                    <div class="vl-dash-kpi-item">
+                        <p class="vl-dash-kpi">{{ $metricas['sinFinalEnv'] }}</p>
+                        <p class="vl-dash-kpi-caption">Sin Final/Env</p>
+                        <p class="vl-dash-metric-hint">Aún no alcanzaron el estado Final/Env.</p>
+                    </div>
+                @endif
             </div>
             @if (tienePermiso(\App\Support\PermisosIaCatalog::PROTOCOLOS))
                 <a href="{{ route('protocolos.index') }}" class="vl-dash-metric-link">Ir a pacientes</a>

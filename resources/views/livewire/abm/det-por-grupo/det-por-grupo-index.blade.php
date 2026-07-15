@@ -1,13 +1,13 @@
 <div class="vl-page">
     <div class="vl-hero mb-4">
         <div class="vl-hero-inner">
-            <div>
+            <x-vl-hero-heading>
                 <p class="vl-eyebrow">Administración</p>
                 <h1 class="text-2xl font-bold sm:text-3xl">Det. por Grupo (Inf)</h1>
                 <p class="mt-2 max-w-2xl text-sm text-white/80">
                     Parametrice qué ítems del informe incluye cada tipo de determinación y en qué orden aparecen.
                 </p>
-            </div>
+            </x-vl-hero-heading>
         </div>
     </div>
 

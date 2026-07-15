@@ -1,10 +1,10 @@
 <div class="vl-page vl-page--wide">
     <div class="vl-hero vl-hero--compact mb-3">
         <div class="vl-hero-inner">
-            <div>
+            <x-vl-hero-heading>
                 <p class="vl-eyebrow">Protocolos</p>
                 <h1>{{ $titulo }}</h1>
-            </div>
+            </x-vl-hero-heading>
         </div>
     </div>
 

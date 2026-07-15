@@ -39,7 +39,7 @@
      x-init="validarAhora(@js($formulas))">
     <div class="vl-hero vl-hero--compact shrink-0">
         <div class="vl-hero-inner">
-            <div>
+            <x-vl-hero-heading>
                 <p class="vl-eyebrow">Administración</p>
                 <h1 class="text-xl font-bold sm:text-2xl">Script de Automatización</h1>
                 <p class="mt-1 max-w-3xl text-xs text-white/80 sm:text-sm">
@@ -47,7 +47,7 @@
                     (sin ejecutar el script). Si pegás <code class="rounded bg-white/10 px-1 py-0.5">&lt;script&gt;...&lt;/script&gt;</code>,
                     se valida el contenido interno.
                 </p>
-            </div>
+            </x-vl-hero-heading>
         </div>
     </div>
 

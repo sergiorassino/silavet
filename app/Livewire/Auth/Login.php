@@ -85,10 +85,10 @@ class Login extends Component
             ]);
         }
 
+        // Login único: personal (laboratorio/admin) y autogestión de cliente.
         $credentials = [
             'dni' => $this->dni,
             'password' => $this->password,
-            'portal' => 'staff',
         ];
 
         if (Auth::attempt($credentials, false)) {

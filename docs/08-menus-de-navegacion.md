@@ -9,9 +9,9 @@ Evita confusiones entre roles operativos, administración y clientes veterinario
 
 | Nombre oficial | Qué es | Layout Blade | Login / guard |
 |----------------|--------|--------------|---------------|
-| **Menú de Laboratorio** | Operaciones analíticas: protocolos, resultados, informes, parametrización operativa | `resources/views/layouts/laboratorio.blade.php` | `/login` · `menu.portal:laboratorio` |
-| **Menú de Administración** | Facturación AFIP, cobranza, stock de reactivos, usuarios, parámetros financieros | `resources/views/layouts/administracion.blade.php` | Mismo login · `menu.portal:administracion` |
-| **Menú de Clientes** | Portal veterinarias/clínicas: consulta de protocolos e informes | `resources/views/layouts/cliente.blade.php` | `/loginCliente` · guard `cliente` |
+| **Menú de Laboratorio** | Operaciones analíticas: protocolos, resultados, informes, parametrización operativa | `layouts.staff` + nav laboratorio | `/login` · `menu.portal:laboratorio` |
+| **Menú de Administración** | Facturación AFIP, cobranza, stock de reactivos, usuarios, parámetros financieros | `layouts.staff` + nav administración | Mismo login · `menu.portal:administracion` |
+| **Menú de Clientes** | Autogestión: pacientes propios, lista de precios, estimación de costos | `layouts.staff` + `sidebar-nav-cliente` | Mismo `/login` · `menu.portal:cliente` |
 
 **Cantidad de sidebars previstos:** 3 layouts. Laboratorio y Administración comparten
 login pero middleware `menu.portal` separa rutas sensibles.
@@ -56,24 +56,27 @@ Orientación UI: **desktop-first**.
 
 ## 3. Menú de Clientes
 
-- **Audiencia:** veterinarias y clínicas (`usuarios` con `idClientes` > 0).
-- **Rutas:** prefijo `/cliente/…` · middleware `auth:cliente`.
+- **Audiencia:** veterinarias y clínicas (`usuarios` con rol cliente e `idClientes` distinto de 1).
+- **Rutas:** prefijo `/cliente/…` · middleware `auth` + `lab.context` + `menu.portal:cliente`.
+- **Login:** el mismo `/login` que el personal; la redirección depende de `idClientes`.
 - **Contexto:** filtrado estricto por `labCtx()->idClientes`.
-- **Enlaces típicos:** mis protocolos · informes PDF · notificaciones · datos de cuenta.
-
-Orientación UI: **mobile-first** (ver [01-descripcion-general.md](01-descripcion-general.md)).
+- **Opciones del sidebar:** Pacientes · Lista de Precios · Estimación de Costos.
+- **Layout:** misma estética que el Menú de Laboratorio (`layouts.staff` + `sidebar-nav-cliente`).
 
 ---
 
-## 4. Redirección post-login (prevista)
+## 4. Redirección post-login
+
+Login único en `/login`. Destino según `usuarios.idClientes` y rol:
 
 | Condición | Destino |
 |-----------|---------|
-| `idClientes` > 0 (login cliente) | `cliente.home` — Menú de Clientes |
-| Rol administración / facturación | `admin.dashboard` — Menú de Administración |
+| `idClientes` distinto de 1 (y > 0) | `cliente.home` — Menú de Clientes (autogestión) |
+| `idClientes` = 1 (laboratorio) o sin cliente | Menú de Laboratorio / Administración según rol |
+| Rol administración / facturación (sin autogestión) | `admin.dashboard` — Menú de Administración |
 | Rol operativo (default) | `dashboard` — Menú de Laboratorio |
 
-Implementación prevista: `App\Support\UsuarioMenuPortal` y middleware `menu.portal`.
+Implementación: `App\Support\UsuarioMenuPortal` y middleware `menu.portal`.
 
 ---
 
@@ -139,6 +142,7 @@ Fuente de verdad: `resources/views/components/vl-sidebar-icon.blade.php`.
 | `estadistico-pacientes` | Listado Estadístico de Pacientes |
 | `historial-determinaciones` | Historial de Determinaciones |
 | `cantidad-determinaciones-comparac` | Cantidad Determinaciones (comparac.) |
+| `lista-precios` | Lista de Precios (Menú de Clientes) |
 | `gestion-procedimientos` | Gestión de Procedimientos |
 | `muestras-por-determinacion` | Muestras por Determinación |
 

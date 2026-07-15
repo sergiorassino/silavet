@@ -34,14 +34,17 @@ class UsuarioUserProvider implements UserProvider
 
         if (array_key_exists('portal', $credentials)) {
             if ($credentials['portal'] === 'cliente') {
-                $query->where('idRoles', UsuarioMenuPortal::ID_ROL_CLIENTE)
-                    ->where('idClientes', '>', 0);
-            } else {
+                // Autogestión: cliente veterinario distinto del laboratorio (id = 1).
+                $query->where('idClientes', '>', 0)
+                    ->where('idClientes', '!=', UsuarioMenuPortal::ID_CLIENTES_LABORATORIO);
+            } elseif ($credentials['portal'] === 'staff') {
                 $query->where(function ($q) {
-                    $q->whereNull('idRoles')
-                        ->orWhere('idRoles', '!=', UsuarioMenuPortal::ID_ROL_CLIENTE);
+                    $q->whereNull('idClientes')
+                        ->orWhere('idClientes', '<=', 0)
+                        ->orWhere('idClientes', UsuarioMenuPortal::ID_CLIENTES_LABORATORIO);
                 });
             }
+            // Sin portal (login unificado): cualquier usuario por DNI.
         }
 
         return $query->first();

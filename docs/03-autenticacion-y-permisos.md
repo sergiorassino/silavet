@@ -5,13 +5,13 @@
 ## 1. Portales y logins
 
 Hay **tres menús de navegación** (ver [08-menus-de-navegacion.md](08-menus-de-navegacion.md))
-y **dos logins** previstos:
+y **un login** unificado:
 
 | Menú | Login |
 |------|--------|
-| **Menú de Laboratorio** | `/login` → `usuarios` (roles operativos) |
+| **Menú de Laboratorio** | `/login` → personal operativo / usuarios con `idClientes` = 1 |
 | **Menú de Administración** | Mismo login; redirección por rol |
-| **Menú de Clientes** | `/loginCliente` → `usuarios` con `idRoles` = 1 |
+| **Menú de Clientes** | Mismo `/login` → `idClientes` distinto de 1 |
 
 ---
 

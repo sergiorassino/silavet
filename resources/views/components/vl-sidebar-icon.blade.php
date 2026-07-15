@@ -176,6 +176,12 @@
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.75"
                   d="M13.19 8.688a4.5 4.5 0 011.242 7.244l-4.5 4.5a4.5 4.5 0 01-6.364-6.364l1.757-1.757m13.35-.622l1.757-1.757a4.5 4.5 0 00-6.364-6.364l-4.5 4.5a4.5 4.5 0 001.242 7.244"/>
             @break
+        @case('lista-precios')
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.75"
+                  d="M12 6v12m-3-9h6M7 4h10a2 2 0 012 2v12a2 2 0 01-2 2H7a2 2 0 01-2-2V6a2 2 0 012-2z"/>
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.75"
+                  d="M9 17h6"/>
+            @break
 
         @default
             @php throw new InvalidArgumentException("Icono de sidebar desconocido: {$name}"); @endphp

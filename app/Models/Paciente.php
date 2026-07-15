@@ -168,12 +168,7 @@ class Paciente extends Model
             return 'vl-pacientes-row--pago-global';
         }
 
-        return match (\App\Support\Resultados\ResultadosEstadosCatalog::normalizar($this->estado)) {
-            'Parcial' => 'vl-pacientes-row--parcial',
-            'Final' => 'vl-pacientes-row--final',
-            'Final/Env' => 'vl-pacientes-row--final-env',
-            default => 'vl-pacientes-row--en-proc',
-        };
+        return \App\Support\Resultados\ResultadosEstadosCatalog::claseCssFila($this->estado);
     }
 
     public function precioFormateado(): string

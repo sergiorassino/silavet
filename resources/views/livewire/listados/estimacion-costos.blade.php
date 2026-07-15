@@ -5,13 +5,13 @@
 <div class="vl-page">
     <div class="vl-hero mb-4">
         <div class="vl-hero-inner">
-            <div>
+            <x-vl-hero-heading>
                 <p class="vl-eyebrow">Listados estadísticos</p>
                 <h1 class="text-2xl font-bold sm:text-3xl">Estimación de costos</h1>
                 <p class="mt-2 text-sm text-white/80">
                     Seleccione un cliente y agregue determinaciones para calcular el costo y ver los procedimientos de muestra.
                 </p>
-            </div>
+            </x-vl-hero-heading>
         </div>
     </div>
 

@@ -1,9 +1,11 @@
 <div class="vl-page">
     <div class="vl-hero mb-4">
         <div class="vl-hero-inner">
-            <p class="vl-eyebrow">Tesorería</p>
-            <h1 class="text-2xl font-bold sm:text-3xl">Transferencias Intercuenta</h1>
-            <p class="mt-2 text-sm text-white/80">Movimientos entre cuentas de medio de pago (retiro + depósito).</p>
+            <x-vl-hero-heading>
+                <p class="vl-eyebrow">Tesorería</p>
+                <h1 class="text-2xl font-bold sm:text-3xl">Transferencias Intercuenta</h1>
+                <p class="mt-2 text-sm text-white/80">Movimientos entre cuentas de medio de pago (retiro + depósito).</p>
+            </x-vl-hero-heading>
         </div>
     </div>
 

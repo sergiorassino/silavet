@@ -38,8 +38,16 @@ class PermisosIaCatalog
             return false;
         }
 
-        if (config('tenant.acceso.temporal_todos_modulos', false)
-            && ! UsuarioMenuPortal::esCliente($usuario->idRoles, $usuario->idClientes)) {
+        if (UsuarioMenuPortal::esCliente($usuario->idRoles, $usuario->idClientes)) {
+            // Portal de autogestión: solo lectura de protocolos/informes y estimación.
+            return in_array($orden, [
+                self::PROTOCOLOS,
+                self::INFORMES,
+                self::LISTADOS_ESTADISTICOS,
+            ], true);
+        }
+
+        if (config('tenant.acceso.temporal_todos_modulos', false)) {
             return true;
         }
 
