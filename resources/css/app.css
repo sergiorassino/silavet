@@ -124,8 +124,13 @@
     }
 
     .vl-auth-logo-frame--wide {
-        padding: 0.7rem 1.15rem;
-        max-width: min(100%, 24rem);
+        padding: 0.75rem 1.15rem;
+        max-width: min(100%, 28rem);
+    }
+
+    .vl-auth-logo-frame--wide.vl-auth-logo-frame--dense {
+        padding: 0.9rem 1.35rem;
+        max-width: min(100%, 34rem);
     }
 
     .vl-auth-logo-frame--square {
@@ -139,11 +144,16 @@
     }
 
     .vl-auth-logo-frame--cropped.vl-auth-logo-frame--wide {
-        width: min(100%, 24rem);
+        width: min(100%, 28rem);
         aspect-ratio: var(--vl-logo-ar, 2.5 / 1);
         padding: 0.65rem 1rem;
         align-items: stretch;
         overflow: hidden;
+    }
+
+    .vl-auth-logo-frame--cropped.vl-auth-logo-frame--wide.vl-auth-logo-frame--dense {
+        width: min(100%, 34rem);
+        padding: 0.75rem 1.15rem;
     }
 
     .vl-auth-logo-frame--cropped.vl-auth-logo-frame--tall {
@@ -161,8 +171,13 @@
     }
 
     .vl-auth-logo-frame--wide .vl-auth-logo {
-        max-height: 6.75rem;
-        max-width: min(100%, 22rem);
+        max-height: 8.5rem;
+        max-width: min(100%, 26rem);
+    }
+
+    .vl-auth-logo-frame--wide.vl-auth-logo-frame--dense .vl-auth-logo {
+        max-height: 12rem;
+        max-width: min(100%, 32rem);
     }
 
     .vl-auth-logo-frame--square .vl-auth-logo {

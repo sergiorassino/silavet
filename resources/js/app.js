@@ -275,6 +275,7 @@ document.addEventListener('alpine:init', () => {
     Alpine.data('vlAuthLogoFrame', (config = {}) => ({
         shape: config.shape || 'square',
         cropped: false,
+        dense: false,
         contentAr: null,
         variant: config.variant || 'login',
 
@@ -297,6 +298,7 @@ document.addEventListener('alpine:init', () => {
                 [`${prefix}--square`]: this.shape === 'square',
                 [`${prefix}--tall`]: this.shape === 'tall',
                 [`${prefix}--cropped`]: this.cropped,
+                [`${prefix}--dense`]: this.dense,
             };
         },
 
@@ -317,26 +319,40 @@ document.addEventListener('alpine:init', () => {
             const ratio = img.naturalWidth / img.naturalHeight;
             let shape = ratio >= 1.2 ? 'wide' : (ratio <= 0.75 ? 'tall' : 'square');
             let cropped = false;
+            let dense = false;
             let contentAr = null;
+            const bbox = this.contentBBox(img);
 
-            if (shape === 'square') {
-                const bbox = this.contentBBox(img);
-                if (bbox && bbox.h > 0) {
+            if (shape === 'square' && bbox && bbox.h > 0) {
+                const contentRatio = bbox.w / bbox.h;
+                if (contentRatio >= 1.25) {
+                    shape = 'wide';
+                    cropped = true;
+                    contentAr = `${bbox.w} / ${bbox.h}`;
+                } else if (contentRatio <= 0.7) {
+                    shape = 'tall';
+                    cropped = true;
+                    contentAr = `${bbox.w} / ${bbox.h}`;
+                }
+            }
+
+            if (shape === 'wide') {
+                if (cropped) {
+                    dense = true;
+                } else if (ratio < 2.8) {
+                    dense = true;
+                } else if (bbox && bbox.h > 0) {
                     const contentRatio = bbox.w / bbox.h;
-                    if (contentRatio >= 1.25) {
-                        shape = 'wide';
-                        cropped = true;
-                        contentAr = `${bbox.w} / ${bbox.h}`;
-                    } else if (contentRatio <= 0.7) {
-                        shape = 'tall';
-                        cropped = true;
-                        contentAr = `${bbox.w} / ${bbox.h}`;
+                    const heightFill = bbox.h / img.naturalHeight;
+                    if (contentRatio < 3.2 || heightFill > 0.5) {
+                        dense = true;
                     }
                 }
             }
 
             this.shape = shape;
             this.cropped = cropped;
+            this.dense = dense;
             this.contentAr = contentAr;
         },
 
