@@ -102,37 +102,34 @@ final class CuentaCorrienteConsulta
     }
 
     /**
-     * Orden de acumulación de saldo (NeoLab):
-     * fechhoy ASC, nombreProtocolo DESC, idPacientes ASC.
+     * Orden de acumulación de saldo: inverso exacto del listado
+     * ({@see Paciente::scopeOrdenAcumulacionSaldo}).
+     * La primera fila del listado (protocolos y luego pagos, días recientes
+     * primero) queda con el saldo actual de la cuenta.
      *
      * @param  \Illuminate\Database\Eloquent\Builder<\App\Models\Paciente>  $query
      * @return \Illuminate\Database\Eloquent\Builder<\App\Models\Paciente>
      */
     public static function aplicarOrdenCalculoSaldo($query)
     {
-        return $query
-            ->orderBy('fechhoy')
-            ->orderByDesc('nombreProtocolo')
-            ->orderBy('idPacientes');
+        return $query->ordenAcumulacionSaldo();
     }
 
     /**
-     * Orden de pantalla (inverso exacto del cálculo, como NeoLab):
-     * fechhoy DESC, nombreProtocolo ASC, idPacientes DESC.
+     * Orden de pantalla: {@see Paciente::scopeOrdenListado}
+     * (días DESC; dentro del día, protocolos/pacientes y luego pagos).
      *
      * @param  \Illuminate\Database\Eloquent\Builder<\App\Models\Paciente>  $query
      * @return \Illuminate\Database\Eloquent\Builder<\App\Models\Paciente>
      */
     public static function aplicarOrdenListado($query)
     {
-        return $query
-            ->orderByDesc('fechhoy')
-            ->orderBy('nombreProtocolo')
-            ->orderByDesc('idPacientes');
+        return $query->ordenListado();
     }
 
     /**
-     * Saldo acumulado al cierre de cada protocolo (orden de cálculo NeoLab).
+     * Saldo acumulado al cierre de cada protocolo (orden inverso al listado).
+     * La clave del primer registro del listado corresponde al saldo actual.
      *
      * @return array<int, float> clave idPacientes
      */

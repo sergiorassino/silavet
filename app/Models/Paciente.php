@@ -84,12 +84,12 @@ class Paciente extends Model
     }
 
     /**
-     * Orden de listado (lab, autogestión, cuenta corriente): días más recientes primero;
-     * dentro de cada día, mismo orden que el saldo corrido (protocolos y luego pagos).
+     * Orden de listado (lab, autogestión, cuenta corriente): días más recientes
+     * primero; dentro de cada día, protocolos/pacientes y luego pagos.
      *
-     * Importante: dentro del día debe coincidir con {@see scopeOrdenCronologico}
-     * (solo cambia el sentido de la fecha calendario) para que el saldo acumulado
-     * encadene fila a fila.
+     * El saldo de cada fila se acumula en el orden inverso
+     * ({@see scopeOrdenAcumulacionSaldo}), de modo que la primera fila del
+     * listado muestra el saldo actual de la cuenta.
      *
      * @param  \Illuminate\Database\Eloquent\Builder<static>  $query
      * @return \Illuminate\Database\Eloquent\Builder<static>
@@ -107,22 +107,34 @@ class Paciente extends Model
     }
 
     /**
-     * Orden cronológico para saldo corrido: día ASC, tipoRegistro ASC
-     * (protocolos antes que pagos del mismo día), fechhoy / protocolo / id ASC.
+     * Orden de acumulación del saldo corrido: inverso exacto de
+     * {@see scopeOrdenListado}. Así el último movimiento acumulado es el
+     * primero del listado y su saldo coincide con el saldo actual.
+     *
+     * @param  \Illuminate\Database\Eloquent\Builder<static>  $query
+     * @return \Illuminate\Database\Eloquent\Builder<static>
+     */
+    public function scopeOrdenAcumulacionSaldo($query)
+    {
+        $tabla = $query->getModel()->getTable();
+
+        return $query
+            ->orderByRaw("DATE({$tabla}.fechhoy) ASC")
+            ->orderByDesc("{$tabla}.tipoRegistro")
+            ->orderByDesc("{$tabla}.fechhoy")
+            ->orderByDesc("{$tabla}.nombreProtocolo")
+            ->orderByDesc("{$tabla}.idPacientes");
+    }
+
+    /**
+     * @deprecated Usar {@see scopeOrdenAcumulacionSaldo}
      *
      * @param  \Illuminate\Database\Eloquent\Builder<static>  $query
      * @return \Illuminate\Database\Eloquent\Builder<static>
      */
     public function scopeOrdenCronologico($query)
     {
-        $tabla = $query->getModel()->getTable();
-
-        return $query
-            ->orderByRaw("DATE({$tabla}.fechhoy) ASC")
-            ->orderBy("{$tabla}.tipoRegistro")
-            ->orderBy("{$tabla}.fechhoy")
-            ->orderBy("{$tabla}.nombreProtocolo")
-            ->orderBy("{$tabla}.idPacientes");
+        return $query->ordenAcumulacionSaldo();
     }
 
     public function esPagoGlobal(): bool
