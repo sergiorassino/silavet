@@ -197,11 +197,11 @@ final class ListadoEstadisticoPacientesConsulta
                 ->select('pacientes.*')
                 ->orderBy('clientes.nombre')
                 ->orderByDesc('pacientes.fechhoy')
-                ->orderByDesc('pacientes.nombreProtocolo')
+                ->orderBy('pacientes.nombreProtocolo')
                 ->orderByDesc('pacientes.idPacientes');
         } else {
             $query->orderByDesc('pacientes.fechhoy')
-                ->orderByDesc('pacientes.nombreProtocolo')
+                ->orderBy('pacientes.nombreProtocolo')
                 ->orderByDesc('pacientes.idPacientes');
         }
 

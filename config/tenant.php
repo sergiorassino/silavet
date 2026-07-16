@@ -48,6 +48,16 @@ return [
     ],
 
     /*
+    | Descuento al cargar determinaciones.
+    | - cliente_porcentaje: % fijo en clientes.descuento, aplica a todas las determinaciones.
+    | - perfiles_volumen_mes_anterior: según perfiles pedidos el mes anterior (tipodeterminaciones.perfil),
+    |   descuento escalonado solo en perfiles del mes actual; no usa clientes.descuento.
+    */
+    'precios' => [
+        'descuento' => 'cliente_porcentaje',
+    ],
+
+    /*
     | Generación de número de protocolo al alta.
     | Ver docs/10-numero-de-protocolo.md (variantes, config por tenant, cómo extender).
     */

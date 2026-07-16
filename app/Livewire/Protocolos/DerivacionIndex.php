@@ -90,18 +90,18 @@ class DerivacionIndex extends PacienteIndex
             $query->leftJoin('derivaciones', 'derivaciones.idDerivaciones', '=', 'determinaciones.idDerivaciones')
                 ->orderBy('derivaciones.derivacion')
                 ->orderByDesc('pacientes.fechhoy')
-                ->orderByDesc('pacientes.nombreProtocolo');
+                ->orderBy('pacientes.nombreProtocolo');
         } elseif ($this->agrupacion === self::AGRUPACION_CLIENTE) {
             $query->leftJoin('clientes', 'clientes.idClientes', '=', 'determinaciones.idClientes')
                 ->orderBy('clientes.nombre')
                 ->orderByDesc('pacientes.fechhoy')
-                ->orderByDesc('pacientes.nombreProtocolo');
+                ->orderBy('pacientes.nombreProtocolo');
         } elseif ($this->agrupacion === self::AGRUPACION_FECHA) {
             $query->orderByDesc('pacientes.fechhoy')
-                ->orderByDesc('pacientes.nombreProtocolo');
+                ->orderBy('pacientes.nombreProtocolo');
         } else {
             $query->orderByDesc('pacientes.fechhoy')
-                ->orderByDesc('pacientes.nombreProtocolo');
+                ->orderBy('pacientes.nombreProtocolo');
         }
 
         $registros = $query->paginate(self::POR_PAGINA);

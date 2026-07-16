@@ -2,10 +2,16 @@
 
 namespace App\Support\Tipodeterminaciones;
 
+use App\Support\Precios\DescuentoDeterminacionConfig;
+
 class TipodeterminacionesGridConfig
 {
     public static function mostrarColumnaPerfil(): bool
     {
+        if (DescuentoDeterminacionConfig::usaPerfilesVolumenMesAnterior()) {
+            return false;
+        }
+
         return (bool) config('tenant.tipodeterminaciones.mostrar_columna_perfil', false);
     }
 

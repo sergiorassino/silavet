@@ -8,6 +8,7 @@ use App\Models\Paciente;
 use App\Models\Tipodeterminacion;
 use App\Support\PermisosIaCatalog;
 use App\Support\PrecioInput;
+use App\Support\Precios\DescuentoDeterminacionResolver;
 use App\Support\Precios\PrecioDeterminacionResolver;
 use App\Support\Resultados\RenglonesMaterializer;
 use App\Support\Tipodeterminaciones\TipodeterminacionesGridConfig;
@@ -429,7 +430,12 @@ class PacienteDeterminaciones extends Component
 
         $paciente = $this->paciente();
         $neto = PrecioDeterminacionResolver::resolverPrecioLista1($tipo);
-        $descuento = PrecioDeterminacionResolver::calcularDescuento($neto, $this->porcentajeDescuentoCliente());
+        $descuento = DescuentoDeterminacionResolver::calcularDescuento(
+            $neto,
+            (int) $paciente->idClientes,
+            $tipo,
+            $paciente->fechhoy
+        );
         $precio = PrecioDeterminacionResolver::precioConDescuento($neto, $descuento);
 
         $fila['neto'] = PrecioInput::format($neto);
@@ -443,8 +449,29 @@ class PacienteDeterminaciones extends Component
     private function recalcularDescuentoDesdePorcentaje(array &$fila): void
     {
         $neto = PrecioInput::parse((string) ($fila['neto'] ?? '0'));
+        $idTipo = (int) ($fila['idTipodeterminaciones'] ?? 0);
+
+        if ($idTipo <= 0) {
+            $fila['descuento'] = PrecioInput::format(0);
+
+            return;
+        }
+
+        $tipo = Tipodeterminacion::query()->find($idTipo);
+        if ($tipo === null) {
+            $fila['descuento'] = PrecioInput::format(0);
+
+            return;
+        }
+
+        $paciente = $this->paciente();
         $fila['descuento'] = PrecioInput::format(
-            PrecioDeterminacionResolver::calcularDescuento($neto, $this->porcentajeDescuentoCliente())
+            DescuentoDeterminacionResolver::calcularDescuento(
+                $neto,
+                (int) $paciente->idClientes,
+                $tipo,
+                $paciente->fechhoy
+            )
         );
     }
 
@@ -456,11 +483,6 @@ class PacienteDeterminaciones extends Component
         $fila['precio'] = PrecioInput::format(
             PrecioDeterminacionResolver::precioConDescuento($neto, $descuento)
         );
-    }
-
-    private function porcentajeDescuentoCliente(): float
-    {
-        return (float) ($this->paciente()->cliente?->descuento ?? 0);
     }
 
     private function tipoYaCargado(int $idTipo): bool

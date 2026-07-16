@@ -186,7 +186,7 @@ SQL;
                 'i.nombreItem',
             ])
             ->orderByDesc('p.fechhoy')
-            ->orderByDesc('p.nombreProtocolo')
+            ->orderBy('p.nombreProtocolo')
             ->orderBy('g.orden')
             ->orderBy('g.idGrupos')
             ->orderBy('r.orden')

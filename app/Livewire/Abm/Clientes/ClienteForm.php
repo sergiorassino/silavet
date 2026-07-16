@@ -4,6 +4,7 @@ namespace App\Livewire\Abm\Clientes;
 
 use App\Models\Cliente;
 use App\Support\CuitInput;
+use App\Support\Precios\DescuentoDeterminacionConfig;
 use App\Support\PermisosIaCatalog;
 use App\Support\UsuarioMenuPortal;
 use Illuminate\Support\Facades\RateLimiter;
@@ -75,7 +76,9 @@ class ClienteForm extends Component
                     }
                 },
             ],
-            'descuento' => ['nullable', 'numeric', 'min:0', 'max:100'],
+            'descuento' => DescuentoDeterminacionConfig::usaPorcentajeCliente()
+                ? ['nullable', 'numeric', 'min:0', 'max:100']
+                : ['nullable'],
         ];
     }
 
@@ -113,7 +116,11 @@ class ClienteForm extends Component
             $data['cuit'] = null;
         }
         $descuento = trim((string) ($data['descuento'] ?? ''));
-        $data['descuento'] = $descuento === '' ? null : (float) $descuento;
+        if (DescuentoDeterminacionConfig::usaPerfilesVolumenMesAnterior()) {
+            $data['descuento'] = null;
+        } else {
+            $data['descuento'] = $descuento === '' ? null : (float) $descuento;
+        }
 
         if ($this->idClientes) {
             $cliente = Cliente::findOrFail($this->idClientes);

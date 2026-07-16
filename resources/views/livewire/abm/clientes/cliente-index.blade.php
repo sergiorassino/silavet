@@ -1,5 +1,6 @@
 @php
     use App\Support\CuitInput;
+    use App\Support\Precios\DescuentoDeterminacionConfig;
 @endphp
 
 <div class="vl-page">
@@ -57,7 +58,9 @@
                                 {{ $cuitFmt !== '' ? $cuitFmt : '—' }}
                             </td>
                             <td class="table-cell text-right tabular-nums">
-                                @if ($cliente->descuento !== null)
+                                @if (DescuentoDeterminacionConfig::usaPerfilesVolumenMesAnterior())
+                                    <span class="text-xs text-neutral-500">Vol. perfiles</span>
+                                @elseif ($cliente->descuento !== null)
                                     {{ rtrim(rtrim(number_format((float) $cliente->descuento, 2, ',', ''), '0'), ',') }}
                                 @else
                                     —

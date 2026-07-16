@@ -7,7 +7,9 @@ use App\Models\MedioDePago;
 use App\Models\Notificacion;
 use App\Models\Paciente;
 use App\Models\Renglon;
+use App\Support\CuentaCorriente\CuentaCorrienteConsulta;
 use App\Support\Envio\InformeEnvioServicio;
+use App\Support\Precios\DescuentoDeterminacionResolver;
 use App\Support\PermisosIaCatalog;
 use App\Support\Protocolos\DiagnosticoIaPromptBuilder;
 use App\Support\Protocolos\PacienteAdjuntoStorage;
@@ -846,7 +848,6 @@ class PacienteIndex extends Component
     public function abrirModalIa(int $id): void
     {
         abort_unless(tienePermiso(PermisosIaCatalog::PROTOCOLOS), 403);
-        $this->abortSiAutogestion();
 
         $paciente = $this->pacienteGestionable($id);
         if ($paciente === null) {
@@ -1029,8 +1030,11 @@ class PacienteIndex extends Component
             ->when(
                 $ctx->esCliente() && $ctx->idClientes,
                 function ($q) use ($ctx) {
-                    $q->where('pacientes.tipoRegistro', Paciente::TIPO_PROTOCOLO)
-                        ->where('pacientes.idClientes', $ctx->idClientes);
+                    // Autogestión: protocolos y pagos globales del cliente (para saldo corrido).
+                    $q->whereIn('pacientes.tipoRegistro', [
+                        Paciente::TIPO_PROTOCOLO,
+                        Paciente::TIPO_PAGO_GLOBAL,
+                    ])->where('pacientes.idClientes', $ctx->idClientes);
                 },
                 function ($q) {
                     $q->whereIn('pacientes.tipoRegistro', [
@@ -1052,12 +1056,8 @@ class PacienteIndex extends Component
                     }
                 });
             })
-            // Día calendario primero (ignora hora de pagos globales en algunos labos),
-            // luego tipoRegistro para que TIPO_PAGO_GLOBAL quede al final de cada día.
-            ->orderByRaw('DATE(pacientes.fechhoy) DESC')
-            ->orderBy('pacientes.tipoRegistro')
-            ->orderByDesc('pacientes.fechhoy')
-            ->orderByDesc('pacientes.nombreProtocolo')
+            // Mismo orden que cuenta corriente / autogestión (Paciente::scopeOrdenListado).
+            ->ordenListado()
             ->paginate(self::POR_PAGINA);
 
         $edInfRenglones = [];
@@ -1088,12 +1088,22 @@ class PacienteIndex extends Component
             ? 'livewire.protocolos.paciente-index-autogestion'
             : 'livewire.protocolos.paciente-index';
 
+        $saldosAcumulados = [];
+        $encabezadoDescuento = null;
+        if ($autogestion && $ctx->idClientes) {
+            $idCliente = (int) $ctx->idClientes;
+            $saldosAcumulados = CuentaCorrienteConsulta::mapaSaldoAcumuladoPorProtocolo($idCliente);
+            $encabezadoDescuento = DescuentoDeterminacionResolver::encabezadoAutogestion($idCliente);
+        }
+
         return view($vista, [
             'pacientes' => $pacientes,
             'edInfRenglones' => $edInfRenglones,
             'clientesPagoGlobal' => $clientesPagoGlobal,
             'mediosPago' => $mediosPago,
             'rutaInforme' => $autogestion ? 'cliente.pacientes.informe' : 'protocolos.informe',
+            'saldosAcumulados' => $saldosAcumulados,
+            'encabezadoDescuento' => $encabezadoDescuento,
         ])->layout('layouts.staff', UsuarioMenuPortal::layoutParamsDesdeContexto());
     }
 

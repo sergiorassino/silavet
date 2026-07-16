@@ -83,6 +83,48 @@ class Paciente extends Model
         ];
     }
 
+    /**
+     * Orden de listado (lab, autogestión, cuenta corriente): días más recientes primero;
+     * dentro de cada día, mismo orden que el saldo corrido (protocolos y luego pagos).
+     *
+     * Importante: dentro del día debe coincidir con {@see scopeOrdenCronologico}
+     * (solo cambia el sentido de la fecha calendario) para que el saldo acumulado
+     * encadene fila a fila.
+     *
+     * @param  \Illuminate\Database\Eloquent\Builder<static>  $query
+     * @return \Illuminate\Database\Eloquent\Builder<static>
+     */
+    public function scopeOrdenListado($query)
+    {
+        $tabla = $query->getModel()->getTable();
+
+        return $query
+            ->orderByRaw("DATE({$tabla}.fechhoy) DESC")
+            ->orderBy("{$tabla}.tipoRegistro")
+            ->orderBy("{$tabla}.fechhoy")
+            ->orderBy("{$tabla}.nombreProtocolo")
+            ->orderBy("{$tabla}.idPacientes");
+    }
+
+    /**
+     * Orden cronológico para saldo corrido: día ASC, tipoRegistro ASC
+     * (protocolos antes que pagos del mismo día), fechhoy / protocolo / id ASC.
+     *
+     * @param  \Illuminate\Database\Eloquent\Builder<static>  $query
+     * @return \Illuminate\Database\Eloquent\Builder<static>
+     */
+    public function scopeOrdenCronologico($query)
+    {
+        $tabla = $query->getModel()->getTable();
+
+        return $query
+            ->orderByRaw("DATE({$tabla}.fechhoy) ASC")
+            ->orderBy("{$tabla}.tipoRegistro")
+            ->orderBy("{$tabla}.fechhoy")
+            ->orderBy("{$tabla}.nombreProtocolo")
+            ->orderBy("{$tabla}.idPacientes");
+    }
+
     public function esPagoGlobal(): bool
     {
         return $this->esIngreso();
@@ -179,6 +221,105 @@ class Paciente extends Model
     public function pagadoFormateado(): string
     {
         return number_format((float) $this->pagado, 2, ',', '.');
+    }
+
+    /**
+     * Precio de lista del protocolo.
+     * Con columna neto (modelo nuevo): suma de netos de determinaciones.
+     * Legacy: el campo precio era el importe de lista.
+     * Los pagos (tipoRegistro = 2) no tienen cargo: siempre 0.
+     */
+    public function precioLista(): float
+    {
+        if ($this->esIngreso()) {
+            return 0.0;
+        }
+
+        $neto = round((float) ($this->neto ?? 0), 2);
+        if ($neto > 0) {
+            return $neto;
+        }
+
+        return round((float) ($this->precio ?? 0), 2);
+    }
+
+    /**
+     * Precio con descuento (cargo neto del movimiento).
+     * Con neto: precio ya viene consolidado con descuento.
+     * Legacy: precio − descuento.
+     * Los pagos (tipoRegistro = 2) no tienen cargo: siempre 0.
+     */
+    public function precioConDescuentoImporte(): float
+    {
+        if ($this->esIngreso()) {
+            return 0.0;
+        }
+
+        $neto = round((float) ($this->neto ?? 0), 2);
+        $precio = round((float) ($this->precio ?? 0), 2);
+        $descuento = round((float) ($this->descuento ?? 0), 2);
+
+        if ($neto > 0) {
+            return $precio;
+        }
+
+        return \App\Support\Precios\PrecioDeterminacionResolver::precioConDescuento($precio, $descuento);
+    }
+
+    public function descuentoImporte(): float
+    {
+        if ($this->esIngreso()) {
+            return 0.0;
+        }
+
+        $neto = round((float) ($this->neto ?? 0), 2);
+        $precio = round((float) ($this->precio ?? 0), 2);
+        $descuento = round((float) ($this->descuento ?? 0), 2);
+
+        if ($neto > 0) {
+            return round(max(0, $neto - $precio), 2);
+        }
+
+        return $descuento;
+    }
+
+    /**
+     * Importe cobrado en este movimiento.
+     * En pagos globales (tipoRegistro = 2) el importe suele estar en pagado;
+     * algunos registros legacy lo guardaron en precio.
+     */
+    public function importePagadoMovimiento(): float
+    {
+        $pagado = round((float) ($this->pagado ?? 0), 2);
+        if ($pagado > 0) {
+            return $pagado;
+        }
+
+        if ($this->esIngreso()) {
+            return round(abs((float) ($this->precio ?? 0)), 2);
+        }
+
+        return 0.0;
+    }
+
+    public function importePagadoMovimientoFormateado(): string
+    {
+        return number_format($this->importePagadoMovimiento(), 2, ',', '.');
+    }
+
+    public function precioListaFormateado(): string
+    {
+        return number_format($this->precioLista(), 2, ',', '.');
+    }
+
+    public function precioConDescuentoFormateado(): string
+    {
+        return number_format($this->precioConDescuentoImporte(), 2, ',', '.');
+    }
+
+    public function descuentoFormateado(): string
+    {
+        return number_format($this->descuentoImporte(), 2, ',', '.');
     }
 
     public function fechhoyFormateada(): string

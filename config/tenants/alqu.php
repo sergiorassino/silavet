@@ -10,4 +10,8 @@ return [
     'tipodeterminaciones' => [
         'mostrar_columna_perfil' => true,
     ],
+
+    'precios' => [
+        'descuento' => 'perfiles_volumen_mes_anterior',
+    ],
 ];

@@ -8,6 +8,7 @@ use App\Models\Reqxtipodet;
 use App\Models\Tipodeterminacion;
 use App\Support\PermisosIaCatalog;
 use App\Support\PrecioInput;
+use App\Support\Precios\DescuentoDeterminacionResolver;
 use App\Support\Precios\PrecioDeterminacionResolver;
 use App\Support\Requerimientos\RequerimientoHtml;
 use App\Support\UsuarioMenuPortal;
@@ -127,7 +128,9 @@ class EstimacionCostos extends Component
             ? $clientes->firstWhere('idClientes', $this->idClientes)
             : null;
 
-        $porcentajeDescuento = (float) ($cliente?->descuento ?? 0);
+        $resumenDescuento = $this->idClientes !== null
+            ? DescuentoDeterminacionResolver::resumenParaCliente($this->idClientes)
+            : null;
 
         $sumaTotal = 0.0;
         foreach ($this->seleccionados as $fila) {
@@ -141,7 +144,7 @@ class EstimacionCostos extends Component
             'clientes' => $clientes,
             'tiposDisponibles' => $tiposDisponibles,
             'clienteBloqueado' => $ctx->esCliente() && $ctx->idClientes,
-            'porcentajeDescuento' => $porcentajeDescuento,
+            'resumenDescuento' => $resumenDescuento,
             'sumaTotal' => $sumaTotal,
             'sumaTotalFormateada' => PrecioInput::format($sumaTotal),
             'requerimientos' => $requerimientos,
@@ -210,7 +213,11 @@ class EstimacionCostos extends Component
     private function filaDesdeTipo(Tipodeterminacion $tipo): array
     {
         $neto = PrecioDeterminacionResolver::resolverPrecioLista1($tipo);
-        $descuento = PrecioDeterminacionResolver::calcularDescuento($neto, $this->porcentajeDescuentoCliente());
+        $descuento = DescuentoDeterminacionResolver::calcularDescuento(
+            $neto,
+            (int) $this->idClientes,
+            $tipo
+        );
         $precio = PrecioDeterminacionResolver::precioConDescuento($neto, $descuento);
 
         return [
@@ -220,19 +227,6 @@ class EstimacionCostos extends Component
             'descuento' => PrecioInput::format($descuento),
             'precio' => PrecioInput::format($precio),
         ];
-    }
-
-    private function porcentajeDescuentoCliente(): float
-    {
-        if ($this->idClientes === null) {
-            return 0.0;
-        }
-
-        $cliente = Cliente::query()
-            ->where('idClientes', $this->idClientes)
-            ->first(['descuento']);
-
-        return (float) ($cliente?->descuento ?? 0);
     }
 
     private function yaSeleccionada(int $idTipo): bool

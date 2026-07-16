@@ -21,6 +21,31 @@
         </div>
     </div>
 
+    @if ($encabezadoDescuento)
+        <div class="mb-4 px-2 text-center text-sm leading-relaxed text-primary-800 sm:text-base">
+            <p class="font-bold">
+                Saldo Cuenta Corriente: $ {{ $encabezadoDescuento['saldoFormateado'] }}
+            </p>
+            @if (! empty($encabezadoDescuento['mostrarDetalleVolumen']))
+                <p class="mt-1">
+                    Descuentos obtenidos durante el mes: $ {{ $encabezadoDescuento['descuentosMesFormateado'] }}
+                </p>
+                <p class="mt-1">
+                    Cantidad de Perfiles solicitados el mes anterior:
+                    {{ $encabezadoDescuento['perfilesMesAnterior'] }}
+                    (Desc. para este mes: {{ $encabezadoDescuento['porcentajeEsteMesFormateado'] }})
+                </p>
+                <p class="mt-1">
+                    Cantidad de Perfiles solicitados este mes:
+                    {{ $encabezadoDescuento['perfilesMesActual'] }}
+                </p>
+                <p class="mt-1">
+                    {{ $encabezadoDescuento['mensajeProximoUmbral'] }}
+                </p>
+            @endif
+        </div>
+    @endif
+
     <div class="vl-card overflow-hidden">
         <div class="vl-toolbar border-b border-accent-200 px-5 py-3 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <input wire:model.live.debounce.300ms="busqueda"
@@ -76,52 +101,106 @@
                         <th class="vl-pacientes-th">Raza</th>
                         <th class="vl-pacientes-th">Sexo</th>
                         <th class="vl-pacientes-th">Edad</th>
-                        <th class="vl-pacientes-th vl-pacientes-th--num">Precio</th>
                         <th class="vl-pacientes-th">Est</th>
+                        <th class="vl-pacientes-th vl-pacientes-th--num" title="Precio de lista">Precio Lista</th>
+                        <th class="vl-pacientes-th vl-pacientes-th--num" title="Descuento">Desc.</th>
+                        <th class="vl-pacientes-th vl-pacientes-th--num" title="Precio con descuento">Precio c/desc</th>
+                        <th class="vl-pacientes-th vl-pacientes-th--num">Pagado</th>
+                        <th class="vl-pacientes-th vl-pacientes-th--num" title="Saldo acumulado del cliente tras este movimiento">Saldo</th>
+                        <th class="vl-pacientes-th vl-pacientes-th--icon" title="Asistente IA">IA</th>
                     </tr>
                 </thead>
                 <tbody>
                     @forelse ($pacientes as $paciente)
-                        <tr class="vl-pacientes-row {{ $paciente->filaClaseCss() }}" wire:key="pac-cli-{{ $paciente->idPacientes }}">
-                            <td class="vl-pacientes-td vl-pacientes-td--icon">
-                                @if (tienePermiso(\App\Support\PermisosIaCatalog::INFORMES))
-                                    <a href="{{ route($rutaInforme, ['ref' => \App\Support\Security\OpaqueRouteToken::forInformePaciente((int) $paciente->idPacientes)]) }}"
-                                       target="_blank"
-                                       rel="noopener noreferrer"
-                                       title="Informe PDF"
-                                       aria-label="Abrir informe PDF"
-                                       class="vl-grid-icon-btn text-red-600 hover:bg-red-50">
-                                        <svg class="h-4 w-4" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                                            <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8l-6-6zm-1 2l5 5h-5V4zM8.5 13.5h7v1.5h-7v-1.5zm0 3h7v1.5h-7v-1.5z"/>
+                        @php
+                            $saldoFila = $saldosAcumulados[(int) $paciente->idPacientes] ?? 0.0;
+                        @endphp
+                        @if ($paciente->esPagoGlobal())
+                            <tr class="vl-pacientes-row {{ $paciente->filaClaseCss() }}" wire:key="pac-cli-{{ $paciente->idPacientes }}">
+                                <td class="vl-pacientes-td vl-pacientes-td--icon"></td>
+                                <td class="vl-pacientes-td vl-pacientes-td--num">
+                                    {{ ($pacientes->currentPage() - 1) * $pacientes->perPage() + $loop->iteration }}
+                                </td>
+                                <td class="vl-pacientes-td whitespace-nowrap">{{ $paciente->fechhoyFormateada() }}</td>
+                                <td class="vl-pacientes-td font-semibold whitespace-nowrap">—</td>
+                                <td class="vl-pacientes-td">
+                                    <span class="vl-pacientes-pago-global-badge">Pago global</span>
+                                </td>
+                                <td class="vl-pacientes-td">—</td>
+                                <td class="vl-pacientes-td">—</td>
+                                <td class="vl-pacientes-td">—</td>
+                                <td class="vl-pacientes-td">—</td>
+                                <td class="vl-pacientes-td">—</td>
+                                <td class="vl-pacientes-td whitespace-nowrap">Pago</td>
+                                <td class="vl-pacientes-td vl-pacientes-td--num whitespace-nowrap">{{ $paciente->precioListaFormateado() }}</td>
+                                <td class="vl-pacientes-td vl-pacientes-td--num whitespace-nowrap">{{ $paciente->descuentoFormateado() }}</td>
+                                <td class="vl-pacientes-td vl-pacientes-td--num whitespace-nowrap">{{ $paciente->precioConDescuentoFormateado() }}</td>
+                                <td class="vl-pacientes-td vl-pacientes-td--num whitespace-nowrap font-semibold">{{ $paciente->importePagadoMovimientoFormateado() }}</td>
+                                <td class="vl-pacientes-td vl-pacientes-td--num whitespace-nowrap font-semibold tabular-nums">
+                                    {{ \App\Support\CuentaCorriente\CuentaCorrienteConsulta::formatearMoneda((float) $saldoFila) }}
+                                </td>
+                                <td class="vl-pacientes-td vl-pacientes-td--icon"></td>
+                            </tr>
+                        @else
+                            <tr class="vl-pacientes-row {{ $paciente->filaClaseCss() }}" wire:key="pac-cli-{{ $paciente->idPacientes }}">
+                                <td class="vl-pacientes-td vl-pacientes-td--icon">
+                                    @if (tienePermiso(\App\Support\PermisosIaCatalog::INFORMES))
+                                        <a href="{{ route($rutaInforme, ['ref' => \App\Support\Security\OpaqueRouteToken::forInformePaciente((int) $paciente->idPacientes)]) }}"
+                                           target="_blank"
+                                           rel="noopener noreferrer"
+                                           title="Informe PDF"
+                                           aria-label="Abrir informe PDF"
+                                           class="vl-grid-icon-btn text-red-600 hover:bg-red-50">
+                                            <svg class="h-4 w-4" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                                                <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8l-6-6zm-1 2l5 5h-5V4zM8.5 13.5h7v1.5h-7v-1.5zm0 3h7v1.5h-7v-1.5z"/>
+                                            </svg>
+                                        </a>
+                                    @else
+                                        <span class="inline-flex h-8 w-8 items-center justify-center text-neutral-300" title="Sin permiso de informes">
+                                            <svg class="h-4 w-4" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                                                <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8l-6-6zm-1 2l5 5h-5V4zM8.5 13.5h7v1.5h-7v-1.5zm0 3h7v1.5h-7v-1.5z"/>
+                                            </svg>
+                                        </span>
+                                    @endif
+                                </td>
+                                <td class="vl-pacientes-td vl-pacientes-td--num">
+                                    {{ ($pacientes->currentPage() - 1) * $pacientes->perPage() + $loop->iteration }}
+                                </td>
+                                <td class="vl-pacientes-td whitespace-nowrap">{{ $paciente->fechhoyFormateada() }}</td>
+                                <td class="vl-pacientes-td font-semibold whitespace-nowrap">{{ $paciente->nombreProtocolo ?: '—' }}</td>
+                                <td class="vl-pacientes-td">{{ $paciente->nombre ?: '—' }}</td>
+                                <td class="vl-pacientes-td">{{ $paciente->propietario ?: '—' }}</td>
+                                <td class="vl-pacientes-td">{{ $paciente->especie?->nombre ?: '—' }}</td>
+                                <td class="vl-pacientes-td">{{ $paciente->raza?->nombre ?: '—' }}</td>
+                                <td class="vl-pacientes-td">{{ $paciente->sexo ?: '—' }}</td>
+                                <td class="vl-pacientes-td">{{ $paciente->edad ?: '—' }}</td>
+                                <td class="vl-pacientes-td whitespace-nowrap">
+                                    {{ $paciente->estado ?: \App\Support\Resultados\ResultadosEstadosCatalog::EN_PROC }}
+                                </td>
+                                <td class="vl-pacientes-td vl-pacientes-td--num whitespace-nowrap">{{ $paciente->precioListaFormateado() }}</td>
+                                <td class="vl-pacientes-td vl-pacientes-td--num whitespace-nowrap">{{ $paciente->descuentoFormateado() }}</td>
+                                <td class="vl-pacientes-td vl-pacientes-td--num whitespace-nowrap">{{ $paciente->precioConDescuentoFormateado() }}</td>
+                                <td class="vl-pacientes-td vl-pacientes-td--num whitespace-nowrap">{{ $paciente->pagadoFormateado() }}</td>
+                                <td class="vl-pacientes-td vl-pacientes-td--num whitespace-nowrap font-semibold tabular-nums">
+                                    {{ \App\Support\CuentaCorriente\CuentaCorrienteConsulta::formatearMoneda((float) $saldoFila) }}
+                                </td>
+                                <td class="vl-pacientes-td vl-pacientes-td--icon">
+                                    <x-vl-grid-icon-btn
+                                        title="Asistente IA"
+                                        variant="primary"
+                                        wire:click="abrirModalIa({{ $paciente->idPacientes }})"
+                                    >
+                                        <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.75"
+                                                  d="M4 5a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1H5a1 1 0 01-1-1V5zm10 0a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1h-4a1 1 0 01-1-1V5zM4 15a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1H5a1 1 0 01-1-1v-4zm10 0a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1h-4a1 1 0 01-1-1v-4z"/>
                                         </svg>
-                                    </a>
-                                @else
-                                    <span class="inline-flex h-8 w-8 items-center justify-center text-neutral-300" title="Sin permiso de informes">
-                                        <svg class="h-4 w-4" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                                            <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8l-6-6zm-1 2l5 5h-5V4zM8.5 13.5h7v1.5h-7v-1.5zm0 3h7v1.5h-7v-1.5z"/>
-                                        </svg>
-                                    </span>
-                                @endif
-                            </td>
-                            <td class="vl-pacientes-td vl-pacientes-td--num">
-                                {{ ($pacientes->currentPage() - 1) * $pacientes->perPage() + $loop->iteration }}
-                            </td>
-                            <td class="vl-pacientes-td whitespace-nowrap">{{ $paciente->fechhoyFormateada() }}</td>
-                            <td class="vl-pacientes-td font-semibold whitespace-nowrap">{{ $paciente->nombreProtocolo ?: '—' }}</td>
-                            <td class="vl-pacientes-td">{{ $paciente->nombre ?: '—' }}</td>
-                            <td class="vl-pacientes-td">{{ $paciente->propietario ?: '—' }}</td>
-                            <td class="vl-pacientes-td">{{ $paciente->especie?->nombre ?: '—' }}</td>
-                            <td class="vl-pacientes-td">{{ $paciente->raza?->nombre ?: '—' }}</td>
-                            <td class="vl-pacientes-td">{{ $paciente->sexo ?: '—' }}</td>
-                            <td class="vl-pacientes-td">{{ $paciente->edad ?: '—' }}</td>
-                            <td class="vl-pacientes-td vl-pacientes-td--num whitespace-nowrap">{{ $paciente->precioFormateado() }}</td>
-                            <td class="vl-pacientes-td whitespace-nowrap">
-                                {{ $paciente->estado ?: \App\Support\Resultados\ResultadosEstadosCatalog::EN_PROC }}
-                            </td>
-                        </tr>
+                                    </x-vl-grid-icon-btn>
+                                </td>
+                            </tr>
+                        @endif
                     @empty
                         <tr>
-                            <td colspan="12" class="vl-pacientes-td text-center text-neutral-500 py-10">
+                            <td colspan="17" class="vl-pacientes-td text-center text-neutral-500 py-10">
                                 @if ($vista === 'hoy')
                                     @php
                                         $fechaEfectiva = $this->fechaVistaEfectiva();
@@ -145,4 +224,6 @@
             </div>
         @endif
     </div>
+
+    @include('livewire.protocolos.partials.paciente-protocolo-modales')
 </div>

@@ -78,33 +78,71 @@ final class CuentaCorrienteConsulta
 
     public static function movimientoCuentaCorriente(Paciente $paciente): float
     {
-        return round((float) ($paciente->precio ?? 0) - (float) ($paciente->pagado ?? 0), 2);
-    }
-
-    public static function movimientoNetoProtocolo(Paciente $paciente): float
-    {
-        $neto = PrecioDeterminacionResolver::neto(
-            (float) ($paciente->precio ?? 0),
-            (float) ($paciente->descuento ?? 0),
-        );
-
-        return round($neto - (float) ($paciente->pagado ?? 0), 2);
+        return self::movimientoNetoProtocolo($paciente);
     }
 
     /**
-     * Saldo acumulado al cierre de cada protocolo (orden cronológico ascendente).
+     * Variación de saldo (misma regla que NeoLab cuentaCorrientePacientes):
+     * precio − pagado sobre los campos guardados en pacientes.
+     *
+     * No se reaplica descuento ni lógica de neto: cada laboratorio ya deja en
+     * precio/pagado el importe que usa su modelo de precios.
+     * En pagos (tipoRegistro = 2) se toma el importe cobrado aunque esté solo en precio.
+     */
+    public static function movimientoNetoProtocolo(Paciente $paciente): float
+    {
+        if ($paciente->esIngreso()) {
+            return round(-$paciente->importePagadoMovimiento(), 2);
+        }
+
+        return round(
+            (float) ($paciente->precio ?? 0) - (float) ($paciente->pagado ?? 0),
+            2
+        );
+    }
+
+    /**
+     * Orden de acumulación de saldo (NeoLab):
+     * fechhoy ASC, nombreProtocolo DESC, idPacientes ASC.
+     *
+     * @param  \Illuminate\Database\Eloquent\Builder<\App\Models\Paciente>  $query
+     * @return \Illuminate\Database\Eloquent\Builder<\App\Models\Paciente>
+     */
+    public static function aplicarOrdenCalculoSaldo($query)
+    {
+        return $query
+            ->orderBy('fechhoy')
+            ->orderByDesc('nombreProtocolo')
+            ->orderBy('idPacientes');
+    }
+
+    /**
+     * Orden de pantalla (inverso exacto del cálculo, como NeoLab):
+     * fechhoy DESC, nombreProtocolo ASC, idPacientes DESC.
+     *
+     * @param  \Illuminate\Database\Eloquent\Builder<\App\Models\Paciente>  $query
+     * @return \Illuminate\Database\Eloquent\Builder<\App\Models\Paciente>
+     */
+    public static function aplicarOrdenListado($query)
+    {
+        return $query
+            ->orderByDesc('fechhoy')
+            ->orderBy('nombreProtocolo')
+            ->orderByDesc('idPacientes');
+    }
+
+    /**
+     * Saldo acumulado al cierre de cada protocolo (orden de cálculo NeoLab).
      *
      * @return array<int, float> clave idPacientes
      */
     public static function mapaSaldoAcumuladoPorProtocolo(int $idClientes): array
     {
-        $protocolos = Paciente::query()
-            ->where('idClientes', $idClientes)
-            ->where('tipoRegistro', '!=', Paciente::TIPO_EGRESO)
-            ->orderBy('fechhoy')
-            ->orderBy('nombreProtocolo')
-            ->orderBy('idPacientes')
-            ->get(['idPacientes', 'precio', 'pagado', 'descuento']);
+        $protocolos = self::aplicarOrdenCalculoSaldo(
+            Paciente::query()
+                ->where('idClientes', $idClientes)
+                ->where('tipoRegistro', '!=', Paciente::TIPO_EGRESO)
+        )->get(self::columnasMovimientoSaldo(['idPacientes']));
 
         $mapa = [];
         $running = 0.0;
@@ -124,12 +162,11 @@ final class CuentaCorrienteConsulta
      */
     public static function mapaSaldoPorCierreDia(int $idClientes): array
     {
-        $protocolos = Paciente::query()
-            ->where('idClientes', $idClientes)
-            ->where('tipoRegistro', '!=', Paciente::TIPO_EGRESO)
-            ->orderBy('fechhoy')
-            ->orderBy('idPacientes')
-            ->get(['idPacientes', 'fechhoy', 'precio', 'pagado', 'descuento']);
+        $protocolos = self::aplicarOrdenCalculoSaldo(
+            Paciente::query()
+                ->where('idClientes', $idClientes)
+                ->where('tipoRegistro', '!=', Paciente::TIPO_EGRESO)
+        )->get(self::columnasMovimientoSaldo(['idPacientes', 'fechhoy']));
 
         $mapa = [];
         $running = 0.0;
@@ -171,14 +208,12 @@ final class CuentaCorrienteConsulta
 
         $fechaCorte = Carbon::parse($desde)->toDateString();
 
-        $protocolos = Paciente::query()
-            ->where('idClientes', $idClientes)
-            ->where('tipoRegistro', '!=', Paciente::TIPO_EGRESO)
-            ->whereDate('fechhoy', '<', $fechaCorte)
-            ->orderBy('fechhoy')
-            ->orderBy('nombreProtocolo')
-            ->orderBy('idPacientes')
-            ->get(['precio', 'pagado', 'descuento']);
+        $protocolos = self::aplicarOrdenCalculoSaldo(
+            Paciente::query()
+                ->where('idClientes', $idClientes)
+                ->where('tipoRegistro', '!=', Paciente::TIPO_EGRESO)
+                ->whereDate('fechhoy', '<', $fechaCorte)
+        )->get(self::columnasMovimientoSaldo());
 
         $running = 0.0;
 
@@ -211,23 +246,20 @@ final class CuentaCorrienteConsulta
         $desde = trim((string) $fechaDesde);
         $hasta = trim((string) $fechaHasta);
 
-        $protocolos = Paciente::query()
-            ->with(['especie:idEspecies,nombre', 'raza:idRazas,nombre'])
-            ->where('idClientes', $idClientes)
-            ->where('tipoRegistro', '!=', Paciente::TIPO_EGRESO)
-            ->when($desde !== '', fn ($q) => $q->whereDate('fechhoy', '>=', Carbon::parse($desde)->toDateString()))
-            ->when($hasta !== '', fn ($q) => $q->whereDate('fechhoy', '<=', Carbon::parse($hasta)->toDateString()))
-            ->orderByDesc('fechhoy')
-            ->orderByDesc('nombreProtocolo')
-            ->orderByDesc('idPacientes')
-            ->get();
+        $protocolos = self::aplicarOrdenListado(
+            Paciente::query()
+                ->with(['especie:idEspecies,nombre', 'raza:idRazas,nombre'])
+                ->where('idClientes', $idClientes)
+                ->where('tipoRegistro', '!=', Paciente::TIPO_EGRESO)
+                ->when($desde !== '', fn ($q) => $q->whereDate('fechhoy', '>=', Carbon::parse($desde)->toDateString()))
+                ->when($hasta !== '', fn ($q) => $q->whereDate('fechhoy', '<=', Carbon::parse($hasta)->toDateString()))
+        )->get();
 
         $saldosAcumulados = self::mapaSaldoAcumuladoPorProtocolo($idClientes);
 
         return $protocolos->map(function (Paciente $paciente) use ($saldosAcumulados) {
-            $precio = round((float) ($paciente->precio ?? 0), 2);
-            $pagado = round((float) ($paciente->pagado ?? 0), 2);
             $fecha = $paciente->fechhoy?->format('Y-m-d') ?? '';
+            $esPagoGlobal = $paciente->esPagoGlobal();
 
             return (object) [
                 'idPacientes' => (int) $paciente->idPacientes,
@@ -239,10 +271,13 @@ final class CuentaCorrienteConsulta
                 'nombre' => trim((string) ($paciente->nombre ?? '')),
                 'propietario' => trim((string) ($paciente->propietario ?? '')),
                 'estado' => trim((string) ($paciente->estado ?? '')),
-                'precio' => $precio,
-                'pagado' => $pagado,
+                // Campos crudos como NeoLab (el saldo no reaplica descuentos).
+                'precio' => $esPagoGlobal ? 0.0 : round((float) ($paciente->precio ?? 0), 2),
+                'pagado' => $esPagoGlobal
+                    ? $paciente->importePagadoMovimiento()
+                    : round((float) ($paciente->pagado ?? 0), 2),
                 'saldo' => $saldosAcumulados[(int) $paciente->idPacientes] ?? 0.0,
-                'esPagoGlobal' => $paciente->esPagoGlobal(),
+                'esPagoGlobal' => $esPagoGlobal,
             ];
         });
     }
@@ -273,7 +308,24 @@ final class CuentaCorrienteConsulta
 
     private static function expresionSqlSaldoProtocolo(string $alias): string
     {
-        return "GREATEST(0, COALESCE({$alias}.precio, 0) - COALESCE({$alias}.descuento, 0) - COALESCE({$alias}.pagado, 0))";
+        // Misma base que NeoLab (precio − pagado). Pagos: importe en pagado o, legacy, en precio.
+        return "CASE
+            WHEN COALESCE({$alias}.tipoRegistro, 0) = ".Paciente::TIPO_INGRESO."
+                THEN -ABS(COALESCE(NULLIF({$alias}.pagado, 0), {$alias}.precio, 0))
+            ELSE COALESCE({$alias}.precio, 0) - COALESCE({$alias}.pagado, 0)
+        END";
+    }
+
+    /**
+     * @param  list<string>  $extra
+     * @return list<string>
+     */
+    private static function columnasMovimientoSaldo(array $extra = []): array
+    {
+        return array_values(array_unique(array_merge(
+            $extra,
+            ['tipoRegistro', 'precio', 'pagado']
+        )));
     }
 
     public static function etiquetaPeriodo(?string $fechaDesde, ?string $fechaHasta): string

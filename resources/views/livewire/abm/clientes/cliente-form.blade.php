@@ -1,3 +1,7 @@
+@php
+    use App\Support\Precios\DescuentoDeterminacionConfig;
+@endphp
+
 <div class="vl-page">
     <div class="vl-hero mb-4">
         <div class="vl-hero-inner">
@@ -14,6 +18,13 @@
                 <label class="form-label mb-1" for="nombre">Nombre *</label>
                 <input wire:model="nombre" id="nombre" type="text" maxlength="200" class="form-input py-1.5 text-sm" autofocus>
                 @error('nombre') <p class="form-error">{{ $message }}</p> @enderror
+            </div>
+
+            <div>
+                <label class="form-label mb-1" for="cuit">CUIT</label>
+                <input wire:model.live="cuit" id="cuit" type="text" maxlength="13" inputmode="numeric"
+                       class="form-input max-w-xs py-1.5 text-sm" placeholder="99-99999999-9">
+                @error('cuit') <p class="form-error">{{ $message }}</p> @enderror
             </div>
 
             <div>
@@ -48,20 +59,14 @@
                 </div>
             </div>
 
-            <div class="grid gap-4 sm:grid-cols-2">
-                <div>
-                    <label class="form-label mb-1" for="cuit">CUIT</label>
-                    <input wire:model.live="cuit" id="cuit" type="text" maxlength="13" inputmode="numeric"
-                           class="form-input max-w-xs py-1.5 text-sm" placeholder="99-99999999-9">
-                    @error('cuit') <p class="form-error">{{ $message }}</p> @enderror
-                </div>
+            @if (DescuentoDeterminacionConfig::usaPorcentajeCliente())
                 <div>
                     <label class="form-label mb-1" for="descuento">Descuento (%)</label>
                     <input wire:model="descuento" id="descuento" type="text" inputmode="decimal"
                            class="form-input max-w-[8rem] py-1.5 text-sm" placeholder="0">
                     @error('descuento') <p class="form-error">{{ $message }}</p> @enderror
                 </div>
-            </div>
+            @endif
 
             <div class="flex flex-wrap gap-2 pt-1">
                 <button type="submit" class="btn-primary py-1.5 text-sm" wire:loading.attr="disabled">Guardar</button>

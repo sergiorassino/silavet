@@ -28,10 +28,9 @@
                         <option value="{{ $cliente->idClientes }}">{{ $cliente->nombre }}</option>
                     @endforeach
                 </select>
-                @if ($idClientes)
+                @if ($idClientes && $resumenDescuento)
                     <p class="mt-1 text-xs text-neutral-500">
-                        Descuento del cliente:
-                        <span class="font-semibold tabular-nums">{{ number_format($porcentajeDescuento, 2, ',', '.') }} %</span>
+                        {{ $resumenDescuento['texto'] }}
                     </p>
                 @endif
             </div>
