@@ -1,6 +1,6 @@
 <div class="vl-page">
     <div class="vl-hero mb-4">
-        <div class="vl-hero-inner">
+        <div class="vl-hero-inner flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <x-vl-hero-heading>
                 <p class="vl-eyebrow">Autogestión</p>
                 <h1 class="text-2xl font-bold sm:text-3xl">Lista de precios</h1>
@@ -8,6 +8,7 @@
                     Tarifario vigente publicado por el laboratorio.
                 </p>
             </x-vl-hero-heading>
+            <x-vl-cli-avisos-campana />
         </div>
     </div>
 

@@ -8,6 +8,7 @@ use App\Models\CuentaDetalle;
 use App\Models\MedioDePago;
 use App\Models\Paciente;
 use App\Support\PermisosIaCatalog;
+use App\Support\Tesoreria\TesoreriaConfig;
 use App\Support\UsuarioMenuPortal;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Facades\Schema;
@@ -48,6 +49,7 @@ class MovimientoIndex extends Component
     public function mount(): void
     {
         abort_unless(tienePermiso(PermisosIaCatalog::FACTURACION), 403);
+        abort_unless(TesoreriaConfig::usaPacientes(), 404);
         $this->reiniciarFechaHora();
     }
 
@@ -88,7 +90,7 @@ class MovimientoIndex extends Component
 
         $movimiento = $this->movimientoEnAlcance($id);
         if ($movimiento === null) {
-            $this->dispatch('vl-swal-error', mensaje: 'No se encontró el movimiento.');
+            $this->dispatch('vl-swal-error', mensaje: 'No se encontr? el movimiento.');
 
             return;
         }
@@ -158,22 +160,22 @@ class MovimientoIndex extends Component
 
         $this->validate($reglas, [
             'tipoRegistro.required' => 'Seleccione el tipo de movimiento.',
-            'tipoRegistro.in' => 'El tipo de movimiento no es válido.',
+            'tipoRegistro.in' => 'El tipo de movimiento no es v?lido.',
             'fecha.required' => 'Ingrese la fecha.',
-            'fecha.date_format' => 'La fecha no es válida.',
+            'fecha.date_format' => 'La fecha no es v?lida.',
             'hora.required' => 'Ingrese la hora.',
-            'hora.date_format' => 'La hora no es válida.',
+            'hora.date_format' => 'La hora no es v?lida.',
             'idClientes.required' => 'Seleccione el cliente.',
-            'idClientes.exists' => 'El cliente seleccionado no es válido.',
+            'idClientes.exists' => 'El cliente seleccionado no es v?lido.',
             'idCuentas.required' => 'Seleccione la cuenta.',
-            'idCuentas.exists' => 'La cuenta seleccionada no es válida.',
+            'idCuentas.exists' => 'La cuenta seleccionada no es v?lida.',
             'idCuentasdetalle.required' => 'Seleccione el proveedor.',
-            'idCuentasdetalle.exists' => 'El proveedor seleccionado no es válido.',
+            'idCuentasdetalle.exists' => 'El proveedor seleccionado no es v?lido.',
             'pagado.required' => 'Ingrese el importe pagado.',
-            'pagado.numeric' => 'El importe no es válido.',
+            'pagado.numeric' => 'El importe no es v?lido.',
             'pagado.gt' => 'El importe debe ser mayor a cero.',
             'idMediodepago.required' => 'Seleccione el medio de pago.',
-            'idMediodepago.exists' => 'El medio de pago seleccionado no es válido.',
+            'idMediodepago.exists' => 'El medio de pago seleccionado no es v?lido.',
         ]);
 
         RateLimiter::hit($key, 60);
@@ -198,7 +200,7 @@ class MovimientoIndex extends Component
         if ($this->idPacientes !== null) {
             $movimiento = $this->movimientoEnAlcance($this->idPacientes);
             if ($movimiento === null) {
-                $this->dispatch('vl-swal-error', mensaje: 'No se encontró el movimiento.');
+                $this->dispatch('vl-swal-error', mensaje: 'No se encontr? el movimiento.');
                 $this->cancelarFormulario();
 
                 return;
@@ -220,7 +222,7 @@ class MovimientoIndex extends Component
     {
         $this->dispatch(
             'vl-swal-error',
-            mensaje: 'La facturación desde movimientos aún no está disponible en SILAVET.'
+            mensaje: 'La facturaci?n desde movimientos a?n no est? disponible en SILAVET.'
         );
     }
 

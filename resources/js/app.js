@@ -277,6 +277,7 @@ document.addEventListener('alpine:init', () => {
         cropped: false,
         dense: false,
         contentAr: null,
+        viewBox: null,
         variant: config.variant || 'login',
 
         init() {
@@ -307,7 +308,18 @@ document.addEventListener('alpine:init', () => {
                 return {};
             }
 
-            return { '--vl-logo-ar': this.contentAr };
+            const style = { '--vl-logo-ar': this.contentAr };
+            if (this.viewBox) {
+                style['--vl-logo-view-box'] = this.viewBox;
+            }
+
+            return style;
+        },
+
+        supportsObjectViewBox() {
+            return typeof CSS !== 'undefined'
+                && typeof CSS.supports === 'function'
+                && CSS.supports('object-view-box', 'inset(10%)');
         },
 
         onLoad(event) {
@@ -321,18 +333,30 @@ document.addEventListener('alpine:init', () => {
             let cropped = false;
             let dense = false;
             let contentAr = null;
+            let viewBox = null;
             const bbox = this.contentBBox(img);
+            const canCrop = this.supportsObjectViewBox();
 
             if (shape === 'square' && bbox && bbox.h > 0) {
                 const contentRatio = bbox.w / bbox.h;
                 if (contentRatio >= 1.25) {
                     shape = 'wide';
-                    cropped = true;
-                    contentAr = `${bbox.w} / ${bbox.h}`;
+                    // object-fit:cover sobre el JPG cuadrado corta la marca;
+                    // object-view-box recorta solo el margen blanco.
+                    if (canCrop) {
+                        cropped = true;
+                        contentAr = `${bbox.w} / ${bbox.h}`;
+                        viewBox = this.insetFromBBox(bbox, img.naturalWidth, img.naturalHeight);
+                    } else {
+                        dense = true;
+                    }
                 } else if (contentRatio <= 0.7) {
                     shape = 'tall';
-                    cropped = true;
-                    contentAr = `${bbox.w} / ${bbox.h}`;
+                    if (canCrop) {
+                        cropped = true;
+                        contentAr = `${bbox.w} / ${bbox.h}`;
+                        viewBox = this.insetFromBBox(bbox, img.naturalWidth, img.naturalHeight);
+                    }
                 }
             }
 
@@ -354,6 +378,23 @@ document.addEventListener('alpine:init', () => {
             this.cropped = cropped;
             this.dense = dense;
             this.contentAr = contentAr;
+            this.viewBox = viewBox;
+        },
+
+        insetFromBBox(bbox, naturalW, naturalH) {
+            // Holgura para no comer antialiasing del trazo / tipografía.
+            const padX = bbox.w * 0.04;
+            const padY = bbox.h * 0.06;
+            const x = Math.max(0, bbox.x - padX);
+            const y = Math.max(0, bbox.y - padY);
+            const right = Math.max(0, naturalW - (bbox.x + bbox.w) - padX);
+            const bottom = Math.max(0, naturalH - (bbox.y + bbox.h) - padY);
+            const topPct = (y / naturalH) * 100;
+            const rightPct = (right / naturalW) * 100;
+            const bottomPct = (bottom / naturalH) * 100;
+            const leftPct = (x / naturalW) * 100;
+
+            return `inset(${topPct}% ${rightPct}% ${bottomPct}% ${leftPct}%)`;
         },
 
         contentBBox(img) {
@@ -400,7 +441,15 @@ document.addEventListener('alpine:init', () => {
                     return null;
                 }
 
-                return { w: maxX - minX + 1, h: maxY - minY + 1 };
+                const sx = img.naturalWidth / w;
+                const sy = img.naturalHeight / h;
+
+                return {
+                    x: minX * sx,
+                    y: minY * sy,
+                    w: (maxX - minX + 1) * sx,
+                    h: (maxY - minY + 1) * sy,
+                };
             } catch {
                 return null;
             }

@@ -30,7 +30,7 @@
         groups: {
             gestion: {{ request()->routeIs('protocolos.*', 'derivaciones.*') ? 'true' : 'false' }},
             clientes: {{ request()->routeIs('clientes.cuenta-corriente*') ? 'true' : 'false' }},
-            tesoreria: {{ request()->routeIs('tesoreria.movimientos.*', 'tesoreria.transferencias.*', 'tesoreria.cuentas.*', 'tesoreria.cuentas-detalle.*') ? 'true' : 'false' }},
+            tesoreria: {{ request()->routeIs('tesoreria.movimientos.*', 'tesoreria.movimientos-entre-cuentas.*', 'tesoreria.saldos-por-dia.*', 'tesoreria.conceptos.*', 'tesoreria.proveedores.*', 'tesoreria.transferencias.*', 'tesoreria.cuentas.*', 'tesoreria.cuentas-detalle.*') ? 'true' : 'false' }},
             gestionStock: false,
             parametrosGenerales: {{ request()->routeIs('abm.clientes.*', 'abm.especies.*', 'abm.razas.*', 'abm.usuarios.*', 'abm.derivaciones.*', 'admin.parametros-sistema.*') ? 'true' : 'false' }},
             parametrosDeterminaciones: {{ request()->routeIs('admin.determinaciones.*', 'admin.grupos.*', 'admin.det-por-grupo.*', 'admin.items-informe.*', 'admin.automatizacion.*') ? 'true' : 'false' }},

@@ -90,9 +90,8 @@ final class DashboardLabConsulta
             ];
         }
 
-        $filas = Paciente::query()
+        $filas = self::queryProtocolos()
             ->selectRaw('estado, COUNT(*) as cantidad')
-            ->where('tipoRegistro', Paciente::TIPO_PROTOCOLO)
             ->whereDate('fechhoy', $fechaSql)
             ->groupBy('estado')
             ->get();
@@ -120,7 +119,10 @@ final class DashboardLabConsulta
         return (int) Determinacion::query()
             ->where('determinaciones.idDerivaciones', '>', 0)
             ->join('pacientes', 'pacientes.idPacientes', '=', 'determinaciones.idPacientes')
-            ->where('pacientes.tipoRegistro', Paciente::TIPO_PROTOCOLO)
+            ->whereRaw('COALESCE(pacientes.tipoRegistro, 0) NOT IN (?, ?)', [
+                Paciente::TIPO_INGRESO,
+                Paciente::TIPO_EGRESO,
+            ])
             ->whereNotIn('pacientes.estado', ResultadosEstadosCatalog::estadosFinalizados())
             ->count('determinaciones.idDeterminaciones');
     }
@@ -132,14 +134,30 @@ final class DashboardLabConsulta
      */
     private static function conteoSinAlcanzarEstados(array $estadosAlcanzados): int
     {
-        return (int) Paciente::query()
-            ->where('tipoRegistro', Paciente::TIPO_PROTOCOLO)
+        return (int) self::queryProtocolos()
             ->where(function ($q) use ($estadosAlcanzados) {
                 $q->whereNull('estado')
                     ->orWhere('estado', '')
                     ->orWhereNotIn('estado', $estadosAlcanzados);
             })
             ->count();
+    }
+
+    /**
+     * Casos analíticos (protocolos), sin filas de tesorería en `pacientes`.
+     *
+     * En labvetciudad (`tesoreria_movimientos`) los protocolos legacy suelen tener
+     * `tipoRegistro = 0`; no exigir `TIPO_PROTOCOLO` (1).
+     *
+     * @return \Illuminate\Database\Eloquent\Builder<\App\Models\Paciente>
+     */
+    private static function queryProtocolos()
+    {
+        return Paciente::query()
+            ->whereRaw('COALESCE(tipoRegistro, 0) NOT IN (?, ?)', [
+                Paciente::TIPO_INGRESO,
+                Paciente::TIPO_EGRESO,
+            ]);
     }
 
     /**

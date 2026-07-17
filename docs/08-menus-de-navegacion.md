@@ -135,6 +135,10 @@ Fuente de verdad: `resources/views/components/vl-sidebar-icon.blade.php`.
 | `razas` | Gestión de Razas |
 | `cuenta-corriente` | Cuenta Corriente |
 | `movimientos` | Movimientos (Tesorería) |
+| `movimientos-entre-cuentas` | Movimientos entre Cuentas (Tesorería / tesoreria_movimientos) |
+| `saldos-por-dia` | Saldos por Día (Tesorería / tesoreria_movimientos) |
+| `gestion-conceptos` | Gestión de Conceptos (Tesorería / tesoreria_movimientos) |
+| `gestion-proveedores` | Gestión de Proveedores (Tesorería / tesoreria_movimientos) |
 | `transferencias-intercuenta` | Transferencias Intercuenta (Tesorería) |
 | `cuentas-contables` | Gestión de Cuentas Contables (Tesorería) |
 | `cuentas-detalle` | Gestión de Cuentas Detalle (Tesorería) |

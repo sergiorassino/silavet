@@ -6,4 +6,8 @@ return [
     'protocolos' => [
         'implementacion' => 'anual_consecutivo',
     ],
+
+    'tesoreria' => [
+        'implementacion' => 'tesoreria_movimientos',
+    ],
 ];

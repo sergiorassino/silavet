@@ -42,24 +42,51 @@
             <x-vl-sidebar-icon name="movimientos" class="h-4 w-4 shrink-0 opacity-80" />
             <span class="truncate">Movimientos</span>
         </a>
-        <a href="{{ route('tesoreria.transferencias.index') }}"
-           class="vl-sidebar-link {{ request()->routeIs('tesoreria.transferencias.*') ? 'is-active' : '' }}"
-           title="Transferencias Intercuenta (v1.0)">
-            <x-vl-sidebar-icon name="transferencias-intercuenta" class="h-4 w-4 shrink-0 opacity-80" />
-            <span class="truncate">Transferencias Intercuenta</span>
-        </a>
-        <a href="{{ route('tesoreria.cuentas.index') }}"
-           class="vl-sidebar-link {{ request()->routeIs('tesoreria.cuentas.*') ? 'is-active' : '' }}"
-           title="Gestión de Cuentas Contables (v1.0)">
-            <x-vl-sidebar-icon name="cuentas-contables" class="h-4 w-4 shrink-0 opacity-80" />
-            <span class="truncate">Gestión de Cuentas Contables</span>
-        </a>
-        <a href="{{ route('tesoreria.cuentas-detalle.index') }}"
-           class="vl-sidebar-link {{ request()->routeIs('tesoreria.cuentas-detalle.*') ? 'is-active' : '' }}"
-           title="Gestión de Cuentas Detalle (v1.0)">
-            <x-vl-sidebar-icon name="cuentas-detalle" class="h-4 w-4 shrink-0 opacity-80" />
-            <span class="truncate">Gestión de Cuentas Detalle</span>
-        </a>
+        @if (\App\Support\Tesoreria\TesoreriaConfig::usaMovimientos())
+            <a href="{{ route('tesoreria.movimientos-entre-cuentas.index') }}"
+               class="vl-sidebar-link {{ request()->routeIs('tesoreria.movimientos-entre-cuentas.*') ? 'is-active' : '' }}"
+               title="Movimientos entre Cuentas (v1.0)">
+                <x-vl-sidebar-icon name="movimientos-entre-cuentas" class="h-4 w-4 shrink-0 opacity-80" />
+                <span class="truncate">Movimientos entre Cuentas</span>
+            </a>
+            <a href="{{ route('tesoreria.saldos-por-dia.index') }}"
+               class="vl-sidebar-link {{ request()->routeIs('tesoreria.saldos-por-dia.*') ? 'is-active' : '' }}"
+               title="Saldos por Día (v1.0)">
+                <x-vl-sidebar-icon name="saldos-por-dia" class="h-4 w-4 shrink-0 opacity-80" />
+                <span class="truncate">Saldos por Día</span>
+            </a>
+            <a href="{{ route('tesoreria.conceptos.index') }}"
+               class="vl-sidebar-link {{ request()->routeIs('tesoreria.conceptos.*') ? 'is-active' : '' }}"
+               title="Gestión de Conceptos (v1.0)">
+                <x-vl-sidebar-icon name="gestion-conceptos" class="h-4 w-4 shrink-0 opacity-80" />
+                <span class="truncate">Gestión de Conceptos</span>
+            </a>
+            <a href="{{ route('tesoreria.proveedores.index') }}"
+               class="vl-sidebar-link {{ request()->routeIs('tesoreria.proveedores.*') ? 'is-active' : '' }}"
+               title="Gestión de Proveedores (v1.0)">
+                <x-vl-sidebar-icon name="gestion-proveedores" class="h-4 w-4 shrink-0 opacity-80" />
+                <span class="truncate">Gestión de Proveedores</span>
+            </a>
+        @else
+            <a href="{{ route('tesoreria.transferencias.index') }}"
+               class="vl-sidebar-link {{ request()->routeIs('tesoreria.transferencias.*') ? 'is-active' : '' }}"
+               title="Transferencias Intercuenta (v1.0)">
+                <x-vl-sidebar-icon name="transferencias-intercuenta" class="h-4 w-4 shrink-0 opacity-80" />
+                <span class="truncate">Transferencias Intercuenta</span>
+            </a>
+            <a href="{{ route('tesoreria.cuentas.index') }}"
+               class="vl-sidebar-link {{ request()->routeIs('tesoreria.cuentas.*') ? 'is-active' : '' }}"
+               title="Gestión de Cuentas Contables (v1.0)">
+                <x-vl-sidebar-icon name="cuentas-contables" class="h-4 w-4 shrink-0 opacity-80" />
+                <span class="truncate">Gestión de Cuentas Contables</span>
+            </a>
+            <a href="{{ route('tesoreria.cuentas-detalle.index') }}"
+               class="vl-sidebar-link {{ request()->routeIs('tesoreria.cuentas-detalle.*') ? 'is-active' : '' }}"
+               title="Gestión de Cuentas Detalle (v1.0)">
+                <x-vl-sidebar-icon name="cuentas-detalle" class="h-4 w-4 shrink-0 opacity-80" />
+                <span class="truncate">Gestión de Cuentas Detalle</span>
+            </a>
+        @endif
     @endif
 </x-vl-sidebar-grupo>
 

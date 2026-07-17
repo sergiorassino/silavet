@@ -134,6 +134,33 @@
             <rect x="3" y="4" width="7" height="5" rx="1" stroke-width="1.75"/>
             <rect x="14" y="15" width="7" height="5" rx="1" stroke-width="1.75"/>
             @break
+        @case('movimientos-entre-cuentas')
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.75"
+                  d="M7 8h4m0 0L9 6m2 2L9 10m8 6h-4m0 0l2 2m-2-2l2-2"/>
+            <rect x="3.5" y="5" width="6.5" height="4.5" rx="1" stroke-width="1.75"/>
+            <rect x="14" y="14.5" width="6.5" height="4.5" rx="1" stroke-width="1.75"/>
+            @break
+        @case('saldos-por-dia')
+            {{-- Calendario + saldo (distinto a cuenta-corriente / movimientos) --}}
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.75"
+                  d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.75"
+                  d="M9 15.5h6"/>
+            @break
+        @case('gestion-conceptos')
+            {{-- Etiquetas / catálogo de conceptos (Tesorería / tesoreria_movimientos) --}}
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.75"
+                  d="M9.568 3H5.25A2.25 2.25 0 003 5.25v4.318c0 .597.237 1.17.659 1.591l9.581 9.581c.699.699 1.78.872 2.607.33a18.095 18.095 0 005.223-5.223c.542-.827.369-1.908-.33-2.607L11.16 3.66A2.25 2.25 0 009.568 3z"/>
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.75"
+                  d="M6 6h.008v.008H6V6z"/>
+            @break
+        @case('gestion-proveedores')
+            {{-- Edificio / proveedor (Tesorería / tesoreria_movimientos) --}}
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.75"
+                  d="M3.75 21h16.5M4.5 3h15l.75 18H3.75L4.5 3z"/>
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.75"
+                  d="M9 21v-6h6v6M8.25 8.25h.008v.008H8.25V8.25zm0 3.75h.008v.008H8.25V12zm3.75-3.75h.008v.008H12V8.25zm0 3.75h.008v.008H12V12zm3.75-3.75h.008v.008H15.75V8.25zm0 3.75h.008v.008H15.75V12z"/>
+            @break
         @case('cuentas-contables')
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.75"
                   d="M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0018 18a8.967 8.967 0 00-6 2.292m0-14.25v14.25"/>

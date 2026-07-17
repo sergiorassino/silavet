@@ -56,6 +56,8 @@ class Paciente extends Model
         'precio',
         'fechaEnvioDeriv',
         'cadete',
+        'cargado',
+        'cargadoCadete',
         'pagado',
         'descuento',
         'saldo',

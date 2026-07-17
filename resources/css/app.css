@@ -197,7 +197,10 @@
     }
 
     .vl-auth-logo-frame--cropped.vl-auth-logo-frame--wide {
-        width: min(100%, calc(var(--vl-auth-logo-max-w, 28rem) * 0.95));
+        /* Altura acotada: el AR del contenido define el ancho, no al revés (evita logos enormes). */
+        height: var(--vl-auth-logo-h-wide);
+        width: auto;
+        max-width: min(100%, calc(var(--vl-auth-logo-max-w, 28rem) * 0.95));
         aspect-ratio: var(--vl-logo-ar, 2.5 / 1);
         padding: 0.65rem 1rem;
         align-items: stretch;
@@ -205,12 +208,15 @@
     }
 
     .vl-auth-logo-frame--cropped.vl-auth-logo-frame--wide.vl-auth-logo-frame--dense {
-        width: min(100%, var(--vl-auth-logo-max-w, 34rem));
+        height: var(--vl-auth-logo-h-dense);
+        max-width: min(100%, var(--vl-auth-logo-max-w, 34rem));
         padding: 0.75rem 1.15rem;
     }
 
     .vl-auth-logo-frame--cropped.vl-auth-logo-frame--tall {
-        width: min(100%, 9.5rem);
+        height: var(--vl-auth-logo-h-tall);
+        width: auto;
+        max-width: min(100%, 9.5rem);
         aspect-ratio: var(--vl-logo-ar, 1 / 1.6);
         padding: 0.75rem 0.55rem;
         align-items: stretch;
@@ -248,8 +254,9 @@
         height: 100%;
         max-height: none;
         max-width: none;
-        object-fit: cover;
-        object-position: center;
+        /* Recorte al bbox de tinta (márgenes blancos), no cover del JPG completo. */
+        object-fit: fill;
+        object-view-box: var(--vl-logo-view-box, inset(0%));
     }
 
     .vl-auth-logo-fallback {
@@ -501,6 +508,10 @@
         @apply mt-0.5 text-xs text-white/70;
     }
 
+    .vl-dash-hero-actions {
+        @apply flex shrink-0 flex-wrap items-center gap-3;
+    }
+
     .vl-dash-grid {
         @apply grid gap-3 lg:grid-cols-2;
     }
@@ -647,6 +658,215 @@
         @apply text-neutral-500;
         min-width: 3.25rem;
         text-align: right;
+    }
+
+    /* Dashboard cliente — feeds y atajos */
+    .vl-dash-cli-atajos {
+        @apply grid gap-2 sm:grid-cols-3;
+    }
+
+    .vl-dash-cli-atajo {
+        @apply flex flex-col rounded-xl border border-accent-200 bg-accent-50/60 px-3 py-2.5 transition hover:border-primary-300 hover:bg-white;
+    }
+
+    .vl-dash-cli-atajo--static {
+        @apply cursor-default hover:border-accent-200 hover:bg-accent-50/60;
+    }
+
+    .vl-dash-cli-atajo-num {
+        @apply text-xl font-bold tabular-nums text-neutral-800;
+    }
+
+    .vl-dash-cli-atajo-label {
+        @apply mt-0.5 text-xs font-medium text-neutral-600;
+    }
+
+    .vl-dash-cli-badge {
+        @apply inline-flex min-w-6 items-center justify-center rounded-full bg-amber-500 px-1.5 py-0.5 text-xs font-bold text-white;
+    }
+
+    .vl-dash-cli-feed {
+        @apply flex flex-col divide-y divide-accent-100;
+    }
+
+    .vl-dash-cli-feed-item {
+        @apply flex items-start justify-between gap-3 py-2.5 first:pt-0 last:pb-0;
+    }
+
+    .vl-dash-cli-feed-main {
+        @apply min-w-0 flex-1;
+    }
+
+    .vl-dash-cli-feed-title {
+        @apply text-sm font-semibold text-neutral-800;
+    }
+
+    .vl-dash-cli-feed-text {
+        @apply mt-0.5 text-xs text-neutral-600 line-clamp-2;
+    }
+
+    .vl-dash-cli-feed-meta {
+        @apply mt-0.5 text-[11px] text-neutral-500;
+    }
+
+    .vl-dash-cli-feed-actions {
+        @apply flex shrink-0 flex-col items-end gap-1;
+    }
+
+    .vl-dash-cli-feed-amount {
+        @apply shrink-0 text-sm font-semibold tabular-nums text-neutral-800;
+    }
+
+    .vl-dash-cli-link-sm {
+        @apply text-xs font-semibold text-primary-600 hover:text-primary-700;
+    }
+
+    .vl-dash-cli-nuevo {
+        @apply mr-1 inline-flex rounded bg-emerald-100 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-emerald-800;
+    }
+
+    .vl-dash-cli-table-wrap {
+        @apply overflow-x-auto;
+    }
+
+    .vl-dash-cli-table {
+        @apply w-full min-w-[36rem] text-left text-xs;
+    }
+
+    .vl-dash-cli-table th {
+        @apply border-b border-accent-200 pb-2 pr-3 font-semibold text-neutral-500;
+    }
+
+    .vl-dash-cli-table td {
+        @apply border-b border-accent-50 py-2 pr-3 text-neutral-700;
+    }
+
+    .vl-dash-cli-table tr:last-child td {
+        @apply border-b-0;
+    }
+
+    /* Campana de avisos — autogestión cliente */
+    .vl-cli-campana {
+        @apply relative;
+    }
+
+    .vl-cli-campana-btn {
+        @apply relative inline-flex h-11 w-11 items-center justify-center rounded-full transition;
+    }
+
+    .vl-cli-campana-btn.is-quiet {
+        @apply cursor-default text-neutral-400;
+    }
+
+    .vl-cli-campana-btn.is-ringing {
+        @apply bg-amber-50 text-amber-600 ring-2 ring-amber-300 hover:bg-amber-100 hover:text-amber-700;
+    }
+
+    .vl-cli-campana--hero .vl-cli-campana-btn.is-quiet {
+        @apply text-white/55;
+    }
+
+    .vl-cli-campana--hero .vl-cli-campana-btn.is-ringing {
+        @apply bg-white/15 text-amber-300 ring-2 ring-amber-300/70 hover:bg-white/25 hover:text-amber-200;
+    }
+
+    .vl-cli-campana-btn.is-ringing .vl-cli-campana-icon {
+        animation: vl-cli-campana-ring 1.2s ease-in-out infinite;
+        transform-origin: top center;
+    }
+
+    .vl-cli-campana-badge {
+        @apply absolute -right-0.5 -top-0.5 inline-flex min-w-5 items-center justify-center rounded-full bg-red-600 px-1 text-[10px] font-bold leading-none text-white shadow-sm;
+        height: 1.15rem;
+    }
+
+    .vl-cli-campana-overlay {
+        @apply fixed inset-0 z-[1100] flex items-end justify-center p-4 sm:items-center;
+    }
+
+    .vl-cli-campana-backdrop {
+        @apply absolute inset-0 bg-neutral-900/45 backdrop-blur-[1px];
+    }
+
+    .vl-cli-campana-panel {
+        @apply relative z-10 flex max-h-[min(82vh,42rem)] w-full max-w-[56rem] flex-col overflow-hidden rounded-2xl border border-neutral-200 bg-white shadow-2xl;
+    }
+
+    .vl-cli-campana-panel-head {
+        @apply flex shrink-0 items-start justify-between gap-3 border-b border-neutral-100 px-5 py-4 sm:px-6;
+    }
+
+    .vl-cli-campana-panel-kicker {
+        @apply text-[10px] font-semibold uppercase tracking-[0.14em] text-neutral-400;
+    }
+
+    .vl-cli-campana-panel-title {
+        @apply mt-0.5 text-base font-bold text-neutral-800 sm:text-lg;
+    }
+
+    .vl-cli-campana-cerrar {
+        @apply -mr-1 -mt-0.5 rounded-lg p-1.5 text-neutral-400 transition hover:bg-neutral-100 hover:text-neutral-700;
+    }
+
+    .vl-cli-campana-panel-body {
+        @apply min-h-0 flex-1 overflow-auto bg-white p-4 sm:p-5;
+    }
+
+    .vl-cli-avisos-table-wrap {
+        @apply overflow-hidden rounded-xl border border-neutral-200;
+    }
+
+    .vl-cli-avisos-table {
+        @apply w-full border-collapse text-left text-sm text-neutral-800;
+    }
+
+    .vl-cli-avisos-table th,
+    .vl-cli-avisos-table td {
+        @apply border-b border-neutral-200 px-3 py-2.5 align-middle sm:px-4;
+    }
+
+    .vl-cli-avisos-table tr:last-child td {
+        @apply border-b-0;
+    }
+
+    .vl-cli-avisos-table thead th {
+        @apply bg-neutral-50 font-semibold text-neutral-700;
+    }
+
+    .vl-cli-avisos-th-visto,
+    .vl-cli-avisos-td-visto {
+        @apply w-[4.5rem] bg-white text-center;
+    }
+
+    .vl-cli-avisos-td-texto {
+        @apply bg-[#FFFDE7] font-normal leading-snug;
+    }
+
+    .vl-cli-avisos-visto {
+        @apply relative mx-auto inline-flex h-7 w-7 items-center justify-center rounded-md transition hover:opacity-90;
+    }
+
+    .vl-cli-avisos-visto-box {
+        @apply block h-5 w-5 rounded-sm bg-red-600;
+    }
+
+    .vl-cli-avisos-visto-x {
+        @apply absolute -bottom-0.5 -right-0.5 flex h-4 w-4 items-center justify-center rounded-sm bg-red-700 text-[13px] font-bold leading-none text-white;
+        line-height: 1;
+    }
+
+    .vl-cli-avisos-visto:hover .vl-cli-avisos-visto-box {
+        @apply bg-red-700;
+    }
+
+    @keyframes vl-cli-campana-ring {
+        0%, 100% { transform: rotate(0deg); }
+        10% { transform: rotate(14deg); }
+        20% { transform: rotate(-12deg); }
+        30% { transform: rotate(10deg); }
+        40% { transform: rotate(-8deg); }
+        50% { transform: rotate(4deg); }
+        60% { transform: rotate(0deg); }
     }
 
     /* Pantallas internas */
@@ -1037,6 +1257,100 @@
 
     .vl-movimientos-btn-fact {
         @apply inline-flex h-5 w-5 items-center justify-center rounded border border-neutral-300 bg-white text-neutral-600 hover:bg-accent-50;
+    }
+
+    /* Tesorería / Saldos por Día — grilla jerárquica */
+    .vl-saldos-dia-grid {
+        @apply w-full border-collapse border border-neutral-300 text-[11px] leading-tight;
+    }
+
+    .vl-saldos-dia-th {
+        @apply border border-neutral-300 bg-slate-100 px-1.5 py-1 text-left text-[10px] font-bold uppercase tracking-[0.04em] text-neutral-700 whitespace-nowrap;
+    }
+
+    .vl-saldos-dia-th--num {
+        @apply text-right;
+    }
+
+    .vl-saldos-dia-th--icon {
+        @apply w-7 text-center;
+    }
+
+    .vl-saldos-dia-th--tone-a {
+        background-color: #fff8dc;
+    }
+
+    .vl-saldos-dia-th--tone-b {
+        @apply bg-slate-50;
+    }
+
+    .vl-saldos-dia-td {
+        @apply border border-neutral-300 px-1.5 py-0.5 text-[11px] text-neutral-900 align-middle;
+    }
+
+    .vl-saldos-dia-td--num {
+        @apply text-right tabular-nums whitespace-nowrap;
+    }
+
+    .vl-saldos-dia-td--icon {
+        @apply text-center;
+    }
+
+    .vl-saldos-dia-td--tone-a {
+        background-color: #fff8dc;
+    }
+
+    .vl-saldos-dia-td--tone-b {
+        @apply bg-white;
+    }
+
+    .vl-saldos-dia-row--open > .vl-saldos-dia-td {
+        background-color: #e8f0f8;
+    }
+
+    .vl-saldos-dia-row--open > .vl-saldos-dia-td--tone-a {
+        background-color: #f5efd0;
+    }
+
+    .vl-saldos-dia-row--cuenta > .vl-saldos-dia-td {
+        @apply bg-white;
+    }
+
+    .vl-saldos-dia-row--detalle > .vl-saldos-dia-td {
+        @apply bg-slate-50;
+    }
+
+    .vl-saldos-dia-toggle {
+        @apply inline-flex h-5 w-5 items-center justify-center rounded text-neutral-600 hover:bg-neutral-100;
+    }
+
+    .vl-saldos-dia-toggle-cuenta {
+        @apply inline-flex h-5 w-5 items-center justify-center rounded border border-neutral-300 bg-white text-[12px] font-bold leading-none text-neutral-700 hover:bg-accent-50;
+    }
+
+    .vl-saldos-dia-detalle {
+        @apply w-full border-collapse border border-neutral-300 text-[11px];
+    }
+
+    .vl-saldos-dia-detalle-th {
+        @apply border border-neutral-300 bg-slate-200 px-1.5 py-1 text-left text-[10px] font-bold uppercase tracking-[0.04em] text-neutral-700 whitespace-nowrap;
+    }
+
+    .vl-saldos-dia-detalle-th--num {
+        @apply text-right;
+    }
+
+    .vl-saldos-dia-detalle-td {
+        @apply border border-neutral-300 px-1.5 py-0.5 text-neutral-900;
+    }
+
+    .vl-saldos-dia-detalle-td--num {
+        @apply text-right tabular-nums;
+    }
+
+    .vl-saldos-dia-detalle-suma > .vl-saldos-dia-detalle-td {
+        background-color: #1e3a5f;
+        @apply text-white;
     }
 
     .vl-pacientes-pago-global-badge {

@@ -16,10 +16,12 @@ use App\Support\Protocolos\PacienteAdjuntoStorage;
 use App\Support\Resultados\InformeVisibilidadConsulta;
 use App\Support\Resultados\RenglonesMaterializer;
 use App\Support\Resultados\ResultadosEstadosCatalog;
+use App\Support\Tesoreria\TesoreriaConfig;
 use App\Support\UsuarioMenuPortal;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Validation\ValidationException;
+use Livewire\Attributes\Url;
 use Livewire\Component;
 use Livewire\WithFileUploads;
 use Livewire\WithPagination;
@@ -35,9 +37,21 @@ class PacienteIndex extends Component
 
     public const VISTA_HISTORIAL = 'historial';
 
+    public const FILTRO_PENDIENTES = 'pendientes';
+
+    public const FILTRO_LISTOS = 'listos';
+
     public string $busqueda = '';
 
+    #[Url(history: true)]
     public string $vista = self::VISTA_HOY;
+
+    /**
+     * Filtro de estado desde el dashboard de autogestión:
+     * '' | pendientes (En Proc./Parcial) | listos (Final / Final/Env).
+     */
+    #[Url(as: 'filtroEstado', history: true)]
+    public string $filtroEstado = '';
 
     /** Fecha (Y-m-d) para filtrar la vista diaria; por defecto hoy. */
     public string $fechaVista = '';
@@ -160,11 +174,40 @@ class PacienteIndex extends Component
         $this->resetPage();
     }
 
+    public function updatingFiltroEstado(): void
+    {
+        $this->resetPage();
+    }
+
     public function verPacientesDeHoy(): void
     {
         $this->vista = self::VISTA_HOY;
         $this->fechaVista = now()->toDateString();
         $this->resetPage();
+    }
+
+    public function limpiarFiltroEstado(): void
+    {
+        $this->filtroEstado = '';
+        $this->resetPage();
+    }
+
+    public function filtroEstadoEfectivo(): string
+    {
+        $filtro = trim($this->filtroEstado);
+
+        return in_array($filtro, [self::FILTRO_PENDIENTES, self::FILTRO_LISTOS], true)
+            ? $filtro
+            : '';
+    }
+
+    public function etiquetaFiltroEstado(): string
+    {
+        return match ($this->filtroEstadoEfectivo()) {
+            self::FILTRO_PENDIENTES => 'Pendientes de resultado',
+            self::FILTRO_LISTOS => 'Informes listos',
+            default => '',
+        };
     }
 
     public function fechaVistaEfectiva(): string
@@ -309,6 +352,46 @@ class PacienteIndex extends Component
         RateLimiter::hit($key, 60);
         $paciente->update([
             'estado' => ResultadosEstadosCatalog::siguiente($paciente->estado),
+        ]);
+    }
+
+    /**
+     * Edición inline de pacientes.cadete (solo tesoreria_movimientos / labvetciudad).
+     */
+    public function guardarCadete(int $id, string $valor = ''): void
+    {
+        abort_unless(tienePermiso(PermisosIaCatalog::PROTOCOLOS), 403);
+        $this->abortSiAutogestion();
+        abort_unless(TesoreriaConfig::usaMovimientos(), 404);
+        abort_unless(Schema::hasColumn('pacientes', 'cadete'), 404);
+
+        $uid = labCtx()->idUsuarios ?? 0;
+        $key = 'protocolos-cadete:'.$uid;
+        abort_if(RateLimiter::tooManyAttempts($key, 60), 429);
+
+        $paciente = $this->pacienteGestionable($id);
+        if ($paciente === null) {
+            return;
+        }
+
+        $normalizado = $this->normalizarImporte($valor);
+        if ($normalizado === '') {
+            $normalizado = '0';
+        }
+
+        $validated = validator(
+            ['cadete' => $normalizado],
+            ['cadete' => ['required', 'numeric', 'min:0']],
+            [
+                'cadete.required' => 'Ingrese el importe de cadete.',
+                'cadete.numeric' => 'El importe de cadete no es válido.',
+                'cadete.min' => 'El importe de cadete no puede ser negativo.',
+            ]
+        )->validate();
+
+        RateLimiter::hit($key, 60);
+        $paciente->update([
+            'cadete' => round((float) $validated['cadete'], 2),
         ]);
     }
 
@@ -1027,20 +1110,21 @@ class PacienteIndex extends Component
 
         $pacientes = Paciente::query()
             ->with($with)
+            // NeoLab: tipoRegistro distingue protocolos/pagos de ingresos-egresos en `pacientes`.
+            // labvetciudad (tesoreria_movimientos): los protocolos legacy tienen tipoRegistro=0.
             ->when(
-                $ctx->esCliente() && $ctx->idClientes,
-                function ($q) use ($ctx) {
-                    // Autogestión: protocolos y pagos globales del cliente (para saldo corrido).
-                    $q->whereIn('pacientes.tipoRegistro', [
-                        Paciente::TIPO_PROTOCOLO,
-                        Paciente::TIPO_PAGO_GLOBAL,
-                    ])->where('pacientes.idClientes', $ctx->idClientes);
-                },
+                ! TesoreriaConfig::usaMovimientos(),
                 function ($q) {
                     $q->whereIn('pacientes.tipoRegistro', [
                         Paciente::TIPO_PROTOCOLO,
                         Paciente::TIPO_PAGO_GLOBAL,
                     ]);
+                }
+            )
+            ->when(
+                $ctx->esCliente() && $ctx->idClientes,
+                function ($q) use ($ctx) {
+                    $q->where('pacientes.idClientes', $ctx->idClientes);
                 }
             )
             ->when($this->vista === self::VISTA_HOY, function ($q) {
@@ -1055,6 +1139,20 @@ class PacienteIndex extends Component
                         $inner->orWhereHas('cliente', fn ($c) => $c->where('nombre', 'like', "%{$term}%"));
                     }
                 });
+            })
+            ->when($this->filtroEstadoEfectivo() === self::FILTRO_PENDIENTES, function ($q) {
+                $estados = [
+                    ResultadosEstadosCatalog::EN_PROC,
+                    ResultadosEstadosCatalog::PARCIAL,
+                ];
+                $q->where(function ($inner) use ($estados) {
+                    $inner->whereIn('pacientes.estado', $estados)
+                        ->orWhereNull('pacientes.estado')
+                        ->orWhere('pacientes.estado', '');
+                });
+            })
+            ->when($this->filtroEstadoEfectivo() === self::FILTRO_LISTOS, function ($q) {
+                $q->whereIn('pacientes.estado', ResultadosEstadosCatalog::estadosFinalizados());
             })
             // Mismo orden que cuenta corriente / autogestión (Paciente::scopeOrdenListado).
             ->ordenListado()
@@ -1096,6 +1194,10 @@ class PacienteIndex extends Component
             $encabezadoDescuento = DescuentoDeterminacionResolver::encabezadoAutogestion($idCliente);
         }
 
+        $mostrarCadete = ! $autogestion
+            && TesoreriaConfig::usaMovimientos()
+            && Schema::hasColumn('pacientes', 'cadete');
+
         return view($vista, [
             'pacientes' => $pacientes,
             'edInfRenglones' => $edInfRenglones,
@@ -1104,6 +1206,7 @@ class PacienteIndex extends Component
             'rutaInforme' => $autogestion ? 'cliente.pacientes.informe' : 'protocolos.informe',
             'saldosAcumulados' => $saldosAcumulados,
             'encabezadoDescuento' => $encabezadoDescuento,
+            'mostrarCadete' => $mostrarCadete,
         ])->layout('layouts.staff', UsuarioMenuPortal::layoutParamsDesdeContexto());
     }
 
@@ -1114,12 +1217,17 @@ class PacienteIndex extends Component
         return Paciente::query()
             ->with('cliente')
             ->when(
-                $ctx->esCliente() && $ctx->idClientes,
-                fn ($q) => $q->where('pacientes.tipoRegistro', Paciente::TIPO_PROTOCOLO),
-                fn ($q) => $q->whereIn('pacientes.tipoRegistro', [
-                    Paciente::TIPO_PROTOCOLO,
-                    Paciente::TIPO_PAGO_GLOBAL,
-                ])
+                ! TesoreriaConfig::usaMovimientos(),
+                function ($q) use ($ctx) {
+                    if ($ctx->esCliente() && $ctx->idClientes) {
+                        $q->where('pacientes.tipoRegistro', Paciente::TIPO_PROTOCOLO);
+                    } else {
+                        $q->whereIn('pacientes.tipoRegistro', [
+                            Paciente::TIPO_PROTOCOLO,
+                            Paciente::TIPO_PAGO_GLOBAL,
+                        ]);
+                    }
+                }
             )
             ->when($ctx->esCliente() && $ctx->idClientes, function ($q) use ($ctx) {
                 $q->where('pacientes.idClientes', $ctx->idClientes);

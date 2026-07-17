@@ -90,6 +90,9 @@
                         <th class="vl-pacientes-th">Edad</th>
                         <th class="vl-pacientes-th vl-pacientes-th--icon" title="Determinaciones">Determ</th>
                         <th class="vl-pacientes-th vl-pacientes-th--num">Precio</th>
+                        @if ($mostrarCadete)
+                            <th class="vl-pacientes-th vl-pacientes-th--num" title="Cadetería">Cadete</th>
+                        @endif
                         <th class="vl-pacientes-th">Est</th>
                         <th class="vl-pacientes-th vl-pacientes-th--icon" title="Cargar resultados">Cargar</th>
                         <th class="vl-pacientes-th vl-pacientes-th--icon" title="Editar informe">Ed.Inf</th>
@@ -135,6 +138,9 @@
                                 <td class="vl-pacientes-td vl-pacientes-td--num whitespace-nowrap font-semibold">
                                     {{ $paciente->pagadoFormateado() }}
                                 </td>
+                                @if ($mostrarCadete)
+                                    <td class="vl-pacientes-td vl-pacientes-td--num">—</td>
+                                @endif
                                 <td class="vl-pacientes-td"></td>
                                 <td class="vl-pacientes-td vl-pacientes-td--icon"></td>
                                 <td class="vl-pacientes-td vl-pacientes-td--icon"></td>
@@ -182,6 +188,17 @@
                                     </a>
                                 </td>
                                 <td class="vl-pacientes-td vl-pacientes-td--num whitespace-nowrap">{{ $paciente->precioFormateado() }}</td>
+                                @if ($mostrarCadete)
+                                    <td class="vl-pacientes-td vl-pacientes-td--num">
+                                        <input type="text"
+                                               value="{{ number_format((float) ($paciente->cadete ?? 0), 2, ',', '.') }}"
+                                               wire:blur="guardarCadete({{ $paciente->idPacientes }}, $event.target.value)"
+                                               wire:keydown.enter.prevent="$event.target.blur()"
+                                               class="vl-determinaciones-input vl-determinaciones-input--precio"
+                                               inputmode="decimal"
+                                               aria-label="Cadete del protocolo {{ $paciente->nombreProtocolo }}">
+                                    </td>
+                                @endif
                                 <td class="vl-pacientes-td whitespace-nowrap">
                                     <button type="button"
                                             wire:click="avanzarEstado({{ $paciente->idPacientes }})"
@@ -307,7 +324,7 @@
                         @endif
                     @empty
                         <tr>
-                            <td colspan="22" class="vl-pacientes-td text-center text-neutral-500 py-10">
+                            <td colspan="{{ $mostrarCadete ? 23 : 22 }}" class="vl-pacientes-td text-center text-neutral-500 py-10">
                                 @if ($vista === 'hoy')
                                     @php
                                         $fechaEfectiva = $this->fechaVistaEfectiva();

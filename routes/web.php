@@ -38,12 +38,20 @@ use App\Livewire\Protocolos\PacienteDeterminaciones;
 use App\Livewire\Protocolos\PacienteForm;
 use App\Livewire\Protocolos\PacienteIndex;
 use App\Livewire\Protocolos\PacienteResultados;
+use App\Livewire\Tesoreria\ConceptoForm;
+use App\Livewire\Tesoreria\ConceptoIndex;
+use App\Livewire\Tesoreria\ProveedorForm;
+use App\Livewire\Tesoreria\ProveedorIndex;
 use App\Livewire\Tesoreria\CuentaDetalleForm;
 use App\Livewire\Tesoreria\CuentaDetalleIndex;
 use App\Livewire\Tesoreria\CuentaForm;
 use App\Livewire\Tesoreria\CuentaIndex;
 use App\Livewire\Tesoreria\MovimientoIndex;
+use App\Livewire\Tesoreria\MovimientosCajaIndex;
+use App\Livewire\Tesoreria\MovimientosEntreCuentas;
+use App\Livewire\Tesoreria\SaldosPorDiaIndex;
 use App\Livewire\Tesoreria\TransferenciaIntercuenta;
+use App\Support\Tesoreria\TesoreriaConfig;
 use App\Http\Controllers\Listados\CantidadDeterminacionesComparacChartPdfController;
 use App\Http\Controllers\Listados\CantidadDeterminacionesComparacExcelController;
 use App\Http\Controllers\Listados\CantidadDeterminacionesComparacPdfController;
@@ -169,24 +177,51 @@ Route::middleware(['auth', 'lab.context'])->group(function () {
     });
 
     Route::prefix('tesoreria/movimientos')->middleware(['menu.portal:staff', 'permiso:6'])->group(function () {
-        Route::get('/', MovimientoIndex::class)->name('tesoreria.movimientos.index');
+        $movimientosComponent = TesoreriaConfig::usaMovimientos()
+            ? MovimientosCajaIndex::class
+            : MovimientoIndex::class;
+        Route::get('/', $movimientosComponent)->name('tesoreria.movimientos.index');
     });
 
-    Route::prefix('tesoreria/transferencias')->middleware(['menu.portal:staff', 'permiso:6'])->group(function () {
-        Route::get('/', TransferenciaIntercuenta::class)->name('tesoreria.transferencias.index');
-    });
+    if (TesoreriaConfig::usaMovimientos()) {
+        Route::prefix('tesoreria/movimientos-entre-cuentas')->middleware(['menu.portal:staff', 'permiso:6'])->group(function () {
+            Route::get('/', MovimientosEntreCuentas::class)->name('tesoreria.movimientos-entre-cuentas.index');
+        });
 
-    Route::prefix('tesoreria/cuentas')->middleware(['menu.portal:staff', 'permiso:6'])->group(function () {
-        Route::get('/', CuentaIndex::class)->name('tesoreria.cuentas.index');
-        Route::get('/nuevo', CuentaForm::class)->name('tesoreria.cuentas.create');
-        Route::get('/{id}/editar', CuentaForm::class)->name('tesoreria.cuentas.edit');
-    });
+        Route::prefix('tesoreria/saldos-por-dia')->middleware(['menu.portal:staff', 'permiso:6'])->group(function () {
+            Route::get('/', SaldosPorDiaIndex::class)->name('tesoreria.saldos-por-dia.index');
+        });
 
-    Route::prefix('tesoreria/cuentas-detalle')->middleware(['menu.portal:staff', 'permiso:6'])->group(function () {
-        Route::get('/', CuentaDetalleIndex::class)->name('tesoreria.cuentas-detalle.index');
-        Route::get('/nuevo', CuentaDetalleForm::class)->name('tesoreria.cuentas-detalle.create');
-        Route::get('/{id}/editar', CuentaDetalleForm::class)->name('tesoreria.cuentas-detalle.edit');
-    });
+        Route::prefix('tesoreria/conceptos')->middleware(['menu.portal:staff', 'permiso:6'])->group(function () {
+            Route::get('/', ConceptoIndex::class)->name('tesoreria.conceptos.index');
+            Route::get('/nuevo', ConceptoForm::class)->name('tesoreria.conceptos.create');
+            Route::get('/{id}/editar', ConceptoForm::class)->name('tesoreria.conceptos.edit');
+        });
+
+        Route::prefix('tesoreria/proveedores')->middleware(['menu.portal:staff', 'permiso:6'])->group(function () {
+            Route::get('/', ProveedorIndex::class)->name('tesoreria.proveedores.index');
+            Route::get('/nuevo', ProveedorForm::class)->name('tesoreria.proveedores.create');
+            Route::get('/{id}/editar', ProveedorForm::class)->name('tesoreria.proveedores.edit');
+        });
+    }
+
+    if (! TesoreriaConfig::usaMovimientos()) {
+        Route::prefix('tesoreria/transferencias')->middleware(['menu.portal:staff', 'permiso:6'])->group(function () {
+            Route::get('/', TransferenciaIntercuenta::class)->name('tesoreria.transferencias.index');
+        });
+
+        Route::prefix('tesoreria/cuentas')->middleware(['menu.portal:staff', 'permiso:6'])->group(function () {
+            Route::get('/', CuentaIndex::class)->name('tesoreria.cuentas.index');
+            Route::get('/nuevo', CuentaForm::class)->name('tesoreria.cuentas.create');
+            Route::get('/{id}/editar', CuentaForm::class)->name('tesoreria.cuentas.edit');
+        });
+
+        Route::prefix('tesoreria/cuentas-detalle')->middleware(['menu.portal:staff', 'permiso:6'])->group(function () {
+            Route::get('/', CuentaDetalleIndex::class)->name('tesoreria.cuentas-detalle.index');
+            Route::get('/nuevo', CuentaDetalleForm::class)->name('tesoreria.cuentas-detalle.create');
+            Route::get('/{id}/editar', CuentaDetalleForm::class)->name('tesoreria.cuentas-detalle.edit');
+        });
+    }
 
     Route::prefix('protocolos')->middleware(['menu.portal:staff', 'permiso:3'])->group(function () {
         Route::get('/', PacienteIndex::class)->name('protocolos.index');
