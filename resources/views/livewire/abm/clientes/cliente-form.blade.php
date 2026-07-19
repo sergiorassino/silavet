@@ -20,11 +20,19 @@
                 @error('nombre') <p class="form-error">{{ $message }}</p> @enderror
             </div>
 
-            <div>
-                <label class="form-label mb-1" for="cuit">CUIT</label>
-                <input wire:model.live="cuit" id="cuit" type="text" maxlength="13" inputmode="numeric"
-                       class="form-input max-w-xs py-1.5 text-sm" placeholder="99-99999999-9">
-                @error('cuit') <p class="form-error">{{ $message }}</p> @enderror
+            <div class="grid gap-4 sm:grid-cols-2">
+                <div>
+                    <label class="form-label mb-1" for="dni">D.N.I.</label>
+                    <input wire:model.live="dni" id="dni" type="text" maxlength="8" inputmode="numeric"
+                           class="form-input py-1.5 text-sm" autocomplete="off">
+                    @error('dni') <p class="form-error">{{ $message }}</p> @enderror
+                </div>
+                <div>
+                    <label class="form-label mb-1" for="cuit">CUIT</label>
+                    <input wire:model.live="cuit" id="cuit" type="text" maxlength="13" inputmode="numeric"
+                           class="form-input py-1.5 text-sm" placeholder="99-99999999-9">
+                    @error('cuit') <p class="form-error">{{ $message }}</p> @enderror
+                </div>
             </div>
 
             <div>

@@ -19,7 +19,7 @@
         <div class="vl-toolbar border-b border-accent-200 px-5 py-3">
             <input wire:model.live.debounce.300ms="busqueda"
                    type="search"
-                   placeholder="Buscar por nombre, dirección, teléfono, email o CUIT…"
+                   placeholder="Buscar por nombre, dirección, teléfono, email, DNI o CUIT…"
                    class="form-input max-w-md">
         </div>
 
@@ -31,6 +31,7 @@
                         <th class="table-header">Teléfono</th>
                         <th class="table-header">Email</th>
                         <th class="table-header">WhatsApp</th>
+                        <th class="table-header">DNI</th>
                         <th class="table-header">CUIT</th>
                         <th class="table-header text-right">Dto. %</th>
                         <th class="table-header text-center">Acciones</th>
@@ -53,6 +54,7 @@
                             </td>
                             <td class="table-cell">{{ $cliente->email ?: '—' }}</td>
                             <td class="table-cell">{{ $cliente->whatsapp ?: '—' }}</td>
+                            <td class="table-cell tabular-nums">{{ trim((string) ($cliente->dni ?? '')) !== '' ? $cliente->dni : '—' }}</td>
                             <td class="table-cell tabular-nums">
                                 @php $cuitFmt = CuitInput::format((string) ($cliente->cuit ?? '')); @endphp
                                 {{ $cuitFmt !== '' ? $cuitFmt : '—' }}

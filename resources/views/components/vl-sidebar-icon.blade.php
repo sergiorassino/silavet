@@ -193,6 +193,13 @@
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.75"
                   d="M6 9.75l3-3 3 2.25 4.5-4.5"/>
             @break
+        @case('excel-pacientes')
+            {{-- Planilla / exportación Excel (distinto a estadistico-pacientes y estimacion-costos) --}}
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.75"
+                  d="M3.75 5.25A1.5 1.5 0 015.25 3.75h9a1.5 1.5 0 011.5 1.5v1.5M3.75 5.25v13.5A1.5 1.5 0 005.25 20.25h9a1.5 1.5 0 001.5-1.5V6.75M3.75 5.25h12"/>
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.75"
+                  d="M7.5 10.5h4.5M7.5 14.25h4.5M16.5 12.75v6m0 0l-2.25-2.25M16.5 18.75l2.25-2.25"/>
+            @break
         @case('gestion-procedimientos')
             {{-- Documento de instrucciones (distinto a clipboard de determinaciones) --}}
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.75"

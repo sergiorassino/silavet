@@ -5,6 +5,8 @@ use App\Http\Controllers\Clientes\CuentaCorrienteClientesExcelController;
 use App\Http\Controllers\Clientes\CuentaCorrienteClientesPdfController;
 use App\Http\Controllers\Clientes\CuentaCorrienteDetalleExcelController;
 use App\Http\Controllers\Clientes\CuentaCorrienteDetallePdfController;
+use App\Http\Controllers\Facturacion\CompAfipPdfController;
+use App\Http\Controllers\Protocolos\EtiquetasTuboPdfController;
 use App\Http\Controllers\Protocolos\InformePacientePdfController;
 use App\Livewire\Abm\Clientes\ClienteForm;
 use App\Livewire\Abm\Clientes\ClienteIndex;
@@ -33,6 +35,7 @@ use App\Livewire\Admin\ScriptAutomatizacionForm;
 use App\Livewire\AdminDashboard;
 use App\Livewire\Auth\Login;
 use App\Livewire\Dashboard;
+use App\Livewire\Facturacion\ComprobantesAfipIndex;
 use App\Livewire\Protocolos\DerivacionIndex;
 use App\Livewire\Protocolos\PacienteDeterminaciones;
 use App\Livewire\Protocolos\PacienteForm;
@@ -51,16 +54,19 @@ use App\Livewire\Tesoreria\MovimientosCajaIndex;
 use App\Livewire\Tesoreria\MovimientosEntreCuentas;
 use App\Livewire\Tesoreria\SaldosPorDiaIndex;
 use App\Livewire\Tesoreria\TransferenciaIntercuenta;
+use App\Support\Facturacion\FacturacionAfipConfig;
 use App\Support\Tesoreria\TesoreriaConfig;
 use App\Http\Controllers\Listados\CantidadDeterminacionesComparacChartPdfController;
 use App\Http\Controllers\Listados\CantidadDeterminacionesComparacExcelController;
 use App\Http\Controllers\Listados\CantidadDeterminacionesComparacPdfController;
+use App\Http\Controllers\Listados\ExcelPacientesExcelController;
 use App\Http\Controllers\Listados\HistorialDeterminacionesExcelController;
 use App\Http\Controllers\Listados\HistorialDeterminacionesPdfController;
 use App\Http\Controllers\Listados\ListadoEstadisticoPacientesExcelController;
 use App\Http\Controllers\Listados\ListadoEstadisticoPacientesPdfController;
 use App\Livewire\Listados\CantidadDeterminacionesComparac;
 use App\Livewire\Listados\EstimacionCostos;
+use App\Livewire\Listados\ExcelPacientes;
 use App\Livewire\Listados\HistorialDeterminaciones;
 use App\Livewire\Listados\ListadoEstadisticoPacientes;
 use App\Support\Auth\CerrarSesionAplicacion;
@@ -176,6 +182,18 @@ Route::middleware(['auth', 'lab.context'])->group(function () {
         Route::get('/{id}/excel', CuentaCorrienteDetalleExcelController::class)->name('clientes.cuenta-corriente.detalle.excel');
     });
 
+    if (FacturacionAfipConfig::habilitada()) {
+        Route::prefix('facturacion/afip')->middleware(['menu.portal:staff', 'permiso:6'])->group(function () {
+            Route::get('/comprobantes/{ref}', ComprobantesAfipIndex::class)
+                ->where('ref', '[A-Za-z0-9_-]+')
+                ->name('facturacion.afip.comprobantes');
+            Route::get('/comprobante/{ref}', CompAfipPdfController::class)
+                ->where('ref', '[A-Za-z0-9_-]+')
+                ->middleware(['throttle:30,1', 'no-store'])
+                ->name('facturacion.afip.comprobante.pdf');
+        });
+    }
+
     Route::prefix('tesoreria/movimientos')->middleware(['menu.portal:staff', 'permiso:6'])->group(function () {
         $movimientosComponent = TesoreriaConfig::usaMovimientos()
             ? MovimientosCajaIndex::class
@@ -226,6 +244,10 @@ Route::middleware(['auth', 'lab.context'])->group(function () {
     Route::prefix('protocolos')->middleware(['menu.portal:staff', 'permiso:3'])->group(function () {
         Route::get('/', PacienteIndex::class)->name('protocolos.index');
         Route::get('/nuevo', PacienteForm::class)->name('protocolos.create');
+        Route::get('/etiquetas/{ref}', EtiquetasTuboPdfController::class)
+            ->where('ref', '[A-Za-z0-9_-]+')
+            ->middleware(['throttle:30,1', 'no-store'])
+            ->name('protocolos.etiquetas');
         Route::get('/{id}/editar', PacienteForm::class)->name('protocolos.edit');
         Route::get('/{id}/determinaciones', PacienteDeterminaciones::class)->name('protocolos.determinaciones');
     });
@@ -261,6 +283,10 @@ Route::middleware(['auth', 'lab.context'])->group(function () {
         Route::post('/cantidad-determinaciones-comparac/chart-pdf', CantidadDeterminacionesComparacChartPdfController::class)
             ->middleware('throttle:10,1')
             ->name('listados.cantidad-determinaciones-comparac.chart-pdf');
+        Route::get('/excel-pacientes', ExcelPacientes::class)->name('listados.excel-pacientes');
+        Route::get('/excel-pacientes/excel', ExcelPacientesExcelController::class)
+            ->middleware('throttle:10,1')
+            ->name('listados.excel-pacientes.excel');
     });
 
     Route::prefix('protocolos')->middleware(['menu.portal:staff', 'permiso:4'])->group(function () {

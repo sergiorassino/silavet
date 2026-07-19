@@ -62,6 +62,55 @@ window.vlSwalConfirmar = function (mensaje, titulo = '¿Confirma?', opciones = {
     }).then((result) => result.isConfirmed === true);
 };
 
+/**
+ * Pide un entero (p. ej. cantidad de etiquetas). Devuelve el número o null si cancela.
+ */
+window.vlSwalPedirCantidad = async function (opciones = {}) {
+    if (typeof Swal === 'undefined') {
+        const raw = window.prompt(opciones.mensaje ?? 'Cantidad', String(opciones.valor ?? 2));
+        if (raw === null) {
+            return null;
+        }
+        const n = parseInt(String(raw).trim(), 10);
+        return Number.isFinite(n) && n >= 1 ? n : null;
+    }
+
+    const min = Number(opciones.min ?? 1);
+    const max = Number(opciones.max ?? 99);
+    const result = await Swal.fire({
+        icon: 'question',
+        title: opciones.titulo ?? 'Cantidad',
+        text: opciones.mensaje ?? 'Ingrese la cantidad',
+        input: 'number',
+        inputValue: opciones.valor ?? 2,
+        inputAttributes: {
+            min: String(min),
+            max: String(max),
+            step: '1',
+        },
+        showCancelButton: true,
+        confirmButtonText: opciones.confirmButtonText ?? 'Imprimir',
+        cancelButtonText: opciones.cancelButtonText ?? 'Cancelar',
+        confirmButtonColor: '#0284c7',
+        cancelButtonColor: '#6b7280',
+        reverseButtons: true,
+        inputValidator: (value) => {
+            const n = parseInt(String(value ?? '').trim(), 10);
+            if (!Number.isFinite(n) || n < min || n > max) {
+                return `Ingrese un número entre ${min} y ${max}.`;
+            }
+            return undefined;
+        },
+    });
+
+    if (!result.isConfirmed) {
+        return null;
+    }
+
+    const n = parseInt(String(result.value ?? '').trim(), 10);
+    return Number.isFinite(n) ? n : null;
+};
+
 document.addEventListener('livewire:init', () => {
     Livewire.on('vl-swal-exito', ({ mensaje, titulo }) => {
         window.vlSwalExito(mensaje, titulo ?? 'Listo');
@@ -223,15 +272,197 @@ document.addEventListener('alpine:init', () => {
             }
         },
 
+        camposNav() {
+            const form = document.getElementById('vl-form-carga');
+            if (!form) {
+                return [];
+            }
+
+            return Array.from(form.querySelectorAll(
+                'input[type="text"]:not([readonly]):not([disabled]), textarea:not([readonly]):not([disabled]), select:not([disabled])',
+            ));
+        },
+
+        enfocarCampo(el) {
+            if (!el) {
+                return;
+            }
+            el.focus({ preventScroll: true });
+            if (typeof el.select === 'function' && el.tagName !== 'SELECT') {
+                try {
+                    el.select();
+                } catch {
+                    // Algunos inputs no permiten select().
+                }
+            }
+            el.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+        },
+
+        caretAlInicio(el) {
+            if (el.tagName === 'SELECT') {
+                return true;
+            }
+            const start = el.selectionStart ?? 0;
+            const end = el.selectionEnd ?? 0;
+            return start === 0 && end === 0;
+        },
+
+        caretAlFinal(el) {
+            if (el.tagName === 'SELECT') {
+                return true;
+            }
+            const len = String(el.value ?? '').length;
+            const start = el.selectionStart ?? 0;
+            const end = el.selectionEnd ?? 0;
+            return start === len && end === len;
+        },
+
+        todoSeleccionado(el) {
+            if (el.tagName === 'SELECT') {
+                return true;
+            }
+            const len = String(el.value ?? '').length;
+            const start = el.selectionStart ?? 0;
+            const end = el.selectionEnd ?? 0;
+            return len === 0 || (start === 0 && end === len);
+        },
+
+        caretEnPrimeraLinea(el) {
+            if (el.tagName !== 'TEXTAREA') {
+                return true;
+            }
+            const pos = el.selectionStart ?? 0;
+            return !String(el.value ?? '').slice(0, pos).includes('\n');
+        },
+
+        caretEnUltimaLinea(el) {
+            if (el.tagName !== 'TEXTAREA') {
+                return true;
+            }
+            const pos = el.selectionEnd ?? 0;
+            return !String(el.value ?? '').slice(pos).includes('\n');
+        },
+
+        cambiarOpcionSelect(select, direccion) {
+            const opciones = Array.from(select.options).filter((opt) => !opt.disabled);
+            if (opciones.length === 0) {
+                return;
+            }
+
+            let idx = opciones.findIndex((opt) => opt === select.options[select.selectedIndex]);
+            if (idx < 0) {
+                idx = direccion > 0 ? -1 : 0;
+            }
+
+            const nuevo = idx + direccion;
+            if (nuevo < 0 || nuevo >= opciones.length) {
+                return;
+            }
+
+            select.selectedIndex = opciones[nuevo].index;
+            select.dispatchEvent(new Event('change', { bubbles: true }));
+        },
+
+        navegarCampos(event) {
+            const keys = ['Enter', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'];
+            if (!keys.includes(event.key)) {
+                return;
+            }
+
+            const actual = event.target;
+            if (!actual) {
+                return;
+            }
+
+            const form = document.getElementById('vl-form-carga');
+            if (!form || !form.contains(actual)) {
+                return;
+            }
+
+            const tag = actual.tagName;
+            if (tag !== 'INPUT' && tag !== 'TEXTAREA' && tag !== 'SELECT') {
+                return;
+            }
+            if (actual.readOnly || actual.disabled) {
+                return;
+            }
+            if (tag === 'INPUT' && actual.type !== 'text') {
+                return;
+            }
+
+            // En <select>: ←/→ cambian opción; ↑/↓ y Enter pasan de campo.
+            if (tag === 'SELECT' && (event.key === 'ArrowLeft' || event.key === 'ArrowRight')) {
+                event.preventDefault();
+                this.cambiarOpcionSelect(actual, event.key === 'ArrowRight' ? 1 : -1);
+                return;
+            }
+
+            // En textarea, Enter solo avanza; Shift+Enter inserta línea.
+            if (tag === 'TEXTAREA' && event.key === 'Enter' && event.shiftKey) {
+                return;
+            }
+
+            if (event.key === 'ArrowUp' && !this.caretEnPrimeraLinea(actual)) {
+                return;
+            }
+            if (event.key === 'ArrowDown' && !this.caretEnUltimaLinea(actual)) {
+                return;
+            }
+
+            const campos = this.camposNav();
+            const idx = campos.indexOf(actual);
+            if (idx < 0) {
+                return;
+            }
+
+            let destino = null;
+
+            if (event.key === 'Enter' || event.key === 'ArrowDown') {
+                destino = campos[idx + 1] || null;
+            } else if (event.key === 'ArrowUp') {
+                destino = campos[idx - 1] || null;
+            } else if (event.key === 'ArrowRight') {
+                if (!this.todoSeleccionado(actual) && !this.caretAlFinal(actual)) {
+                    return;
+                }
+                destino = campos[idx + 1] || null;
+            } else if (event.key === 'ArrowLeft') {
+                if (!this.todoSeleccionado(actual) && !this.caretAlInicio(actual)) {
+                    return;
+                }
+                destino = campos[idx - 1] || null;
+            }
+
+            if (!destino) {
+                return;
+            }
+
+            event.preventDefault();
+            this.enfocarCampo(destino);
+        },
+
         onKeydown(event) {
+            if (document.querySelector('.swal2-container')) {
+                return;
+            }
+
+            const modalAa = document.getElementById('modal-autoanalizador-titulo');
+            if (modalAa && modalAa.closest('[role="dialog"]')?.contains(document.activeElement)) {
+                return;
+            }
+
             if (event.key === 'F9') {
                 event.preventDefault();
                 this.guardar(false);
+                return;
             }
             if (event.key === 'F10') {
                 event.preventDefault();
                 this.guardar(true);
+                return;
             }
+
+            this.navegarCampos(event);
         },
 
         recolectarPayload() {

@@ -50,6 +50,9 @@ final class InformePacienteTcpdf extends Fpdi
     /** Interlineado de filas (+10 % sobre el legacy ~5,6 mm). */
     private const ALTO_FILA = 6.16;
 
+    /** Alto de línea MultiCell (mm); debe coincidir con alturaMultiCell. */
+    private const ALTO_LINEA = 4.5;
+
     /** @var array<string, mixed> */
     private array $datos;
 
@@ -399,14 +402,14 @@ final class InformePacienteTcpdf extends Fpdi
             $this->alturaMultiCell($wNombre, $nombre, 9),
             $this->alturaMultiCell($wValor, $valor, 9)
         );
-        $this->asegurarEspacio($h + 2);
+        $this->asegurarEspacio($h + 0.5);
         $x = self::MARGEN;
         $y = $this->GetY();
 
+        // Mismo avance vertical que valor/referencia y dos-valores (valign M + ln=1).
         TcpdfFuenteArial::aplicar($this, '', 9);
-        $this->MultiCell($wNombre, 4.5, $nombre, 0, 'L', false, 0, $x, $y, true, 0, false, true, $h, 'T');
-        $this->MultiCell($wValor, 4.5, $valor, 0, 'L', false, 1, $x + $wNombre, $y, true, 0, false, true, $h, 'T');
-        $this->Ln(1);
+        $this->MultiCell($wNombre, self::ALTO_LINEA, $nombre, 0, 'L', false, 0, $x, $y, true, 0, false, true, $h, 'M');
+        $this->MultiCell($wValor, self::ALTO_LINEA, $valor, 0, 'L', false, 1, $x + $wNombre, $y, true, 0, false, true, $h, 'M');
     }
 
     private function dibujarLineaSeparadora(): void
@@ -618,6 +621,6 @@ final class InformePacienteTcpdf extends Fpdi
         TcpdfFuenteArial::aplicar($this, '', $fontSize);
         $lineas = max(1, $this->getNumLines($texto, $ancho));
 
-        return max(self::ALTO_FILA, $lineas * 4.2);
+        return max(self::ALTO_FILA, $lineas * self::ALTO_LINEA);
     }
 }

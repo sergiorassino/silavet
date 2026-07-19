@@ -176,7 +176,7 @@
                         class="btn-primary text-sm disabled:opacity-50 disabled:cursor-not-allowed">
                     Agregar Determinación (F2)
                 </button>
-                <a href="{{ route('protocolos.index') }}"
+                <a href="{{ $urlVolver }}"
                    class="btn-secondary text-sm">
                     Volver
                 </a>

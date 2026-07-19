@@ -62,3 +62,27 @@ if (! function_exists('labListaPreciosUrl')) {
         return null;
     }
 }
+
+if (! function_exists('tenantFacturacionAfipHabilitada')) {
+    function tenantFacturacionAfipHabilitada(): bool
+    {
+        return \App\Support\Facturacion\FacturacionAfipConfig::habilitada();
+    }
+}
+
+if (! function_exists('tenantFacturacionAfipConfig')) {
+    /**
+     * @return array<string, mixed>
+     */
+    function tenantFacturacionAfipConfig(): array
+    {
+        return \App\Support\Facturacion\FacturacionAfipConfig::config();
+    }
+}
+
+if (! function_exists('tenantFacturacionAfipModo')) {
+    function tenantFacturacionAfipModo(): string
+    {
+        return \App\Support\Facturacion\FacturacionAfipConfig::modo();
+    }
+}

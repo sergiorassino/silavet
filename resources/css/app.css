@@ -1138,6 +1138,22 @@
         @apply text-center;
     }
 
+    /* Iconos del listado de pacientes: 26×26. */
+    .vl-pacientes-grid .vl-grid-icon-btn {
+        width: 26px !important;
+        height: 26px !important;
+        min-width: 26px;
+        min-height: 26px;
+    }
+
+    .vl-pacientes-grid .vl-grid-icon-btn svg {
+        width: 26px !important;
+        height: 26px !important;
+        max-width: none;
+        max-height: none;
+        flex-shrink: 0;
+    }
+
     .vl-pacientes-td--carga-ok {
         @apply bg-emerald-100;
     }
@@ -1252,11 +1268,36 @@
     }
 
     .vl-movimientos-btn-edit {
-        @apply inline-flex h-5 w-5 items-center justify-center rounded border border-sky-300 bg-sky-50 text-sky-700 hover:bg-sky-100;
+        @apply inline-flex items-center justify-center rounded-lg border-0 bg-transparent text-neutral-600 hover:bg-neutral-100;
+        width: 26px !important;
+        height: 26px !important;
+        min-width: 26px;
+        min-height: 26px;
     }
 
     .vl-movimientos-btn-fact {
-        @apply inline-flex h-5 w-5 items-center justify-center rounded border border-neutral-300 bg-white text-neutral-600 hover:bg-accent-50;
+        @apply inline-flex items-center justify-center rounded-lg border-0 bg-transparent text-sky-700 hover:bg-sky-50;
+        width: 26px !important;
+        height: 26px !important;
+        min-width: 26px;
+        min-height: 26px;
+    }
+
+    .vl-movimientos-btn-fact--pendiente {
+        @apply text-sky-700 hover:bg-sky-50;
+    }
+
+    .vl-movimientos-btn-fact--emitido {
+        @apply border-0 bg-orange-500 text-white ring-2 ring-orange-300 hover:bg-orange-600;
+    }
+
+    .vl-movimientos-btn-edit svg,
+    .vl-movimientos-btn-fact svg {
+        width: 26px !important;
+        height: 26px !important;
+        max-width: none;
+        max-height: none;
+        flex-shrink: 0;
     }
 
     /* Tesorería / Saldos por Día — grilla jerárquica */
@@ -1360,6 +1401,15 @@
     /* No usar filter en <tr>: con border-collapse borra los bordes al hover */
     .vl-pacientes-row:hover > .vl-pacientes-td {
         background-image: linear-gradient(rgba(0, 0, 0, 0.03), rgba(0, 0, 0, 0.03));
+    }
+
+    .vl-pacientes-row.vl-pacientes-row-focus {
+        outline: 2px solid rgba(45, 106, 106, 0.85);
+        outline-offset: -2px;
+    }
+
+    .vl-pacientes-row.vl-pacientes-row-focus > .vl-pacientes-td {
+        box-shadow: inset 0 0 0 1px rgba(45, 106, 106, 0.35);
     }
 
     .vl-pacientes-estado-btn {

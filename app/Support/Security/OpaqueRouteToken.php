@@ -16,6 +16,12 @@ final class OpaqueRouteToken
 {
     public const PURPOSE_INFORME_PACIENTE = 'protocolos.informe-paciente';
 
+    public const PURPOSE_ETIQUETAS_TUBO = 'protocolos.etiquetas-tubo';
+
+    public const PURPOSE_COMP_AFIP = 'facturacion.compafip';
+
+    public const PURPOSE_COMP_AFIP_PACIENTE = 'facturacion.compafip-paciente';
+
     /** Vigencia del token (segundos). */
     private const TTL_SEGUNDOS = 7200;
 
@@ -36,6 +42,113 @@ final class OpaqueRouteToken
     public static function decodeInformePaciente(string $ref): ?array
     {
         $data = self::decodePayload($ref, self::PURPOSE_INFORME_PACIENTE);
+        if ($data === null) {
+            return null;
+        }
+
+        $id = (int) ($data['id'] ?? 0);
+        $u = (int) ($data['u'] ?? 0);
+        $t = (int) ($data['t'] ?? 0);
+
+        if ($id <= 0 || $u <= 0 || $t <= 0) {
+            return null;
+        }
+
+        if ((time() - $t) > self::TTL_SEGUNDOS) {
+            return null;
+        }
+
+        return ['id' => $id, 'u' => $u];
+    }
+
+    public static function forEtiquetasTubo(int $idPacientes, int $cantidad, ?int $idUsuario = null): string
+    {
+        return self::encodePayload(self::PURPOSE_ETIQUETAS_TUBO, [
+            'id' => $idPacientes,
+            'c' => max(1, min(99, $cantidad)),
+            'u' => $idUsuario ?? (int) (auth()->id() ?? 0),
+            't' => time(),
+            'n' => bin2hex(random_bytes(4)),
+        ]);
+    }
+
+    /**
+     * @return array{id: int, u: int, c: int}|null
+     */
+    public static function decodeEtiquetasTubo(string $ref): ?array
+    {
+        $data = self::decodePayload($ref, self::PURPOSE_ETIQUETAS_TUBO);
+        if ($data === null) {
+            return null;
+        }
+
+        $id = (int) ($data['id'] ?? 0);
+        $u = (int) ($data['u'] ?? 0);
+        $c = (int) ($data['c'] ?? 0);
+        $t = (int) ($data['t'] ?? 0);
+
+        if ($id <= 0 || $u <= 0 || $c < 1 || $c > 99 || $t <= 0) {
+            return null;
+        }
+
+        if ((time() - $t) > self::TTL_SEGUNDOS) {
+            return null;
+        }
+
+        return ['id' => $id, 'u' => $u, 'c' => $c];
+    }
+
+    public static function forCompAfip(int $idCompAfip, ?int $idUsuario = null): string
+    {
+        return self::encodePayload(self::PURPOSE_COMP_AFIP, [
+            'id' => $idCompAfip,
+            'u' => $idUsuario ?? (int) (auth()->id() ?? 0),
+            't' => time(),
+            'n' => bin2hex(random_bytes(4)),
+        ]);
+    }
+
+    /**
+     * @return array{id: int, u: int}|null
+     */
+    public static function decodeCompAfip(string $ref): ?array
+    {
+        $data = self::decodePayload($ref, self::PURPOSE_COMP_AFIP);
+        if ($data === null) {
+            return null;
+        }
+
+        $id = (int) ($data['id'] ?? 0);
+        $u = (int) ($data['u'] ?? 0);
+        $t = (int) ($data['t'] ?? 0);
+
+        if ($id <= 0 || $u <= 0 || $t <= 0) {
+            return null;
+        }
+
+        if ((time() - $t) > self::TTL_SEGUNDOS) {
+            return null;
+        }
+
+        return ['id' => $id, 'u' => $u];
+    }
+
+    public static function forCompAfipPaciente(int $idPacientes, ?int $idUsuario = null): string
+    {
+        return self::encodePayload(self::PURPOSE_COMP_AFIP_PACIENTE, [
+            'id' => $idPacientes,
+            'u' => $idUsuario ?? (int) (auth()->id() ?? 0),
+            't' => time(),
+            'n' => bin2hex(random_bytes(4)),
+        ]);
+    }
+
+    /**
+     * @return array{id: int, u: int}|null
+     */
+    public static function decodeCompAfipPaciente(string $ref): ?array
+    {
+        $data = self::decodePayload($ref, self::PURPOSE_COMP_AFIP_PACIENTE);
         if ($data === null) {
             return null;
         }

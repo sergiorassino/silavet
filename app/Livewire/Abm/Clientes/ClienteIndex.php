@@ -79,6 +79,9 @@ class ClienteIndex extends Component
                         ->orWhere('telefono2', 'like', "%{$term}%")
                         ->orWhere('whatsapp', 'like', "%{$term}%")
                         ->orWhere('direccion', 'like', "%{$term}%");
+                    if (Schema::hasColumn('clientes', 'dni')) {
+                        $inner->orWhere('dni', 'like', "%{$term}%");
+                    }
                 });
             })
             ->orderBy('nombre')

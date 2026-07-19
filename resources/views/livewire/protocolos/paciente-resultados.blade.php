@@ -5,6 +5,10 @@
      })"
      @keydown.window="onKeydown($event)">
 
+    @if ($mensaje = session()->pull('vl_mensaje_exito'))
+        <div x-data x-init="window.vlSwalExito(@js($mensaje))" class="hidden" aria-hidden="true"></div>
+    @endif
+
     <div class="vl-prot-det-header mb-4">
         <div class="vl-prot-det-header-inner">
             <div class="vl-prot-det-header-item">
@@ -40,14 +44,23 @@
 
     <div class="vl-card overflow-hidden">
         <div class="vl-toolbar border-b border-accent-200 px-5 py-3 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-            <h1 class="text-base font-semibold text-neutral-800">Carga de resultados</h1>
+            <div>
+                <h1 class="text-base font-semibold text-neutral-800">Carga de resultados</h1>
+                <p class="mt-0.5 text-xs text-neutral-500">
+                    <strong class="font-semibold text-neutral-700">Enter</strong> / <strong class="font-semibold text-neutral-700">↑↓</strong> entre campos.
+                    En listas: <strong class="font-semibold text-neutral-700">←→</strong> cambian opción.
+                    Multilínea: <strong class="font-semibold text-neutral-700">Shift+Enter</strong> nueva línea.
+                </p>
+            </div>
             <div class="flex flex-wrap items-center gap-2 shrink-0">
-                <button type="button"
-                        class="btn-secondary text-sm opacity-60 cursor-not-allowed"
-                        title="Funcionalidad a desarrollar"
-                        disabled>
-                    Autoanalizadores
-                </button>
+                @if ($autoanalizadoresDisponibles)
+                    <button type="button"
+                            class="btn-secondary text-sm"
+                            wire:click="abrirModalAutoanalizador"
+                            wire:loading.attr="disabled">
+                        Autoanalizadores
+                    </button>
+                @endif
                 <a href="{{ $urlVolver }}" class="btn-secondary text-sm">Volver</a>
             </div>
         </div>
@@ -202,4 +215,93 @@
             </button>
         </div>
     </div>
+
+    @if ($modalAutoanalizadorAbierto)
+        @teleport('body')
+            <div class="fixed inset-0 z-[120] flex items-end justify-center p-4 sm:items-center"
+                 wire:keydown.escape.window="cerrarModalAutoanalizador">
+                <button type="button"
+                        class="absolute inset-0 bg-neutral-900/50"
+                        wire:click="cerrarModalAutoanalizador"
+                        aria-label="Cerrar"></button>
+                <div class="relative z-10 flex max-h-[85vh] w-full max-w-lg flex-col overflow-hidden rounded-2xl bg-white shadow-xl"
+                     role="dialog"
+                     aria-modal="true"
+                     aria-labelledby="modal-autoanalizador-titulo">
+                    <div class="border-b border-accent-200 px-5 py-4">
+                        <h3 id="modal-autoanalizador-titulo" class="text-lg font-bold text-neutral-900">Autoanalizadores</h3>
+                        <p class="mt-1 text-sm text-neutral-600">
+                            Protocolo: <strong>{{ $pacienteResumen['protocolo'] ?? '—' }}</strong>
+                        </p>
+                    </div>
+
+                    <div class="min-h-0 flex-1 space-y-4 overflow-y-auto px-5 py-4">
+                        <div>
+                            <label for="vl-aa-aparato" class="mb-1 block text-sm font-medium text-neutral-700">Aparato</label>
+                            <select id="vl-aa-aparato"
+                                    wire:model="aparatoSeleccionado"
+                                    class="form-input w-full">
+                                @foreach ($aparatosDisponibles as $aparato)
+                                    <option value="{{ $aparato['clave'] }}">{{ $aparato['etiqueta'] }}</option>
+                                @endforeach
+                            </select>
+                            @error('aparatoSeleccionado')
+                                <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                            @enderror
+                        </div>
+
+                        <div>
+                            <label for="vl-aa-archivo" class="mb-1 block text-sm font-medium text-neutral-700">Archivo (últimos 7 días)</label>
+                            <select id="vl-aa-archivo"
+                                    wire:model="archivoSeleccionado"
+                                    class="form-input w-full">
+                                @forelse ($archivosRecientes as $archivo)
+                                    <option value="{{ $archivo['nombre'] }}">
+                                        {{ $archivo['nombre'] }}
+                                        ({{ \Illuminate\Support\Carbon::createFromTimestamp($archivo['mtime'])->format('d/m/Y H:i') }})
+                                    </option>
+                                @empty
+                                    <option value="">No hay archivos recientes</option>
+                                @endforelse
+                            </select>
+                            @error('archivoSeleccionado')
+                                <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                            @enderror
+                        </div>
+
+                        <div>
+                            <label for="vl-aa-upload" class="mb-1 block text-sm font-medium text-neutral-700">Subir nuevo archivo</label>
+                            <input id="vl-aa-upload"
+                                   type="file"
+                                   accept=".csv,.txt,.shd,text/csv,text/plain"
+                                   wire:model="archivoCsv"
+                                   class="form-input w-full text-sm">
+                            <div wire:loading wire:target="archivoCsv" class="mt-1 text-xs text-neutral-500">
+                                Subiendo…
+                            </div>
+                            @error('archivoCsv')
+                                <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                            @enderror
+                        </div>
+                    </div>
+
+                    <div class="flex flex-wrap justify-end gap-2 border-t border-accent-200 px-5 py-3">
+                        <button type="button"
+                                wire:click="cerrarModalAutoanalizador"
+                                class="rounded-xl border border-accent-200 px-4 py-2 text-sm font-medium text-neutral-700 hover:bg-accent-50">
+                            Cancelar
+                        </button>
+                        <button type="button"
+                                wire:click="importarDesdeAutoanalizador"
+                                wire:loading.attr="disabled"
+                                wire:target="importarDesdeAutoanalizador"
+                                class="btn-primary text-sm"
+                                @disabled($archivosRecientes === [])>
+                            Importar valores
+                        </button>
+                    </div>
+                </div>
+            </div>
+        @endteleport
+    @endif
 </div>

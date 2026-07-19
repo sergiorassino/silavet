@@ -20,6 +20,8 @@ class SwitchTenantCommand extends Command
         'neolab' => 'lb_neolab',
         'alqu' => 'lb_alqu',
         'laboratoriosiv' => 'lb_laboratoriosiv',
+        'lvm' => 'lb_lvm',
+        'lam' => 'lb_lam',
     ];
 
     public function handle(): int

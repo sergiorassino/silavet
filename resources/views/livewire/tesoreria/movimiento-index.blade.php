@@ -37,7 +37,11 @@
                         <th class="vl-movimientos-th vl-movimientos-th--num">Importe</th>
                         <th class="vl-movimientos-th">Medio de Pago</th>
                         <th class="vl-movimientos-th">Observaciones</th>
-                        <th class="vl-movimientos-th vl-movimientos-th--icon">Facturación</th>
+                        @if ($mostrarColumnaAfip)
+                            <th class="vl-movimientos-th vl-movimientos-th--icon">AFIP</th>
+                        @else
+                            <th class="vl-movimientos-th vl-movimientos-th--icon">Facturación</th>
+                        @endif
                     </tr>
                 </thead>
                 <tbody>
@@ -53,9 +57,9 @@
                                         wire:click="abrirFormularioEditar({{ $mov->idPacientes }})"
                                         class="vl-movimientos-btn-edit"
                                         title="Editar">
-                                    <svg class="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                              d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 18.036H3v-3.572L16.732 3.732z"/>
+                                    <svg class="h-[26px] w-[26px]" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.75"
+                                              d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
                                     </svg>
                                 </button>
                             </td>
@@ -82,15 +86,36 @@
                                 {{ $mov->observaciones ?: '' }}
                             </td>
                             <td class="vl-movimientos-td vl-movimientos-td--icon">
-                                <button type="button"
-                                        wire:click="facturacionPlaceholder"
-                                        class="vl-movimientos-btn-fact"
-                                        title="Facturación">
-                                    <svg class="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                              d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
-                                    </svg>
-                                </button>
+                                @if ($mostrarColumnaAfip && $mov->esIngreso())
+                                    @php
+                                        $afipEmitido = isset($afipEmitidos[(int) $mov->idPacientes]);
+                                    @endphp
+                                    <a href="{{ $urlAfipFn((int) $mov->idPacientes) }}"
+                                       class="vl-movimientos-btn-fact {{ $afipEmitido ? 'vl-movimientos-btn-fact--emitido' : 'vl-movimientos-btn-fact--pendiente' }}"
+                                       title="{{ $afipEmitido ? 'Comprobantes AFIP (emitido)' : 'Comprobantes AFIP' }}">
+                                        @if ($afipEmitido)
+                                            <svg class="h-[26px] w-[26px]" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                                                <path fill-rule="evenodd" clip-rule="evenodd"
+                                                      d="M2.25 12c0-5.385 4.365-9.75 9.75-9.75s9.75 4.365 9.75 9.75-4.365 9.75-9.75 9.75S2.25 17.385 2.25 12Zm13.36-1.814a.75.75 0 10-1.22-.872l-3.236 4.53L9.53 12.22a.75.75 0 00-1.06 1.06l2.25 2.25a.75.75 0 001.14-.094l3.75-5.25z"/>
+                                            </svg>
+                                        @else
+                                            <svg class="h-[26px] w-[26px]" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.75"
+                                                      d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                                            </svg>
+                                        @endif
+                                    </a>
+                                @elseif (! $mostrarColumnaAfip)
+                                    <button type="button"
+                                            wire:click="facturacionPlaceholder"
+                                            class="vl-movimientos-btn-fact"
+                                            title="Facturación">
+                                        <svg class="h-[26px] w-[26px]" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.75"
+                                                  d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                                        </svg>
+                                    </button>
+                                @endif
                             </td>
                         </tr>
                     @empty

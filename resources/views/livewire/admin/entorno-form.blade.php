@@ -5,7 +5,7 @@
                 <p class="vl-eyebrow">Parámetros Generales</p>
                 <h1 class="text-xl font-bold sm:text-2xl">Parámetros del Sistema</h1>
                 <p class="mt-1 max-w-3xl text-xs text-white/80 sm:text-sm">
-                    Configuración institucional del laboratorio: identidad visual, contacto, pie de informe, firmas y envío de mail.
+                    Configuración institucional del laboratorio: identidad visual, contacto, pie de informe, firmas, envío de mail y etiquetas de tubos.
                 </p>
             </x-vl-hero-heading>
         </div>
@@ -202,6 +202,139 @@
                     </div>
                 </div>
             </section>
+
+            {{-- Etiquetas térmicas --}}
+            @if ($tieneCamposEtiquetas)
+                <section>
+                    <h2 class="mb-1 text-sm font-semibold uppercase tracking-wide text-neutral-500">Etiquetas</h2>
+                    <p class="mb-3 text-xs text-neutral-500">
+                        Parámetros de impresión de etiquetas de tubos (impresora térmica). Medidas en mm; tamaños de fuente en puntos.
+                    </p>
+
+                    <div class="grid gap-4">
+                        <div>
+                            <p class="mb-2 text-xs font-medium text-neutral-600">Papel y etiqueta</p>
+                            <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+                                <div>
+                                    <label class="form-label mb-1" for="e_AnchoPapel">Ancho papel</label>
+                                    <input wire:model="e_AnchoPapel" id="e_AnchoPapel" type="number" step="0.01" min="10" max="300" class="form-input py-1.5 text-sm">
+                                    @error('e_AnchoPapel') <p class="form-error">{{ $message }}</p> @enderror
+                                </div>
+                                <div>
+                                    <label class="form-label mb-1" for="e_AnchoEtiq">Ancho etiqueta</label>
+                                    <input wire:model="e_AnchoEtiq" id="e_AnchoEtiq" type="number" step="0.01" min="5" max="200" class="form-input py-1.5 text-sm">
+                                    @error('e_AnchoEtiq') <p class="form-error">{{ $message }}</p> @enderror
+                                </div>
+                                <div>
+                                    <label class="form-label mb-1" for="e_AltoEtiq">Alto etiqueta</label>
+                                    <input wire:model="e_AltoEtiq" id="e_AltoEtiq" type="number" step="0.01" min="5" max="200" class="form-input py-1.5 text-sm">
+                                    @error('e_AltoEtiq') <p class="form-error">{{ $message }}</p> @enderror
+                                </div>
+                                <div>
+                                    <label class="form-label mb-1" for="e_CantCol">Columnas</label>
+                                    <input wire:model="e_CantCol" id="e_CantCol" type="number" step="1" min="1" max="10" class="form-input py-1.5 text-sm">
+                                    @error('e_CantCol') <p class="form-error">{{ $message }}</p> @enderror
+                                </div>
+                            </div>
+                        </div>
+
+                        <div>
+                            <p class="mb-2 text-xs font-medium text-neutral-600">Espaciados y márgenes (mm)</p>
+                            <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                                <div>
+                                    <label class="form-label mb-1" for="e_GapX">Gap X</label>
+                                    <input wire:model="e_GapX" id="e_GapX" type="number" step="0.01" min="0" max="50" class="form-input py-1.5 text-sm">
+                                    @error('e_GapX') <p class="form-error">{{ $message }}</p> @enderror
+                                </div>
+                                <div>
+                                    <label class="form-label mb-1" for="e_GapY">Gap Y</label>
+                                    <input wire:model="e_GapY" id="e_GapY" type="number" step="0.01" min="0" max="50" class="form-input py-1.5 text-sm">
+                                    @error('e_GapY') <p class="form-error">{{ $message }}</p> @enderror
+                                </div>
+                                <div>
+                                    <label class="form-label mb-1" for="e_MarginTop">Margen superior</label>
+                                    <input wire:model="e_MarginTop" id="e_MarginTop" type="number" step="0.01" min="0" max="50" class="form-input py-1.5 text-sm">
+                                    @error('e_MarginTop') <p class="form-error">{{ $message }}</p> @enderror
+                                </div>
+                                <div>
+                                    <label class="form-label mb-1" for="e_MarginBottom">Margen inferior</label>
+                                    <input wire:model="e_MarginBottom" id="e_MarginBottom" type="number" step="0.01" min="0" max="50" class="form-input py-1.5 text-sm">
+                                    @error('e_MarginBottom') <p class="form-error">{{ $message }}</p> @enderror
+                                </div>
+                                <div>
+                                    <label class="form-label mb-1" for="e_MarginLeft">Margen izquierdo</label>
+                                    <input wire:model="e_MarginLeft" id="e_MarginLeft" type="number" step="0.01" min="0" max="50" class="form-input py-1.5 text-sm">
+                                    @error('e_MarginLeft') <p class="form-error">{{ $message }}</p> @enderror
+                                </div>
+                                <div>
+                                    <label class="form-label mb-1" for="e_MarginRight">Margen derecho</label>
+                                    <input wire:model="e_MarginRight" id="e_MarginRight" type="number" step="0.01" min="0" max="50" class="form-input py-1.5 text-sm">
+                                    @error('e_MarginRight') <p class="form-error">{{ $message }}</p> @enderror
+                                </div>
+                            </div>
+                        </div>
+
+                        <div>
+                            <p class="mb-2 text-xs font-medium text-neutral-600">Fuentes y límites de texto</p>
+                            <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                                <div>
+                                    <label class="form-label mb-1" for="e_FontLinea1">Fuente línea 1</label>
+                                    <input wire:model="e_FontLinea1" id="e_FontLinea1" type="number" step="1" min="4" max="48" class="form-input py-1.5 text-sm">
+                                    @error('e_FontLinea1') <p class="form-error">{{ $message }}</p> @enderror
+                                </div>
+                                <div>
+                                    <label class="form-label mb-1" for="e_FontLinea2">Fuente línea 2</label>
+                                    <input wire:model="e_FontLinea2" id="e_FontLinea2" type="number" step="1" min="4" max="48" class="form-input py-1.5 text-sm">
+                                    @error('e_FontLinea2') <p class="form-error">{{ $message }}</p> @enderror
+                                </div>
+                                <div>
+                                    <label class="form-label mb-1" for="e_FontLinea3">Fuente línea 3</label>
+                                    <input wire:model="e_FontLinea3" id="e_FontLinea3" type="number" step="1" min="4" max="48" class="form-input py-1.5 text-sm">
+                                    @error('e_FontLinea3') <p class="form-error">{{ $message }}</p> @enderror
+                                </div>
+                                <div>
+                                    <label class="form-label mb-1" for="e_FontLinea4">Fuente línea 4</label>
+                                    <input wire:model="e_FontLinea4" id="e_FontLinea4" type="number" step="1" min="4" max="48" class="form-input py-1.5 text-sm">
+                                    @error('e_FontLinea4') <p class="form-error">{{ $message }}</p> @enderror
+                                </div>
+                                <div>
+                                    <label class="form-label mb-1" for="e_MaxLargoLinea2">Máx. chars línea 2</label>
+                                    <input wire:model="e_MaxLargoLinea2" id="e_MaxLargoLinea2" type="number" step="1" min="1" max="80" class="form-input py-1.5 text-sm">
+                                    @error('e_MaxLargoLinea2') <p class="form-error">{{ $message }}</p> @enderror
+                                </div>
+                                <div>
+                                    <label class="form-label mb-1" for="e_MaxLargoLinea3">Máx. chars línea 3</label>
+                                    <input wire:model="e_MaxLargoLinea3" id="e_MaxLargoLinea3" type="number" step="1" min="1" max="80" class="form-input py-1.5 text-sm">
+                                    @error('e_MaxLargoLinea3') <p class="form-error">{{ $message }}</p> @enderror
+                                </div>
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="inline-flex items-center gap-2 text-sm text-neutral-800">
+                                <input wire:model="e_Borde" type="checkbox" class="rounded border-neutral-300 text-primary-600 focus:ring-primary-500">
+                                Imprimir borde de la etiqueta
+                            </label>
+                            @error('e_Borde') <p class="form-error">{{ $message }}</p> @enderror
+                        </div>
+                    </div>
+                </section>
+            @endif
+
+            @if ($tieneCampoAfipFormato)
+                <section>
+                    <h2 class="mb-3 text-sm font-semibold uppercase tracking-wide text-neutral-500">Facturación AFIP</h2>
+                    <div class="max-w-md">
+                        <label class="form-label mb-1" for="afipFormatoImpresion">Formato de impresión</label>
+                        <select wire:model="afipFormatoImpresion" id="afipFormatoImpresion" class="form-input py-1.5 text-sm">
+                            <option value="A4">Hoja A4</option>
+                            <option value="termica80">Impresora térmica 80 mm</option>
+                        </select>
+                        <p class="mt-1 text-xs text-neutral-500">Aplica a facturas, notas de crédito y comandas.</p>
+                        @error('afipFormatoImpresion') <p class="form-error">{{ $message }}</p> @enderror
+                    </div>
+                </section>
+            @endif
 
             <div class="flex flex-wrap gap-2 border-t border-neutral-200 pt-4">
                 <button type="submit" class="btn-primary py-1.5 text-sm" wire:loading.attr="disabled" wire:target="save">

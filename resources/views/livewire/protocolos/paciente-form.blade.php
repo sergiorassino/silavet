@@ -11,7 +11,7 @@
     <form wire:submit.prevent="save" class="vl-card vl-form--compact max-w-5xl">
         <div class="vl-form-actions">
             <button type="submit" class="btn-primary" wire:loading.attr="disabled">Guardar</button>
-            <a href="{{ route('protocolos.index') }}" class="btn-secondary">Cancelar</a>
+            <a href="{{ $urlVolver }}" class="btn-secondary">Cancelar</a>
         </div>
 
         <div class="vl-form-grid">
@@ -95,15 +95,24 @@
                 <input wire:model.live="dni"
                        id="dni"
                        type="text"
-                       maxlength="{{ \App\Support\DniInput::MAX_LENGTH }}"
-                       class="form-input">
+                       maxlength="8"
+                       inputmode="numeric"
+                       class="form-input"
+                       autocomplete="off">
                 @error('dni') <p class="form-error">{{ $message }}</p> @enderror
             </div>
 
             <div class="vl-form-field">
-                <label class="form-label" for="edad">Edad</label>
-                <input wire:model="edad" id="edad" type="text" class="form-input">
-                @error('edad') <p class="form-error">{{ $message }}</p> @enderror
+                <label class="form-label" for="cuit">CUIT</label>
+                <input wire:model.live="cuit"
+                       id="cuit"
+                       type="text"
+                       maxlength="13"
+                       inputmode="numeric"
+                       class="form-input"
+                       placeholder="99-99999999-9"
+                       autocomplete="off">
+                @error('cuit') <p class="form-error">{{ $message }}</p> @enderror
             </div>
 
             <div class="vl-form-field vl-form-span-2">
@@ -152,6 +161,12 @@
                     @endforeach
                 </select>
                 @error('sexo') <p class="form-error">{{ $message }}</p> @enderror
+            </div>
+
+            <div class="vl-form-field">
+                <label class="form-label" for="edad">Edad</label>
+                <input wire:model="edad" id="edad" type="text" class="form-input">
+                @error('edad') <p class="form-error">{{ $message }}</p> @enderror
             </div>
 
             <div class="vl-form-field vl-form-span-full">

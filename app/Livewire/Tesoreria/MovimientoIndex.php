@@ -7,7 +7,10 @@ use App\Models\Cuenta;
 use App\Models\CuentaDetalle;
 use App\Models\MedioDePago;
 use App\Models\Paciente;
+use App\Support\Facturacion\FacturacionAfipConfig;
+use App\Support\Facturacion\FacturacionAfipIndicadores;
 use App\Support\PermisosIaCatalog;
+use App\Support\Security\OpaqueRouteToken;
 use App\Support\Tesoreria\TesoreriaConfig;
 use App\Support\UsuarioMenuPortal;
 use Illuminate\Support\Facades\RateLimiter;
@@ -222,7 +225,7 @@ class MovimientoIndex extends Component
     {
         $this->dispatch(
             'vl-swal-error',
-            mensaje: 'La facturaci?n desde movimientos a?n no est? disponible en SILAVET.'
+            mensaje: 'La facturación desde movimientos aún no está disponible en SILAVET.'
         );
     }
 
@@ -281,13 +284,25 @@ class MovimientoIndex extends Component
             ? MedioDePago::query()->orderBy('nombreMedioPago')->get(['id', 'nombreMedioPago'])
             : collect();
 
-        return view('livewire.tesoreria.movimiento-index', compact(
-            'movimientos',
-            'clientes',
-            'cuentas',
-            'proveedores',
-            'mediosPago',
-        ))->layout('layouts.staff', UsuarioMenuPortal::staffLayoutParams(labCtx()->idRoles));
+        $mostrarColumnaAfip = FacturacionAfipConfig::habilitada()
+            && FacturacionAfipConfig::esModoMovimiento();
+
+        $afipEmitidos = $mostrarColumnaAfip
+            ? FacturacionAfipIndicadores::mapaConEmitido($movimientos->getCollection()->pluck('idPacientes')->all())
+            : [];
+
+        return view('livewire.tesoreria.movimiento-index', [
+            'movimientos' => $movimientos,
+            'clientes' => $clientes,
+            'cuentas' => $cuentas,
+            'proveedores' => $proveedores,
+            'mediosPago' => $mediosPago,
+            'mostrarColumnaAfip' => $mostrarColumnaAfip,
+            'afipEmitidos' => $afipEmitidos,
+            'urlAfipFn' => static fn (int $id): string => route('facturacion.afip.comprobantes', [
+                'ref' => OpaqueRouteToken::forCompAfipPaciente($id),
+            ]),
+        ])->layout('layouts.staff', UsuarioMenuPortal::staffLayoutParams(labCtx()->idRoles));
     }
 
     private function movimientoEnAlcance(int $id): ?Paciente

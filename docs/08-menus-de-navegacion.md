@@ -146,6 +146,7 @@ Fuente de verdad: `resources/views/components/vl-sidebar-icon.blade.php`.
 | `estadistico-pacientes` | Listado Estadístico de Pacientes |
 | `historial-determinaciones` | Historial de Determinaciones |
 | `cantidad-determinaciones-comparac` | Cantidad Determinaciones (comparac.) |
+| `excel-pacientes` | Excel de Pacientes (Listados Estadísticos) |
 | `lista-precios` | Lista de Precios (Menú de Clientes) |
 | `gestion-procedimientos` | Gestión de Procedimientos |
 | `muestras-por-determinacion` | Muestras por Determinación |

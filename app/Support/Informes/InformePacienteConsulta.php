@@ -204,12 +204,15 @@ final class InformePacienteConsulta
 
     /**
      * Normaliza texto de ítems/referencias: <br> → salto de línea, sin tags HTML.
+     * Convierte NBSP (&nbsp;) a espacio normal para que trim() elimine líneas en blanco
+     * iniciales (p. ej. Serie Roja/Blanca con "&nbsp;<br>…").
      */
     private static function textoInforme(string $texto): string
     {
         $texto = html_entity_decode($texto, ENT_QUOTES | ENT_HTML5, 'UTF-8');
         $texto = preg_replace('/<\s*br\s*\/?\s*>/i', "\n", $texto) ?? $texto;
         $texto = strip_tags($texto);
+        $texto = preg_replace('/\x{00A0}/u', ' ', $texto) ?? $texto;
         $texto = str_replace(["\r\n", "\r"], "\n", $texto);
         $texto = preg_replace("/[ \t]+\n/", "\n", $texto) ?? $texto;
         $texto = preg_replace("/\n{3,}/", "\n\n", $texto) ?? $texto;

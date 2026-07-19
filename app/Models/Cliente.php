@@ -20,6 +20,7 @@ class Cliente extends Model
         'email',
         'whatsapp',
         'cuit',
+        'dni',
         'descuento',
     ];
 

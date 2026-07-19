@@ -1,4 +1,31 @@
-<div class="vl-page vl-page--wide">
+<div class="vl-page vl-page--wide"
+     x-data="{
+        enfocarFila(id) {
+            this.$nextTick(() => {
+                const row = document.getElementById('pac-row-' + id);
+                if (!row) {
+                    return;
+                }
+
+                row.scrollIntoView({ block: 'center', behavior: 'smooth' });
+                row.classList.add('vl-pacientes-row-focus');
+                row.focus({ preventScroll: true });
+
+                window.setTimeout(() => row.classList.remove('vl-pacientes-row-focus'), 2500);
+
+                try {
+                    const url = new URL(window.location.href);
+                    if (url.searchParams.has('foco')) {
+                        url.searchParams.delete('foco');
+                        const qs = url.searchParams.toString();
+                        window.history.replaceState({}, '', url.pathname + (qs ? '?' + qs : '') + url.hash);
+                    }
+                } catch (e) {}
+            });
+        }
+     }"
+     x-init="@if ($focoIdPaciente) enfocarFila({{ (int) $focoIdPaciente }}) @endif"
+     @pacientes-enfocar-fila.window="enfocarFila($event.detail.id)">
     <div class="vl-hero mb-4">
         <div class="vl-hero-inner flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <x-vl-hero-heading>
@@ -24,7 +51,7 @@
                         class="btn-secondary shrink-0 border-white/40 bg-white/15 text-white hover:bg-white/25">
                     Pago global
                 </button>
-                <a href="{{ route('protocolos.create') }}"
+                <a href="{{ route('protocolos.create', $this->filtrosListadoParaUrl()) }}"
                    class="btn-primary shrink-0 bg-white text-primary-700 hover:bg-accent-50">
                     Nuevo Paciente
                 </a>
@@ -78,7 +105,8 @@
                 <thead class="bg-accent-50/80">
                     <tr>
                         <th class="vl-pacientes-th vl-pacientes-th--num">#</th>
-                        <th class="vl-pacientes-th vl-pacientes-th--icon" title="Paciente">Pac.</th>
+                        <th class="vl-pacientes-th vl-pacientes-th--icon" title="Editar paciente">Ed.</th>
+                        <th class="vl-pacientes-th vl-pacientes-th--icon" title="Etiquetas de tubos">Etiq</th>
                         <th class="vl-pacientes-th">Cliente</th>
                         <th class="vl-pacientes-th">Fechhoy</th>
                         <th class="vl-pacientes-th">Protocolo</th>
@@ -102,12 +130,18 @@
                         <th class="vl-pacientes-th vl-pacientes-th--icon" title="Notificaciones">Avisos</th>
                         <th class="vl-pacientes-th vl-pacientes-th--icon" title="Enviar informe">Enviar</th>
                         <th class="vl-pacientes-th vl-pacientes-th--icon" title="Asistente IA">IA</th>
+                        @if ($mostrarColumnaAfip)
+                            <th class="vl-pacientes-th vl-pacientes-th--icon" title="Comprobantes AFIP">AFIP</th>
+                        @endif
                     </tr>
                 </thead>
                 <tbody>
                     @forelse ($pacientes as $paciente)
                         @if ($paciente->esPagoGlobal())
-                            <tr class="vl-pacientes-row {{ $paciente->filaClaseCss() }}" wire:key="pac-{{ $paciente->idPacientes }}">
+                            <tr id="pac-row-{{ $paciente->idPacientes }}"
+                                tabindex="-1"
+                                class="vl-pacientes-row {{ $paciente->filaClaseCss() }}"
+                                wire:key="pac-{{ $paciente->idPacientes }}">
                                 <td class="vl-pacientes-td vl-pacientes-td--num">
                                     {{ ($pacientes->currentPage() - 1) * $pacientes->perPage() + $loop->iteration }}
                                 </td>
@@ -117,12 +151,13 @@
                                             title="Editar pago global"
                                             aria-label="Editar pago global"
                                             class="vl-grid-icon-btn text-neutral-600 hover:bg-neutral-100">
-                                        <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                                        <svg class="h-[26px] w-[26px]" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.75"
                                                   d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
                                         </svg>
                                     </button>
                                 </td>
+                                <td class="vl-pacientes-td vl-pacientes-td--icon"></td>
                                 <td class="vl-pacientes-td">{{ $paciente->cliente?->nombre ?: '—' }}</td>
                                 <td class="vl-pacientes-td whitespace-nowrap">{{ $paciente->fechhoyFormateada() }}</td>
                                 <td class="vl-pacientes-td font-semibold whitespace-nowrap">—</td>
@@ -150,22 +185,76 @@
                                 <td class="vl-pacientes-td vl-pacientes-td--icon"></td>
                                 <td class="vl-pacientes-td vl-pacientes-td--icon"></td>
                                 <td class="vl-pacientes-td vl-pacientes-td--icon"></td>
+                                @if ($mostrarColumnaAfip)
+                                    <td class="vl-pacientes-td vl-pacientes-td--icon">
+                                        @php
+                                            $afipEmitido = isset($afipEmitidos[(int) $paciente->idPacientes]);
+                                        @endphp
+                                        <a href="{{ route('facturacion.afip.comprobantes', array_merge(
+                                                ['ref' => \App\Support\Security\OpaqueRouteToken::forCompAfipPaciente((int) $paciente->idPacientes)],
+                                                $this->filtrosListadoParaUrl()
+                                            )) }}"
+                                           title="{{ $afipEmitido ? 'Comprobantes AFIP (emitido)' : 'Comprobantes AFIP' }}"
+                                           aria-label="{{ $afipEmitido ? 'Comprobantes AFIP (emitido)' : 'Comprobantes AFIP' }}"
+                                           class="vl-grid-icon-btn {{ $afipEmitido ? 'bg-orange-500 text-white ring-2 ring-orange-300 hover:bg-orange-600' : 'text-sky-700 hover:bg-sky-50' }}">
+                                            @if ($afipEmitido)
+                                                {{-- Círculo con tilde sólido: comprobante emitido --}}
+                                                <svg class="h-[26px] w-[26px]" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                                                    <path fill-rule="evenodd" clip-rule="evenodd"
+                                                          d="M2.25 12c0-5.385 4.365-9.75 9.75-9.75s9.75 4.365 9.75 9.75-4.365 9.75-9.75 9.75S2.25 17.385 2.25 12Zm13.36-1.814a.75.75 0 10-1.22-.872l-3.236 4.53L9.53 12.22a.75.75 0 00-1.06 1.06l2.25 2.25a.75.75 0 001.14-.094l3.75-5.25z"/>
+                                                </svg>
+                                            @else
+                                                <svg class="h-[26px] w-[26px]" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.75"
+                                                          d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                                                </svg>
+                                            @endif
+                                        </a>
+                                    </td>
+                                @endif
                             </tr>
                         @else
-                            <tr class="vl-pacientes-row {{ $paciente->filaClaseCss() }}" wire:key="pac-{{ $paciente->idPacientes }}">
+                            <tr id="pac-row-{{ $paciente->idPacientes }}"
+                                tabindex="-1"
+                                class="vl-pacientes-row {{ $paciente->filaClaseCss() }}"
+                                wire:key="pac-{{ $paciente->idPacientes }}">
                                 <td class="vl-pacientes-td vl-pacientes-td--num">
                                     {{ ($pacientes->currentPage() - 1) * $pacientes->perPage() + $loop->iteration }}
                                 </td>
                                 <td class="vl-pacientes-td vl-pacientes-td--icon">
-                                    <a href="{{ route('protocolos.edit', $paciente->idPacientes) }}"
+                                    <a href="{{ route('protocolos.edit', array_merge(['id' => $paciente->idPacientes], $this->filtrosListadoParaUrl())) }}"
                                        title="Editar paciente"
                                        aria-label="Editar paciente"
                                        class="vl-grid-icon-btn text-neutral-600 hover:bg-neutral-100">
-                                        <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                                        <svg class="h-[26px] w-[26px]" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.75"
                                                   d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
                                         </svg>
                                     </a>
+                                </td>
+                                <td class="vl-pacientes-td vl-pacientes-td--icon">
+                                    <button type="button"
+                                            title="Imprimir etiquetas de tubos"
+                                            aria-label="Imprimir etiquetas de tubos"
+                                            class="vl-grid-icon-btn text-neutral-600 hover:bg-neutral-100"
+                                            x-data
+                                            @click.prevent="
+                                                const c = await window.vlSwalPedirCantidad({
+                                                    titulo: 'Etiquetas de tubos',
+                                                    mensaje: '¿Cuántas etiquetas desea imprimir? (todas iguales)',
+                                                    valor: 2,
+                                                    min: 1,
+                                                    max: 99,
+                                                });
+                                                if (c !== null) {
+                                                    $wire.abrirEtiquetasTubo({{ (int) $paciente->idPacientes }}, c);
+                                                }
+                                            ">
+                                        <svg class="h-[26px] w-[26px]" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.75"
+                                                  d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A2 2 0 013 12V7a4 4 0 014-4z"/>
+                                        </svg>
+                                    </button>
                                 </td>
                                 <td class="vl-pacientes-td">{{ $paciente->cliente?->nombre ?: '—' }}</td>
                                 <td class="vl-pacientes-td whitespace-nowrap">{{ $paciente->fechhoyFormateada() }}</td>
@@ -177,11 +266,11 @@
                                 <td class="vl-pacientes-td">{{ $paciente->sexo ?: '—' }}</td>
                                 <td class="vl-pacientes-td">{{ $paciente->edad ?: '—' }}</td>
                                 <td class="vl-pacientes-td vl-pacientes-td--icon">
-                                    <a href="{{ route('protocolos.determinaciones', $paciente->idPacientes) }}"
+                                    <a href="{{ route('protocolos.determinaciones', array_merge(['id' => $paciente->idPacientes], $this->filtrosListadoParaUrl())) }}"
                                        title="Determinaciones solicitadas"
                                        aria-label="Determinaciones solicitadas"
                                        class="vl-grid-icon-btn text-primary-700 hover:bg-primary-50">
-                                        <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                                        <svg class="h-[26px] w-[26px]" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.75"
                                                   d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
                                         </svg>
@@ -210,18 +299,18 @@
                                 </td>
                                 <td class="vl-pacientes-td vl-pacientes-td--icon">
                                     @if (tienePermiso(\App\Support\PermisosIaCatalog::RESULTADOS))
-                                        <a href="{{ route('protocolos.resultados', $paciente->idPacientes) }}"
+                                        <a href="{{ route('protocolos.resultados', array_merge(['id' => $paciente->idPacientes], $this->filtrosListadoParaUrl())) }}"
                                            title="Cargar resultados"
                                            aria-label="Cargar resultados"
                                            class="vl-grid-icon-btn text-primary-700 hover:bg-primary-50">
-                                            <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                                            <svg class="h-[26px] w-[26px]" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.75"
                                                       d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0115.75 21H5.25A2.25 2.25 0 013 18.75V8.25A2.25 2.25 0 015.25 6H10"/>
                                             </svg>
                                         </a>
                                     @else
                                         <span class="inline-flex h-8 w-8 items-center justify-center text-neutral-300" title="Sin permiso de resultados">
-                                            <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                                            <svg class="h-[26px] w-[26px]" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.75"
                                                       d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0115.75 21H5.25A2.25 2.25 0 013 18.75V8.25A2.25 2.25 0 015.25 6H10"/>
                                             </svg>
@@ -234,7 +323,7 @@
                                         variant="danger"
                                         wire:click="abrirModalEdInf({{ $paciente->idPacientes }})"
                                     >
-                                        <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                                        <svg class="h-[26px] w-[26px]" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.75"
                                                   d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"/>
                                         </svg>
@@ -246,7 +335,7 @@
                                         variant="info"
                                         wire:click="abrirModalObs({{ $paciente->idPacientes }})"
                                     >
-                                        <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                                        <svg class="h-[26px] w-[26px]" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.75"
                                                   d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
                                         </svg>
@@ -260,13 +349,13 @@
                                            title="Informe PDF"
                                            aria-label="Abrir informe PDF"
                                            class="vl-grid-icon-btn text-red-600 hover:bg-red-50">
-                                            <svg class="h-4 w-4" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                                            <svg class="h-[26px] w-[26px]" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                                                 <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8l-6-6zm-1 2l5 5h-5V4zM8.5 13.5h7v1.5h-7v-1.5zm0 3h7v1.5h-7v-1.5z"/>
                                             </svg>
                                         </a>
                                     @else
                                         <span class="inline-flex h-8 w-8 items-center justify-center text-neutral-300" title="Sin permiso de informes">
-                                            <svg class="h-4 w-4" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                                            <svg class="h-[26px] w-[26px]" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                                                 <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8l-6-6zm-1 2l5 5h-5V4zM8.5 13.5h7v1.5h-7v-1.5zm0 3h7v1.5h-7v-1.5z"/>
                                             </svg>
                                         </span>
@@ -278,7 +367,7 @@
                                         :variant="$paciente->tieneAdjunto() ? 'success' : 'neutral'"
                                         wire:click="abrirModalAdjunto({{ $paciente->idPacientes }})"
                                     >
-                                        <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                                        <svg class="h-[26px] w-[26px]" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.75"
                                                   d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"/>
                                         </svg>
@@ -290,7 +379,7 @@
                                         :variant="$paciente->tieneNotificacion() ? 'success' : 'neutral'"
                                         wire:click="abrirModalAviso({{ $paciente->idPacientes }})"
                                     >
-                                        <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                                        <svg class="h-[26px] w-[26px]" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.75"
                                                   d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/>
                                         </svg>
@@ -302,7 +391,7 @@
                                         variant="success"
                                         wire:click="abrirModalEnvio({{ $paciente->idPacientes }})"
                                     >
-                                        <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                                        <svg class="h-[26px] w-[26px]" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.75"
                                                   d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
                                         </svg>
@@ -314,17 +403,44 @@
                                         variant="primary"
                                         wire:click="abrirModalIa({{ $paciente->idPacientes }})"
                                     >
-                                        <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                                        <svg class="h-[26px] w-[26px]" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.75"
                                                   d="M4 5a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1H5a1 1 0 01-1-1V5zm10 0a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1h-4a1 1 0 01-1-1V5zM4 15a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1H5a1 1 0 01-1-1v-4zm10 0a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1h-4a1 1 0 01-1-1v-4z"/>
                                         </svg>
                                     </x-vl-grid-icon-btn>
                                 </td>
+                                @if ($mostrarColumnaAfip)
+                                    <td class="vl-pacientes-td vl-pacientes-td--icon">
+                                        @php
+                                            $afipEmitido = isset($afipEmitidos[(int) $paciente->idPacientes]);
+                                        @endphp
+                                        <a href="{{ route('facturacion.afip.comprobantes', array_merge(
+                                                ['ref' => \App\Support\Security\OpaqueRouteToken::forCompAfipPaciente((int) $paciente->idPacientes)],
+                                                $this->filtrosListadoParaUrl()
+                                            )) }}"
+                                           title="{{ $afipEmitido ? 'Comprobantes AFIP (emitido)' : 'Comprobantes AFIP' }}"
+                                           aria-label="{{ $afipEmitido ? 'Comprobantes AFIP (emitido)' : 'Comprobantes AFIP' }}"
+                                           class="vl-grid-icon-btn {{ $afipEmitido ? 'bg-orange-500 text-white ring-2 ring-orange-300 hover:bg-orange-600' : 'text-sky-700 hover:bg-sky-50' }}">
+                                            @if ($afipEmitido)
+                                                {{-- Círculo con tilde sólido: comprobante emitido --}}
+                                                <svg class="h-[26px] w-[26px]" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                                                    <path fill-rule="evenodd" clip-rule="evenodd"
+                                                          d="M2.25 12c0-5.385 4.365-9.75 9.75-9.75s9.75 4.365 9.75 9.75-4.365 9.75-9.75 9.75S2.25 17.385 2.25 12Zm13.36-1.814a.75.75 0 10-1.22-.872l-3.236 4.53L9.53 12.22a.75.75 0 00-1.06 1.06l2.25 2.25a.75.75 0 001.14-.094l3.75-5.25z"/>
+                                                </svg>
+                                            @else
+                                                <svg class="h-[26px] w-[26px]" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.75"
+                                                          d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                                                </svg>
+                                            @endif
+                                        </a>
+                                    </td>
+                                @endif
                             </tr>
                         @endif
                     @empty
                         <tr>
-                            <td colspan="{{ $mostrarCadete ? 23 : 22 }}" class="vl-pacientes-td text-center text-neutral-500 py-10">
+                            <td colspan="{{ ($mostrarCadete ? 24 : 23) + ($mostrarColumnaAfip ? 1 : 0) }}" class="vl-pacientes-td text-center text-neutral-500 py-10">
                                 @if ($vista === 'hoy')
                                     @php
                                         $fechaEfectiva = $this->fechaVistaEfectiva();

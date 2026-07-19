@@ -1,0 +1,28 @@
+---
+description: No persistir campos de formulario en otra columna ni ocultar fallos de guardado
+alwaysApply: true
+---
+
+# Persistencia sin silencios
+
+## Prohibido
+
+- Guardar un campo de UI en **otra** columna «porque la correcta no existe» o
+  «por compatibilidad legacy» (ej.: form DNI → `fechnaci` / `cuit`).
+- Tratar el descarte de Eloquent (`$fillable`) como éxito: atributos no
+  fillable **se pierden en silencio**.
+- Mostrar éxito / redirigir si parte del payload no pudo persistirse.
+- Omitir un campo del UPDATE/INSERT cuando el usuario lo envió, sin error
+  visible.
+
+## Obligatorio
+
+1. Persistencia en la columna de negocio acordada (mismo significado que el
+   label del form).
+2. Si `Schema::hasColumn` es false para esa columna: **error visible**
+   (`vl-swal-error` y/o `ValidationException`) y SQL/migración para crearla.
+3. Migraciones aditivas (`hasTable`/`hasColumn`) + SQL en `database/sql/` —
+   no improvisar destino temporal en otra columna.
+4. Lectores (AFIP, listados, PDFs) deben usar la **misma** columna que el form.
+
+Detalle y caso DNI: `docs/05-preferencias-y-convenciones.md` §13.

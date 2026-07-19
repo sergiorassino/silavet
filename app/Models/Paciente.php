@@ -46,6 +46,8 @@ class Paciente extends Model
         'nombreProtocolo',
         'nombre',
         'propietario',
+        'dni',
+        'cuit',
         'email',
         'whatsapp',
         'sexo',
@@ -66,8 +68,8 @@ class Paciente extends Model
         'urlPdf',
         'adjunto',
         'observaciones',
+        'obsInterna',
         'clinica',
-        'obsPriv',
     ];
 
     protected function casts(): array

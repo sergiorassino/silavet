@@ -7,17 +7,22 @@ use App\Models\Especie;
 use App\Models\Paciente;
 use App\Models\Raza;
 use App\Models\Usuario;
+use App\Support\CuitInput;
 use App\Support\DniInput;
 use App\Support\PermisosIaCatalog;
 use App\Support\ProtocoloNumero;
+use App\Support\Protocolos\PacienteListadoFiltros;
 use App\Support\Resultados\ResultadosEstadosCatalog;
 use App\Support\SexoCatalog;
 use App\Support\UsuarioMenuPortal;
+use Illuminate\Database\QueryException;
 use Illuminate\Support\Facades\RateLimiter;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 use Livewire\Component;
 use RuntimeException;
+use Throwable;
 
 class PacienteForm extends Component
 {
@@ -39,6 +44,8 @@ class PacienteForm extends Component
 
     public string $dni = '';
 
+    public string $cuit = '';
+
     public string $email = '';
 
     public string $whatsapp = '';
@@ -53,9 +60,14 @@ class PacienteForm extends Component
 
     public string $observaciones = '';
 
+    /** @var array{vista?: string, filtroEstado?: string, page?: int} */
+    public array $listadoFiltros = [];
+
     public function mount(?int $id = null): void
     {
         abort_unless(tienePermiso(PermisosIaCatalog::PROTOCOLOS), 403);
+
+        $this->listadoFiltros = PacienteListadoFiltros::desdeRequest();
 
         $ctx = labCtx();
 
@@ -70,7 +82,12 @@ class PacienteForm extends Component
             $this->nombreProtocolo = (string) $paciente->nombreProtocolo;
             $this->nombre = (string) $paciente->nombre;
             $this->propietario = (string) $paciente->propietario;
-            $this->dni = (string) ($paciente->fechnaci ?? '');
+            $this->dni = self::tieneColumnaDni()
+                ? (string) ($paciente->dni ?? '')
+                : '';
+            $this->cuit = self::tieneColumnaCuit()
+                ? CuitInput::format((string) ($paciente->cuit ?? ''))
+                : '';
             $this->email = (string) $paciente->email;
             $this->whatsapp = (string) $paciente->whatsapp;
             $this->idEspecies = $paciente->idEspecies ?: null;
@@ -120,7 +137,13 @@ class PacienteForm extends Component
     public function updatedDni(string $value): void
     {
         $this->resetErrorBag('dni');
-        $this->dni = DniInput::normalize($value);
+        $this->dni = DniInput::normalize($value, 8);
+    }
+
+    public function updatedCuit(string $value): void
+    {
+        $this->resetErrorBag('cuit');
+        $this->cuit = CuitInput::format($value);
     }
 
     public function rules(): array
@@ -137,7 +160,18 @@ class PacienteForm extends Component
             'nombreProtocolo' => [$this->idPacientes ? 'required' : 'nullable', 'string', 'max:50'],
             'nombre' => ['required', 'string', 'max:50'],
             'propietario' => ['nullable', 'string', 'max:100'],
-            'dni' => ['nullable', 'string', 'max:'.DniInput::MAX_LENGTH],
+            'dni' => ['nullable', 'string', 'max:8'],
+            'cuit' => [
+                'nullable',
+                'string',
+                'max:'.CuitInput::FORMATTED_LENGTH,
+                function (string $attribute, mixed $value, \Closure $fail): void {
+                    $digits = CuitInput::normalize((string) $value);
+                    if ($digits !== '' && strlen($digits) !== CuitInput::DIGITS_LENGTH) {
+                        $fail('El CUIT debe tener 11 dígitos (formato 99-99999999-9).');
+                    }
+                },
+            ],
             'email' => ['nullable', 'email', 'max:150'],
             'whatsapp' => ['nullable', 'string', 'max:20'],
             'idEspecies' => ['required', 'integer', 'exists:especies,idEspecies'],
@@ -187,6 +221,23 @@ class PacienteForm extends Component
             }
         }
 
+        $dni = trim((string) ($data['dni'] ?? ''));
+        $cuit = CuitInput::normalize(trim((string) ($data['cuit'] ?? '')));
+
+        if ($dni !== '' && ! self::tieneColumnaDni()) {
+            $mensaje = 'No se puede guardar el DNI: falta la columna pacientes.dni en este laboratorio. '
+                .'Ejecute la migración (php artisan lb:migrate-legacy --force) o el SQL de database/sql/dni_cuit_pacientes_clientes.sql.';
+            $this->dispatch('vl-swal-error', mensaje: $mensaje);
+            throw ValidationException::withMessages(['dni' => $mensaje]);
+        }
+
+        if ($cuit !== '' && ! self::tieneColumnaCuit()) {
+            $mensaje = 'No se puede guardar el CUIT: falta la columna pacientes.cuit en este laboratorio. '
+                .'Ejecute la migración (php artisan lb:migrate-legacy --force) o el SQL de database/sql/dni_cuit_pacientes_clientes.sql.';
+            $this->dispatch('vl-swal-error', mensaje: $mensaje);
+            throw ValidationException::withMessages(['cuit' => $mensaje]);
+        }
+
         $payload = [
             'idClientes' => (int) $data['idClientes'],
             'idUsuarios' => $idUsuarios,
@@ -195,7 +246,6 @@ class PacienteForm extends Component
             'fechhoy' => $data['fechhoy'],
             'nombre' => trim($data['nombre']),
             'propietario' => trim((string) ($data['propietario'] ?? '')),
-            'fechnaci' => trim((string) ($data['dni'] ?? '')),
             'email' => trim((string) ($data['email'] ?? '')),
             'whatsapp' => trim((string) ($data['whatsapp'] ?? '')),
             'sexo' => trim((string) ($data['sexo'] ?? '')),
@@ -203,37 +253,84 @@ class PacienteForm extends Component
             'observaciones' => trim((string) ($data['observaciones'] ?? '')),
         ];
 
-        if ($this->idPacientes) {
-            $payload['nombreProtocolo'] = trim($data['nombreProtocolo']);
-            $paciente = $this->pacienteEnAlcance($this->idPacientes);
-            $paciente->update($payload);
-            $mensaje = 'Protocolo actualizado correctamente.';
-        } else {
-            try {
-                $tipo = ProtocoloNumero::usaTipoProtocolo()
-                    ? ($data['tipoProtocolo'] ?? 'L')
-                    : null;
+        if (self::tieneColumnaDni()) {
+            $payload['dni'] = $dni;
+        }
+        if (self::tieneColumnaCuit()) {
+            $payload['cuit'] = $cuit;
+        }
 
-                ProtocoloNumero::withSiguienteReservado($payload['fechhoy'], function (string $numero) use ($payload): void {
-                    Paciente::create(array_merge($payload, [
-                        'nombreProtocolo' => $numero,
-                        'tipoRegistro' => 1,
-                        'estado' => ResultadosEstadosCatalog::EN_PROC,
-                    ]));
-                }, $tipo);
-            } catch (RuntimeException $e) {
-                throw ValidationException::withMessages([
-                    'nombreProtocolo' => $e->getMessage(),
-                ]);
+        try {
+            if ($this->idPacientes) {
+                $payload['nombreProtocolo'] = trim($data['nombreProtocolo']);
+                $paciente = $this->pacienteEnAlcance($this->idPacientes);
+                $paciente->update($payload);
+                $mensaje = 'Protocolo actualizado correctamente.';
+                $focoId = $this->idPacientes;
+                $filtrosVolver = $this->listadoFiltros;
+            } else {
+                try {
+                    $tipo = ProtocoloNumero::usaTipoProtocolo()
+                        ? ($data['tipoProtocolo'] ?? 'L')
+                        : null;
+
+                    $nuevoId = null;
+                    ProtocoloNumero::withSiguienteReservado($payload['fechhoy'], function (string $numero) use ($payload, &$nuevoId): void {
+                        $creado = Paciente::create(array_merge($payload, [
+                            'nombreProtocolo' => $numero,
+                            'tipoRegistro' => 1,
+                            'estado' => ResultadosEstadosCatalog::EN_PROC,
+                        ]));
+                        $nuevoId = (int) $creado->idPacientes;
+                    }, $tipo);
+                    $this->idPacientes = $nuevoId;
+                } catch (RuntimeException $e) {
+                    throw ValidationException::withMessages([
+                        'nombreProtocolo' => $e->getMessage(),
+                    ]);
+                }
+
+                $mensaje = 'Protocolo registrado correctamente.';
+                $focoId = $this->idPacientes;
+                // Alta nueva: suele estar al inicio del listado (página 1).
+                $filtrosVolver = $this->listadoFiltros;
+                unset($filtrosVolver['page']);
             }
-
-            $mensaje = 'Protocolo registrado correctamente.';
+        } catch (ValidationException $e) {
+            throw $e;
+        } catch (QueryException $e) {
+            report($e);
+            $mensaje = 'No se pudo guardar el protocolo en la base de datos.';
+            $this->dispatch('vl-swal-error', mensaje: $mensaje);
+            throw ValidationException::withMessages([
+                'nombre' => $mensaje,
+            ]);
+        } catch (Throwable $e) {
+            report($e);
+            $mensaje = 'No se pudo guardar el protocolo: '.$e->getMessage();
+            $this->dispatch('vl-swal-error', mensaje: $mensaje);
+            throw ValidationException::withMessages([
+                'nombre' => $mensaje,
+            ]);
         }
 
         RateLimiter::hit($key, 60);
         $this->dispatch('vl-swal-exito', mensaje: $mensaje);
 
-        $this->redirectRoute('protocolos.index', navigate: false);
+        $this->redirect(
+            PacienteListadoFiltros::urlIndex($filtrosVolver, $focoId),
+            navigate: false
+        );
+    }
+
+    protected static function tieneColumnaDni(): bool
+    {
+        return Schema::hasColumn('pacientes', 'dni');
+    }
+
+    protected static function tieneColumnaCuit(): bool
+    {
+        return Schema::hasColumn('pacientes', 'cuit');
     }
 
     protected function actualizarPreviewProtocolo(): void
@@ -288,15 +385,16 @@ class PacienteForm extends Component
         $clienteBloqueado = $ctx->esCliente() && $ctx->idClientes;
         $usaTipoProtocolo = ProtocoloNumero::usaTipoProtocolo();
 
-        return view('livewire.protocolos.paciente-form', compact(
-            'titulo',
-            'clientes',
-            'medicos',
-            'especies',
-            'razas',
-            'sexos',
-            'clienteBloqueado',
-            'usaTipoProtocolo',
-        ))->layout('layouts.staff', UsuarioMenuPortal::staffLayoutParams(labCtx()->idRoles));
+        return view('livewire.protocolos.paciente-form', [
+            'titulo' => $titulo,
+            'clientes' => $clientes,
+            'medicos' => $medicos,
+            'especies' => $especies,
+            'razas' => $razas,
+            'sexos' => $sexos,
+            'clienteBloqueado' => $clienteBloqueado,
+            'usaTipoProtocolo' => $usaTipoProtocolo,
+            'urlVolver' => PacienteListadoFiltros::urlIndex($this->listadoFiltros, $this->idPacientes),
+        ])->layout('layouts.staff', UsuarioMenuPortal::staffLayoutParams(labCtx()->idRoles));
     }
 }

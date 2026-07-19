@@ -9,10 +9,14 @@ use App\Models\Paciente;
 use App\Models\Renglon;
 use App\Support\CuentaCorriente\CuentaCorrienteConsulta;
 use App\Support\Envio\InformeEnvioServicio;
+use App\Support\Facturacion\FacturacionAfipConfig;
+use App\Support\Facturacion\FacturacionAfipIndicadores;
 use App\Support\Precios\DescuentoDeterminacionResolver;
 use App\Support\PermisosIaCatalog;
 use App\Support\Protocolos\DiagnosticoIaPromptBuilder;
 use App\Support\Protocolos\PacienteAdjuntoStorage;
+use App\Support\Protocolos\PacienteListadoFiltros;
+use App\Support\Security\OpaqueRouteToken;
 use App\Support\Resultados\InformeVisibilidadConsulta;
 use App\Support\Resultados\RenglonesMaterializer;
 use App\Support\Resultados\ResultadosEstadosCatalog;
@@ -52,6 +56,9 @@ class PacienteIndex extends Component
      */
     #[Url(as: 'filtroEstado', history: true)]
     public string $filtroEstado = '';
+
+    /** Tras volver de editar/determinaciones/resultados: id de fila a enfocar (one-shot). */
+    public ?int $focoIdPaciente = null;
 
     /** Fecha (Y-m-d) para filtrar la vista diaria; por defecto hoy. */
     public string $fechaVista = '';
@@ -152,6 +159,11 @@ class PacienteIndex extends Component
         if ($ctx->esCliente() && $ctx->idClientes) {
             $this->pagoGlobalIdClientes = $ctx->idClientes;
         }
+
+        $foco = (int) request()->query('foco', 0);
+        if ($foco > 0) {
+            $this->focoIdPaciente = $foco;
+        }
     }
 
     private function abortSiAutogestion(): void
@@ -190,6 +202,20 @@ class PacienteIndex extends Component
     {
         $this->filtroEstado = '';
         $this->resetPage();
+    }
+
+    /**
+     * Query params a propagar al salir del listado (editar, determinaciones, etc.).
+     *
+     * @return array{vista?: string, filtroEstado?: string, page?: int}
+     */
+    public function filtrosListadoParaUrl(): array
+    {
+        return PacienteListadoFiltros::sanitizar([
+            'vista' => $this->vista,
+            'filtroEstado' => $this->filtroEstado,
+            'page' => $this->getPage(),
+        ]);
     }
 
     public function filtroEstadoEfectivo(): string
@@ -523,6 +549,30 @@ class PacienteIndex extends Component
         $this->cerrarModalEnvio();
         $this->dispatch('vl-abrir-url', url: $resultado['url']);
         $this->dispatch('vl-swal-exito', mensaje: 'Se abrió WhatsApp Web para completar el envío.');
+    }
+
+    public function abrirEtiquetasTubo(int $id, int $cantidad = 2): void
+    {
+        abort_unless(tienePermiso(PermisosIaCatalog::PROTOCOLOS), 403);
+        $this->abortSiAutogestion();
+
+        $uid = labCtx()->idUsuarios ?? 0;
+        $key = 'protocolos-etiquetas-abrir:'.$uid;
+        abort_if(RateLimiter::tooManyAttempts($key, 30), 429);
+
+        $cantidad = max(1, min(99, $cantidad));
+        $paciente = $this->pacienteGestionable($id);
+        if ($paciente === null) {
+            return;
+        }
+
+        RateLimiter::hit($key, 60);
+
+        $url = route('protocolos.etiquetas', [
+            'ref' => OpaqueRouteToken::forEtiquetasTubo((int) $paciente->idPacientes, $cantidad),
+        ]);
+
+        $this->dispatch('vl-abrir-url', url: $url);
     }
 
     public function abrirModalEdInf(int $id): void
@@ -1198,6 +1248,15 @@ class PacienteIndex extends Component
             && TesoreriaConfig::usaMovimientos()
             && Schema::hasColumn('pacientes', 'cadete');
 
+        $mostrarColumnaAfip = ! $autogestion
+            && FacturacionAfipConfig::habilitada()
+            && FacturacionAfipConfig::esModoPaciente()
+            && tienePermiso(PermisosIaCatalog::FACTURACION);
+
+        $afipEmitidos = $mostrarColumnaAfip
+            ? FacturacionAfipIndicadores::mapaConEmitido($pacientes->getCollection()->pluck('idPacientes')->all())
+            : [];
+
         return view($vista, [
             'pacientes' => $pacientes,
             'edInfRenglones' => $edInfRenglones,
@@ -1207,6 +1266,8 @@ class PacienteIndex extends Component
             'saldosAcumulados' => $saldosAcumulados,
             'encabezadoDescuento' => $encabezadoDescuento,
             'mostrarCadete' => $mostrarCadete,
+            'mostrarColumnaAfip' => $mostrarColumnaAfip,
+            'afipEmitidos' => $afipEmitidos,
         ])->layout('layouts.staff', UsuarioMenuPortal::layoutParamsDesdeContexto());
     }
 

@@ -19,4 +19,10 @@ yarn-error.log
 !/.vscode/tasks.json
 
 /storage/fonts/*.ttf
+/storage/app/AUTOANALIZADORES/*
+!/storage/app/AUTOANALIZADORES/.gitkeep
+
+# Certificados y tickets AFIP (por usuario); conservar solo .gitkeep
+/afipSE/cert/**
+!/afipSE/cert/.gitkeep
 

@@ -10,6 +10,7 @@ use App\Support\PermisosIaCatalog;
 use App\Support\PrecioInput;
 use App\Support\Precios\DescuentoDeterminacionResolver;
 use App\Support\Precios\PrecioDeterminacionResolver;
+use App\Support\Protocolos\PacienteListadoFiltros;
 use App\Support\Resultados\RenglonesMaterializer;
 use App\Support\Tipodeterminaciones\TipodeterminacionesGridConfig;
 use App\Support\UsuarioMenuPortal;
@@ -22,6 +23,9 @@ class PacienteDeterminaciones extends Component
     public int $idPacientes;
 
     public string $busquedaRapida = '';
+
+    /** @var array{vista?: string, filtroEstado?: string, page?: int} */
+    public array $listadoFiltros = [];
 
     /** @var array<int, array<string, mixed>> */
     public array $filas = [];
@@ -36,6 +40,7 @@ class PacienteDeterminaciones extends Component
         abort_unless(tienePermiso(PermisosIaCatalog::PROTOCOLOS), 403);
         abort_unless(Schema::hasTable('determinaciones'), 404, 'La tabla de determinaciones no está disponible.');
 
+        $this->listadoFiltros = PacienteListadoFiltros::desdeRequest();
         $this->pacienteCache = $this->pacienteEnAlcance($id);
         abort_if($this->pacienteCache->esPagoGlobal(), 404);
         $this->idPacientes = $this->pacienteCache->idPacientes;
@@ -357,6 +362,7 @@ class PacienteDeterminaciones extends Component
             'centrosDerivacion' => $this->centrosDerivacion(),
             'totalProtocolo' => PrecioInput::format($this->totalPrecioConDescuento()),
             'tieneFechasDerivacion' => $this->tieneColumnasFechasDerivacion(),
+            'urlVolver' => PacienteListadoFiltros::urlIndex($this->listadoFiltros, $this->idPacientes),
         ])->layout('layouts.staff', UsuarioMenuPortal::staffLayoutParams(labCtx()->idRoles));
     }
 

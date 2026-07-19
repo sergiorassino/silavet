@@ -156,19 +156,59 @@ a todos los módulos. Ver [06-reglas-de-seguridad.md](06-reglas-de-seguridad.md)
 ## 12. Fechas
 
 - Formato de visualización: **`d/m/Y`** (Argentina).
-- Entrada en formularios: respetar formato legacy donde exista (`fechnaci` como
-  varchar en `pacientes`).
 
 ---
 
-## 13. URLs opacas
+## 13. Persistencia de campos de formulario (obligatorio)
+
+**Nunca** mapear un campo de UI a otra columna de BD «por compatibilidad» o
+porque la columna correcta «todavía no existe» en algún laboratorio. Eso produce
+éxitos silenciosos: el usuario cree que guardó y los datos no quedan donde
+corresponde.
+
+### Reglas
+
+1. **Nombre alineado:** el dato que el formulario llama «DNI», «email», etc.
+   debe persistirse en la columna con el **mismo significado de negocio**
+   acordado (p. ej. DNI del protocolo → `pacientes.dni`). No reutilizar
+   columnas legacy de otro propósito (`fechnaci`, `cuit`, etc.) como
+   substituto silencioso.
+2. **Columna ausente = error visible:** si la columna no está en la BD del
+   tenant, el guardado debe **fallar con aviso** (`vl-swal-error` y/o error de
+   validación). No descartar el atributo, no guardar «el resto» fingiendo éxito
+   completo, no redirigir con mensaje de éxito.
+3. **`$fillable` coherente:** todo atributo que el formulario intente
+   persistir debe estar en `$fillable` **y** existir como columna (o el código
+   debe abortar antes). Eloquent **descarta en silencio** lo que no es
+   fillable: eso nunca debe usarse como «solución».
+4. **Migración aditiva primero:** si el campo es nuevo, agregar migración con
+   `hasTable`/`hasColumn` + SQL en `database/sql/`, y documentar el SQL al
+   cierre de la tarea. No inventar un destino temporal en otra columna.
+5. **Lectores alineados:** reportes, AFIP u otros consumidores deben leer la
+   **misma** columna que escribe el formulario (salvo requisito explícito
+   documentado).
+
+### Caso de referencia — DNI de protocolo
+
+| Incorrecto (histórico) | Correcto |
+|------------------------|----------|
+| Form «DNI» → `pacientes.fechnaci` | Form «DNI» → `pacientes.dni` |
+| AFIP lee `pacientes.cuit` | AFIP lee `pacientes.dni` |
+| Columna faltante → éxito igual | Columna faltante → error + SQL para crearla |
+
+Migración: `database/migrations/2026_07_19_000003_add_dni_pacientes.php`  
+SQL: `database/sql/pacientes_dni.sql`
+
+---
+
+## 14. URLs opacas
 
 - Portal clientes, PDFs e informes descargables: tokens opacos, no IDs en URL.
 - Ver [06-reglas-de-seguridad.md](06-reglas-de-seguridad.md) §10.
 
 ---
 
-## 14. Comandos Artisan de tenant
+## 15. Comandos Artisan de tenant
 
 - `php artisan lb:switch {slug}` — cambia `TENANT_SLUG` y `DB_DATABASE` en `.env`.
 - `php artisan lb:migrate-legacy` — aplica migraciones aditivas sobre BD legacy existente.

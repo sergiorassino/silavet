@@ -4,10 +4,13 @@ namespace App\Livewire\Abm\Clientes;
 
 use App\Models\Cliente;
 use App\Support\CuitInput;
+use App\Support\DniInput;
 use App\Support\Precios\DescuentoDeterminacionConfig;
 use App\Support\PermisosIaCatalog;
 use App\Support\UsuarioMenuPortal;
 use Illuminate\Support\Facades\RateLimiter;
+use Illuminate\Support\Facades\Schema;
+use Illuminate\Validation\ValidationException;
 use Livewire\Component;
 
 class ClienteForm extends Component
@@ -26,6 +29,8 @@ class ClienteForm extends Component
 
     public string $whatsapp = '';
 
+    public string $dni = '';
+
     public string $cuit = '';
 
     public string $descuento = '';
@@ -43,11 +48,22 @@ class ClienteForm extends Component
             $this->telefono2 = (string) ($cliente->telefono2 ?? '');
             $this->email = (string) ($cliente->email ?? '');
             $this->whatsapp = (string) ($cliente->whatsapp ?? '');
-            $this->cuit = CuitInput::format((string) ($cliente->cuit ?? ''));
+            $this->dni = self::tieneColumnaDni()
+                ? (string) ($cliente->dni ?? '')
+                : '';
+            $this->cuit = self::tieneColumnaCuit()
+                ? CuitInput::format((string) ($cliente->cuit ?? ''))
+                : '';
             $this->descuento = $cliente->descuento !== null
                 ? rtrim(rtrim(number_format((float) $cliente->descuento, 2, '.', ''), '0'), '.')
                 : '';
         }
+    }
+
+    public function updatedDni(string $value): void
+    {
+        $this->resetErrorBag('dni');
+        $this->dni = DniInput::normalize($value, 8);
     }
 
     public function updatedCuit(string $value): void
@@ -65,6 +81,7 @@ class ClienteForm extends Component
             'telefono2' => ['nullable', 'string', 'max:50'],
             'email' => ['nullable', 'email', 'max:150'],
             'whatsapp' => ['nullable', 'string', 'max:20'],
+            'dni' => ['nullable', 'string', 'max:8'],
             'cuit' => [
                 'nullable',
                 'string',
@@ -93,6 +110,7 @@ class ClienteForm extends Component
             'email.email' => 'Ingrese un email válido.',
             'email.max' => 'El email no puede superar 150 caracteres.',
             'whatsapp.max' => 'El WhatsApp no puede superar 20 caracteres.',
+            'dni.max' => 'El DNI no puede superar 8 caracteres.',
             'descuento.numeric' => 'El descuento debe ser un número.',
             'descuento.min' => 'El descuento no puede ser negativo.',
             'descuento.max' => 'El descuento no puede superar 100%.',
@@ -105,16 +123,39 @@ class ClienteForm extends Component
         abort_if(RateLimiter::tooManyAttempts($key, 30), 429);
 
         $data = $this->validate();
+
         $data['nombre'] = trim($data['nombre']);
         $data['direccion'] = trim((string) ($data['direccion'] ?? ''));
         $data['telefono1'] = trim((string) ($data['telefono1'] ?? ''));
         $data['telefono2'] = trim((string) ($data['telefono2'] ?? ''));
         $data['email'] = trim((string) ($data['email'] ?? ''));
         $data['whatsapp'] = trim((string) ($data['whatsapp'] ?? ''));
-        $data['cuit'] = CuitInput::normalize(trim((string) ($data['cuit'] ?? '')));
-        if ($data['cuit'] === '') {
-            $data['cuit'] = null;
+
+        $dni = trim((string) ($data['dni'] ?? ''));
+        $cuit = CuitInput::normalize(trim((string) ($data['cuit'] ?? '')));
+
+        if ($dni !== '' && ! self::tieneColumnaDni()) {
+            $mensaje = 'No se puede guardar el DNI: falta la columna clientes.dni en este laboratorio. '
+                .'Ejecute la migración (php artisan lb:migrate-legacy --force) o el SQL de database/sql/dni_cuit_pacientes_clientes.sql.';
+            $this->dispatch('vl-swal-error', mensaje: $mensaje);
+            throw ValidationException::withMessages(['dni' => $mensaje]);
         }
+
+        if ($cuit !== '' && ! self::tieneColumnaCuit()) {
+            $mensaje = 'No se puede guardar el CUIT: falta la columna clientes.cuit en este laboratorio. '
+                .'Ejecute la migración (php artisan lb:migrate-legacy --force) o el SQL de database/sql/dni_cuit_pacientes_clientes.sql.';
+            $this->dispatch('vl-swal-error', mensaje: $mensaje);
+            throw ValidationException::withMessages(['cuit' => $mensaje]);
+        }
+
+        unset($data['dni'], $data['cuit']);
+        if (self::tieneColumnaDni()) {
+            $data['dni'] = $dni;
+        }
+        if (self::tieneColumnaCuit()) {
+            $data['cuit'] = $cuit !== '' ? $cuit : null;
+        }
+
         $descuento = trim((string) ($data['descuento'] ?? ''));
         if (DescuentoDeterminacionConfig::usaPerfilesVolumenMesAnterior()) {
             $data['descuento'] = null;
@@ -135,6 +176,16 @@ class ClienteForm extends Component
         $this->dispatch('vl-swal-exito', mensaje: $mensaje);
 
         $this->redirectRoute('abm.clientes.index', navigate: false);
+    }
+
+    protected static function tieneColumnaDni(): bool
+    {
+        return Schema::hasColumn('clientes', 'dni');
+    }
+
+    protected static function tieneColumnaCuit(): bool
+    {
+        return Schema::hasColumn('clientes', 'cuit');
     }
 
     public function render()

@@ -103,4 +103,47 @@ return [
         ],
     ],
 
+    /*
+    | Facturación AFIP — individual (sin masiva). Emisor y certs en `usuarios`.
+    | - modo paciente: icono en protocolos (tipoRegistro 1→paciente, 2→cliente).
+    | - modo movimiento: icono en movimientos, solo ingresos (→cliente).
+    */
+    'facturacion_afip' => [
+        'habilitado' => false,
+        /** @var 'paciente'|'movimiento' */
+        'modo' => 'paciente',
+        'produccion' => true,
+        /** Si true, no llama a AFIP (CAE simulado). Default: true hasta homologación/producción real. */
+        'simular' => true,
+        /** En local, simula salvo que el tenant declare `simular => false` explícito. */
+        'simular_local' => true,
+        'cbte_tipo' => 11,
+        'nota_credito_tipo' => 12,
+        'comanda_tipo' => 888,
+        'concepto' => 2,
+        'doc_tipo_dni' => 96,
+        'doc_tipo_cuit' => 80,
+        'condicion_iva_receptor_id' => 5,
+    ],
+
+    /*
+    | Autoanalizadores — importación de CSV desde storage/app/AUTOANALIZADORES.
+    | Cada tenant declara solo los aparatos activos y sus overrides de formato.
+    | Drivers en App\Support\Autoanalizadores\Drivers (registry por clave).
+    */
+    'autoanalizadores' => [
+        'carpeta' => '', // vacío = storage/app/AUTOANALIZADORES
+        'dias_retencion' => 7,
+        'aparatos' => [
+            // Ejemplo:
+            // 'mindray_bc20' => [
+            //     'activo' => true,
+            //     'etiqueta' => 'Mindray BC-20',
+            //     'overrides' => [
+            //         'WBC' => ['multiplicador' => 1000, 'formato' => 'entero_miles'],
+            //     ],
+            // ],
+        ],
+    ],
+
 ];

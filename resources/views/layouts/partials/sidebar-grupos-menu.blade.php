@@ -214,6 +214,12 @@
             <x-vl-sidebar-icon name="cantidad-determinaciones-comparac" class="h-4 w-4 shrink-0 opacity-80" />
             <span class="truncate">Cantidad Determinaciones (comparac.)</span>
         </a>
+        <a href="{{ route('listados.excel-pacientes') }}"
+           class="vl-sidebar-link {{ request()->routeIs('listados.excel-pacientes*') ? 'is-active' : '' }}"
+           title="Excel de Pacientes (v1.0)">
+            <x-vl-sidebar-icon name="excel-pacientes" class="h-4 w-4 shrink-0 opacity-80" />
+            <span class="truncate">Excel de Pacientes</span>
+        </a>
     @endif
 </x-vl-sidebar-grupo>
 
