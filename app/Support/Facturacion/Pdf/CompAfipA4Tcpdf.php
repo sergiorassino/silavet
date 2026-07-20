@@ -149,7 +149,7 @@ final class CompAfipA4Tcpdf extends TCPDF
         TcpdfFuenteArial::aplicar($this, 'B', 8);
         $this->Cell(35, 4, 'Condición de venta:', 0, 0, 'L');
         TcpdfFuenteArial::aplicar($this, '', 8);
-        $this->Cell(60, 4, 'Cuenta Corriente', 0, 1, 'L');
+        $this->Cell(60, 4, (string) ($d['condicion_venta'] ?? 'Cuenta Corriente'), 0, 1, 'L');
 
         $this->Ln(2);
         $this->SetX(30);

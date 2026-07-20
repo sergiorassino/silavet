@@ -54,6 +54,8 @@ final class CompAfipPdfDatos
         }
 
         $lab = LabInstitucional::datos();
+        $cfg = FacturacionAfipConfig::config();
+        $esConsumidorFinal = $comp->esConsumidorFinalSinIdentificar();
 
         return [
             'CbteTipo' => (int) $comp->CbteTipo,
@@ -74,7 +76,11 @@ final class CompAfipPdfDatos
             'fecha_iso' => $fechaIso,
             'DocTipo' => (int) $comp->DocTipo,
             'DocNro' => (string) $comp->DocNro,
-            'razonSocialCliente' => (string) $comp->razonSocialCliente,
+            'es_consumidor_final_sin_identificar' => $esConsumidorFinal,
+            'razonSocialCliente' => $esConsumidorFinal ? '' : (string) $comp->razonSocialCliente,
+            'condicion_venta' => $esConsumidorFinal
+                ? (string) $cfg['condicion_venta_consumidor_final']
+                : (string) $cfg['condicion_venta_identificado'],
             'CondicionIVAReceptorId' => (int) $comp->CondicionIVAReceptorId,
             'condicion_iva_etiqueta' => AfipCondicionIvaReceptor::etiquetaDesdeId((int) $comp->CondicionIVAReceptorId),
             'conceptoFacturado' => (string) $comp->conceptoFacturado,

@@ -319,11 +319,7 @@ final class FacturacionAfipService
         if ($doc === '') {
             $this->assertPuedeFacturarConsumidorFinal($importe, $cfg, 'cliente');
 
-            return $this->receptorConsumidorFinal(
-                $cfg,
-                $condicionDefault,
-                trim((string) $cliente->nombre) ?: 'Consumidor final'
-            );
+            return $this->receptorConsumidorFinal($cfg, $condicionDefault);
         }
 
         return $this->receptorConDocumento(
@@ -369,12 +365,12 @@ final class FacturacionAfipService
      * @param  array<string, mixed>  $cfg
      * @return array{doc_tipo: int, doc_nro: string, razon_social: string, condicion_iva_id: int}
      */
-    private function receptorConsumidorFinal(array $cfg, int $condicionDefault, string $razonSocial = 'Consumidor final'): array
+    private function receptorConsumidorFinal(array $cfg, int $condicionDefault): array
     {
         return [
             'doc_tipo' => (int) $cfg['doc_tipo_consumidor_final'],
             'doc_nro' => '0',
-            'razon_social' => mb_substr($razonSocial !== '' ? $razonSocial : 'Consumidor final', 0, 100),
+            'razon_social' => '',
             'condicion_iva_id' => $condicionDefault > 0 ? $condicionDefault : 5,
         ];
     }

@@ -112,4 +112,16 @@ class CompAfip extends Model
             .'-'
             .str_pad((string) ((int) $this->CbteHasta), 8, '0', STR_PAD_LEFT);
     }
+
+    public function esConsumidorFinalSinIdentificar(): bool
+    {
+        $cfg = FacturacionAfipConfig::config();
+        if ((int) $this->DocTipo !== (int) $cfg['doc_tipo_consumidor_final']) {
+            return false;
+        }
+
+        $docNro = preg_replace('/\D/', '', (string) ($this->DocNro ?? '')) ?? '';
+
+        return $docNro === '' || $docNro === '0';
+    }
 }
