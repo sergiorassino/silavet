@@ -123,6 +123,10 @@ return [
         'concepto' => 2,
         'doc_tipo_dni' => 96,
         'doc_tipo_cuit' => 80,
+        /** DocTipo 99 — consumidor final sin identificar (DocNro 0). */
+        'doc_tipo_consumidor_final' => 99,
+        /** Desde este importe AFIP exige DNI/CUIT/CUIL/CDI del comprador (normativa 2025). */
+        'importe_minimo_identificacion_cf' => 10_000_000,
         'condicion_iva_receptor_id' => 5,
     ],
 

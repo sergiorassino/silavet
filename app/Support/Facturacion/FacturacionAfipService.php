@@ -27,7 +27,7 @@ final class FacturacionAfipService
         $this->assertPuedeEmitirFactura($paciente);
 
         $importe = $this->importeAFacturar($paciente);
-        $receptor = $this->armReceptor($paciente, $emisor);
+        $receptor = $this->armReceptor($paciente, $emisor, $importe);
         $cfg = FacturacionAfipConfig::paraEmision($emisor);
         $fecha = Carbon::now();
         $fechaYmd = $fecha->format('Ymd');
@@ -149,7 +149,7 @@ final class FacturacionAfipService
         $emisor = $this->resolverEmisor($emisor);
         $paciente = $this->cargarPacienteFacturable($idPacientes);
         $importe = $this->importeAFacturar($paciente);
-        $receptor = $this->armReceptor($paciente, $emisor);
+        $receptor = $this->armReceptor($paciente, $emisor, $importe);
         // Comanda interna: no discrimina condición IVA del receptor.
         $receptor['condicion_iva_id'] = 0;
         $cfg = FacturacionAfipConfig::paraEmision($emisor);
@@ -231,7 +231,7 @@ final class FacturacionAfipService
     private function cargarPacienteFacturable(int $idPacientes): Paciente
     {
         $paciente = Paciente::query()
-            ->with('cliente:idClientes,nombre,cuit')
+            ->with('cliente:idClientes,nombre,cuit,dni')
             ->find($idPacientes);
 
         if ($paciente === null) {
@@ -280,13 +280,13 @@ final class FacturacionAfipService
     /**
      * @return array{doc_tipo: int, doc_nro: string, razon_social: string, condicion_iva_id: int}
      */
-    private function armReceptor(Paciente $paciente, Usuario $emisor): array
+    private function armReceptor(Paciente $paciente, Usuario $emisor, float $importe): array
     {
         $cfg = FacturacionAfipConfig::config();
         $tipo = (int) $paciente->tipoRegistro;
         $condicionDefault = (int) ($emisor->CondicionIVAReceptorId ?: $cfg['condicion_iva_receptor_id']);
 
-        // Protocolo real → DNI/CUIT del paciente (columna pacientes.dni).
+        // Protocolo real → DNI/CUIT del paciente (columna pacientes.dni) o consumidor final (DocTipo 99).
         if ($tipo === Paciente::TIPO_PROTOCOLO) {
             if (! Schema::hasColumn('pacientes', 'dni')) {
                 throw new RuntimeException(
@@ -294,38 +294,101 @@ final class FacturacionAfipService
                 );
             }
 
-            $doc = preg_replace('/\D/', '', (string) ($paciente->dni ?? '')) ?? '';
-            if ($doc === '' || $doc === '0') {
-                throw new RuntimeException('El paciente no tiene DNI/CUIT cargado para facturar.');
-            }
-            $nombre = trim((string) ($paciente->propietario ?: $paciente->nombre));
-            if ($nombre === '') {
-                $nombre = 'Consumidor final';
+            $doc = $this->docNormalizado((string) ($paciente->dni ?? ''));
+            if ($doc === '') {
+                $this->assertPuedeFacturarConsumidorFinal($importe, $cfg);
+
+                return $this->receptorConsumidorFinal($cfg, $condicionDefault);
             }
 
-            return [
-                'doc_tipo' => strlen($doc) === 11 ? (int) $cfg['doc_tipo_cuit'] : (int) $cfg['doc_tipo_dni'],
-                'doc_nro' => $doc,
-                'razon_social' => mb_substr($nombre, 0, 100),
-                'condicion_iva_id' => $condicionDefault > 0 ? $condicionDefault : 5,
-            ];
+            $nombre = trim((string) ($paciente->propietario ?: $paciente->nombre));
+
+            return $this->receptorConDocumento($cfg, $doc, $nombre, $condicionDefault);
         }
 
-        // Pago global / ingreso → cliente (veterinaria).
+        // Pago global / ingreso (modo movimiento o pago global) → cliente o consumidor final.
         $cliente = $paciente->cliente;
         if (! $cliente instanceof Cliente) {
             throw new RuntimeException('El registro no tiene cliente asociado.');
         }
 
-        $doc = preg_replace('/\D/', '', (string) ($cliente->cuit ?? '')) ?? '';
-        if ($doc === '' || $doc === '0') {
-            throw new RuntimeException('El cliente no tiene CUIT/DNI cargado para facturar.');
+        $doc = $this->docDesdeCampos(
+            (string) ($cliente->cuit ?? ''),
+            (string) ($cliente->dni ?? ''),
+        );
+        if ($doc === '') {
+            $this->assertPuedeFacturarConsumidorFinal($importe, $cfg, 'cliente');
+
+            return $this->receptorConsumidorFinal(
+                $cfg,
+                $condicionDefault,
+                trim((string) $cliente->nombre) ?: 'Consumidor final'
+            );
         }
 
+        return $this->receptorConDocumento(
+            $cfg,
+            $doc,
+            trim((string) $cliente->nombre) ?: 'Cliente',
+            $condicionDefault
+        );
+    }
+
+    private function docNormalizado(string $raw): string
+    {
+        $doc = preg_replace('/\D/', '', $raw) ?? '';
+
+        return ($doc === '' || $doc === '0') ? '' : $doc;
+    }
+
+    private function docDesdeCampos(string ...$valores): string
+    {
+        foreach ($valores as $raw) {
+            $doc = $this->docNormalizado($raw);
+            if ($doc !== '') {
+                return $doc;
+            }
+        }
+
+        return '';
+    }
+
+    private function assertPuedeFacturarConsumidorFinal(float $importe, array $cfg, string $sujeto = 'paciente'): void
+    {
+        $minimo = (float) ($cfg['importe_minimo_identificacion_cf'] ?? 0);
+        if ($minimo > 0 && round($importe, 2) >= $minimo) {
+            $etiqueta = $sujeto === 'cliente' ? 'del cliente' : 'del paciente';
+            throw new RuntimeException(
+                'El importe supera $'.number_format($minimo, 0, ',', '.')
+                .' y AFIP exige identificar al comprador. Cargue DNI o CUIT '.$etiqueta.'.'
+            );
+        }
+    }
+
+    /**
+     * @param  array<string, mixed>  $cfg
+     * @return array{doc_tipo: int, doc_nro: string, razon_social: string, condicion_iva_id: int}
+     */
+    private function receptorConsumidorFinal(array $cfg, int $condicionDefault, string $razonSocial = 'Consumidor final'): array
+    {
+        return [
+            'doc_tipo' => (int) $cfg['doc_tipo_consumidor_final'],
+            'doc_nro' => '0',
+            'razon_social' => mb_substr($razonSocial !== '' ? $razonSocial : 'Consumidor final', 0, 100),
+            'condicion_iva_id' => $condicionDefault > 0 ? $condicionDefault : 5,
+        ];
+    }
+
+    /**
+     * @param  array<string, mixed>  $cfg
+     * @return array{doc_tipo: int, doc_nro: string, razon_social: string, condicion_iva_id: int}
+     */
+    private function receptorConDocumento(array $cfg, string $doc, string $razonSocial, int $condicionDefault): array
+    {
         return [
             'doc_tipo' => strlen($doc) === 11 ? (int) $cfg['doc_tipo_cuit'] : (int) $cfg['doc_tipo_dni'],
             'doc_nro' => $doc,
-            'razon_social' => mb_substr(trim((string) $cliente->nombre) ?: 'Cliente', 0, 100),
+            'razon_social' => mb_substr($razonSocial !== '' ? $razonSocial : 'Consumidor final', 0, 100),
             'condicion_iva_id' => $condicionDefault > 0 ? $condicionDefault : 5,
         ];
     }

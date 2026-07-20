@@ -49,6 +49,8 @@ final class FacturacionAfipConfig
             'concepto' => (int) ($cfg['concepto'] ?? 2),
             'doc_tipo_dni' => (int) ($cfg['doc_tipo_dni'] ?? 96),
             'doc_tipo_cuit' => (int) ($cfg['doc_tipo_cuit'] ?? 80),
+            'doc_tipo_consumidor_final' => (int) ($cfg['doc_tipo_consumidor_final'] ?? 99),
+            'importe_minimo_identificacion_cf' => (float) ($cfg['importe_minimo_identificacion_cf'] ?? 10_000_000),
             'condicion_iva_receptor_id' => (int) ($cfg['condicion_iva_receptor_id'] ?? 5),
         ]);
     }

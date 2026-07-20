@@ -24,7 +24,7 @@ final class CompAfipComandaA4Tcpdf extends TCPDF
         $this->datos = $datos;
         $this->SetCreator(config('app.name', 'SILAVET'));
         $this->SetAuthor(config('app.name', 'SILAVET'));
-        $this->SetTitle('Comanda');
+        $this->SetTitle('Recibo');
         $this->setPrintHeader(false);
         $this->setPrintFooter(false);
         $this->SetAutoPageBreak(false, 10);
@@ -76,7 +76,7 @@ final class CompAfipComandaA4Tcpdf extends TCPDF
         $this->Cell(20, 15, 'X', 1, 1, 'C');
         TcpdfFuenteArial::aplicar($this, '', 7);
         $this->SetX(95);
-        $this->Cell(20, 3, 'Comanda', 0, 0, 'C');
+        $this->Cell(20, 3, 'Recibo', 0, 0, 'C');
 
         $this->SetXY(30, 48);
         TcpdfFuenteArial::aplicar($this, 'B', 12);
@@ -84,7 +84,7 @@ final class CompAfipComandaA4Tcpdf extends TCPDF
 
         $this->SetXY(120, 48);
         TcpdfFuenteArial::aplicar($this, 'B', 10);
-        $this->Cell(30, 5, 'COMANDA:  ', 0, 0, 'L');
+        $this->Cell(30, 5, 'RECIBO:  ', 0, 0, 'L');
         TcpdfFuenteArial::aplicar($this, '', 8);
         $this->Cell(30, 5, (string) ($d['CbteHasta'] ?? ''), 0, 0, 'L');
 

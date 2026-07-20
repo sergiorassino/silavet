@@ -91,9 +91,11 @@
                                         $afipEmitido = isset($afipEmitidos[(int) $mov->idPacientes]);
                                     @endphp
                                     <a href="{{ $urlAfipFn((int) $mov->idPacientes) }}"
-                                       class="vl-movimientos-btn-fact {{ $afipEmitido ? 'vl-movimientos-btn-fact--emitido' : 'vl-movimientos-btn-fact--pendiente' }}"
-                                       title="{{ $afipEmitido ? 'Comprobantes AFIP (emitido)' : 'Comprobantes AFIP' }}">
+                                       title="{{ $afipEmitido ? 'Comprobantes AFIP (emitido)' : 'Comprobantes AFIP' }}"
+                                       aria-label="{{ $afipEmitido ? 'Comprobantes AFIP (emitido)' : 'Comprobantes AFIP' }}"
+                                       class="vl-grid-icon-btn {{ $afipEmitido ? 'bg-orange-500 text-white ring-2 ring-orange-300 hover:bg-orange-600' : 'text-sky-700 hover:bg-sky-50' }}">
                                         @if ($afipEmitido)
+                                            {{-- Círculo con tilde sólido: comprobante emitido --}}
                                             <svg class="h-[26px] w-[26px]" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
                                                 <path fill-rule="evenodd" clip-rule="evenodd"
                                                       d="M2.25 12c0-5.385 4.365-9.75 9.75-9.75s9.75 4.365 9.75 9.75-4.365 9.75-9.75 9.75S2.25 17.385 2.25 12Zm13.36-1.814a.75.75 0 10-1.22-.872l-3.236 4.53L9.53 12.22a.75.75 0 00-1.06 1.06l2.25 2.25a.75.75 0 001.14-.094l3.75-5.25z"/>

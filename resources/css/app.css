@@ -1283,12 +1283,20 @@
         min-height: 26px;
     }
 
-    .vl-movimientos-btn-fact--pendiente {
-        @apply text-sky-700 hover:bg-sky-50;
+    /* Iconos AFIP del listado de movimientos: mismo tamaño que pacientes. */
+    .vl-movimientos-grid .vl-grid-icon-btn {
+        width: 26px !important;
+        height: 26px !important;
+        min-width: 26px;
+        min-height: 26px;
     }
 
-    .vl-movimientos-btn-fact--emitido {
-        @apply border-0 bg-orange-500 text-white ring-2 ring-orange-300 hover:bg-orange-600;
+    .vl-movimientos-grid .vl-grid-icon-btn svg {
+        width: 26px !important;
+        height: 26px !important;
+        max-width: none;
+        max-height: none;
+        flex-shrink: 0;
     }
 
     .vl-movimientos-btn-edit svg,

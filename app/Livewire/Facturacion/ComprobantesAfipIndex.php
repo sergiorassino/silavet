@@ -38,7 +38,7 @@ class ComprobantesAfipIndex extends Component
 
         $this->idPacientes = (int) $decoded['id'];
         $paciente = Paciente::query()
-            ->with('cliente:idClientes,nombre,cuit')
+            ->with('cliente:idClientes,nombre,cuit,dni')
             ->find($this->idPacientes);
         abort_if($paciente === null, 404);
 
