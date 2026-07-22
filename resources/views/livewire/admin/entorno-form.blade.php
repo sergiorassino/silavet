@@ -5,7 +5,7 @@
                 <p class="vl-eyebrow">Parámetros Generales</p>
                 <h1 class="text-xl font-bold sm:text-2xl">Parámetros del Sistema</h1>
                 <p class="mt-1 max-w-3xl text-xs text-white/80 sm:text-sm">
-                    Configuración institucional del laboratorio: identidad visual, contacto, pie de informe, firmas, envío de mail y etiquetas de tubos.
+                    Configuración institucional del laboratorio: identidad visual, encabezado/pie del informe, contacto, firmas, envío de mail y etiquetas de tubos.
                 </p>
             </x-vl-hero-heading>
         </div>
@@ -71,6 +71,58 @@
                         @error('colorInforme') <p class="form-error">{{ $message }}</p> @enderror
                     </div>
                 </div>
+
+                @if ($tieneCamposHeaderFooter)
+                    <div class="mt-4 grid gap-4 sm:grid-cols-2">
+                        <div>
+                            <label class="form-label mb-1" for="headerInformeUpload">Encabezado del informe (imagen)</label>
+                            @if ($headerInformePreviewUrl)
+                                <div class="mb-2 rounded border border-primary-200 bg-primary-50 p-2">
+                                    <img src="{{ $headerInformePreviewUrl }}" alt="Vista previa del encabezado" class="max-h-24 max-w-full object-contain">
+                                    <p class="mt-1 text-xs text-primary-700">Vista previa — guardá los parámetros para confirmar.</p>
+                                </div>
+                            @elseif ($headerInformeUrl)
+                                <div class="mb-2 rounded border border-neutral-200 bg-neutral-50 p-2">
+                                    <img src="{{ $headerInformeUrl }}" alt="Encabezado actual" class="max-h-24 max-w-full object-contain">
+                                    <p class="mt-1 text-xs text-neutral-600">Encabezado cargado. Reemplaza logo y datos de contacto en el PDF.</p>
+                                    <button type="button" wire:click="quitarHeaderInforme" class="mt-2 text-xs font-medium text-red-700 hover:underline">
+                                        Quitar encabezado (volver al membrete)
+                                    </button>
+                                </div>
+                            @else
+                                <p class="mb-2 text-xs text-neutral-500">Sin imagen: se imprime el membrete con logo y datos del laboratorio.</p>
+                            @endif
+                            <input wire:model="headerInformeUpload" id="headerInformeUpload" type="file" accept="image/*" class="form-input py-1.5 text-sm file:mr-2 file:rounded file:border-0 file:bg-primary-50 file:px-2 file:py-1 file:text-xs file:font-medium file:text-primary-700">
+                            <p class="mt-1 text-xs text-neutral-500">PNG, JPG o WebP. Máx. 4 MB. Misma carpeta que el logo.</p>
+                            <div wire:loading wire:target="headerInformeUpload" class="mt-1 text-xs text-primary-600">Subiendo encabezado…</div>
+                            @error('headerInformeUpload') <p class="form-error">{{ $message }}</p> @enderror
+                        </div>
+
+                        <div>
+                            <label class="form-label mb-1" for="footerInformeUpload">Pie del informe (imagen)</label>
+                            @if ($footerInformePreviewUrl)
+                                <div class="mb-2 rounded border border-primary-200 bg-primary-50 p-2">
+                                    <img src="{{ $footerInformePreviewUrl }}" alt="Vista previa del pie" class="max-h-24 max-w-full object-contain">
+                                    <p class="mt-1 text-xs text-primary-700">Vista previa — guardá los parámetros para confirmar.</p>
+                                </div>
+                            @elseif ($footerInformeUrl)
+                                <div class="mb-2 rounded border border-neutral-200 bg-neutral-50 p-2">
+                                    <img src="{{ $footerInformeUrl }}" alt="Pie actual" class="max-h-24 max-w-full object-contain">
+                                    <p class="mt-1 text-xs text-neutral-600">Pie cargado. Reemplaza firmas y textos del pie en el PDF.</p>
+                                    <button type="button" wire:click="quitarFooterInforme" class="mt-2 text-xs font-medium text-red-700 hover:underline">
+                                        Quitar pie (volver a firmas)
+                                    </button>
+                                </div>
+                            @else
+                                <p class="mb-2 text-xs text-neutral-500">Sin imagen: se imprime el pie con firmas escaneadas y datos de los firmantes.</p>
+                            @endif
+                            <input wire:model="footerInformeUpload" id="footerInformeUpload" type="file" accept="image/*" class="form-input py-1.5 text-sm file:mr-2 file:rounded file:border-0 file:bg-primary-50 file:px-2 file:py-1 file:text-xs file:font-medium file:text-primary-700">
+                            <p class="mt-1 text-xs text-neutral-500">PNG, JPG o WebP. Máx. 4 MB. Misma carpeta que el logo.</p>
+                            <div wire:loading wire:target="footerInformeUpload" class="mt-1 text-xs text-primary-600">Subiendo pie…</div>
+                            @error('footerInformeUpload') <p class="form-error">{{ $message }}</p> @enderror
+                        </div>
+                    </div>
+                @endif
             </section>
 
             {{-- Contacto --}}

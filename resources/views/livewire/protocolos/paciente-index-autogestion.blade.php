@@ -104,7 +104,7 @@
             <table class="vl-pacientes-grid min-w-full text-xs">
                 <thead class="bg-accent-50/80">
                     <tr>
-                        <th class="vl-pacientes-th vl-pacientes-th--icon" title="Informe PDF">Informe</th>
+                        <th class="vl-pacientes-th vl-pacientes-th--icon" title="Informe PDF">INFOR.</th>
                         <th class="vl-pacientes-th vl-pacientes-th--num">#</th>
                         <th class="vl-pacientes-th">Fechhoy</th>
                         <th class="vl-pacientes-th">Protocolo</th>
@@ -114,7 +114,7 @@
                         <th class="vl-pacientes-th">Raza</th>
                         <th class="vl-pacientes-th">Sexo</th>
                         <th class="vl-pacientes-th">Edad</th>
-                        <th class="vl-pacientes-th">Est</th>
+                        <th class="vl-pacientes-th vl-pacientes-th--estado" title="Estado">ESTADO</th>
                         <th class="vl-pacientes-th vl-pacientes-th--num" title="Precio de lista">Precio Lista</th>
                         <th class="vl-pacientes-th vl-pacientes-th--num" title="Descuento">Desc.</th>
                         <th class="vl-pacientes-th vl-pacientes-th--num" title="Precio con descuento">Precio c/desc</th>
@@ -144,7 +144,7 @@
                                 <td class="vl-pacientes-td">—</td>
                                 <td class="vl-pacientes-td">—</td>
                                 <td class="vl-pacientes-td">—</td>
-                                <td class="vl-pacientes-td whitespace-nowrap">Pago</td>
+                                <td class="vl-pacientes-td vl-pacientes-td--estado">Pago</td>
                                 <td class="vl-pacientes-td vl-pacientes-td--num whitespace-nowrap">{{ $paciente->precioListaFormateado() }}</td>
                                 <td class="vl-pacientes-td vl-pacientes-td--num whitespace-nowrap">{{ $paciente->descuentoFormateado() }}</td>
                                 <td class="vl-pacientes-td vl-pacientes-td--num whitespace-nowrap">{{ $paciente->precioConDescuentoFormateado() }}</td>
@@ -187,7 +187,7 @@
                                 <td class="vl-pacientes-td">{{ $paciente->raza?->nombre ?: '—' }}</td>
                                 <td class="vl-pacientes-td">{{ $paciente->sexo ?: '—' }}</td>
                                 <td class="vl-pacientes-td">{{ $paciente->edad ?: '—' }}</td>
-                                <td class="vl-pacientes-td whitespace-nowrap">
+                                <td class="vl-pacientes-td vl-pacientes-td--estado">
                                     {{ $paciente->estado ?: \App\Support\Resultados\ResultadosEstadosCatalog::EN_PROC }}
                                 </td>
                                 <td class="vl-pacientes-td vl-pacientes-td--num whitespace-nowrap">{{ $paciente->precioListaFormateado() }}</td>

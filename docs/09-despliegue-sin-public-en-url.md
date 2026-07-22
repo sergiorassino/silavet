@@ -76,15 +76,17 @@ Checklist:
 
 ## Logo institucional
 
-Se guarda en `public/entorno/logos/{TENANT_SLUG}/` (campo `entorno.logo`). La subida
-temporal de Livewire usa `storage/app/livewire-tmp`.
+Se guarda en `public/entorno/logos/{TENANT_SLUG}/` (campo `entorno.logo`). En la
+misma carpeta van el encabezado y el pie opcionales del informe
+(`entorno.headerInforme` → `header-informe.*`, `entorno.footerInforme` →
+`footer-informe.*`). La subida temporal de Livewire usa `storage/app/livewire-tmp`.
 
 Checklist:
 
 1. **`TENANT_SLUG`** en `.env` antes de `config:cache`.
 2. Permisos de escritura en `public/entorno` y `storage/app/livewire-tmp`.
 3. **`APP_URL`** con path completo + `config:clear`.
-4. Elegir archivo, esperar a que desaparezca «Subiendo logo…», luego **Guardar**.
+4. Elegir archivo, esperar a que desaparezca «Subiendo…», luego **Guardar**.
 
 ---
 

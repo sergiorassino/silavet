@@ -226,6 +226,187 @@ document.addEventListener('alpine:init', () => {
         },
     }));
 
+    /**
+     * Combobox de tipodeterminaciones en carga de determinaciones del protocolo (F2).
+     * Escribir filtra; flechas navegan; Enter elige y confirma; Esc cierra o cancela.
+     */
+    Alpine.data('vlProtDetCombobox', (config = {}) => ({
+        opciones: Array.isArray(config.opciones) ? config.opciones : [],
+        consulta: String(config.nombreInicial || ''),
+        idSeleccionado: String(config.idInicial || ''),
+        abierto: false,
+        indice: -1,
+
+        get filtrados() {
+            const term = this.consulta.trim().toLowerCase();
+            if (term === '') {
+                return this.opciones;
+            }
+
+            return this.opciones.filter((o) => String(o.nombre || '').toLowerCase().includes(term));
+        },
+
+        init() {
+            this.syncDataset();
+        },
+
+        syncDataset() {
+            const el = this.$refs.input;
+            if (!el) {
+                return;
+            }
+            if (this.idSeleccionado) {
+                el.dataset.selectedId = this.idSeleccionado;
+            } else {
+                delete el.dataset.selectedId;
+            }
+        },
+
+        abrir() {
+            this.abierto = true;
+            this.$nextTick(() => {
+                this.posicionarLista();
+                this.scrollActivo();
+            });
+        },
+
+        cerrar() {
+            this.abierto = false;
+            this.indice = -1;
+        },
+
+        onInput() {
+            this.idSeleccionado = '';
+            this.syncDataset();
+            this.abierto = true;
+            // Primera coincidencia lista para Enter; ↓/↑ cambian si no es la correcta.
+            this.indice = this.filtrados.length > 0 ? 0 : -1;
+            this.$nextTick(() => {
+                this.posicionarLista();
+                this.scrollActivo();
+            });
+        },
+
+        posicionarLista() {
+            const input = this.$refs.input;
+            const lista = this.$refs.lista;
+            if (!input || !lista || !this.abierto) {
+                return;
+            }
+            const r = input.getBoundingClientRect();
+            const ancho = Math.max(r.width, 220);
+            lista.style.position = 'fixed';
+            lista.style.left = `${Math.round(r.left)}px`;
+            lista.style.top = `${Math.round(r.bottom + 2)}px`;
+            lista.style.width = `${Math.round(ancho)}px`;
+            lista.style.right = 'auto';
+            lista.style.minWidth = '12rem';
+        },
+
+        onKeydown(event) {
+            if (event.key === 'ArrowDown') {
+                event.preventDefault();
+                event.stopPropagation();
+                if (!this.abierto) {
+                    this.abrir();
+                }
+                if (this.filtrados.length === 0) {
+                    return;
+                }
+                // Si aún no hay ítem activo, la primera ↓ entra a la lista en el primero.
+                if (this.indice < 0) {
+                    this.indice = 0;
+                } else {
+                    this.indice = this.indice < this.filtrados.length - 1 ? this.indice + 1 : 0;
+                }
+                this.$nextTick(() => {
+                    this.posicionarLista();
+                    this.scrollActivo();
+                });
+                return;
+            }
+
+            if (event.key === 'ArrowUp') {
+                event.preventDefault();
+                event.stopPropagation();
+                if (!this.abierto) {
+                    this.abrir();
+                }
+                if (this.filtrados.length === 0) {
+                    return;
+                }
+                if (this.indice < 0) {
+                    this.indice = this.filtrados.length - 1;
+                } else {
+                    this.indice = this.indice > 0 ? this.indice - 1 : this.filtrados.length - 1;
+                }
+                this.$nextTick(() => {
+                    this.posicionarLista();
+                    this.scrollActivo();
+                });
+                return;
+            }
+
+            if (event.key === 'Enter') {
+                event.preventDefault();
+                event.stopPropagation();
+                this.confirmarConTeclado();
+                return;
+            }
+
+            if (event.key === 'Escape') {
+                if (this.abierto) {
+                    event.preventDefault();
+                    event.stopPropagation();
+                    this.cerrar();
+                }
+            }
+        },
+
+        scrollActivo() {
+            const lista = this.$refs.lista;
+            if (!lista || this.indice < 0) {
+                return;
+            }
+            const item = lista.querySelector(`[data-combo-idx="${this.indice}"]`);
+            if (item) {
+                item.scrollIntoView({ block: 'nearest' });
+            }
+        },
+
+        async aplicarSeleccion(item, confirmar) {
+            if (!item) {
+                return;
+            }
+            this.consulta = String(item.nombre || '');
+            this.idSeleccionado = String(item.id);
+            this.syncDataset();
+            this.cerrar();
+
+            if (confirmar) {
+                await this.$wire.confirmarNueva(String(item.id));
+                return;
+            }
+
+            await this.$wire.set('filaNueva.idTipodeterminaciones', String(item.id));
+        },
+
+        async confirmarConTeclado() {
+            if (this.abierto && this.indice >= 0 && this.filtrados[this.indice]) {
+                await this.aplicarSeleccion(this.filtrados[this.indice], true);
+                return;
+            }
+
+            if (this.idSeleccionado) {
+                await this.$wire.confirmarNueva(this.idSeleccionado);
+            }
+        },
+
+        async elegirClick(item) {
+            await this.aplicarSeleccion(item, false);
+        },
+    }));
+
     Alpine.data('vlCargaResultados', (config) => ({
         estadoPaciente: config.estadoInicial || 'En Proc.',
 

@@ -79,9 +79,10 @@ La tabla `entorno` almacena la configuración institucional en **un registro**
 | `formulas`           | Fórmulas de cálculo (texto legacy)                       |
 | `nombreListaPrecio`  | Nombre de la lista de precios activa                     |
 | `logo`, `fondo`      | Archivos de identidad visual para informes               |
+| `headerInforme`, `footerInforme` | Imágenes opcionales de encabezado/pie del informe (misma carpeta que el logo); si faltan, se usa membrete + firmas |
 | `direLabo`, `teleLabo`, `emailLabo` | Datos de contacto del laboratorio     |
 | `colorInforme`       | Color de acento en informes PDF/HTML                     |
-| `texto*footer*`, `firma*` | Pie de informe y firmas profesionales               |
+| `texto*footer*`, `firma*` | Pie de informe y firmas profesionales (fallback si no hay `footerInforme`) |
 | `*Mail`              | Configuración SMTP para envío de informes                |
 
 Equivalente funcional de la tabla `ento` en Sistemas Escolares.

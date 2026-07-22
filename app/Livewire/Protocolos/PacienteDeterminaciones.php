@@ -33,6 +33,9 @@ class PacienteDeterminaciones extends Component
     /** @var array<string, mixed>|null */
     public ?array $filaNueva = null;
 
+    /** Fuerza remount del combobox tras cada alta (evita perder el foco). */
+    public int $filaNuevaSeq = 0;
+
     private ?Paciente $pacienteCache = null;
 
     public function mount(int $id): void
@@ -71,8 +74,11 @@ class PacienteDeterminaciones extends Component
             'fechaEnvioDeriv' => '',
             'fechaDevolucDeterm' => '',
         ];
+        $this->filaNuevaSeq++;
         $this->busquedaRapida = '';
         $this->dispatch('vl-prot-det-focus-tipo');
+        // Tras el morph de Livewire el foco a veces se pierde; re-disparar al final del ciclo.
+        $this->js('queueMicrotask(() => window.dispatchEvent(new CustomEvent("vl-prot-det-focus-tipo")))');
     }
 
     public function updatedFilaNuevaIdTipodeterminaciones(mixed $value): void
@@ -339,25 +345,42 @@ class PacienteDeterminaciones extends Component
         $paciente = $this->paciente()->load(['cliente']);
         $term = trim(mb_strtolower($this->busquedaRapida));
 
-        $tiposDisponibles = Tipodeterminacion::query()
+        $idsCargados = collect($this->filas)->pluck('idTipodeterminaciones')->map(fn ($v) => (int) $v)->all();
+
+        $tiposParaCombobox = Tipodeterminacion::query()
             ->orderBy('orden')
             ->orderBy('nombre')
             ->get()
-            ->filter(function (Tipodeterminacion $tipo) use ($term) {
+            ->filter(function (Tipodeterminacion $tipo) use ($term, $idsCargados) {
+                if (in_array((int) $tipo->idTipodeterminaciones, $idsCargados, true)) {
+                    return false;
+                }
+
                 if ($term === '') {
                     return true;
                 }
 
-                return str_contains(mb_strtolower($tipo->nombre), $term);
+                return str_contains(mb_strtolower((string) $tipo->nombre), $term);
             })
-            ->values();
+            ->map(fn (Tipodeterminacion $tipo) => [
+                'id' => (int) $tipo->idTipodeterminaciones,
+                'nombre' => (string) $tipo->nombre,
+            ])
+            ->values()
+            ->all();
 
-        $idsCargados = collect($this->filas)->pluck('idTipodeterminaciones')->map(fn ($v) => (int) $v)->all();
+        $nombreTipoSeleccionado = '';
+        $idTipoSeleccionado = (string) ($this->filaNueva['idTipodeterminaciones'] ?? '');
+        if ($idTipoSeleccionado !== '' && $idTipoSeleccionado !== '0') {
+            $nombreTipoSeleccionado = (string) (Tipodeterminacion::query()
+                ->whereKey((int) $idTipoSeleccionado)
+                ->value('nombre') ?? '');
+        }
 
         return view('livewire.protocolos.paciente-determinaciones', [
             'paciente' => $paciente,
-            'tiposDisponibles' => $tiposDisponibles,
-            'idsCargados' => $idsCargados,
+            'tiposParaCombobox' => $tiposParaCombobox,
+            'nombreTipoSeleccionado' => $nombreTipoSeleccionado,
             'derivacionEsCatalogo' => TipodeterminacionesGridConfig::derivacionEsCatalogo(),
             'centrosDerivacion' => $this->centrosDerivacion(),
             'totalProtocolo' => PrecioInput::format($this->totalPrecioConDescuento()),

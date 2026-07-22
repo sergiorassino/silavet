@@ -103,7 +103,7 @@ final class InformePacienteTcpdf extends Fpdi
         $pdf->nuevaPaginaConEncabezado();
         $pdf->dibujarCuerpo();
         $pdf->dibujarObservaciones();
-        $pdf->asegurarEspacio(self::RESERVA_FOOTER);
+        $pdf->asegurarEspacio($pdf->alturaReservaFooter());
         $pdf->dibujarFooterFirmas();
         $pdf->incorporarAdjunto();
 
@@ -154,12 +154,21 @@ final class InformePacienteTcpdf extends Fpdi
     }
 
     /**
-     * Membrete legacy: barra gruesa, logo izq., contacto der., línea bajo membrete.
-     * Sin repetir el nombre del laboratorio (ya va en el logo).
+     * Membrete: imagen personalizada si está cargada; si no, barra + logo + contacto.
      */
     private function dibujarMembrete(): void
     {
         $header = (array) ($this->datos['header'] ?? []);
+        $headerFile = is_string($header['header_file'] ?? null) ? $header['header_file'] : null;
+
+        if ($headerFile !== null && is_file($headerFile)) {
+            $this->dibujarImagenBandeja($headerFile, self::MARGEN, 50.0);
+            $this->dibujarLineaColorInforme($this->GetY());
+            $this->SetY($this->GetY() + 5.0);
+
+            return;
+        }
+
         $direccion = trim((string) ($header['direccion'] ?? ''));
         $telefono = trim((string) ($header['telefono'] ?? ''));
         $email = trim((string) ($header['email'] ?? ''));
@@ -498,6 +507,16 @@ final class InformePacienteTcpdf extends Fpdi
     private function dibujarFooterFirmas(): void
     {
         $f = (array) ($this->datos['footer'] ?? []);
+        $footerFile = is_string($f['footer_file'] ?? null) ? $f['footer_file'] : null;
+
+        if ($footerFile !== null && is_file($footerFile)) {
+            $yLinea = $this->GetY() + 2;
+            $this->dibujarLineaColorInforme($yLinea);
+            $this->dibujarImagenBandeja($footerFile, $yLinea + 4.0, 45.0);
+
+            return;
+        }
+
         $anchoCol = $this->anchoUtil() / 3;
         $yInicio = $this->GetY() + 4;
         $altoFirma = 16.0;
@@ -543,6 +562,62 @@ final class InformePacienteTcpdf extends Fpdi
             'dash' => 0,
             'color' => [0, 0, 0],
         ]);
+    }
+
+    /**
+     * Imagen a ancho útil, alto proporcional (tope maxAltoMm). Deja el cursor debajo.
+     */
+    private function dibujarImagenBandeja(string $ruta, float $y, float $maxAltoMm): void
+    {
+        $ancho = $this->anchoUtil();
+        $alto = $this->altoImagenEscalada($ruta, $ancho, $maxAltoMm);
+
+        try {
+            $this->Image($ruta, self::MARGEN, $y, $ancho, $alto, '', '', '', false, 150, '', false, false, 0);
+        } catch (Throwable) {
+            TcpdfFuenteArial::aplicar($this, '', 8);
+            $this->SetXY(self::MARGEN, $y);
+            $this->Cell($ancho, 5, '[Imagen no disponible]', 0, 1, 'C');
+            $this->SetY($y + 8);
+
+            return;
+        }
+
+        $this->SetY($y + $alto + 3.0);
+    }
+
+    private function alturaReservaFooter(): float
+    {
+        $f = (array) ($this->datos['footer'] ?? []);
+        $footerFile = is_string($f['footer_file'] ?? null) ? $f['footer_file'] : null;
+        if ($footerFile === null || ! is_file($footerFile)) {
+            return self::RESERVA_FOOTER;
+        }
+
+        // Línea de color + gap + imagen + margen inferior.
+        return $this->altoImagenEscalada($footerFile, $this->anchoUtil(), 45.0) + 14.0;
+    }
+
+    /** Línea delgada con el color del informe (igual que bajo títulos de grupo). Deja Y en la línea. */
+    private function dibujarLineaColorInforme(float $y): void
+    {
+        $this->SetDrawColor($this->colorRgb[0], $this->colorRgb[1], $this->colorRgb[2]);
+        $this->SetLineWidth(0.2);
+        $this->Line(self::MARGEN, $y, self::PAGE_W - self::MARGEN, $y);
+        $this->SetDrawColor(0, 0, 0);
+        $this->SetY($y);
+    }
+
+    private function altoImagenEscalada(string $ruta, float $anchoMm, float $maxAltoMm): float
+    {
+        $info = @getimagesize($ruta);
+        if (! is_array($info) || (int) ($info[0] ?? 0) <= 0) {
+            return $maxAltoMm;
+        }
+
+        $proporcional = $anchoMm * ((float) $info[1] / (float) $info[0]);
+
+        return min($maxAltoMm, max(8.0, $proporcional));
     }
 
     private function incorporarAdjunto(): void

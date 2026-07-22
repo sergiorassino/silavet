@@ -21,7 +21,7 @@ final class InformePacienteConsulta
     /**
      * @return array{
      *     paciente: array<string, mixed>,
-     *     header: array{nombre: string, direccion: string, telefono: string, logo_file: ?string},
+     *     header: array{nombre: string, direccion: string, telefono: string, email: string, logo_file: ?string, header_file: ?string},
      *     color_rgb: array{0: int, 1: int, 2: int},
      *     footer: array<string, mixed>,
      *     grupos: list<array{idGrupos: int, nombreGrupo: string, renglones: list<array<string, mixed>>}>,
@@ -40,6 +40,9 @@ final class InformePacienteConsulta
 
         $grupos = self::gruposConRenglones($paciente, $idEspecies);
 
+        $header = LabInstitucional::datosParaPdf();
+        $header['header_file'] = self::rutaImagenEntorno($entorno, 'headerInforme');
+
         return [
             'paciente' => [
                 'idPacientes' => (int) $paciente->idPacientes,
@@ -56,7 +59,7 @@ final class InformePacienteConsulta
                 'idEspecies' => $idEspecies,
                 'rotulo_ref' => self::rotuloReferencia($idEspecies),
             ],
-            'header' => LabInstitucional::datosParaPdf(),
+            'header' => $header,
             'color_rgb' => self::colorRgb($entorno),
             'footer' => self::footerDesdeEntorno($entorno),
             'grupos' => $grupos,
@@ -294,6 +297,7 @@ final class InformePacienteConsulta
      *     firmaIzq: ?string,
      *     firmaCentro: ?string,
      *     firmaDer: ?string,
+     *     footer_file: ?string,
      * }
      */
     private static function footerDesdeEntorno(?Entorno $entorno): array
@@ -314,7 +318,21 @@ final class InformePacienteConsulta
             'firmaIzq' => $firma($entorno?->firmaIzq ?? null),
             'firmaCentro' => $firma($entorno?->firmaCentro ?? null),
             'firmaDer' => $firma($entorno?->firmaDer ?? null),
+            'footer_file' => self::rutaImagenEntorno($entorno, 'footerInforme'),
         ];
+    }
+
+    private static function rutaImagenEntorno(?Entorno $entorno, string $campo): ?string
+    {
+        if ($entorno === null || ! Schema::hasColumn('entorno', $campo)) {
+            return null;
+        }
+
+        $normalizada = EntornoArchivos::normalizarRutaLegacy(
+            trim((string) ($entorno->{$campo} ?? '')) ?: null
+        );
+
+        return EntornoArchivos::rutaAbsoluta($normalizada);
     }
 
     private static function rutaAdjuntoPdf(Paciente $paciente): ?string

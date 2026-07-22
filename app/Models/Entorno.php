@@ -18,6 +18,8 @@ class Entorno extends Model
         'listaPreciosPdf',
         'carpeta',
         'logo',
+        'headerInforme',
+        'footerInforme',
         'fondo',
         'direLabo',
         'teleLabo',

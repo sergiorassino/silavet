@@ -64,13 +64,20 @@
                         </tr>
                     @endforelse
                 </tbody>
+                @if ($clientes->isNotEmpty())
+                    <tfoot class="bg-accent-50/60 border-t border-accent-200">
+                        <tr>
+                            <td colspan="3" class="table-cell text-right font-semibold">
+                                Total adeudado:
+                            </td>
+                            <td class="table-cell text-right tabular-nums font-semibold {{ $saldoTotal > 0 ? 'text-red-700' : 'text-neutral-700' }}">
+                                {{ \App\Support\CuentaCorriente\CuentaCorrienteConsulta::formatearMoneda($saldoTotal) }}
+                            </td>
+                            <td class="table-cell"></td>
+                        </tr>
+                    </tfoot>
+                @endif
             </table>
         </div>
-
-        @if ($clientes->hasPages())
-            <div class="vl-matriz-list-footer px-3 py-1.5 sm:px-4">
-                {{ $clientes->links('vendor.pagination.vl-compact') }}
-            </div>
-        @endif
     </div>
 </div>

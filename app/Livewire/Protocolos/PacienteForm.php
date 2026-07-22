@@ -3,19 +3,27 @@
 namespace App\Livewire\Protocolos;
 
 use App\Models\Cliente;
+use App\Models\CompAfip;
 use App\Models\Especie;
+use App\Models\Imagenxrenglon;
+use App\Models\Movimiento;
+use App\Models\Notificacion;
 use App\Models\Paciente;
 use App\Models\Raza;
+use App\Models\Renglon;
 use App\Models\Usuario;
 use App\Support\CuitInput;
 use App\Support\DniInput;
 use App\Support\PermisosIaCatalog;
 use App\Support\ProtocoloNumero;
+use App\Support\Protocolos\PacienteAdjuntoStorage;
 use App\Support\Protocolos\PacienteListadoFiltros;
+use App\Support\Resultados\RenglonImagenesStorage;
 use App\Support\Resultados\ResultadosEstadosCatalog;
 use App\Support\SexoCatalog;
 use App\Support\UsuarioMenuPortal;
 use Illuminate\Database\QueryException;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Validation\Rule;
@@ -323,6 +331,117 @@ class PacienteForm extends Component
         );
     }
 
+    public function eliminar(): void
+    {
+        abort_unless(tienePermiso(PermisosIaCatalog::PROTOCOLOS), 403);
+
+        if (! $this->idPacientes) {
+            return;
+        }
+
+        $key = 'paciente-del:'.auth()->id();
+        abort_if(RateLimiter::tooManyAttempts($key, 10), 429);
+
+        $paciente = $this->pacienteEnAlcance($this->idPacientes);
+        abort_if($paciente->esMovimientoTesoreria(), 404);
+
+        if ($paciente->determinaciones()->exists()) {
+            $this->dispatch(
+                'vl-swal-error',
+                mensaje: 'No se puede eliminar: el protocolo tiene determinaciones cargadas.',
+                titulo: 'Protocolo en uso'
+            );
+
+            return;
+        }
+
+        if (Schema::hasTable('movimientos')
+            && Movimiento::query()->where('idPacientes', $paciente->idPacientes)->exists()) {
+            $this->dispatch(
+                'vl-swal-error',
+                mensaje: 'No se puede eliminar: el protocolo tiene movimientos de tesorería asociados.',
+                titulo: 'Protocolo en uso'
+            );
+
+            return;
+        }
+
+        if (Schema::hasTable('compafip')
+            && CompAfip::query()->where('idPacientes', $paciente->idPacientes)->exists()) {
+            $this->dispatch(
+                'vl-swal-error',
+                mensaje: 'No se puede eliminar: el protocolo tiene comprobantes AFIP asociados.',
+                titulo: 'Protocolo en uso'
+            );
+
+            return;
+        }
+
+        RateLimiter::hit($key, 60);
+
+        $adjunto = trim((string) ($paciente->adjunto ?? ''));
+        $id = (int) $paciente->idPacientes;
+        $imagenesABorrar = [];
+
+        try {
+            DB::transaction(function () use ($paciente, $id, &$imagenesABorrar): void {
+                if (Schema::hasTable('notificaciones')) {
+                    Notificacion::query()->where('idPacientes', $id)->delete();
+                }
+
+                if (Schema::hasTable('renglones')) {
+                    $idsRenglones = Renglon::query()
+                        ->where('idPacientes', $id)
+                        ->pluck('idRenglones')
+                        ->map(fn ($v) => (int) $v)
+                        ->all();
+
+                    if ($idsRenglones !== [] && Schema::hasTable('imagenesxrenglon')) {
+                        $imagenes = Imagenxrenglon::query()
+                            ->whereIn('idRenglones', $idsRenglones)
+                            ->get(['id', 'nombreImagen']);
+
+                        foreach ($imagenes as $imagen) {
+                            $nombre = trim((string) ($imagen->nombreImagen ?? ''));
+                            if ($nombre !== '') {
+                                $imagenesABorrar[] = $nombre;
+                            }
+                            $imagen->delete();
+                        }
+                    }
+
+                    Renglon::query()->where('idPacientes', $id)->delete();
+                }
+
+                $paciente->delete();
+            });
+        } catch (Throwable $e) {
+            report($e);
+            $this->dispatch(
+                'vl-swal-error',
+                mensaje: 'No se pudo eliminar el protocolo.',
+                titulo: 'Error'
+            );
+
+            return;
+        }
+
+        foreach ($imagenesABorrar as $nombreImagen) {
+            RenglonImagenesStorage::eliminarArchivo($nombreImagen);
+        }
+
+        if ($adjunto !== '') {
+            PacienteAdjuntoStorage::eliminarArchivo($adjunto);
+        }
+
+        $this->dispatch('vl-swal-exito', mensaje: 'Protocolo eliminado correctamente.');
+
+        $this->redirect(
+            PacienteListadoFiltros::urlIndex($this->listadoFiltros),
+            navigate: false
+        );
+    }
+
     protected static function tieneColumnaDni(): bool
     {
         return Schema::hasColumn('pacientes', 'dni');
@@ -384,6 +503,14 @@ class PacienteForm extends Component
         $sexos = SexoCatalog::opciones();
         $clienteBloqueado = $ctx->esCliente() && $ctx->idClientes;
         $usaTipoProtocolo = ProtocoloNumero::usaTipoProtocolo();
+        $puedeEliminar = false;
+
+        if ($this->idPacientes) {
+            $puedeEliminar = ! Paciente::query()
+                ->whereKey($this->idPacientes)
+                ->whereHas('determinaciones')
+                ->exists();
+        }
 
         return view('livewire.protocolos.paciente-form', [
             'titulo' => $titulo,
@@ -394,6 +521,7 @@ class PacienteForm extends Component
             'sexos' => $sexos,
             'clienteBloqueado' => $clienteBloqueado,
             'usaTipoProtocolo' => $usaTipoProtocolo,
+            'puedeEliminar' => $puedeEliminar,
             'urlVolver' => PacienteListadoFiltros::urlIndex($this->listadoFiltros, $this->idPacientes),
         ])->layout('layouts.staff', UsuarioMenuPortal::staffLayoutParams(labCtx()->idRoles));
     }

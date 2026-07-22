@@ -51,6 +51,10 @@ class EntornoForm extends Component
 
     public ?string $logoActual = null;
 
+    public ?string $headerInformeActual = null;
+
+    public ?string $footerInformeActual = null;
+
     public ?string $firmaIzqActual = null;
 
     public ?string $firmaCentroActual = null;
@@ -65,11 +69,17 @@ class EntornoForm extends Component
 
     public $logoUpload = null;
 
+    public $headerInformeUpload = null;
+
+    public $footerInformeUpload = null;
+
     public $firmaIzqUpload = null;
 
     public $firmaCentroUpload = null;
 
     public $firmaDerUpload = null;
+
+    public bool $tieneCamposHeaderFooter = false;
 
     /** Campos de impresión de etiquetas térmicas (entorno.e_*). */
     public string $e_AnchoPapel = '80';
@@ -143,8 +153,25 @@ class EntornoForm extends Component
         $this->firmaDerActual = $this->cargarRutaArchivo($entorno, 'firmaDer');
         $this->tienePassEnvioMail = trim((string) ($entorno->passEnvioMail ?? '')) !== '';
 
+        $this->cargarCamposHeaderFooter($entorno);
         $this->cargarCamposEtiquetas($entorno);
         $this->cargarCampoAfipFormato($entorno);
+    }
+
+    private function cargarCamposHeaderFooter(Entorno $entorno): void
+    {
+        $this->tieneCamposHeaderFooter = Schema::hasColumn('entorno', 'headerInforme')
+            && Schema::hasColumn('entorno', 'footerInforme');
+
+        if (! $this->tieneCamposHeaderFooter) {
+            $this->headerInformeActual = null;
+            $this->footerInformeActual = null;
+
+            return;
+        }
+
+        $this->headerInformeActual = $this->cargarRutaArchivo($entorno, 'headerInforme');
+        $this->footerInformeActual = $this->cargarRutaArchivo($entorno, 'footerInforme');
     }
 
     private function cargarCampoAfipFormato(Entorno $entorno): void
@@ -250,6 +277,11 @@ class EntornoForm extends Component
             'firmaDerUpload' => ['nullable', 'image', 'max:1024'],
         ];
 
+        if ($this->tieneCamposHeaderFooter) {
+            $rules['headerInformeUpload'] = ['nullable', 'image', 'max:4096'];
+            $rules['footerInformeUpload'] = ['nullable', 'image', 'max:4096'];
+        }
+
         if ($this->tieneCamposEtiquetas) {
             $rules = array_merge($rules, [
                 'e_AnchoPapel' => ['required', 'numeric', 'min:10', 'max:300'],
@@ -288,6 +320,10 @@ class EntornoForm extends Component
             'listaPreciosUpload.max' => 'La lista de precios no puede superar 10 MB.',
             'logoUpload.image' => 'El logo debe ser una imagen.',
             'logoUpload.max' => 'El logo no puede superar 2 MB.',
+            'headerInformeUpload.image' => 'El encabezado del informe debe ser una imagen.',
+            'headerInformeUpload.max' => 'El encabezado del informe no puede superar 4 MB.',
+            'footerInformeUpload.image' => 'El pie del informe debe ser una imagen.',
+            'footerInformeUpload.max' => 'El pie del informe no puede superar 4 MB.',
             'firmaIzqUpload.image' => 'La firma izquierda debe ser una imagen.',
             'firmaCentroUpload.image' => 'La firma central debe ser una imagen.',
             'firmaDerUpload.image' => 'La firma derecha debe ser una imagen.',
@@ -310,6 +346,20 @@ class EntornoForm extends Component
 
         $this->tieneCamposEtiquetas = Schema::hasColumn('entorno', 'e_AnchoPapel');
         $this->tieneCampoAfipFormato = Schema::hasColumn('entorno', 'afipFormatoImpresion');
+        $this->tieneCamposHeaderFooter = Schema::hasColumn('entorno', 'headerInforme')
+            && Schema::hasColumn('entorno', 'footerInforme');
+
+        if (
+            (! $this->tieneCamposHeaderFooter)
+            && ($this->headerInformeUpload !== null || $this->footerInformeUpload !== null)
+        ) {
+            $this->dispatch(
+                'vl-swal-error',
+                mensaje: 'Faltan las columnas headerInforme/footerInforme en entorno. Ejecutá el SQL de database/sql/entorno_header_footer_informe.sql o la migración correspondiente.'
+            );
+
+            return;
+        }
 
         $data = $this->validate();
         $entorno = Entorno::query()->orderBy('id')->first();
@@ -385,6 +435,26 @@ class EntornoForm extends Component
             $this->logoUpload = null;
         }
 
+        if ($this->tieneCamposHeaderFooter && $this->headerInformeUpload !== null) {
+            $payload['headerInforme'] = EntornoArchivos::guardarImagen(
+                $this->headerInformeUpload,
+                EntornoArchivos::directorioLogo(),
+                'header-informe'
+            );
+            $this->headerInformeActual = $payload['headerInforme'];
+            $this->headerInformeUpload = null;
+        }
+
+        if ($this->tieneCamposHeaderFooter && $this->footerInformeUpload !== null) {
+            $payload['footerInforme'] = EntornoArchivos::guardarImagen(
+                $this->footerInformeUpload,
+                EntornoArchivos::directorioLogo(),
+                'footer-informe'
+            );
+            $this->footerInformeActual = $payload['footerInforme'];
+            $this->footerInformeUpload = null;
+        }
+
         if ($this->firmaIzqUpload !== null) {
             $payload['firmaIzq'] = EntornoArchivos::guardarImagen(
                 $this->firmaIzqUpload,
@@ -423,6 +493,7 @@ class EntornoForm extends Component
         $this->firmaIzqActual = $this->cargarRutaArchivo($entorno, 'firmaIzq');
         $this->firmaCentroActual = $this->cargarRutaArchivo($entorno, 'firmaCentro');
         $this->firmaDerActual = $this->cargarRutaArchivo($entorno, 'firmaDer');
+        $this->cargarCamposHeaderFooter($entorno);
         $this->cargarCamposEtiquetas($entorno);
         $this->cargarCampoAfipFormato($entorno);
 
@@ -435,24 +506,80 @@ class EntornoForm extends Component
         $this->dispatch('vl-swal-exito', mensaje: 'Parámetros del sistema actualizados correctamente.');
     }
 
-    public function render()
+    public function quitarHeaderInforme(): void
     {
-        $logoPreviewUrl = null;
-        if ($this->logoUpload !== null) {
-            try {
-                $logoPreviewUrl = $this->logoUpload->temporaryUrl();
-            } catch (\Throwable) {
-                $logoPreviewUrl = null;
+        $this->quitarImagenInforme('headerInforme', 'headerInformeActual', 'Encabezado del informe quitado. Se usará el membrete con logo y datos.');
+    }
+
+    public function quitarFooterInforme(): void
+    {
+        $this->quitarImagenInforme('footerInforme', 'footerInformeActual', 'Pie del informe quitado. Se usarán firmas y textos del pie.');
+    }
+
+    private function quitarImagenInforme(string $campo, string $propActual, string $mensajeOk): void
+    {
+        abort_unless(tienePermiso(PermisosIaCatalog::PARAMETROS), 403);
+
+        $key = 'entorno-parametros-quitar-img:'.auth()->id();
+        abort_if(RateLimiter::tooManyAttempts($key, 20), 429);
+
+        if (! Schema::hasColumn('entorno', $campo)) {
+            $this->dispatch(
+                'vl-swal-error',
+                mensaje: 'Falta la columna '.$campo.' en entorno. Ejecutá el SQL de database/sql/entorno_header_footer_informe.sql.'
+            );
+
+            return;
+        }
+
+        $entorno = Entorno::query()->orderBy('id')->first();
+        abort_if($entorno === null, 404);
+
+        $ruta = $this->cargarRutaArchivo($entorno, $campo);
+        $entorno->update([$campo => null]);
+        $this->{$propActual} = null;
+
+        if ($ruta !== null) {
+            $absoluta = EntornoArchivos::rutaAbsoluta($ruta);
+            if ($absoluta !== null && is_file($absoluta)) {
+                @unlink($absoluta);
             }
         }
+
+        RateLimiter::hit($key, 60);
+        $this->dispatch('vl-swal-exito', mensaje: $mensajeOk);
+    }
+
+    public function render()
+    {
+        $logoPreviewUrl = $this->previewTemporal($this->logoUpload);
+        $headerInformePreviewUrl = $this->previewTemporal($this->headerInformeUpload);
+        $footerInformePreviewUrl = $this->previewTemporal($this->footerInformeUpload);
 
         return view('livewire.admin.entorno-form', [
             'listaPreciosUrl' => EntornoArchivos::urlPublica($this->listaPreciosPdfActual),
             'logoPreviewUrl' => $logoPreviewUrl,
             'logoUrl' => EntornoArchivos::urlPublica($this->logoActual, cacheBust: true),
+            'headerInformePreviewUrl' => $headerInformePreviewUrl,
+            'headerInformeUrl' => EntornoArchivos::urlPublica($this->headerInformeActual, cacheBust: true),
+            'footerInformePreviewUrl' => $footerInformePreviewUrl,
+            'footerInformeUrl' => EntornoArchivos::urlPublica($this->footerInformeActual, cacheBust: true),
             'firmaIzqUrl' => EntornoArchivos::urlPublica($this->firmaIzqActual),
             'firmaCentroUrl' => EntornoArchivos::urlPublica($this->firmaCentroActual),
             'firmaDerUrl' => EntornoArchivos::urlPublica($this->firmaDerActual),
         ])->layout('layouts.staff', UsuarioMenuPortal::staffLayoutParams(labCtx()->idRoles));
+    }
+
+    private function previewTemporal(mixed $upload): ?string
+    {
+        if ($upload === null) {
+            return null;
+        }
+
+        try {
+            return $upload->temporaryUrl();
+        } catch (\Throwable) {
+            return null;
+        }
     }
 }

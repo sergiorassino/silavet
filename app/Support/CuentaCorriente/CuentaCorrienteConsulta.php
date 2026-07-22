@@ -65,6 +65,11 @@ final class CuentaCorrienteConsulta
             ->leftJoinSub($saldoSubquery, 'saldos', 'saldos.idClientes', '=', 'clientes.idClientes')
             ->select('clientes.*')
             ->selectRaw('COALESCE(saldos.saldo_total, 0) as saldo_total')
+            // tipoCliente = 1: no forman parte de la cuenta corriente.
+            ->where(function ($q) {
+                $q->whereNull('clientes.tipoCliente')
+                    ->orWhere('clientes.tipoCliente', '!=', 1);
+            })
             ->when($term !== '', function ($q) use ($term) {
                 $q->where(function ($inner) use ($term) {
                     $inner->where('clientes.nombre', 'like', "%{$term}%")

@@ -12,6 +12,24 @@
         <div class="vl-form-actions">
             <button type="submit" class="btn-primary" wire:loading.attr="disabled">Guardar</button>
             <a href="{{ $urlVolver }}" class="btn-secondary">Cancelar</a>
+            @if ($idPacientes)
+                <button type="button"
+                        class="rounded-lg border border-red-200 px-3 py-1.5 text-xs font-medium text-red-700 hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-50"
+                        @disabled(! $puedeEliminar)
+                        wire:loading.attr="disabled"
+                        wire:target="eliminar"
+                        @if ($puedeEliminar)
+                            title="Eliminar protocolo"
+                            x-on:click="window.vlSwalConfirmar('¿Eliminar este protocolo? Esta acción no se puede deshacer.', 'Eliminar protocolo', { confirmButtonText: 'Sí, eliminar', icon: 'warning' }).then(ok => ok && $wire.eliminar())"
+                        @else
+                            title="No se puede eliminar: el protocolo tiene determinaciones cargadas"
+                        @endif>
+                    Eliminar
+                </button>
+                <span class="self-center text-[10px] leading-tight text-neutral-500">
+                    No se puede eliminar un paciente que tiene determinaciones cargadas
+                </span>
+            @endif
         </div>
 
         <div class="vl-form-grid">

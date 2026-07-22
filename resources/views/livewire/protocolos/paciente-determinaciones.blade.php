@@ -1,6 +1,7 @@
 <div class="vl-page"
      x-data="{
         init() {
+            this._focusTipoPendiente = false;
             this._onEnterCapture = (event) => {
                 if (event.key !== 'Enter') {
                     return;
@@ -8,14 +9,18 @@
                 if (document.querySelector('.swal2-container')) {
                     return;
                 }
-                const select = document.getElementById('vl-prot-det-select-tipo');
-                if (!select || !select.value) {
+                const input = document.getElementById('vl-prot-det-select-tipo');
+                const idSeleccionado = input?.dataset?.selectedId || '';
+                if (!input || !idSeleccionado) {
                     return;
                 }
                 const active = document.activeElement;
-                if (active && active !== select) {
+                // El combobox maneja Enter en su propio keydown.
+                if (active === input) {
+                    return;
+                }
+                if (active) {
                     const tag = active.tagName;
-                    // No interceptar Enter si el usuario escribe neto, descuento, búsqueda, etc.
                     if (tag === 'INPUT' || tag === 'TEXTAREA') {
                         return;
                     }
@@ -26,14 +31,24 @@
                         return;
                     }
                 }
-                // Capture: en Chrome/Windows el Enter del <select> no llega al keyup del elemento.
                 event.preventDefault();
                 event.stopPropagation();
-                $wire.confirmarNueva(select.value);
+                $wire.confirmarNueva(idSeleccionado);
             };
             document.addEventListener('keydown', this._onEnterCapture, true);
+            this._onMorphUpdated = () => {
+                if (this._focusTipoPendiente) {
+                    this.intentarEnfocarTipo(12);
+                }
+            };
+            if (window.Livewire && typeof Livewire.hook === 'function') {
+                this._unhookMorph = Livewire.hook('morph.updated', this._onMorphUpdated);
+            }
             this.$el.addEventListener('alpine:destroying', () => {
                 document.removeEventListener('keydown', this._onEnterCapture, true);
+                if (typeof this._unhookMorph === 'function') {
+                    this._unhookMorph();
+                }
             });
         },
         camposNav() {
@@ -113,16 +128,29 @@
             this.$nextTick(() => this.enfocarCampo(destino));
         },
         enfocarTipo() {
-            this.$nextTick(() => {
-                window.setTimeout(() => {
-                    const el = document.getElementById('vl-prot-det-select-tipo');
-                    if (!el) {
-                        return;
+            this._focusTipoPendiente = true;
+            this.intentarEnfocarTipo(30);
+        },
+        intentarEnfocarTipo(intentos) {
+            const el = document.getElementById('vl-prot-det-select-tipo');
+            if (el) {
+                el.focus({ preventScroll: true });
+                if (document.activeElement === el) {
+                    try {
+                        el.select();
+                    } catch (e) {
+                        // ignore
                     }
-                    el.focus({ preventScroll: true });
                     el.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
-                }, 30);
-            });
+                    this._focusTipoPendiente = false;
+                    return;
+                }
+            }
+            if (intentos <= 0) {
+                this._focusTipoPendiente = false;
+                return;
+            }
+            window.setTimeout(() => this.intentarEnfocarTipo(intentos - 1), 40);
         },
         onTeclado(event) {
             if (document.querySelector('.swal2-container')) {
@@ -134,6 +162,7 @@
                 return;
             }
             if (event.key === 'Escape' && document.getElementById('vl-prot-det-select-tipo')) {
+                // Si el listado del combobox está abierto, su propio handler cierra con stopPropagation.
                 event.preventDefault();
                 $wire.cancelarNueva();
             }
@@ -165,7 +194,7 @@
                 <input id="busqueda-rapida-det"
                        wire:model.live.debounce.300ms="busquedaRapida"
                        type="search"
-                       placeholder="Filtrar determinaciones…"
+                       placeholder="Prefiltrar catálogo…"
                        class="form-input max-w-md flex-1">
             </div>
             <div class="flex items-center gap-2 shrink-0">
@@ -186,7 +215,8 @@
         <p class="border-b border-accent-200 bg-accent-50/40 px-5 py-2 text-xs text-neutral-600">
             Puede cargar determinaciones solo con teclado:
             <strong class="font-semibold text-neutral-700">F2</strong> agregar,
-            letras o flechas para elegir,
+            escriba para filtrar (queda marcada la primera),
+            <strong class="font-semibold text-neutral-700">↑↓</strong> cambiar,
             <strong class="font-semibold text-neutral-700">Enter</strong> confirmar,
             <strong class="font-semibold text-neutral-700">Esc</strong> cancelar.
             En Neto/Descuento: <strong class="font-semibold text-neutral-700">Enter</strong> y <strong class="font-semibold text-neutral-700">flechas</strong> para navegar.
@@ -286,7 +316,7 @@
                     @endforeach
 
                     @if ($filaNueva !== null)
-                        <tr class="vl-determinaciones-row vl-prot-det-row--nueva bg-accent-50/30" wire:key="det-nueva">
+                        <tr class="vl-determinaciones-row vl-prot-det-row--nueva bg-accent-50/30" wire:key="det-nueva-{{ $filaNuevaSeq }}">
                             <td class="vl-determinaciones-td vl-determinaciones-col--acciones">
                                 <div class="flex items-center justify-center gap-0.5">
                                     <button type="button"
@@ -312,17 +342,46 @@
                                 </div>
                             </td>
                             <td class="vl-determinaciones-td vl-prot-det-col--tipo">
-                                <select id="vl-prot-det-select-tipo"
-                                        wire:model.live="filaNueva.idTipodeterminaciones"
-                                        class="vl-determinaciones-select vl-prot-det-select--tipo"
-                                        title="Elija el tipo y pulse Enter para confirmar">
-                                    <option value="">Seleccione</option>
-                                    @foreach ($tiposDisponibles as $tipo)
-                                        @if (! in_array((int) $tipo->idTipodeterminaciones, $idsCargados, true))
-                                            <option value="{{ $tipo->idTipodeterminaciones }}">{{ $tipo->nombre }}</option>
-                                        @endif
-                                    @endforeach
-                                </select>
+                                <div class="vl-prot-det-combobox"
+                                     wire:key="det-nueva-combo-{{ $filaNuevaSeq }}"
+                                     x-data="vlProtDetCombobox({
+                                         opciones: @js($tiposParaCombobox),
+                                         idInicial: @js((string) ($filaNueva['idTipodeterminaciones'] ?? '')),
+                                         nombreInicial: @js($nombreTipoSeleccionado),
+                                     })"
+                                     @click.outside="cerrar()">
+                                    <input id="vl-prot-det-select-tipo"
+                                           x-ref="input"
+                                           type="text"
+                                           class="vl-determinaciones-input vl-prot-det-combobox-input"
+                                           placeholder="Escriba para buscar…"
+                                           autocomplete="off"
+                                           spellcheck="false"
+                                           title="Escriba, use ↑↓ y Enter para confirmar"
+                                           x-model="consulta"
+                                           @focus="abrir()"
+                                           @input="onInput()"
+                                           @keydown="onKeydown($event)">
+                                    <ul x-ref="lista"
+                                        class="vl-prot-det-combobox-lista"
+                                        x-show="abierto"
+                                        x-cloak
+                                        role="listbox">
+                                        <template x-for="(item, index) in filtrados" :key="item.id">
+                                            <li role="option"
+                                                :data-combo-idx="index"
+                                                class="vl-prot-det-combobox-item"
+                                                :class="indice === index ? 'is-active' : ''"
+                                                :aria-selected="indice === index"
+                                                @mouseenter="indice = index"
+                                                @mousedown.prevent="elegirClick(item)"
+                                                x-text="item.nombre"></li>
+                                        </template>
+                                        <li x-show="filtrados.length === 0"
+                                            class="vl-prot-det-combobox-vacio"
+                                            x-text="consulta.trim() ? 'Sin coincidencias' : 'Sin determinaciones disponibles'"></li>
+                                    </ul>
+                                </div>
                             </td>
                             <td class="vl-determinaciones-td vl-prot-det-col--neto">
                                 <input type="text"

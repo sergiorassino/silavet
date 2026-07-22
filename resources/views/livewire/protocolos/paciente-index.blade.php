@@ -106,7 +106,7 @@
                     <tr>
                         <th class="vl-pacientes-th vl-pacientes-th--num">#</th>
                         <th class="vl-pacientes-th vl-pacientes-th--icon" title="Editar paciente">Ed.</th>
-                        <th class="vl-pacientes-th vl-pacientes-th--icon" title="Etiquetas de tubos">Etiq</th>
+                        <th class="vl-pacientes-th vl-pacientes-th--icon" title="Etiquetas de tubos">ET.</th>
                         <th class="vl-pacientes-th">Cliente</th>
                         <th class="vl-pacientes-th">Fechhoy</th>
                         <th class="vl-pacientes-th">Protocolo</th>
@@ -116,19 +116,19 @@
                         <th class="vl-pacientes-th">Raza</th>
                         <th class="vl-pacientes-th">Sexo</th>
                         <th class="vl-pacientes-th">Edad</th>
-                        <th class="vl-pacientes-th vl-pacientes-th--icon" title="Determinaciones">Determ</th>
+                        <th class="vl-pacientes-th vl-pacientes-th--icon" title="Determinaciones">DET</th>
                         <th class="vl-pacientes-th vl-pacientes-th--num">Precio</th>
                         @if ($mostrarCadete)
                             <th class="vl-pacientes-th vl-pacientes-th--num" title="Cadetería">Cadete</th>
                         @endif
-                        <th class="vl-pacientes-th">Est</th>
-                        <th class="vl-pacientes-th vl-pacientes-th--icon" title="Cargar resultados">Cargar</th>
-                        <th class="vl-pacientes-th vl-pacientes-th--icon" title="Editar informe">Ed.Inf</th>
+                        <th class="vl-pacientes-th vl-pacientes-th--estado" title="Estado">ESTADO</th>
+                        <th class="vl-pacientes-th vl-pacientes-th--icon" title="Cargar resultados">CARGA</th>
+                        <th class="vl-pacientes-th vl-pacientes-th--icon" title="Editar informe">OCUL</th>
                         <th class="vl-pacientes-th vl-pacientes-th--icon" title="Observaciones">Obs.</th>
-                        <th class="vl-pacientes-th vl-pacientes-th--icon" title="Informe PDF">Informe</th>
+                        <th class="vl-pacientes-th vl-pacientes-th--icon" title="Informe PDF">INFOR.</th>
                         <th class="vl-pacientes-th vl-pacientes-th--icon" title="Adjunto">Adj.</th>
-                        <th class="vl-pacientes-th vl-pacientes-th--icon" title="Notificaciones">Avisos</th>
-                        <th class="vl-pacientes-th vl-pacientes-th--icon" title="Enviar informe">Enviar</th>
+                        <th class="vl-pacientes-th vl-pacientes-th--icon" title="Notificaciones">NOTI</th>
+                        <th class="vl-pacientes-th vl-pacientes-th--icon" title="Enviar informe">ENV.</th>
                         <th class="vl-pacientes-th vl-pacientes-th--icon" title="Asistente IA">IA</th>
                         @if ($mostrarColumnaAfip)
                             <th class="vl-pacientes-th vl-pacientes-th--icon" title="Comprobantes AFIP">AFIP</th>
@@ -176,7 +176,7 @@
                                 @if ($mostrarCadete)
                                     <td class="vl-pacientes-td vl-pacientes-td--num">—</td>
                                 @endif
-                                <td class="vl-pacientes-td"></td>
+                                <td class="vl-pacientes-td vl-pacientes-td--estado"></td>
                                 <td class="vl-pacientes-td vl-pacientes-td--icon"></td>
                                 <td class="vl-pacientes-td vl-pacientes-td--icon"></td>
                                 <td class="vl-pacientes-td vl-pacientes-td--icon"></td>
@@ -288,7 +288,7 @@
                                                aria-label="Cadete del protocolo {{ $paciente->nombreProtocolo }}">
                                     </td>
                                 @endif
-                                <td class="vl-pacientes-td whitespace-nowrap">
+                                <td class="vl-pacientes-td vl-pacientes-td--estado">
                                     <button type="button"
                                             wire:click="avanzarEstado({{ $paciente->idPacientes }})"
                                             wire:loading.attr="disabled"

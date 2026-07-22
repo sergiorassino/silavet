@@ -6,24 +6,14 @@ use App\Support\CuentaCorriente\CuentaCorrienteConsulta;
 use App\Support\PermisosIaCatalog;
 use App\Support\UsuarioMenuPortal;
 use Livewire\Component;
-use Livewire\WithPagination;
 
 class CuentaCorrienteIndex extends Component
 {
-    use WithPagination;
-
-    public const POR_PAGINA = 50;
-
     public string $busqueda = '';
 
     public function mount(): void
     {
         abort_unless(tienePermiso(PermisosIaCatalog::FACTURACION), 403);
-    }
-
-    public function updatingBusqueda(): void
-    {
-        $this->resetPage();
     }
 
     public function getPdfUrlProperty(): string
@@ -42,9 +32,10 @@ class CuentaCorrienteIndex extends Component
 
     public function render()
     {
-        $clientes = CuentaCorrienteConsulta::clientesPaginados($this->busqueda, self::POR_PAGINA);
+        $clientes = CuentaCorrienteConsulta::clientesListado($this->busqueda);
+        $saldoTotal = round($clientes->sum(fn ($cliente) => (float) $cliente->saldo_total), 2);
 
-        return view('livewire.clientes.cuenta-corriente-index', compact('clientes'))
+        return view('livewire.clientes.cuenta-corriente-index', compact('clientes', 'saldoTotal'))
             ->layout('layouts.staff', UsuarioMenuPortal::staffLayoutParams(labCtx()->idRoles));
     }
 }

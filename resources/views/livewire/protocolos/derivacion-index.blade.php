@@ -72,35 +72,32 @@
                         <th class="vl-pacientes-th vl-pacientes-th--num">#</th>
                         <th class="vl-pacientes-th vl-pacientes-th--icon" title="Paciente">Pac.</th>
                         <th class="vl-pacientes-th">Cliente</th>
-                        <th class="vl-pacientes-th">Fechhoy</th>
+                        <th class="vl-pacientes-th">Fecha</th>
                         <th class="vl-pacientes-th">Protocolo</th>
                         <th class="vl-pacientes-th">Nombre</th>
                         <th class="vl-pacientes-th">Tutor</th>
-                        <th class="vl-pacientes-th">Especie</th>
-                        <th class="vl-pacientes-th">Raza</th>
-                        <th class="vl-pacientes-th">Sexo</th>
-                        <th class="vl-pacientes-th">Edad</th>
+                        <th class="vl-pacientes-th" title="Especie, raza, sexo y edad">
+                            Especie / Raza<br>Sexo / Edad
+                        </th>
                         <th class="vl-pacientes-th">Determinación</th>
                         <th class="vl-pacientes-th">Centro</th>
                         @if ($tieneFechasDerivacion)
-                            <th class="vl-pacientes-th" title="Fecha de envío a derivación">F. envío</th>
-                            <th class="vl-pacientes-th" title="Fecha de devolución de la determinación">F. devol.</th>
+                            <th class="vl-pacientes-th" title="Fecha de envío y devolución">F. envío / devol.</th>
                         @endif
                         <th class="vl-pacientes-th vl-pacientes-th--num">Precio</th>
-                        <th class="vl-pacientes-th">Est</th>
-                        <th class="vl-pacientes-th vl-pacientes-th--icon" title="Cargar resultados">Cargar</th>
-                        <th class="vl-pacientes-th vl-pacientes-th--icon" title="Editar informe">Ed.Inf</th>
+                        <th class="vl-pacientes-th vl-pacientes-th--estado" title="Estado">ESTADO</th>
+                        <th class="vl-pacientes-th vl-pacientes-th--icon" title="Cargar resultados">CARGA</th>
+                        <th class="vl-pacientes-th vl-pacientes-th--icon" title="Editar informe">OCUL</th>
                         <th class="vl-pacientes-th vl-pacientes-th--icon" title="Observaciones">Obs.</th>
-                        <th class="vl-pacientes-th vl-pacientes-th--icon" title="Informe PDF">Informe</th>
+                        <th class="vl-pacientes-th vl-pacientes-th--icon" title="Informe PDF">INFOR.</th>
                         <th class="vl-pacientes-th vl-pacientes-th--icon" title="Adjunto">Adj.</th>
-                        <th class="vl-pacientes-th vl-pacientes-th--icon" title="Notificaciones">Avisos</th>
+                        <th class="vl-pacientes-th vl-pacientes-th--icon" title="Notificaciones">NOTI</th>
                         <th class="vl-pacientes-th vl-pacientes-th--icon" title="Enviar informe">Enviar</th>
-                        <th class="vl-pacientes-th vl-pacientes-th--icon" title="Asistente IA">IA</th>
                     </tr>
                 </thead>
                 <tbody>
                     @php
-                        $colspan = $tieneFechasDerivacion ? 25 : 23;
+                        $colspan = $tieneFechasDerivacion ? 20 : 19;
                         $grupoAnterior = null;
                     @endphp
                     @forelse ($registros as $determinacion)
@@ -157,32 +154,36 @@
                                 <td class="vl-pacientes-td font-semibold whitespace-nowrap">{{ $paciente->nombreProtocolo ?: '—' }}</td>
                                 <td class="vl-pacientes-td">{{ $paciente->nombre ?: '—' }}</td>
                                 <td class="vl-pacientes-td">{{ $paciente->propietario ?: '—' }}</td>
-                                <td class="vl-pacientes-td">{{ $paciente->especie?->nombre ?: '—' }}</td>
-                                <td class="vl-pacientes-td">{{ $paciente->raza?->nombre ?: '—' }}</td>
-                                <td class="vl-pacientes-td">{{ $paciente->sexo ?: '—' }}</td>
-                                <td class="vl-pacientes-td">{{ $paciente->edad ?: '—' }}</td>
+                                <td class="vl-pacientes-td">
+                                    <div class="vl-derivaciones-datos-stack">
+                                        <span class="font-semibold">{{ $paciente->especie?->nombre ?: '—' }}</span>
+                                        <span>{{ $paciente->raza?->nombre ?: '—' }}</span>
+                                        <span>{{ $paciente->sexo ?: '—' }}</span>
+                                        <span>{{ $paciente->edad ?: '—' }}</span>
+                                    </div>
+                                </td>
                                 <td class="vl-pacientes-td">{{ $determinacion->tipodeterminacion?->nombre ?: '—' }}</td>
                                 <td class="vl-pacientes-td whitespace-nowrap">{{ $determinacion->derivacion?->derivacion ?: '—' }}</td>
                                 @if ($tieneFechasDerivacion)
                                     <td class="vl-pacientes-td whitespace-nowrap">
-                                        <input type="date"
-                                               class="vl-derivaciones-fecha-input"
-                                               value="{{ $determinacion->fechaEnvioDeriv?->format('Y-m-d') }}"
-                                               wire:change="actualizarFechaEnvioDeriv({{ $determinacion->idDeterminaciones }}, $event.target.value)"
-                                               title="Fecha de envío a derivación"
-                                               aria-label="Fecha de envío a derivación">
-                                    </td>
-                                    <td class="vl-pacientes-td whitespace-nowrap">
-                                        <input type="date"
-                                               class="vl-derivaciones-fecha-input"
-                                               value="{{ $determinacion->fechaDevolucDeterm?->format('Y-m-d') }}"
-                                               wire:change="actualizarFechaDevolucDeterm({{ $determinacion->idDeterminaciones }}, $event.target.value)"
-                                               title="Fecha de devolución"
-                                               aria-label="Fecha de devolución">
+                                        <div class="vl-derivaciones-fechas-stack">
+                                            <input type="date"
+                                                   class="vl-derivaciones-fecha-input"
+                                                   value="{{ $determinacion->fechaEnvioDeriv?->format('Y-m-d') }}"
+                                                   wire:change="actualizarFechaEnvioDeriv({{ $determinacion->idDeterminaciones }}, $event.target.value)"
+                                                   title="Fecha de envío a derivación"
+                                                   aria-label="Fecha de envío a derivación">
+                                            <input type="date"
+                                                   class="vl-derivaciones-fecha-input"
+                                                   value="{{ $determinacion->fechaDevolucDeterm?->format('Y-m-d') }}"
+                                                   wire:change="actualizarFechaDevolucDeterm({{ $determinacion->idDeterminaciones }}, $event.target.value)"
+                                                   title="Fecha de devolución"
+                                                   aria-label="Fecha de devolución">
+                                        </div>
                                     </td>
                                 @endif
                                 <td class="vl-pacientes-td vl-pacientes-td--num whitespace-nowrap">{{ $determinacion->precioFormateado() }}</td>
-                                <td class="vl-pacientes-td whitespace-nowrap">
+                                <td class="vl-pacientes-td vl-pacientes-td--estado">
                                     <button type="button"
                                             wire:click="avanzarEstado({{ $paciente->idPacientes }})"
                                             wire:loading.attr="disabled"
@@ -288,18 +289,6 @@
                                         <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.75"
                                                   d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
-                                        </svg>
-                                    </x-vl-grid-icon-btn>
-                                </td>
-                                <td class="vl-pacientes-td vl-pacientes-td--icon">
-                                    <x-vl-grid-icon-btn
-                                        title="Asistente IA"
-                                        variant="primary"
-                                        wire:click="abrirModalIa({{ $paciente->idPacientes }})"
-                                    >
-                                        <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.75"
-                                                  d="M4 5a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1H5a1 1 0 01-1-1V5zm10 0a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1h-4a1 1 0 01-1-1V5zM4 15a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1H5a1 1 0 01-1-1v-4zm10 0a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1h-4a1 1 0 01-1-1v-4z"/>
                                         </svg>
                                     </x-vl-grid-icon-btn>
                                 </td>
