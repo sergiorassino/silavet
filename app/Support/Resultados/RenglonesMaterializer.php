@@ -12,7 +12,14 @@ use Illuminate\Support\Facades\Schema;
 
 /**
  * Materializa filas de `renglones` a partir de las determinaciones del protocolo
- * y la plantilla `renglonesxdeterminacion`. No inventa valores: deja valor/valor2 vacíos.
+ * y la plantilla `renglonesxdeterminacion`.
+ *
+ * `valor` al alta:
+ * - tipoItem 2 (valor fijo) y 3 (título): vacío
+ * - tipoItem 8 (texto largo): copia `itemsinforme.textos`
+ * - resto: "PENDIENTE"
+ *
+ * `valor2` siempre vacío.
  */
 class RenglonesMaterializer
 {
@@ -73,15 +80,17 @@ class RenglonesMaterializer
                 continue;
             }
 
+            $tipoItem = (int) ($item->tipoItem ?? 0);
+
             $filas[] = [
                 'idClientes' => $idClientesFinal,
                 'idPacientes' => (int) $paciente->idPacientes,
                 'idGrupos' => (int) ($item->idGrupos ?? 0),
                 'idTipodeterminacion' => $idTipodeterminacion,
                 'orden' => (int) ($renglonPlantilla->orden ?? 0),
-                'tipoItem' => (int) ($item->tipoItem ?? 0),
+                'tipoItem' => $tipoItem,
                 'idItems' => (int) $item->idItems,
-                'valor' => '',
+                'valor' => $this->valorInicial($tipoItem, $item),
                 'valor2' => '',
                 'tipoHtml' => null,
                 'idAnalizador' => (string) ($item->idAnalizador ?? ''),
@@ -94,6 +103,19 @@ class RenglonesMaterializer
         }
 
         DB::table('renglones')->insert($filas);
+    }
+
+    private function valorInicial(int $tipoItem, Itemsinforme $item): string
+    {
+        if (in_array($tipoItem, [2, 3], true)) {
+            return '';
+        }
+
+        if ($tipoItem === 8) {
+            return (string) ($item->textos ?? '');
+        }
+
+        return 'PENDIENTE';
     }
 
     public function eliminarParaDeterminacion(int $idPacientes, int $idTipodeterminacion): void

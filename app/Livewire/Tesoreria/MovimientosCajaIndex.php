@@ -22,7 +22,7 @@ use Livewire\Component;
 use Livewire\WithPagination;
 
 /**
- * Tesorería sobre tabla `movimientos` (variante tesoreria_movimientos / labvetciudad).
+ * Tesorería sobre tabla `movimientos` (variante tesoreria_pacientes / labvetciudad).
  */
 class MovimientosCajaIndex extends Component
 {
@@ -81,7 +81,7 @@ class MovimientosCajaIndex extends Component
     public function mount(): void
     {
         abort_unless(tienePermiso(PermisosIaCatalog::FACTURACION), 403);
-        abort_unless(TesoreriaConfig::usaMovimientos(), 404);
+        abort_unless(TesoreriaConfig::usaPacientes(), 404);
         abort_unless(Schema::hasTable('movimientos'), 404);
 
         $this->fechaElegirProtocolos = now()->toDateString();

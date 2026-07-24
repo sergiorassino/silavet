@@ -84,7 +84,8 @@ a todos los módulos. Ver [06-reglas-de-seguridad.md](06-reglas-de-seguridad.md)
 
 - Un despliegue por laboratorio: `TENANT_SLUG` + BD propia.
   Ver [07-versionado-de-modulos-por-tenant.md](07-versionado-de-modulos-por-tenant.md).
-  Tesorería: [11-tesoreria-por-tenant.md](11-tesoreria-por-tenant.md).
+  Tesorería: [11-tesoreria-por-tenant.md](11-tesoreria-por-tenant.md),
+  módulo [modulos/tesoreria.md](modulos/tesoreria.md).
 - Preferir parametrización en BD (`entorno`, permisos) antes de ramas por tenant.
 - Overrides en `config/tenants/{slug}.php` solo para lo que no corresponda en BD.
 
@@ -99,6 +100,13 @@ a todos los módulos. Ver [06-reglas-de-seguridad.md](06-reglas-de-seguridad.md)
   módulo y versión si aplica: `(v1.0)`.
 - Rutas con prefijo de dominio cuando el alcance lo requiera:
   `protocolos.recepcion`, `informes.emitir`, `facturacion.afip`.
+
+### Especificaciones por módulo
+
+Docs cortos de comportamiento (flujos, variantes tenant, trampas): carpeta
+[modulos/](modulos/README.md). **Antes de modificar un módulo**, leer su archivo
+si existe; no romper las reglas ahí listadas salvo pedido explícito de cambiar
+la especificación.
 
 ---
 

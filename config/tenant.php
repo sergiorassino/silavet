@@ -90,11 +90,11 @@ return [
     /*
     | Tesorería — variantes por laboratorio.
     | Ver docs/11-tesoreria-por-tenant.md.
-    | - tesoreria_pacientes: ingresos/egresos en tabla pacientes (mayoría de labs).
-    | - tesoreria_movimientos: caja sobre tabla movimientos (labvetciudad).
+    | - tesoreria_movimientos: ingresos/egresos en tabla pacientes (mayoría de labs).
+    | - tesoreria_pacientes: caja sobre tabla movimientos (labvetciudad).
     */
     'tesoreria' => [
-        'implementacion' => 'tesoreria_pacientes',
+        'implementacion' => 'tesoreria_movimientos',
 
         'movimientos' => [
             'concepto_ingresos_diarios' => 'Ingresos Diarios',

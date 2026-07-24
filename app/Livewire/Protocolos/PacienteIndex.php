@@ -382,13 +382,13 @@ class PacienteIndex extends Component
     }
 
     /**
-     * Edición inline de pacientes.cadete (solo tesoreria_movimientos / labvetciudad).
+     * Edición inline de pacientes.cadete (solo tesoreria_pacientes / labvetciudad).
      */
     public function guardarCadete(int $id, string $valor = ''): void
     {
         abort_unless(tienePermiso(PermisosIaCatalog::PROTOCOLOS), 403);
         $this->abortSiAutogestion();
-        abort_unless(TesoreriaConfig::usaMovimientos(), 404);
+        abort_unless(TesoreriaConfig::usaPacientes(), 404);
         abort_unless(Schema::hasColumn('pacientes', 'cadete'), 404);
 
         $uid = labCtx()->idUsuarios ?? 0;
@@ -1161,9 +1161,9 @@ class PacienteIndex extends Component
         $pacientes = Paciente::query()
             ->with($with)
             // NeoLab: tipoRegistro distingue protocolos/pagos de ingresos-egresos en `pacientes`.
-            // labvetciudad (tesoreria_movimientos): los protocolos legacy tienen tipoRegistro=0.
+            // labvetciudad (tesoreria_pacientes): los protocolos legacy tienen tipoRegistro=0.
             ->when(
-                ! TesoreriaConfig::usaMovimientos(),
+                ! TesoreriaConfig::usaPacientes(),
                 function ($q) {
                     $q->whereIn('pacientes.tipoRegistro', [
                         Paciente::TIPO_PROTOCOLO,
@@ -1245,7 +1245,7 @@ class PacienteIndex extends Component
         }
 
         $mostrarCadete = ! $autogestion
-            && TesoreriaConfig::usaMovimientos()
+            && TesoreriaConfig::usaPacientes()
             && Schema::hasColumn('pacientes', 'cadete');
 
         $mostrarColumnaAfip = ! $autogestion
@@ -1278,7 +1278,7 @@ class PacienteIndex extends Component
         return Paciente::query()
             ->with('cliente')
             ->when(
-                ! TesoreriaConfig::usaMovimientos(),
+                ! TesoreriaConfig::usaPacientes(),
                 function ($q) use ($ctx) {
                     if ($ctx->esCliente() && $ctx->idClientes) {
                         $q->where('pacientes.tipoRegistro', Paciente::TIPO_PROTOCOLO);

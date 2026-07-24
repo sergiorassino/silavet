@@ -15,11 +15,45 @@
     </div>
 
     <div class="vl-card overflow-hidden">
-        <div class="vl-toolbar border-b border-accent-200 px-3 py-2">
+        <div class="vl-toolbar flex flex-col gap-3 border-b border-accent-200 px-3 py-2 sm:flex-row sm:flex-wrap sm:items-end sm:justify-between">
             <input wire:model.live.debounce.300ms="busqueda"
                    type="search"
                    placeholder="Buscar por cliente, CUIT, cuenta, importe…"
-                   class="form-input max-w-md text-xs">
+                   class="form-input max-w-md w-full text-xs sm:flex-1">
+            <div class="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-end sm:gap-3 shrink-0">
+                @if ($vistaEfectiva === 'historial')
+                    <div class="flex flex-wrap items-end gap-2">
+                        <div>
+                            <label class="mb-0.5 block text-[10px] font-bold uppercase tracking-wide text-neutral-500" for="movFechaDesde">Desde</label>
+                            <input id="movFechaDesde"
+                                   type="date"
+                                   wire:model.live="fechaDesde"
+                                   class="form-input text-xs">
+                        </div>
+                        <div>
+                            <label class="mb-0.5 block text-[10px] font-bold uppercase tracking-wide text-neutral-500" for="movFechaHasta">Hasta</label>
+                            <input id="movFechaHasta"
+                                   type="date"
+                                   wire:model.live="fechaHasta"
+                                   class="form-input text-xs">
+                        </div>
+                    </div>
+                @endif
+                <div class="vl-pacientes-vista-toggle" role="group" aria-label="Vista del listado">
+                    <button type="button"
+                            wire:click="verHoy"
+                            class="vl-pacientes-vista-toggle-btn {{ $vistaEfectiva === 'hoy' ? 'is-active' : '' }}"
+                            aria-pressed="{{ $vistaEfectiva === 'hoy' ? 'true' : 'false' }}">
+                        Hoy
+                    </button>
+                    <button type="button"
+                            wire:click="verHistorial"
+                            class="vl-pacientes-vista-toggle-btn {{ $vistaEfectiva === 'historial' ? 'is-active' : '' }}"
+                            aria-pressed="{{ $vistaEfectiva === 'historial' ? 'true' : 'false' }}">
+                        Historial
+                    </button>
+                </div>
+            </div>
         </div>
 
         <div class="overflow-x-auto">
@@ -123,7 +157,11 @@
                     @empty
                         <tr>
                             <td colspan="12" class="vl-movimientos-td py-6 text-center text-neutral-500">
-                                No hay movimientos de ingreso o egreso.
+                                @if ($vistaEfectiva === 'hoy')
+                                    No hay movimientos de hoy.
+                                @else
+                                    No hay movimientos en el período seleccionado.
+                                @endif
                             </td>
                         </tr>
                     @endforelse

@@ -13,6 +13,7 @@ use App\Support\PermisosIaCatalog;
 use App\Support\Security\OpaqueRouteToken;
 use App\Support\Tesoreria\TesoreriaConfig;
 use App\Support\UsuarioMenuPortal;
+use Carbon\Carbon;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Validation\Rule;
@@ -24,6 +25,10 @@ class MovimientoIndex extends Component
     use WithPagination;
 
     public const POR_PAGINA = 50;
+
+    public const VISTA_HOY = 'hoy';
+
+    public const VISTA_HISTORIAL = 'historial';
 
     public bool $formAbierto = false;
 
@@ -49,15 +54,53 @@ class MovimientoIndex extends Component
 
     public string $busqueda = '';
 
+    /** `hoy` | `historial` — filtro rápido del listado. */
+    public string $vista = self::VISTA_HOY;
+
+    /** Rango opcional (vista historial); formato Y-m-d. */
+    public string $fechaDesde = '';
+
+    public string $fechaHasta = '';
+
     public function mount(): void
     {
         abort_unless(tienePermiso(PermisosIaCatalog::FACTURACION), 403);
-        abort_unless(TesoreriaConfig::usaPacientes(), 404);
+        abort_unless(TesoreriaConfig::usaMovimientos(), 404);
+        $this->vista = self::VISTA_HOY;
         $this->reiniciarFechaHora();
     }
 
     public function updatingBusqueda(): void
     {
+        $this->resetPage();
+    }
+
+    public function updatingVista(): void
+    {
+        $this->resetPage();
+    }
+
+    public function updatingFechaDesde(): void
+    {
+        $this->resetPage();
+    }
+
+    public function updatingFechaHasta(): void
+    {
+        $this->resetPage();
+    }
+
+    public function verHoy(): void
+    {
+        $this->vista = self::VISTA_HOY;
+        $this->fechaDesde = '';
+        $this->fechaHasta = '';
+        $this->resetPage();
+    }
+
+    public function verHistorial(): void
+    {
+        $this->vista = self::VISTA_HISTORIAL;
         $this->resetPage();
     }
 
@@ -231,6 +274,10 @@ class MovimientoIndex extends Component
 
     public function render()
     {
+        $vista = $this->vistaEfectiva();
+        $desde = $this->fechaFiltroNormalizada($this->fechaDesde);
+        $hasta = $this->fechaFiltroNormalizada($this->fechaHasta);
+
         $movimientos = Paciente::query()
             ->with([
                 'cliente:idClientes,nombre,cuit',
@@ -239,6 +286,15 @@ class MovimientoIndex extends Component
                 'cuentaDetalle.cuenta:id,nombreCuenta',
             ])
             ->whereIn('tipoRegistro', [Paciente::TIPO_INGRESO, Paciente::TIPO_EGRESO])
+            ->when($vista === self::VISTA_HOY, function ($q) {
+                $q->whereDate('fechhoy', now()->toDateString());
+            })
+            ->when($vista === self::VISTA_HISTORIAL && $desde !== null, function ($q) use ($desde) {
+                $q->whereDate('fechhoy', '>=', $desde);
+            })
+            ->when($vista === self::VISTA_HISTORIAL && $hasta !== null, function ($q) use ($hasta) {
+                $q->whereDate('fechhoy', '<=', $hasta);
+            })
             ->when(trim($this->busqueda) !== '', function ($q) {
                 $term = trim($this->busqueda);
                 $q->where(function ($inner) use ($term) {
@@ -299,10 +355,32 @@ class MovimientoIndex extends Component
             'mediosPago' => $mediosPago,
             'mostrarColumnaAfip' => $mostrarColumnaAfip,
             'afipEmitidos' => $afipEmitidos,
+            'vistaEfectiva' => $vista,
             'urlAfipFn' => static fn (int $id): string => route('facturacion.afip.comprobantes', [
                 'ref' => OpaqueRouteToken::forCompAfipPaciente($id),
             ]),
         ])->layout('layouts.staff', UsuarioMenuPortal::staffLayoutParams(labCtx()->idRoles));
+    }
+
+    private function vistaEfectiva(): string
+    {
+        return $this->vista === self::VISTA_HISTORIAL
+            ? self::VISTA_HISTORIAL
+            : self::VISTA_HOY;
+    }
+
+    private function fechaFiltroNormalizada(string $valor): ?string
+    {
+        $valor = trim($valor);
+        if ($valor === '') {
+            return null;
+        }
+
+        try {
+            return Carbon::createFromFormat('Y-m-d', $valor)->toDateString();
+        } catch (\Throwable) {
+            return null;
+        }
     }
 
     private function movimientoEnAlcance(int $id): ?Paciente

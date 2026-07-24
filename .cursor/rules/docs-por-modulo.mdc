@@ -1,0 +1,25 @@
+---
+description: Leer docs/modulos antes de cambiar un módulo; no romper reglas de negocio documentadas
+alwaysApply: true
+---
+
+# Documentación por módulo (obligatorio)
+
+Antes de modificar un módulo (Livewire, rutas, modelos, vistas, precios, PDFs
+asociados), **leer** su especificación en `docs/modulos/` si existe (índice:
+`docs/modulos/README.md`).
+
+## Reglas
+
+1. Los cambios pedidos **no deben alterar** el modo de funcionamiento fijado en
+   ese doc (flujos, variantes por tenant, qué escribe/lee, “qué no hacer”),
+   salvo que el usuario pida explícitamente cambiar la especificación.
+2. Si el cambio **sí** modifica comportamiento documentado: actualizar el
+   archivo del módulo en el mismo PR/tarea.
+3. Módulo sin doc aún: implementar con cuidado; al cerrar una tarea grande de
+   ese módulo, preferir crear el doc con la plantilla de `docs/modulos/README.md`.
+
+## Ejemplo
+
+Carga de determinaciones al protocolo →
+`docs/modulos/carga-determinaciones-paciente.md`.

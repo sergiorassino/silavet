@@ -192,7 +192,7 @@ class PacienteResultados extends Component
         $paciente = $this->pacienteEnAlcance($this->idPacientes);
 
         try {
-            $resultado = (new AutoanalizadorImportador)->importar(
+            (new AutoanalizadorImportador)->importar(
                 $paciente,
                 $this->aparatoSeleccionado,
                 $this->archivoSeleccionado
@@ -210,14 +210,6 @@ class PacienteResultados extends Component
 
         $this->modalAutoanalizadorAbierto = false;
         $this->archivoCsv = null;
-
-        $n = (int) $resultado['actualizados'];
-        session()->flash(
-            'vl_mensaje_exito',
-            $n === 1
-                ? 'Se importó 1 valor desde el autoanalizador.'
-                : "Se importaron {$n} valores desde el autoanalizador."
-        );
 
         return $this->redirect(
             route('protocolos.resultados', array_merge([

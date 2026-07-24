@@ -16,7 +16,7 @@ use Livewire\Component;
 
 /**
  * Transferencia entre cuentas → 2 filas en `movimientos`
- * (variante tesoreria_movimientos / labvetciudad).
+ * (variante tesoreria_pacientes / labvetciudad).
  */
 class MovimientosEntreCuentas extends Component
 {
@@ -35,7 +35,7 @@ class MovimientosEntreCuentas extends Component
     public function mount(): void
     {
         abort_unless(tienePermiso(PermisosIaCatalog::FACTURACION), 403);
-        abort_unless(TesoreriaConfig::usaMovimientos(), 404);
+        abort_unless(TesoreriaConfig::usaPacientes(), 404);
         abort_unless(Schema::hasTable('movimientos'), 404);
 
         $this->reiniciarFechaHora();

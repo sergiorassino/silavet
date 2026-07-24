@@ -14,7 +14,7 @@ use Illuminate\Validation\Rule;
 use Livewire\Component;
 
 /**
- * Alta/edición de proveedores (variante tesoreria_movimientos / labvetciudad).
+ * Alta/edición de proveedores (variante tesoreria_pacientes / labvetciudad).
  */
 class ProveedorForm extends Component
 {
@@ -29,7 +29,7 @@ class ProveedorForm extends Component
     public function mount(?int $id = null): void
     {
         abort_unless(tienePermiso(PermisosIaCatalog::FACTURACION), 403);
-        abort_unless(TesoreriaConfig::usaMovimientos(), 404);
+        abort_unless(TesoreriaConfig::usaPacientes(), 404);
         abort_unless(Schema::hasTable('proveedores'), 404);
 
         if ($id) {
@@ -87,7 +87,7 @@ class ProveedorForm extends Component
     public function save(): void
     {
         abort_unless(tienePermiso(PermisosIaCatalog::FACTURACION), 403);
-        abort_unless(TesoreriaConfig::usaMovimientos(), 404);
+        abort_unless(TesoreriaConfig::usaPacientes(), 404);
 
         $key = 'proveedor-save:'.auth()->id();
         abort_if(RateLimiter::tooManyAttempts($key, 30), 429);

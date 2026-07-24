@@ -122,6 +122,7 @@
                                                    @change="{{ $onchangeFmt }}">
                                         @elseif ($tipo === 4)
                                             <div class="vl-carga-select-wrap">
+                                                <div class="vl-carga-select-field">
                                                 <select id="{{ $idI }}_2"
                                                         class="form-input vl-carga-select"
                                                         data-renglon="{{ $idR }}"
@@ -134,6 +135,7 @@
                                                         </option>
                                                     @endforeach
                                                 </select>
+                                                </div>
                                                 <textarea id="{{ $idI }}"
                                                           class="form-input vl-carga-textarea"
                                                           data-renglon="{{ $idR }}"

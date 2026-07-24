@@ -83,6 +83,13 @@ En portal de clientes, PDFs y descargas por GET: **no** poner IDs de BD, CUIT ni
 número de protocolo en la URL. Usar `App\Support\Security\OpaqueRouteToken`.
 Detalle: `docs/06-reglas-de-seguridad.md` §10.
 
+## Documentación por módulo (obligatorio al modificar)
+
+Antes de cambiar un módulo, leer su especificación en `docs/modulos/` si existe
+(índice: `docs/modulos/README.md`). No alterar el modo de funcionamiento
+documentado salvo pedido explícito; si el comportamiento cambia, actualizar el
+doc del módulo en la misma tarea.
+
 ## Resto del baseline
 
 Seguridad, permisos, `labCtx()`, Blade, etc.: `docs/06-reglas-de-seguridad.md`

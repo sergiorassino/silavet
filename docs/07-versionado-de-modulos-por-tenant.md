@@ -79,8 +79,9 @@ No bifurcar lógica en vistas.
 `dual_corto_largo`, …). Detalle completo de formatos, reglas y cómo agregar
 variantes: [10-numero-de-protocolo.md](10-numero-de-protocolo.md).
 
-**Ejemplo implementado:** tesorería (`tesoreria_pacientes` vs
-`tesoreria_movimientos`). Detalle: [11-tesoreria-por-tenant.md](11-tesoreria-por-tenant.md).
+**Ejemplo implementado:** tesorería (`tesoreria_movimientos` vs
+`tesoreria_pacientes`). Detalle flags: [11-tesoreria-por-tenant.md](11-tesoreria-por-tenant.md).
+Especificación del módulo: [modulos/tesoreria.md](modulos/tesoreria.md).
 
 ---
 

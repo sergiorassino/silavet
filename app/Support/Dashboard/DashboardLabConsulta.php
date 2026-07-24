@@ -146,7 +146,7 @@ final class DashboardLabConsulta
     /**
      * Casos analíticos (protocolos), sin filas de tesorería en `pacientes`.
      *
-     * En labvetciudad (`tesoreria_movimientos`) los protocolos legacy suelen tener
+     * En labvetciudad (`tesoreria_pacientes`) los protocolos legacy suelen tener
      * `tipoRegistro = 0`; no exigir `TIPO_PROTOCOLO` (1).
      *
      * @return \Illuminate\Database\Eloquent\Builder<\App\Models\Paciente>

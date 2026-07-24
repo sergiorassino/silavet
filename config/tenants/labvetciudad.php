@@ -8,7 +8,7 @@ return [
     ],
 
     'tesoreria' => [
-        'implementacion' => 'tesoreria_movimientos',
+        'implementacion' => 'tesoreria_pacientes',
     ],
 
     'autoanalizadores' => [

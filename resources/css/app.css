@@ -1744,12 +1744,37 @@
         height: auto;
     }
 
+    /* Overlay aparte: en Windows el texto del <select> se pinta sobre padding/background. */
+    .vl-carga-select-field {
+        @apply relative mb-2 w-full max-w-xs;
+    }
+
+    .vl-carga-select-field::after {
+        content: "";
+        position: absolute;
+        top: 1px;
+        right: 1px;
+        bottom: 1px;
+        z-index: 1;
+        width: 2.25rem;
+        pointer-events: none;
+        border-radius: 0 0.7rem 0.7rem 0;
+        background-color: color-mix(in srgb, var(--color-accent-50) 50%, white);
+        background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
+        background-position: right 0.45rem center;
+        background-repeat: no-repeat;
+        background-size: 1.35em 1.35em;
+    }
+
     .vl-carga-select {
-        @apply w-full max-w-xs text-sm leading-normal mb-2;
+        @apply w-full text-sm leading-normal;
+        appearance: none;
         padding-block: 0.25rem;
-        padding-inline: 0.5rem;
+        padding-left: 0.5rem;
+        padding-right: 2.5rem;
         min-height: 2rem;
         height: auto;
+        background-image: none;
     }
 
     .vl-carga-select-wrap {

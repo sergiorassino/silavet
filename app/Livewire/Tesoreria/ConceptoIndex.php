@@ -14,7 +14,7 @@ use Livewire\Component;
 use Livewire\WithPagination;
 
 /**
- * ABM de conceptos (variante tesoreria_movimientos / labvetciudad).
+ * ABM de conceptos (variante tesoreria_pacientes / labvetciudad).
  */
 class ConceptoIndex extends Component
 {
@@ -36,7 +36,7 @@ class ConceptoIndex extends Component
     public function mount(): void
     {
         abort_unless(tienePermiso(PermisosIaCatalog::FACTURACION), 403);
-        abort_unless(TesoreriaConfig::usaMovimientos(), 404);
+        abort_unless(TesoreriaConfig::usaPacientes(), 404);
         abort_unless(Schema::hasTable('conceptos'), 404);
     }
 
@@ -69,7 +69,7 @@ class ConceptoIndex extends Component
     public function eliminar(int $id): void
     {
         abort_unless(tienePermiso(PermisosIaCatalog::FACTURACION), 403);
-        abort_unless(TesoreriaConfig::usaMovimientos(), 404);
+        abort_unless(TesoreriaConfig::usaPacientes(), 404);
 
         $key = 'concepto-del:'.auth()->id();
         abort_if(RateLimiter::tooManyAttempts($key, 10), 429);

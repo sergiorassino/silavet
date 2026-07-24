@@ -17,6 +17,7 @@ Leer antes de implementar módulos:
 - `docs/05-preferencias-y-convenciones.md`
 - `docs/06-reglas-de-seguridad.md`
 - `docs/10-numero-de-protocolo.md` (si se toca generación o alta de protocolos)
+- `docs/modulos/{modulo}.md` si existe (índice: `docs/modulos/README.md`) — **antes de cambiar un módulo**
 - `AGENTS.md`
 
 ## Reglas clave

@@ -470,8 +470,12 @@ class PacienteDeterminaciones extends Component
         $fila['neto'] = PrecioInput::format($neto);
         $fila['descuento'] = PrecioInput::format($descuento);
         $fila['precio'] = PrecioInput::format($precio);
-        $fila['idDerivaciones'] = $this->derivacionParaFormulario((int) $tipo->destino);
-        $this->aplicarFechaEnvioAlCambiarDerivacion($fila);
+        // Al cargar el tipo no se preselecciona destino ni fecha de envío:
+        // catálogo → "Seleccione"; si_no → "No"; fecha vacía hasta que el usuario elija.
+        $fila['idDerivaciones'] = '0';
+        if ($this->tieneColumnasFechasDerivacion()) {
+            $fila['fechaEnvioDeriv'] = '';
+        }
     }
 
     /** @param array<string, mixed> $fila */

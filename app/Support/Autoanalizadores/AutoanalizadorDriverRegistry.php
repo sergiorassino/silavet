@@ -9,6 +9,7 @@ use App\Support\Autoanalizadores\Drivers\EdanH60Driver;
 use App\Support\Autoanalizadores\Drivers\ExigoH400Driver;
 use App\Support\Autoanalizadores\Drivers\GeoMcDriver;
 use App\Support\Autoanalizadores\Drivers\IncaaDriver;
+use App\Support\Autoanalizadores\Drivers\IncamDriver;
 use App\Support\Autoanalizadores\Drivers\MetrolabCm250Driver;
 use App\Support\Autoanalizadores\Drivers\MindrayBc20Driver;
 use App\Support\Autoanalizadores\Drivers\MindrayBs120Driver;
@@ -26,6 +27,7 @@ final class AutoanalizadorDriverRegistry
         'edan_h30' => EdanH30Driver::class,
         'edan_h60' => EdanH60Driver::class,
         'incaa' => IncaaDriver::class,
+        'incam' => IncamDriver::class,
         'biosystem_a15' => BiosystemA15Driver::class,
         'metrolab_cm250' => MetrolabCm250Driver::class,
         'wiener_cm160' => WienerCm160Driver::class,

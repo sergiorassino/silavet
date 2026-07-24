@@ -14,7 +14,7 @@ use Livewire\Component;
 use Livewire\WithPagination;
 
 /**
- * ABM de proveedores (variante tesoreria_movimientos / labvetciudad).
+ * ABM de proveedores (variante tesoreria_pacientes / labvetciudad).
  */
 class ProveedorIndex extends Component
 {
@@ -29,7 +29,7 @@ class ProveedorIndex extends Component
     public function mount(): void
     {
         abort_unless(tienePermiso(PermisosIaCatalog::FACTURACION), 403);
-        abort_unless(TesoreriaConfig::usaMovimientos(), 404);
+        abort_unless(TesoreriaConfig::usaPacientes(), 404);
         abort_unless(Schema::hasTable('proveedores'), 404);
     }
 
@@ -46,7 +46,7 @@ class ProveedorIndex extends Component
     public function eliminar(int $id): void
     {
         abort_unless(tienePermiso(PermisosIaCatalog::FACTURACION), 403);
-        abort_unless(TesoreriaConfig::usaMovimientos(), 404);
+        abort_unless(TesoreriaConfig::usaPacientes(), 404);
 
         $key = 'proveedor-del:'.auth()->id();
         abort_if(RateLimiter::tooManyAttempts($key, 10), 429);

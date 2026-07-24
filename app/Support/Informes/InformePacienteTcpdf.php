@@ -336,11 +336,14 @@ final class InformePacienteTcpdf extends Fpdi
         $x = self::MARGEN;
         $y = $this->GetY();
 
+        // ln=0 en todas: TCPDF con maxh+valign M y celda corta/vacía (p. ej. ref)
+        // deja Y a mitad de fila; el avance real lo fuerza SetY($y+$h).
         TcpdfFuenteArial::aplicar($this, '', 9);
-        $this->MultiCell($wNombre, 4.5, $nombre, 0, 'L', false, 0, $x, $y, true, 0, false, true, $h, 'M');
-        $this->MultiCell($wValor, 4.5, $textoValor, 0, 'L', false, 0, $x + $wNombre, $y, true, 0, false, true, $h, 'M');
+        $this->MultiCell($wNombre, 4.5, $nombre, 0, 'L', false, 0, $x, $y, true, 0, false, true, $h, 'T');
+        $this->MultiCell($wValor, 4.5, $textoValor, 0, 'L', false, 0, $x + $wNombre, $y, true, 0, false, true, $h, 'T');
         TcpdfFuenteArial::aplicar($this, '', 6.5);
-        $this->MultiCell($wRef, 3.2, $ref, 0, 'R', false, 1, $x + $wNombre + $wValor, $y, true, 0, false, true, $h, 'M');
+        $this->MultiCell($wRef, 3.2, $ref, 0, 'R', false, 0, $x + $wNombre + $wValor, $y, true, 0, false, true, $h, 'T');
+        $this->SetY($y + $h);
     }
 
     /**
@@ -361,6 +364,8 @@ final class InformePacienteTcpdf extends Fpdi
         $h = max(
             self::ALTO_FILA,
             $this->alturaMultiCell($wNombre, $nombre, 9),
+            $this->alturaMultiCell($wV1, $v1, 9),
+            $this->alturaMultiCell($wV2, $v2, 9),
             $this->alturaMultiCell($wRef, $ref, 6.5)
         );
         $this->asegurarEspacio($h + 0.5);
@@ -368,11 +373,12 @@ final class InformePacienteTcpdf extends Fpdi
         $y = $this->GetY();
 
         TcpdfFuenteArial::aplicar($this, '', 9);
-        $this->MultiCell($wNombre, 4.5, $nombre, 0, 'L', false, 0, $x, $y, true, 0, false, true, $h, 'M');
-        $this->MultiCell($wV1, 4.5, $v1, 0, 'L', false, 0, $x + $wNombre, $y, true, 0, false, true, $h, 'M');
-        $this->MultiCell($wV2, 4.5, $v2, 0, 'L', false, 0, $x + $wNombre + $wV1, $y, true, 0, false, true, $h, 'M');
+        $this->MultiCell($wNombre, 4.5, $nombre, 0, 'L', false, 0, $x, $y, true, 0, false, true, $h, 'T');
+        $this->MultiCell($wV1, 4.5, $v1, 0, 'L', false, 0, $x + $wNombre, $y, true, 0, false, true, $h, 'T');
+        $this->MultiCell($wV2, 4.5, $v2, 0, 'L', false, 0, $x + $wNombre + $wV1, $y, true, 0, false, true, $h, 'T');
         TcpdfFuenteArial::aplicar($this, '', 6.5);
-        $this->MultiCell($wRef, 3.2, $ref, 0, 'R', false, 1, $x + $wNombre + $wV1 + $wV2, $y, true, 0, false, true, $h, 'M');
+        $this->MultiCell($wRef, 3.2, $ref, 0, 'R', false, 0, $x + $wNombre + $wV1 + $wV2, $y, true, 0, false, true, $h, 'T');
+        $this->SetY($y + $h);
     }
 
     /**
@@ -415,10 +421,10 @@ final class InformePacienteTcpdf extends Fpdi
         $x = self::MARGEN;
         $y = $this->GetY();
 
-        // Mismo avance vertical que valor/referencia y dos-valores (valign M + ln=1).
         TcpdfFuenteArial::aplicar($this, '', 9);
-        $this->MultiCell($wNombre, self::ALTO_LINEA, $nombre, 0, 'L', false, 0, $x, $y, true, 0, false, true, $h, 'M');
-        $this->MultiCell($wValor, self::ALTO_LINEA, $valor, 0, 'L', false, 1, $x + $wNombre, $y, true, 0, false, true, $h, 'M');
+        $this->MultiCell($wNombre, self::ALTO_LINEA, $nombre, 0, 'L', false, 0, $x, $y, true, 0, false, true, $h, 'T');
+        $this->MultiCell($wValor, self::ALTO_LINEA, $valor, 0, 'L', false, 0, $x + $wNombre, $y, true, 0, false, true, $h, 'T');
+        $this->SetY($y + $h);
     }
 
     private function dibujarLineaSeparadora(): void

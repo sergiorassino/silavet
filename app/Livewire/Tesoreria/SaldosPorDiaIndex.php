@@ -14,7 +14,7 @@ use Livewire\Component;
 use Livewire\WithPagination;
 
 /**
- * Saldos por día (variante tesoreria_movimientos / labvetciudad).
+ * Saldos por día (variante tesoreria_pacientes / labvetciudad).
  */
 class SaldosPorDiaIndex extends Component
 {
@@ -33,7 +33,7 @@ class SaldosPorDiaIndex extends Component
     public function mount(): void
     {
         abort_unless(tienePermiso(PermisosIaCatalog::FACTURACION), 403);
-        abort_unless(TesoreriaConfig::usaMovimientos(), 404);
+        abort_unless(TesoreriaConfig::usaPacientes(), 404);
         abort_unless(Schema::hasTable('movimientos'), 404);
 
         $hoy = now();

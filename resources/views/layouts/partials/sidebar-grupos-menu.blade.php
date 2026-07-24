@@ -42,7 +42,7 @@
             <x-vl-sidebar-icon name="movimientos" class="h-4 w-4 shrink-0 opacity-80" />
             <span class="truncate">Movimientos</span>
         </a>
-        @if (\App\Support\Tesoreria\TesoreriaConfig::usaMovimientos())
+        @if (\App\Support\Tesoreria\TesoreriaConfig::usaPacientes())
             <a href="{{ route('tesoreria.movimientos-entre-cuentas.index') }}"
                class="vl-sidebar-link {{ request()->routeIs('tesoreria.movimientos-entre-cuentas.*') ? 'is-active' : '' }}"
                title="Movimientos entre Cuentas (v1.0)">

@@ -33,6 +33,11 @@ return [
                 'etiqueta' => 'Incaa',
                 'overrides' => [],
             ],
+            'incam' => [
+                'activo' => true,
+                'etiqueta' => 'Incam',
+                'overrides' => [],
+            ],
         ],
     ],
 ];

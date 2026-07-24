@@ -195,13 +195,13 @@ Route::middleware(['auth', 'lab.context'])->group(function () {
     }
 
     Route::prefix('tesoreria/movimientos')->middleware(['menu.portal:staff', 'permiso:6'])->group(function () {
-        $movimientosComponent = TesoreriaConfig::usaMovimientos()
+        $movimientosComponent = TesoreriaConfig::usaPacientes()
             ? MovimientosCajaIndex::class
             : MovimientoIndex::class;
         Route::get('/', $movimientosComponent)->name('tesoreria.movimientos.index');
     });
 
-    if (TesoreriaConfig::usaMovimientos()) {
+    if (TesoreriaConfig::usaPacientes()) {
         Route::prefix('tesoreria/movimientos-entre-cuentas')->middleware(['menu.portal:staff', 'permiso:6'])->group(function () {
             Route::get('/', MovimientosEntreCuentas::class)->name('tesoreria.movimientos-entre-cuentas.index');
         });
@@ -223,7 +223,7 @@ Route::middleware(['auth', 'lab.context'])->group(function () {
         });
     }
 
-    if (! TesoreriaConfig::usaMovimientos()) {
+    if (TesoreriaConfig::usaMovimientos()) {
         Route::prefix('tesoreria/transferencias')->middleware(['menu.portal:staff', 'permiso:6'])->group(function () {
             Route::get('/', TransferenciaIntercuenta::class)->name('tesoreria.transferencias.index');
         });

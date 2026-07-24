@@ -148,14 +148,14 @@
                   d="M9 15.5h6"/>
             @break
         @case('gestion-conceptos')
-            {{-- Etiquetas / catálogo de conceptos (Tesorería / tesoreria_movimientos) --}}
+            {{-- Etiquetas / catálogo de conceptos (Tesorería / tesoreria_pacientes) --}}
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.75"
                   d="M9.568 3H5.25A2.25 2.25 0 003 5.25v4.318c0 .597.237 1.17.659 1.591l9.581 9.581c.699.699 1.78.872 2.607.33a18.095 18.095 0 005.223-5.223c.542-.827.369-1.908-.33-2.607L11.16 3.66A2.25 2.25 0 009.568 3z"/>
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.75"
                   d="M6 6h.008v.008H6V6z"/>
             @break
         @case('gestion-proveedores')
-            {{-- Edificio / proveedor (Tesorería / tesoreria_movimientos) --}}
+            {{-- Edificio / proveedor (Tesorería / tesoreria_pacientes) --}}
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.75"
                   d="M3.75 21h16.5M4.5 3h15l.75 18H3.75L4.5 3z"/>
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.75"

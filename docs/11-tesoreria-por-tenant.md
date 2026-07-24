@@ -2,6 +2,7 @@
 
 > Cómo se elige la implementación de tesorería según el tenant.
 > Complementa [07-versionado-de-modulos-por-tenant.md](07-versionado-de-modulos-por-tenant.md) §3.3.
+> Especificación operativa del módulo: [modulos/tesoreria.md](modulos/tesoreria.md).
 
 ---
 
@@ -9,36 +10,38 @@
 
 | Clave `implementacion` | Tabla principal | Labs típicos | Estado |
 |------------------------|-----------------|--------------|--------|
-| `tesoreria_pacientes` | `pacientes` (`tipoRegistro` ingreso/egreso) | alqu, neolab, mayoría | **Implementada** |
-| `tesoreria_movimientos` | `movimientos` | labvetciudad | **Implementada** (caja / movimientos) |
+| `tesoreria_movimientos` | `pacientes` (`tipoRegistro` ingreso/egreso) | alqu, neolab, mayoría | **Implementada** |
+| `tesoreria_pacientes` | `movimientos` | labvetciudad | **Implementada** (caja / movimientos) |
 
 Config:
 
 ```php
 // config/tenant.php (default)
 'tesoreria' => [
-    'implementacion' => 'tesoreria_pacientes',
+    'implementacion' => 'tesoreria_movimientos',
 ],
 
 // config/tenants/labvetciudad.php
 'tesoreria' => [
-    'implementacion' => 'tesoreria_movimientos',
+    'implementacion' => 'tesoreria_pacientes',
 ],
 ```
 
-Helper: `App\Support\Tesoreria\TesoreriaConfig`.
+Helper: `App\Support\Tesoreria\TesoreriaConfig`
+(`usaMovimientos()` / `usaPacientes()` según la clave).
 
 ---
 
-## 2. Variante `tesoreria_pacientes`
+## 2. Variante `tesoreria_movimientos`
 
 - Listado/alta en `App\Livewire\Tesoreria\MovimientoIndex`.
 - Persiste ingresos/egresos como filas en `pacientes`.
+- Listado: toggle **Hoy** / **Historial** + filtro opcional Desde/Hasta sobre `fechhoy`.
 - Incluye menú de transferencias y ABM de `cuentas` / `cuentasdetalle`.
 
 ---
 
-## 3. Variante `tesoreria_movimientos`
+## 3. Variante `tesoreria_pacientes`
 
 - Listado/alta en `App\Livewire\Tesoreria\MovimientosCajaIndex`.
 - Tabla `movimientos` (legacy labvetciudad).
@@ -91,7 +94,7 @@ Nombres de concepto configurables:
 
 ## 4. Menú
 
-Con `tesoreria_movimientos` se muestran **Movimientos**, **Movimientos entre Cuentas**,
+Con `tesoreria_pacientes` se muestran **Movimientos**, **Movimientos entre Cuentas**,
 **Saldos por Día**, **Gestión de Conceptos** y **Gestión de Proveedores** en el grupo
 Tesorería (no transferencias ni ABM de cuentas contables NeoLab).
 
@@ -105,13 +108,13 @@ al expandir una cuenta, movimientos de ese día + fila Suma.
 **Gestión de Proveedores** (`App\Livewire\Tesoreria\ProveedorIndex` / `ProveedorForm`): ABM de
 `proveedores` (`idConceptos`, `proveedor`, `cuit`). No elimina si hay movimientos asociados.
 
-Con `tesoreria_pacientes`: **Movimientos**, **Transferencias Intercuenta**,
+Con `tesoreria_movimientos`: **Movimientos**, **Transferencias Intercuenta**,
 **Gestión de Cuentas Contables** y **Gestión de Cuentas Detalle**.
 
 ---
 
-## 5. Agregar un tenant a esta variante
+## 5. Agregar un tenant a la variante labvetciudad (`tesoreria_pacientes`)
 
 1. Confirmar que la BD tiene `movimientos`, `conceptos`, `tipomovimiento`, `proveedores`.
-2. En `config/tenants/{slug}.php` setear `'tesoreria' => ['implementacion' => 'tesoreria_movimientos']`.
+2. En `config/tenants/{slug}.php` setear `'tesoreria' => ['implementacion' => 'tesoreria_pacientes']`.
 3. Ajustar nombres de concepto si difieren del default.
