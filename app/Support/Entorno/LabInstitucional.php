@@ -19,6 +19,7 @@ final class LabInstitucional
      *     email: string,
      *     logo_url: ?string,
      *     logo_file: ?string,
+     *     header_file: ?string,
      *     color_informe: string,
      *     iniciales: string,
      * }
@@ -32,6 +33,7 @@ final class LabInstitucional
             $email = '';
             $logoUrl = null;
             $logoFile = null;
+            $headerFile = null;
             $colorInforme = '#0EA5E9';
 
             if (Schema::hasTable('entorno')) {
@@ -45,6 +47,7 @@ final class LabInstitucional
                     );
                     $logoUrl = EntornoArchivos::urlPublica($rutaLogo, cacheBust: true);
                     $logoFile = EntornoArchivos::rutaAbsoluta($rutaLogo);
+                    $headerFile = self::rutaHeaderInforme($entorno);
 
                     $color = trim((string) ($entorno->colorInforme ?? ''));
                     if (preg_match('/^#[0-9A-Fa-f]{6}$/', $color) === 1) {
@@ -68,6 +71,7 @@ final class LabInstitucional
                 'email' => $email,
                 'logo_url' => $logoUrl,
                 'logo_file' => $logoFile,
+                'header_file' => $headerFile,
                 'color_informe' => $colorInforme,
                 'iniciales' => self::iniciales($nombre),
             ];
@@ -87,7 +91,10 @@ final class LabInstitucional
     /**
      * Formato para controladores PDF (membrete institucional).
      *
-     * @return array{nombre: string, direccion: string, telefono: string, email: string, logo_file: ?string}
+     * Si hay `headerInforme` en entorno, `header_file` apunta a esa imagen
+     * (reemplaza logo + nombre en {@see \App\Support\Pdf\TcpdfHeaderInstitucional}).
+     *
+     * @return array{nombre: string, direccion: string, telefono: string, email: string, logo_file: ?string, header_file: ?string}
      */
     public static function datosParaPdf(): array
     {
@@ -99,7 +106,23 @@ final class LabInstitucional
             'telefono' => $datos['telefono'],
             'email' => $datos['email'],
             'logo_file' => $datos['logo_file'],
+            'header_file' => $datos['header_file'],
         ];
+    }
+
+    private static function rutaHeaderInforme(Entorno $entorno): ?string
+    {
+        if (! Schema::hasColumn('entorno', 'headerInforme')) {
+            return null;
+        }
+
+        $ruta = EntornoArchivos::rutaAbsoluta(
+            EntornoArchivos::normalizarRutaLegacy(
+                trim((string) ($entorno->headerInforme ?? '')) ?: null
+            )
+        );
+
+        return ($ruta !== null && is_file($ruta)) ? $ruta : null;
     }
 
     private static function iniciales(string $nombre): string

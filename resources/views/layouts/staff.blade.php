@@ -29,7 +29,7 @@
         _sidebarManualCollapsedKey: 'vlStaffSidebarCollapsed',
         groups: {
             gestion: {{ request()->routeIs('protocolos.*', 'derivaciones.*') ? 'true' : 'false' }},
-            clientes: {{ request()->routeIs('clientes.cuenta-corriente*') ? 'true' : 'false' }},
+            clientes: {{ request()->routeIs('clientes.cuenta-corriente*', 'clientes.resumen-entre-fechas*') ? 'true' : 'false' }},
             tesoreria: {{ request()->routeIs('tesoreria.movimientos.*', 'tesoreria.movimientos-entre-cuentas.*', 'tesoreria.saldos-por-dia.*', 'tesoreria.conceptos.*', 'tesoreria.proveedores.*', 'tesoreria.transferencias.*', 'tesoreria.cuentas.*', 'tesoreria.cuentas-detalle.*') ? 'true' : 'false' }},
             gestionStock: false,
             parametrosGenerales: {{ request()->routeIs('abm.clientes.*', 'abm.especies.*', 'abm.razas.*', 'abm.usuarios.*', 'abm.derivaciones.*', 'admin.parametros-sistema.*') ? 'true' : 'false' }},

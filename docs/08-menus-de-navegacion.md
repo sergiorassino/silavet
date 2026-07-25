@@ -134,6 +134,7 @@ Fuente de verdad: `resources/views/components/vl-sidebar-icon.blade.php`.
 | `especies` | Gestión de Especies |
 | `razas` | Gestión de Razas |
 | `cuenta-corriente` | Cuenta Corriente |
+| `resumen-entre-fechas` | Resumen Cliente Entre Fechas |
 | `movimientos` | Movimientos (Tesorería) |
 | `movimientos-entre-cuentas` | Movimientos entre Cuentas (Tesorería / tesoreria_pacientes) |
 | `saldos-por-dia` | Saldos por Día (Tesorería / tesoreria_pacientes) |

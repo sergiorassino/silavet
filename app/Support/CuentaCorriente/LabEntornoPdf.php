@@ -10,7 +10,7 @@ use App\Support\Entorno\LabInstitucional;
 final class LabEntornoPdf
 {
     /**
-     * @return array{nombre: string, direccion: string, telefono: string, logo_file: ?string}
+     * @return array{nombre: string, direccion: string, telefono: string, email: string, logo_file: ?string, header_file: ?string}
      */
     public static function datosHeader(): array
     {

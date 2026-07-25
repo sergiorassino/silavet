@@ -46,11 +46,13 @@
                 </p>
             </x-vl-hero-heading>
             <div class="flex shrink-0 flex-col gap-2 sm:flex-row sm:items-center">
-                <button type="button"
-                        wire:click="abrirModalPagoGlobal"
-                        class="btn-secondary shrink-0 border-white/40 bg-white/15 text-white hover:bg-white/25">
-                    Pago global
-                </button>
+                @if ($mostrarPagoGlobal)
+                    <button type="button"
+                            wire:click="abrirModalPagoGlobal"
+                            class="btn-secondary shrink-0 border-white/40 bg-white/15 text-white hover:bg-white/25">
+                        Pago global
+                    </button>
+                @endif
                 <a href="{{ route('protocolos.create', $this->filtrosListadoParaUrl()) }}"
                    class="btn-primary shrink-0 bg-white text-primary-700 hover:bg-accent-50">
                     Nuevo Paciente

@@ -250,6 +250,8 @@ class PacienteIndex extends Component
     {
         abort_unless(tienePermiso(PermisosIaCatalog::PROTOCOLOS), 403);
         $this->abortSiAutogestion();
+        // Con tesorería NeoLab los ingresos van a MovimientoIndex, no aquí.
+        abort_unless(! TesoreriaConfig::usaMovimientos(), 404);
 
         $ctx = labCtx();
         $this->pagoGlobalIdPacientes = null;
@@ -266,6 +268,7 @@ class PacienteIndex extends Component
     {
         abort_unless(tienePermiso(PermisosIaCatalog::PROTOCOLOS), 403);
         $this->abortSiAutogestion();
+        abort_unless(! TesoreriaConfig::usaMovimientos(), 404);
 
         $paciente = $this->pacienteEnAlcance($id);
         if ($paciente === null || ! $paciente->esPagoGlobal()) {
@@ -295,6 +298,7 @@ class PacienteIndex extends Component
     {
         $this->abortSiAutogestion();
         abort_unless(tienePermiso(PermisosIaCatalog::PROTOCOLOS), 403);
+        abort_unless(! TesoreriaConfig::usaMovimientos(), 404);
 
         $uid = labCtx()->idUsuarios ?? 0;
         $key = 'protocolos-pago-global:'.$uid;
@@ -1160,15 +1164,13 @@ class PacienteIndex extends Component
 
         $pacientes = Paciente::query()
             ->with($with)
-            // NeoLab: tipoRegistro distingue protocolos/pagos de ingresos-egresos en `pacientes`.
-            // labvetciudad (tesoreria_pacientes): los protocolos legacy tienen tipoRegistro=0.
+            // NeoLab / alqu (tesoreria_movimientos): solo protocolos; pagos (tipoRegistro=2)
+            // e ingresos/egresos viven en Tesorería (MovimientoIndex), no en este listado.
+            // labvetciudad (tesoreria_pacientes): protocolos legacy suelen tener tipoRegistro=0.
             ->when(
                 ! TesoreriaConfig::usaPacientes(),
                 function ($q) {
-                    $q->whereIn('pacientes.tipoRegistro', [
-                        Paciente::TIPO_PROTOCOLO,
-                        Paciente::TIPO_PAGO_GLOBAL,
-                    ]);
+                    $q->where('pacientes.tipoRegistro', Paciente::TIPO_PROTOCOLO);
                 }
             )
             ->when(
@@ -1253,6 +1255,9 @@ class PacienteIndex extends Component
             && FacturacionAfipConfig::esModoPaciente()
             && tienePermiso(PermisosIaCatalog::FACTURACION);
 
+        // Pago global en este listado solo si la caja no vive en `pacientes` (labvetciudad).
+        $mostrarPagoGlobal = ! $autogestion && ! TesoreriaConfig::usaMovimientos();
+
         $afipEmitidos = $mostrarColumnaAfip
             ? FacturacionAfipIndicadores::mapaConEmitido($pacientes->getCollection()->pluck('idPacientes')->all())
             : [];
@@ -1267,6 +1272,7 @@ class PacienteIndex extends Component
             'encabezadoDescuento' => $encabezadoDescuento,
             'mostrarCadete' => $mostrarCadete,
             'mostrarColumnaAfip' => $mostrarColumnaAfip,
+            'mostrarPagoGlobal' => $mostrarPagoGlobal,
             'afipEmitidos' => $afipEmitidos,
         ])->layout('layouts.staff', UsuarioMenuPortal::layoutParamsDesdeContexto());
     }
@@ -1279,15 +1285,8 @@ class PacienteIndex extends Component
             ->with('cliente')
             ->when(
                 ! TesoreriaConfig::usaPacientes(),
-                function ($q) use ($ctx) {
-                    if ($ctx->esCliente() && $ctx->idClientes) {
-                        $q->where('pacientes.tipoRegistro', Paciente::TIPO_PROTOCOLO);
-                    } else {
-                        $q->whereIn('pacientes.tipoRegistro', [
-                            Paciente::TIPO_PROTOCOLO,
-                            Paciente::TIPO_PAGO_GLOBAL,
-                        ]);
-                    }
+                function ($q) {
+                    $q->where('pacientes.tipoRegistro', Paciente::TIPO_PROTOCOLO);
                 }
             )
             ->when($ctx->esCliente() && $ctx->idClientes, function ($q) use ($ctx) {

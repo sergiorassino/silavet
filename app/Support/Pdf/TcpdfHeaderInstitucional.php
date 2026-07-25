@@ -4,9 +4,13 @@ namespace App\Support\Pdf;
 
 use App\Support\Entorno\LabInstitucional;
 use TCPDF;
+use Throwable;
 
 /**
  * Encabezado institucional reutilizable en PDFs TCPDF.
+ *
+ * Si el laboratorio tiene `entorno.headerInforme` (membrete), se dibuja esa
+ * imagen a ancho útil. Si no, logo + nombre + contacto.
  */
 final class TcpdfHeaderInstitucional
 {
@@ -16,10 +20,13 @@ final class TcpdfHeaderInstitucional
 
     private const MARGEN_LOGO_IZQ = 4.0;
 
+    /** Alto máximo del membrete gráfico (mm), proporción al ancho útil. */
+    private const MEMBRETE_MAX_ALTO = 35.0;
+
     /**
-     * Dibuja logo a la izquierda y datos centrados en la página, alineados en altura.
+     * Dibuja membrete gráfico (si hay) o logo + datos centrados.
      *
-     * @param  array{nombre?: string, direccion?: string, telefono?: string, logo_file?: ?string}|null  $datos
+     * @param  array{nombre?: string, direccion?: string, telefono?: string, logo_file?: ?string, header_file?: ?string}|null  $datos
      */
     public static function dibujar(
         TCPDF $pdf,
@@ -29,6 +36,12 @@ final class TcpdfHeaderInstitucional
         ?array $datos = null,
     ): float {
         $inst = $datos ?? LabInstitucional::datosParaPdf();
+
+        $headerFile = is_string($inst['header_file'] ?? null) ? $inst['header_file'] : null;
+        if ($headerFile !== null && is_file($headerFile)) {
+            return self::dibujarMembrete($pdf, $margen, $yInicio, $anchoUtil, $headerFile);
+        }
+
         $nombre = trim((string) ($inst['nombre'] ?? 'Laboratorio'));
         $direccion = trim((string) ($inst['direccion'] ?? ''));
         $telefono = trim((string) ($inst['telefono'] ?? ''));
@@ -111,5 +124,39 @@ final class TcpdfHeaderInstitucional
         }
 
         return $y + 1.0;
+    }
+
+    private static function dibujarMembrete(
+        TCPDF $pdf,
+        float $margen,
+        float $yInicio,
+        float $anchoUtil,
+        string $ruta,
+    ): float {
+        $alto = self::altoImagenEscalada($ruta, $anchoUtil, self::MEMBRETE_MAX_ALTO);
+
+        try {
+            $pdf->Image($ruta, $margen, $yInicio, $anchoUtil, $alto, '', '', '', false, 150, '', false, false, 0);
+        } catch (Throwable) {
+            TcpdfFuenteArial::aplicar($pdf, '', 8);
+            $pdf->SetXY($margen, $yInicio);
+            $pdf->Cell($anchoUtil, 5, '[Membrete no disponible]', 0, 1, 'C');
+
+            return $yInicio + 8.0;
+        }
+
+        return $yInicio + $alto + 3.0;
+    }
+
+    private static function altoImagenEscalada(string $ruta, float $anchoMm, float $maxAltoMm): float
+    {
+        $info = @getimagesize($ruta);
+        if (! is_array($info) || (int) ($info[0] ?? 0) <= 0) {
+            return $maxAltoMm;
+        }
+
+        $proporcional = $anchoMm * ((float) $info[1] / (float) $info[0]);
+
+        return min($maxAltoMm, max(8.0, $proporcional));
     }
 }

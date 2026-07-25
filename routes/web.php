@@ -5,6 +5,7 @@ use App\Http\Controllers\Clientes\CuentaCorrienteClientesExcelController;
 use App\Http\Controllers\Clientes\CuentaCorrienteClientesPdfController;
 use App\Http\Controllers\Clientes\CuentaCorrienteDetalleExcelController;
 use App\Http\Controllers\Clientes\CuentaCorrienteDetallePdfController;
+use App\Http\Controllers\Clientes\ResumenClienteEntreFechasPdfController;
 use App\Http\Controllers\Facturacion\CompAfipPdfController;
 use App\Http\Controllers\Protocolos\EtiquetasTuboPdfController;
 use App\Http\Controllers\Protocolos\InformePacientePdfController;
@@ -25,6 +26,7 @@ use App\Livewire\Cliente\ClienteHome;
 use App\Livewire\Cliente\ListaPrecios;
 use App\Livewire\Clientes\CuentaCorrienteDetalle;
 use App\Livewire\Clientes\CuentaCorrienteIndex;
+use App\Livewire\Clientes\ResumenClienteEntreFechas;
 use App\Livewire\Abm\DetPorGrupo\DetPorGrupoIndex;
 use App\Livewire\Abm\Grupos\GrupoForm;
 use App\Livewire\Abm\Grupos\GrupoIndex;
@@ -180,6 +182,13 @@ Route::middleware(['auth', 'lab.context'])->group(function () {
         Route::get('/{id}', CuentaCorrienteDetalle::class)->name('clientes.cuenta-corriente.detalle');
         Route::get('/{id}/pdf', CuentaCorrienteDetallePdfController::class)->name('clientes.cuenta-corriente.detalle.pdf');
         Route::get('/{id}/excel', CuentaCorrienteDetalleExcelController::class)->name('clientes.cuenta-corriente.detalle.excel');
+    });
+
+    Route::prefix('clientes/resumen-entre-fechas')->middleware(['menu.portal:laboratorio', 'permiso:6'])->group(function () {
+        Route::get('/', ResumenClienteEntreFechas::class)->name('clientes.resumen-entre-fechas.index');
+        Route::get('/pdf', ResumenClienteEntreFechasPdfController::class)
+            ->middleware(['throttle:30,1', 'no-store'])
+            ->name('clientes.resumen-entre-fechas.pdf');
     });
 
     if (FacturacionAfipConfig::habilitada()) {

@@ -124,6 +124,15 @@
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.75"
                   d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"/>
             @break
+        @case('resumen-entre-fechas')
+            {{-- Documento + rango de fechas (distinto a cuenta-corriente / saldos-por-dia) --}}
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.75"
+                  d="M9 3.75H7.5A2.25 2.25 0 005.25 6v12A2.25 2.25 0 007.5 20.25h9A2.25 2.25 0 0018.75 18V9.75L14.25 3.75H12"/>
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.75"
+                  d="M14.25 3.75V7.5a1.5 1.5 0 001.5 1.5h3.75"/>
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.75"
+                  d="M8.25 13.5h7.5M8.25 16.5h4.5"/>
+            @break
         @case('movimientos')
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.75"
                   d="M7.5 21L3 16.5m0 0L7.5 12M3 16.5h13.5m0-13.5L21 7.5m0 0L16.5 12M21 7.5H7.5"/>

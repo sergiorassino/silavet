@@ -21,6 +21,7 @@
             <x-vl-hero-heading>
                 <p class="vl-eyebrow">Administración</p>
                 <h1 class="text-xl font-bold sm:text-2xl">Parametrización de Items</h1>
+                <p class="mt-0.5 text-xs text-white/80">Click sobre una celda para Editar</p>
             </x-vl-hero-heading>
             <button type="button"
                     wire:click="agregarItem"

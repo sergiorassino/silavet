@@ -29,6 +29,12 @@
             <x-vl-sidebar-icon name="cuenta-corriente" class="h-4 w-4 shrink-0 opacity-80" />
             <span class="truncate">Cuenta Corriente</span>
         </a>
+        <a href="{{ route('clientes.resumen-entre-fechas.index') }}"
+           class="vl-sidebar-link {{ request()->routeIs('clientes.resumen-entre-fechas*') ? 'is-active' : '' }}"
+           title="Resumen Cliente Entre Fechas (v1.0)">
+            <x-vl-sidebar-icon name="resumen-entre-fechas" class="h-4 w-4 shrink-0 opacity-80" />
+            <span class="truncate">Resumen Cliente Entre Fechas</span>
+        </a>
     @endif
 </x-vl-sidebar-grupo>
 

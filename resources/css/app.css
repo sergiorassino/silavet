@@ -92,8 +92,9 @@
         --vl-auth-field-gap: clamp(0.85rem, 1dvh + 0.45rem, 1.25rem);
         --vl-auth-input-py: clamp(0.55rem, 0.35dvh + 0.4rem, 0.75rem);
         --vl-auth-logo-h: clamp(7.25rem, 11dvh, 11rem);
-        --vl-auth-logo-h-wide: clamp(7.5rem, 12dvh, 11.5rem);
-        --vl-auth-logo-h-dense: clamp(8.75rem, 14dvh, 13.5rem);
+        /* Apaisados: −36% vs llenar el stack (80% × 80%; el límite real es el ancho). */
+        --vl-auth-logo-h-wide: clamp(4.8rem, 7.7dvh, 7.35rem);
+        --vl-auth-logo-h-dense: clamp(5.6rem, 9dvh, 8.65rem);
         --vl-auth-logo-h-square: clamp(8.5rem, 12.5dvh, 12rem);
         --vl-auth-logo-h-tall: clamp(8.75rem, 13dvh, 12.5rem);
         --vl-auth-logo-max-w: clamp(22rem, 30vw, 34rem);
@@ -177,13 +178,14 @@
     }
 
     .vl-auth-logo-frame--wide {
-        padding: 0.75rem 1.15rem;
-        max-width: min(100%, calc(var(--vl-auth-logo-max-w, 28rem) * 0.95));
+        padding: 0.6rem 0.9rem;
+        /* 64% del contenedor (= 20% más chico que el 80% anterior). */
+        max-width: min(64%, var(--vl-auth-logo-max-w, 21.75rem));
     }
 
     .vl-auth-logo-frame--wide.vl-auth-logo-frame--dense {
-        padding: 0.9rem 1.35rem;
-        max-width: min(100%, var(--vl-auth-logo-max-w, 34rem));
+        padding: 0.7rem 1.05rem;
+        max-width: min(64%, var(--vl-auth-logo-max-w, 21.75rem));
     }
 
     .vl-auth-logo-frame--square {
@@ -200,17 +202,17 @@
         /* Altura acotada: el AR del contenido define el ancho, no al revés (evita logos enormes). */
         height: var(--vl-auth-logo-h-wide);
         width: auto;
-        max-width: min(100%, calc(var(--vl-auth-logo-max-w, 28rem) * 0.95));
+        max-width: min(64%, var(--vl-auth-logo-max-w, 21.75rem));
         aspect-ratio: var(--vl-logo-ar, 2.5 / 1);
-        padding: 0.65rem 1rem;
+        padding: 0.5rem 0.8rem;
         align-items: stretch;
         overflow: hidden;
     }
 
     .vl-auth-logo-frame--cropped.vl-auth-logo-frame--wide.vl-auth-logo-frame--dense {
         height: var(--vl-auth-logo-h-dense);
-        max-width: min(100%, var(--vl-auth-logo-max-w, 34rem));
-        padding: 0.75rem 1.15rem;
+        max-width: min(64%, var(--vl-auth-logo-max-w, 21.75rem));
+        padding: 0.6rem 0.9rem;
     }
 
     .vl-auth-logo-frame--cropped.vl-auth-logo-frame--tall {
@@ -231,12 +233,12 @@
 
     .vl-auth-logo-frame--wide .vl-auth-logo {
         max-height: var(--vl-auth-logo-h-wide);
-        max-width: min(100%, calc(var(--vl-auth-logo-max-w, 26rem) * 0.9));
+        max-width: 100%;
     }
 
     .vl-auth-logo-frame--wide.vl-auth-logo-frame--dense .vl-auth-logo {
         max-height: var(--vl-auth-logo-h-dense);
-        max-width: min(100%, var(--vl-auth-logo-max-w, 32rem));
+        max-width: 100%;
     }
 
     .vl-auth-logo-frame--square .vl-auth-logo {
@@ -283,8 +285,8 @@
             --vl-auth-field-gap: 0.75rem;
             --vl-auth-input-py: 0.5rem;
             --vl-auth-logo-h: 7.25rem;
-            --vl-auth-logo-h-wide: 7.5rem;
-            --vl-auth-logo-h-dense: 9rem;
+            --vl-auth-logo-h-wide: 4.8rem;
+            --vl-auth-logo-h-dense: 5.75rem;
             --vl-auth-logo-h-square: 8.5rem;
             --vl-auth-logo-h-tall: 8.75rem;
             --vl-auth-logo-max-w: 28rem;
@@ -298,7 +300,7 @@
         }
 
         .vl-auth-logo-frame--wide.vl-auth-logo-frame--dense {
-            padding: 0.65rem 1.1rem;
+            padding: 0.55rem 0.9rem;
         }
     }
 
@@ -312,8 +314,8 @@
         --vl-auth-field-gap: 0.75rem;
         --vl-auth-input-py: 0.5rem;
         --vl-auth-logo-h: 7.25rem;
-        --vl-auth-logo-h-wide: 7.5rem;
-        --vl-auth-logo-h-dense: 9rem;
+        --vl-auth-logo-h-wide: 4.8rem;
+        --vl-auth-logo-h-dense: 5.75rem;
         --vl-auth-logo-h-square: 8.5rem;
         --vl-auth-logo-h-tall: 8.75rem;
         --vl-auth-logo-max-w: 28rem;
@@ -327,7 +329,7 @@
     }
 
     html[data-vl-auth-scale="compact"] .vl-auth-logo-frame--wide.vl-auth-logo-frame--dense {
-        padding: 0.65rem 1.1rem;
+        padding: 0.55rem 0.9rem;
     }
 
     /* Monitor amplio / 21"+ — contraste marcado vs 17" */
@@ -342,8 +344,8 @@
         --vl-auth-field-gap: 1.25rem;
         --vl-auth-input-py: 0.8rem;
         --vl-auth-logo-h: 11.5rem;
-        --vl-auth-logo-h-wide: 12rem;
-        --vl-auth-logo-h-dense: 14.5rem;
+        --vl-auth-logo-h-wide: 7.7rem;
+        --vl-auth-logo-h-dense: 9.3rem;
         --vl-auth-logo-h-square: 12.5rem;
         --vl-auth-logo-h-tall: 13rem;
         --vl-auth-logo-max-w: 38rem;
@@ -353,7 +355,7 @@
     }
 
     html[data-vl-auth-scale="roomy"] .vl-auth-logo-frame--wide.vl-auth-logo-frame--dense {
-        padding: 1.1rem 1.65rem;
+        padding: 0.9rem 1.3rem;
     }
 
     html[data-vl-auth-scale="roomy"] .vl-auth-card--login .text-sm {
@@ -1314,6 +1316,19 @@
         max-width: none;
         max-height: none;
         flex-shrink: 0;
+    }
+
+    /* Resumen de caja bajo el listado de movimientos (NeoLab). */
+    .vl-movimientos-resumen {
+        @apply border-t border-accent-200 bg-white px-3 py-4 text-sm leading-relaxed text-neutral-900;
+    }
+
+    .vl-movimientos-resumen-bloque {
+        @apply mt-4 space-y-0;
+    }
+
+    .vl-movimientos-resumen p {
+        @apply tabular-nums;
     }
 
     /* Tesorería / Saldos por Día — grilla jerárquica */

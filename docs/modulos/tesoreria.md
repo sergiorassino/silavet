@@ -126,8 +126,19 @@ En listados de protocolos / dashboard de esta variante: **no** exigir
    solo `fechhoy` de hoy) / **Historial** (con filtro opcional Desde/Hasta).
 2. Alta/edición (modal): tipo → fecha/hora → (ingreso: cliente | egreso: cuenta + detalle) → importe → medio de pago → observaciones.
 3. Persistencia: `Paciente::create` / `update` (misma tabla que protocolos).
-4. **Transferencias Intercuenta:** dos filas en `pacientes` (egreso origen + ingreso destino), `idClientes = 1`, mismo importe/obs, distinto `idMediodepago`.
-5. ABM de `cuentas` y `cuentasdetalle`.
+4. **Gestión de pacientes (`PacienteIndex`):** solo `tipoRegistro = 1` (protocolos).
+   Los pagos / ingresos (`tipoRegistro = 2`) **no** se listan ahí; van a Tesorería.
+5. **Resumen bajo el listado**:
+   - **Total Devengado / Ingresos / Egresos:** mismo rango de fechas que el filtro
+     Hoy / Historial (Desde–Hasta).
+   - **Total Devengado:** suma de precios de determinaciones (o `pacientes.precio`
+     de protocolos) en el rango; excluye tipoRegistro ingreso/egreso.
+   - **Ingresos / Egresos** del período por medio de pago (`pagado` + `idMediodepago`).
+   - **Saldo** por medio: acumulado histórico (ingresos − egresos) **hasta** la fecha
+     tope del filtro (`Hasta`, o hoy en vista Hoy); no es el neto del período.
+   - **Saldo Total Entre Cuentas:** suma de esos saldos acumulados.
+6. **Transferencias Intercuenta:** dos filas en `pacientes` (egreso origen + ingreso destino), `idClientes = 1`, mismo importe/obs, distinto `idMediodepago`.
+7. ABM de `cuentas` y `cuentasdetalle`.
 
 ### B) `tesoreria_pacientes` (labvetciudad)
 
@@ -154,7 +165,8 @@ Rate limits típicos: save ~30/min; delete caja ~10/min por usuario.
 | Dato | Quién escribe | Quién solo lee |
 |------|---------------|----------------|
 | Variante activa | config tenant + `TesoreriaConfig` | Rutas, sidebar, guards Livewire |
-| Caja NeoLab | `MovimientoIndex` / `TransferenciaIntercuenta` → `pacientes` | Listados, AFIP modo movimiento |
+| Caja NeoLab | `MovimientoIndex` / `TransferenciaIntercuenta` → `pacientes` | Listados, AFIP modo movimiento, resumen del día |
+| Resumen NeoLab | `MovimientosResumenConsulta` (solo lee `determinaciones` + `pacientes`) | `MovimientoIndex` |
 | Caja labvetciudad | `MovimientosCajaIndex` / asientos / entre cuentas → `movimientos` | Saldos por día |
 | Cuentas contables NeoLab | ABM `Cuenta*` / `CuentaDetalle*` | Formulario de egresos NeoLab |
 | Conceptos / proveedores | ABM `Concepto*` / `Proveedor*` | Formulario de caja labvetciudad |
@@ -173,6 +185,7 @@ Rate limits típicos: save ~30/min; delete caja ~10/min por usuario.
 | Pieza | Ruta |
 |-------|------|
 | Config helper | `app/Support/Tesoreria/TesoreriaConfig.php` |
+| Resumen caja NeoLab | `app/Support/Tesoreria/MovimientosResumenConsulta.php` |
 | Saldos | `app/Support/Tesoreria/SaldosPorDiaConsulta.php` |
 | Config default | `config/tenant.php` → `tesoreria` |
 | Override labvetciudad | `config/tenants/labvetciudad.php` |
@@ -197,8 +210,9 @@ Rate limits típicos: save ~30/min; delete caja ~10/min por usuario.
 Modelos: `Paciente`, `Movimiento`, `Concepto`, `Proveedor`, `Cuenta`, `CuentaDetalle`,
 `MedioDePago`, `TipoMovimiento`, `Cliente`.
 
-Cross-cutting: `PacienteIndex` (cadete / filtro `tipoRegistro`);
-`DashboardLabConsulta`; AFIP (`FacturacionAfipConfig`, icono en `MovimientoIndex`).
+Cross-cutting: `PacienteIndex` (cadete en labvetciudad; con `tesoreria_movimientos`
+solo lista `tipoRegistro = 1`, sin pagos); `DashboardLabConsulta`; AFIP
+(`FacturacionAfipConfig`, icono en `MovimientoIndex`).
 
 ## Qué no hacer / reglas de negocio
 
@@ -213,10 +227,12 @@ Cross-cutting: `PacienteIndex` (cadete / filtro `tipoRegistro`);
 7. **Asiento** (modal) exige cliente; **Movimientos entre Cuentas** (menú) no.
 8. No eliminar conceptos/proveedores con movimientos (o proveedores) asociados.
 9. En labvetciudad **no exigir** `tipoRegistro = 1` en listados de protocolos.
-10. Conceptos Ingresos Diarios / Cadetería: resolver por **nombre** de config, no hardcodear ids.
-11. No alterar tablas legacy; columnas nuevas solo con migración aditiva + SQL entregado.
-12. AFIP modo `movimiento` solo sobre ingresos NeoLab en `pacientes`, no sobre `movimientos`.
-13. Diálogos: `vlSwal*`; sin `wire:confirm` / `alert`.
+10. Con `tesoreria_movimientos`, **no** listar `tipoRegistro = 2` (pagos) en
+    `PacienteIndex`; esos registros son de Tesorería.
+11. Conceptos Ingresos Diarios / Cadetería: resolver por **nombre** de config, no hardcodear ids.
+12. No alterar tablas legacy; columnas nuevas solo con migración aditiva + SQL entregado.
+13. AFIP modo `movimiento` solo sobre ingresos NeoLab en `pacientes`, no sobre `movimientos`.
+14. Diálogos: `vlSwal*`; sin `wire:confirm` / `alert`.
 
 ## Checklist al modificar
 
@@ -224,9 +240,11 @@ Cross-cutting: `PacienteIndex` (cadete / filtro `tipoRegistro`);
 - [ ] ¿Queda clara la variante (`TesoreriaConfig::implementacion()` / slug)?
 - [ ] ¿El cambio toca solo la rama correcta (tabla + Livewire + menú/rutas)?
 - [ ] ¿Listado NeoLab: Hoy / Historial y Desde/Hasta sobre `fechhoy` intactos?
+- [ ] ¿Resumen NeoLab: Devengado/ingresos/egresos del rango; saldos acumulados hasta `Hasta`/hoy?
 - [ ] ¿`usaPacientes()` / `usaMovimientos()` siguen alineados con sidebar y `routes/web.php`?
 - [ ] Si Ingresos Diarios / Cadetería: ¿flags `cargado*` y selectores de protocolo intactos?
 - [ ] Si protocolos en labvetciudad: ¿filtro `tipoRegistro` y columna Cadete intactos?
+- [ ] Con `tesoreria_movimientos`: ¿`PacienteIndex` lista solo `tipoRegistro = 1` (sin pagos)?
 - [ ] Si AFIP: ¿`facturacion_afip.modo` y el id es `pacientes.idPacientes`?
 - [ ] ¿Permiso 6 + rate limits + paginación 50 + `vlSwal*`?
 - [ ] ¿Tenant nuevo a caja: BD con `movimientos`/`conceptos`/`tipomovimiento`/`proveedores` + config `tesoreria_pacientes`?

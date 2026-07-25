@@ -53,6 +53,18 @@ final class InformePacienteTcpdf extends Fpdi
     /** Alto de línea MultiCell (mm); debe coincidir con alturaMultiCell. */
     private const ALTO_LINEA = 4.5;
 
+    /**
+     * Geometría de columnas compartida (valor único y dos valores).
+     * COL_V1 + COL_V2 = COL_VALOR → el 1.er valor y la ref alinean con tipoItem 1.
+     */
+    private const COL_NOMBRE = 60.0;
+
+    private const COL_VALOR = 55.0;
+
+    private const COL_V1 = 28.0;
+
+    private const COL_V2 = 27.0;
+
     /** @var array<string, mixed> */
     private array $datos;
 
@@ -315,8 +327,8 @@ final class InformePacienteTcpdf extends Fpdi
      */
     private function dibujarValorReferencia(array $r): void
     {
-        $wNombre = 60.0;
-        $wValor = 55.0;
+        $wNombre = self::COL_NOMBRE;
+        $wValor = self::COL_VALOR;
         $wRef = $this->anchoUtil() - $wNombre - $wValor;
 
         $nombre = (string) ($r['nombreItem'] ?? '');
@@ -347,18 +359,22 @@ final class InformePacienteTcpdf extends Fpdi
     }
 
     /**
+     * tipoItem 9: en BD valor/unidad = relativa, valor2/unidad2 = absoluta.
+     * En PDF se invierte el orden para que la absoluta (1.ª) alinee con valores simples.
+     *
      * @param  array<string, mixed>  $r
      */
     private function dibujarDosValores(array $r): void
     {
-        $wNombre = 55.0;
-        $wV1 = 28.0;
-        $wV2 = 32.0;
+        $wNombre = self::COL_NOMBRE;
+        $wV1 = self::COL_V1;
+        $wV2 = self::COL_V2;
         $wRef = $this->anchoUtil() - $wNombre - $wV1 - $wV2;
 
         $nombre = (string) ($r['nombreItem'] ?? '');
-        $v1 = trim((string) ($r['valor'] ?? '').' '.(string) ($r['unidadMedida'] ?? ''));
-        $v2 = trim((string) ($r['valor2'] ?? '').' '.(string) ($r['unidadMedida2'] ?? ''));
+        // Columna 1 = absoluta (valor2); columna 2 = relativa (valor).
+        $v1 = trim((string) ($r['valor2'] ?? '').' '.(string) ($r['unidadMedida2'] ?? ''));
+        $v2 = trim((string) ($r['valor'] ?? '').' '.(string) ($r['unidadMedida'] ?? ''));
         $ref = (string) ($r['referencia'] ?? '');
 
         $h = max(
@@ -386,11 +402,47 @@ final class InformePacienteTcpdf extends Fpdi
      */
     private function dibujarTextoFijo(array $r): void
     {
+        $texto = trim((string) ($r['nombreItem'] ?? '').' '.(string) ($r['valor'] ?? ''));
+        if ($this->esCabeceraColumnasDosValores($texto)) {
+            $this->dibujarCabeceraColumnasDosValores();
+
+            return;
+        }
+
         $this->asegurarEspacio(7);
         TcpdfFuenteArial::aplicar($this, '', 8);
-        $texto = trim((string) ($r['nombreItem'] ?? '').' '.(string) ($r['valor'] ?? ''));
         $this->MultiCell($this->anchoUtil(), 4, $texto, 0, 'L', false, 1);
         $this->Ln(0.5);
+    }
+
+    /**
+     * Detecta el renglón legacy con puntos (…. RELATIVA …. ABSOLUTA) u otro
+     * texto fijo que solo anuncia esas dos etiquetas de columna.
+     */
+    private function esCabeceraColumnasDosValores(string $texto): bool
+    {
+        $compacto = preg_replace('/[\s.\-_·•]+/u', '', mb_strtoupper($texto)) ?? '';
+
+        return str_contains($compacto, 'RELATIVA') && str_contains($compacto, 'ABSOLUTA');
+    }
+
+    /**
+     * Etiquetas ABSOLUTA / RELATIVA alineadas a las columnas de tipoItem 9.
+     * Los puntos del ítem fijo en BD ya no hacen falta para el maquetado.
+     */
+    private function dibujarCabeceraColumnasDosValores(): void
+    {
+        $h = 5.0;
+        $this->asegurarEspacio($h + 0.5);
+        $x = self::MARGEN;
+        $y = $this->GetY();
+
+        TcpdfFuenteArial::aplicar($this, '', 7);
+        $this->SetTextColor(0, 0, 0);
+        $this->MultiCell(self::COL_NOMBRE, 3.5, '', 0, 'L', false, 0, $x, $y, true, 0, false, true, $h, 'T');
+        $this->MultiCell(self::COL_V1, 3.5, 'ABSOLUTA', 0, 'L', false, 0, $x + self::COL_NOMBRE, $y, true, 0, false, true, $h, 'T');
+        $this->MultiCell(self::COL_V2, 3.5, 'RELATIVA', 0, 'L', false, 0, $x + self::COL_NOMBRE + self::COL_V1, $y, true, 0, false, true, $h, 'T');
+        $this->SetY($y + $h);
     }
 
     private function dibujarTituloItem(string $nombre): void

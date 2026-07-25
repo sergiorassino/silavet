@@ -238,6 +238,7 @@ final class CuentaCorrienteConsulta
      *   propietario: string,
      *   estado: string,
      *   precio: float,
+     *   descuento: float,
      *   pagado: float,
      *   saldo: float,
      *   esPagoGlobal: bool,
@@ -275,6 +276,7 @@ final class CuentaCorrienteConsulta
                 'estado' => trim((string) ($paciente->estado ?? '')),
                 // Campos crudos como NeoLab (el saldo no reaplica descuentos).
                 'precio' => $esPagoGlobal ? 0.0 : round((float) ($paciente->precio ?? 0), 2),
+                'descuento' => $esPagoGlobal ? 0.0 : round((float) ($paciente->descuento ?? 0), 2),
                 'pagado' => $esPagoGlobal
                     ? $paciente->importePagadoMovimiento()
                     : round((float) ($paciente->pagado ?? 0), 2),

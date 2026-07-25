@@ -13,6 +13,7 @@ en esta carpeta (si existe) y respetar las reglas de negocio ahí listadas.
 |--------|---------|
 | Carga de determinaciones al paciente (protocolo) | [carga-determinaciones-paciente.md](carga-determinaciones-paciente.md) |
 | Tesorería (variantes por tenant) | [tesoreria.md](tesoreria.md) |
+| Resumen cliente entre fechas (PDF) | [resumen-cliente-entre-fechas.md](resumen-cliente-entre-fechas.md) |
 
 ## Plantilla
 

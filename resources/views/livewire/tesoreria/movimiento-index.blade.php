@@ -174,6 +174,55 @@
                 {{ $movimientos->links('vendor.pagination.vl-compact') }}
             </div>
         @endif
+
+        <div class="vl-movimientos-resumen" aria-label="Resumen de tesorería">
+            <p>
+                Total Devengado:
+                {{ \App\Support\Tesoreria\MovimientosResumenConsulta::formatearMonto((float) $resumen['total_devengado']) }}
+            </p>
+
+            <div class="vl-movimientos-resumen-bloque">
+                <p>
+                    Total Ingresos:
+                    {{ \App\Support\Tesoreria\MovimientosResumenConsulta::formatearMonto((float) $resumen['total_ingresos']) }}
+                </p>
+                @foreach ($resumen['medios'] as $medio)
+                    <p>
+                        {{ $medio['etiqueta_ingreso'] }}:
+                        {{ \App\Support\Tesoreria\MovimientosResumenConsulta::formatearMonto((float) $medio['ingresos']) }}
+                    </p>
+                @endforeach
+            </div>
+
+            <div class="vl-movimientos-resumen-bloque">
+                <p>
+                    Total Egresos:
+                    {{ \App\Support\Tesoreria\MovimientosResumenConsulta::formatearMonto((float) $resumen['total_egresos']) }}
+                </p>
+                @foreach ($resumen['medios'] as $medio)
+                    <p>
+                        {{ $medio['etiqueta_egreso'] }}:
+                        {{ \App\Support\Tesoreria\MovimientosResumenConsulta::formatearMonto((float) $medio['egresos']) }}
+                    </p>
+                @endforeach
+            </div>
+
+            <div class="vl-movimientos-resumen-bloque">
+                @foreach ($resumen['medios'] as $medio)
+                    <p>
+                        {{ $medio['etiqueta_saldo'] }}:
+                        {{ \App\Support\Tesoreria\MovimientosResumenConsulta::formatearMonto((float) $medio['saldo']) }}
+                    </p>
+                @endforeach
+            </div>
+
+            <div class="vl-movimientos-resumen-bloque">
+                <p>
+                    Saldo Total Entre Cuentas:
+                    {{ \App\Support\Tesoreria\MovimientosResumenConsulta::formatearMonto((float) $resumen['saldo_total']) }}
+                </p>
+            </div>
+        </div>
     </div>
 
     @if ($formAbierto)

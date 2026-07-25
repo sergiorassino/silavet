@@ -11,6 +11,7 @@ use App\Support\Facturacion\FacturacionAfipConfig;
 use App\Support\Facturacion\FacturacionAfipIndicadores;
 use App\Support\PermisosIaCatalog;
 use App\Support\Security\OpaqueRouteToken;
+use App\Support\Tesoreria\MovimientosResumenConsulta;
 use App\Support\Tesoreria\TesoreriaConfig;
 use App\Support\UsuarioMenuPortal;
 use Carbon\Carbon;
@@ -347,6 +348,15 @@ class MovimientoIndex extends Component
             ? FacturacionAfipIndicadores::mapaConEmitido($movimientos->getCollection()->pluck('idPacientes')->all())
             : [];
 
+        if ($vista === self::VISTA_HOY) {
+            $hoy = now()->toDateString();
+            $resumenDesde = $hoy;
+            $resumenHasta = $hoy;
+        } else {
+            $resumenDesde = $desde;
+            $resumenHasta = $hasta;
+        }
+
         return view('livewire.tesoreria.movimiento-index', [
             'movimientos' => $movimientos,
             'clientes' => $clientes,
@@ -356,6 +366,7 @@ class MovimientoIndex extends Component
             'mostrarColumnaAfip' => $mostrarColumnaAfip,
             'afipEmitidos' => $afipEmitidos,
             'vistaEfectiva' => $vista,
+            'resumen' => MovimientosResumenConsulta::paraRango($resumenDesde, $resumenHasta),
             'urlAfipFn' => static fn (int $id): string => route('facturacion.afip.comprobantes', [
                 'ref' => OpaqueRouteToken::forCompAfipPaciente($id),
             ]),

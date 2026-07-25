@@ -603,12 +603,25 @@ document.addEventListener('alpine:init', () => {
             } else if (event.key === 'ArrowUp') {
                 destino = campos[idx - 1] || null;
             } else if (event.key === 'ArrowRight') {
-                if (!this.todoSeleccionado(actual) && !this.caretAlFinal(actual)) {
+                // Con todo el texto seleccionado (p. ej. al bajar del select),
+                // ←/→ colapsan el caret para poder editar; no saltan de campo.
+                if (this.todoSeleccionado(actual) && String(actual.value ?? '').length > 0) {
+                    event.preventDefault();
+                    const len = String(actual.value ?? '').length;
+                    actual.setSelectionRange(len, len);
+                    return;
+                }
+                if (!this.caretAlFinal(actual)) {
                     return;
                 }
                 destino = campos[idx + 1] || null;
             } else if (event.key === 'ArrowLeft') {
-                if (!this.todoSeleccionado(actual) && !this.caretAlInicio(actual)) {
+                if (this.todoSeleccionado(actual) && String(actual.value ?? '').length > 0) {
+                    event.preventDefault();
+                    actual.setSelectionRange(0, 0);
+                    return;
+                }
+                if (!this.caretAlInicio(actual)) {
                     return;
                 }
                 destino = campos[idx - 1] || null;
