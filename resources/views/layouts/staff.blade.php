@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="es" class="h-full bg-[#F0F9FF]">
+<html lang="es" class="h-full vl-app-surface" style="{{ \App\Support\Entorno\TemaFondoSistema::variablesCss() }}">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -13,7 +13,7 @@
     /** En desktop el menú usa rail colapsado salvo el panel de inicio; hover/focus lo expanden (modo dinámico). */
     $isSidebarPeekMode = ! request()->routeIs('dashboard', 'admin.dashboard', 'cliente.home');
 @endphp
-<body class="h-full antialiased text-neutral-800">
+<body class="h-full antialiased text-neutral-800 vl-app-surface">
 
 <div id="vl-shell"
      class="h-full"

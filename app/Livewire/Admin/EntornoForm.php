@@ -23,6 +23,10 @@ class EntornoForm extends Component
 
     public string $colorInforme = '#0EA5E9';
 
+    public string $colorFondoSistema = '#0EA5E9';
+
+    public bool $tieneCampoColorFondoSistema = false;
+
     public string $texto1footerIzq = '';
 
     public string $texto2footerIzq = '';
@@ -134,6 +138,7 @@ class EntornoForm extends Component
         $this->teleLabo = (string) ($entorno->teleLabo ?? '');
         $this->emailLabo = (string) ($entorno->emailLabo ?? '');
         $this->colorInforme = $this->normalizarColor((string) ($entorno->colorInforme ?? '#0EA5E9'));
+        $this->cargarCampoColorFondoSistema($entorno);
         $this->texto1footerIzq = (string) ($entorno->texto1footerIzq ?? '');
         $this->texto2footerIzq = (string) ($entorno->texto2footerIzq ?? '');
         $this->texto1footerCentro = (string) ($entorno->texto1footerCentro ?? '');
@@ -156,6 +161,21 @@ class EntornoForm extends Component
         $this->cargarCamposHeaderFooter($entorno);
         $this->cargarCamposEtiquetas($entorno);
         $this->cargarCampoAfipFormato($entorno);
+    }
+
+    private function cargarCampoColorFondoSistema(Entorno $entorno): void
+    {
+        $this->tieneCampoColorFondoSistema = Schema::hasColumn('entorno', 'colorFondoSistema');
+        if (! $this->tieneCampoColorFondoSistema) {
+            $this->colorFondoSistema = '#0EA5E9';
+
+            return;
+        }
+
+        $this->colorFondoSistema = $this->normalizarColor(
+            (string) ($entorno->colorFondoSistema ?? '#0EA5E9'),
+            '#0EA5E9'
+        );
     }
 
     private function cargarCamposHeaderFooter(Entorno $entorno): void
@@ -240,14 +260,14 @@ class EntornoForm extends Component
         return $normalizada;
     }
 
-    private function normalizarColor(string $color): string
+    private function normalizarColor(string $color, string $fallback = '#0EA5E9'): string
     {
         $color = trim($color);
         if (preg_match('/^#[0-9A-Fa-f]{6}$/', $color) === 1) {
             return strtoupper($color);
         }
 
-        return '#0EA5E9';
+        return strtoupper($fallback);
     }
 
     public function rules(): array
@@ -308,6 +328,10 @@ class EntornoForm extends Component
             $rules['afipFormatoImpresion'] = ['required', 'in:A4,termica80'];
         }
 
+        if ($this->tieneCampoColorFondoSistema) {
+            $rules['colorFondoSistema'] = ['required', 'regex:/^#[0-9A-Fa-f]{6}$/'];
+        }
+
         return $rules;
     }
 
@@ -315,6 +339,7 @@ class EntornoForm extends Component
     {
         return [
             'colorInforme.regex' => 'El color del informe debe ser un código hexadecimal válido (#RRGGBB).',
+            'colorFondoSistema.regex' => 'El color de fondo del sistema debe ser un código hexadecimal válido (#RRGGBB).',
             'emailLabo.email' => 'El email del laboratorio no es válido.',
             'listaPreciosUpload.mimes' => 'La lista de precios debe ser un archivo PDF.',
             'listaPreciosUpload.max' => 'La lista de precios no puede superar 10 MB.',
@@ -346,6 +371,7 @@ class EntornoForm extends Component
 
         $this->tieneCamposEtiquetas = Schema::hasColumn('entorno', 'e_AnchoPapel');
         $this->tieneCampoAfipFormato = Schema::hasColumn('entorno', 'afipFormatoImpresion');
+        $this->tieneCampoColorFondoSistema = Schema::hasColumn('entorno', 'colorFondoSistema');
         $this->tieneCamposHeaderFooter = Schema::hasColumn('entorno', 'headerInforme')
             && Schema::hasColumn('entorno', 'footerInforme');
 
@@ -408,6 +434,10 @@ class EntornoForm extends Component
 
         if ($this->tieneCampoAfipFormato) {
             $payload['afipFormatoImpresion'] = (string) $data['afipFormatoImpresion'];
+        }
+
+        if ($this->tieneCampoColorFondoSistema) {
+            $payload['colorFondoSistema'] = strtoupper((string) $data['colorFondoSistema']);
         }
 
         $passNueva = trim((string) ($data['passEnvioMail'] ?? ''));
@@ -496,10 +526,17 @@ class EntornoForm extends Component
         $this->cargarCamposHeaderFooter($entorno);
         $this->cargarCamposEtiquetas($entorno);
         $this->cargarCampoAfipFormato($entorno);
+        $this->cargarCampoColorFondoSistema($entorno);
 
         if ($passNueva !== '') {
             $this->passEnvioMail = '';
             $this->tienePassEnvioMail = true;
+        }
+
+        if ($this->tieneCampoColorFondoSistema && isset($payload['colorFondoSistema'])) {
+            $this->js(
+                'document.documentElement.style.setProperty(\'--vl-theme-base\', '.json_encode($payload['colorFondoSistema']).');'
+            );
         }
 
         RateLimiter::hit($key, 60);

@@ -24,7 +24,6 @@
     };
 
     $logoShape = 'square';
-    $logoDense = false;
     $logoFile = $datos['logo_file'] ?? null;
     if (is_string($logoFile) && is_file($logoFile)) {
         $sizeInfo = @getimagesize($logoFile);
@@ -32,15 +31,14 @@
             $ratio = $sizeInfo[0] / $sizeInfo[1];
             // 1.2: logos horizontales con poco padding (p. ej. ALQU) no llegan a 1.35.
             $logoShape = $ratio >= 1.2 ? 'wide' : ($ratio <= 0.75 ? 'tall' : 'square');
-            $logoDense = $logoShape === 'wide' && $ratio < 2.8;
         }
     }
 @endphp
 
 @if ($variant === 'login')
-    <div {{ $attributes->class(['flex w-full justify-center']) }}>
+    <div {{ $attributes->class(['vl-auth-logo-slot']) }}>
         @if ($datos['logo_url'])
-            <div class="vl-auth-logo-frame{{ $logoShape === 'wide' ? ' vl-auth-logo-frame--wide' : '' }}{{ $logoDense ? ' vl-auth-logo-frame--dense' : '' }}"
+            <div class="vl-auth-logo-frame"
                  x-data="vlAuthLogoFrame({ shape: @js($logoShape), variant: 'login' })"
                  x-bind:class="frameClass"
                  x-bind:style="frameStyle">

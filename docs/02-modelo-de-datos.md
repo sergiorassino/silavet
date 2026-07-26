@@ -82,6 +82,7 @@ La tabla `entorno` almacena la configuración institucional en **un registro**
 | `headerInforme`, `footerInforme` | Imágenes opcionales de encabezado/pie del informe (misma carpeta que el logo); si faltan, se usa membrete + firmas |
 | `direLabo`, `teleLabo`, `emailLabo` | Datos de contacto del laboratorio     |
 | `colorInforme`       | Color de acento en informes PDF/HTML                     |
+| `colorFondoSistema`  | Color base de la UI (`#RRGGBB`); fondo, hero y sidebar conservan degradé |
 | `texto*footer*`, `firma*` | Pie de informe y firmas profesionales (fallback si no hay `footerInforme`) |
 | `*Mail`              | Configuración SMTP para envío de informes                |
 

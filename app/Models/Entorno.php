@@ -25,6 +25,7 @@ class Entorno extends Model
         'teleLabo',
         'emailLabo',
         'colorInforme',
+        'colorFondoSistema',
         'texto1footerIzq',
         'texto2footerIzq',
         'texto1footerCentro',

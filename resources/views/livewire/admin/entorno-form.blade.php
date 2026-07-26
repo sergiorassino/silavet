@@ -68,7 +68,32 @@
                             <input wire:model.live="colorInforme" type="text" maxlength="7" class="form-input max-w-[8rem] py-1.5 font-mono text-sm uppercase">
                             <span class="inline-block h-8 w-16 rounded border border-neutral-200" style="background-color: {{ $colorInforme }}"></span>
                         </div>
+                        <p class="mt-1 text-xs text-neutral-500">Barras y acentos del PDF/HTML de informes.</p>
                         @error('colorInforme') <p class="form-error">{{ $message }}</p> @enderror
+                    </div>
+
+                    <div class="sm:col-span-2">
+                        <label class="form-label mb-1" for="colorFondoSistema">Color de fondo del sistema</label>
+                        <div class="flex flex-wrap items-center gap-3">
+                            <input wire:model.live="colorFondoSistema" id="colorFondoSistema" type="color" class="h-10 w-14 cursor-pointer rounded border border-neutral-300 bg-white p-1" @disabled(! $tieneCampoColorFondoSistema)>
+                            <input wire:model.live="colorFondoSistema" type="text" maxlength="7" class="form-input max-w-[8rem] py-1.5 font-mono text-sm uppercase" @disabled(! $tieneCampoColorFondoSistema)>
+                            <span class="inline-block h-10 w-28 rounded-lg border border-neutral-200 shadow-inner"
+                                  style="background: linear-gradient(160deg, color-mix(in srgb, {{ $colorFondoSistema }} 18%, white), color-mix(in srgb, {{ $colorFondoSistema }} 5%, white))"
+                                  title="Vista previa del degradé de fondo"></span>
+                            <span class="inline-block h-10 w-28 rounded-lg border border-neutral-200 shadow-inner"
+                                  style="background: linear-gradient(to bottom right, color-mix(in srgb, {{ $colorFondoSistema }} 86%, black), color-mix(in srgb, {{ $colorFondoSistema }} 52%, black))"
+                                  title="Vista previa del degradé de cabeceras / menú"></span>
+                        </div>
+                        <p class="mt-1 text-xs text-neutral-500">
+                            Tinte general de la interfaz. Se aplica como degradé en el fondo, las cabeceras y el menú lateral (no afecta el color del informe).
+                        </p>
+                        @unless ($tieneCampoColorFondoSistema)
+                            <p class="mt-1 text-xs font-medium text-amber-700">
+                                Falta la columna <code class="font-mono">colorFondoSistema</code>. Ejecutá
+                                <code class="font-mono">database/sql/entorno_color_fondo_sistema.sql</code>.
+                            </p>
+                        @endunless
+                        @error('colorFondoSistema') <p class="form-error">{{ $message }}</p> @enderror
                     </div>
                 </div>
 

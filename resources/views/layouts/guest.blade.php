@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="es" class="h-full">
+<html lang="es" class="h-full" style="{{ \App\Support\Entorno\TemaFondoSistema::variablesCss() }}">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -46,11 +46,11 @@
 
 <div class="vl-auth-page flex flex-col md:flex-row">
 
-    <div class="h-3 shrink-0 bg-gradient-to-r from-[#333333] via-[#0EA5E9] to-[#BAE6FD] md:hidden"
+    <div class="vl-auth-mobile-bar h-3 shrink-0 md:hidden"
          aria-hidden="true"></div>
 
-    <aside class="vl-auth-brand relative hidden min-h-dvh flex-col overflow-hidden bg-gradient-to-br from-[#0EA5E9] via-[#0284C7] to-[#333333] text-white md:flex md:w-[46%] lg:w-[48%]">
-        <div class="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_120%_80%_at_90%_0%,rgba(255,255,255,0.08),transparent_50%),radial-gradient(ellipse_90%_55%_at_10%_100%,rgba(51,51,51,0.35),transparent_52%)]"
+    <aside class="vl-auth-brand relative hidden min-h-dvh flex-col overflow-hidden text-white md:flex md:w-[46%] lg:w-[48%]">
+        <div class="vl-auth-brand__glow pointer-events-none absolute inset-0"
              aria-hidden="true"></div>
 
         <div class="vl-auth-brand__body relative z-10 flex flex-1 flex-col justify-center">
@@ -69,13 +69,13 @@
         </div>
 
         <div class="vl-auth-brand__footer relative z-10 flex gap-3 border-t border-white/10">
-            <span class="vl-auth-brand__bar h-2 max-w-[4.5rem] flex-1 rounded-full bg-[#0EA5E9]" aria-hidden="true"></span>
-            <span class="vl-auth-brand__bar h-2 max-w-[3rem] flex-1 rounded-full bg-[#7DD3FC]" aria-hidden="true"></span>
-            <span class="vl-auth-brand__bar h-2 max-w-[5rem] flex-1 rounded-full bg-[#BAE6FD]/85" aria-hidden="true"></span>
+            <span class="vl-auth-brand__bar vl-auth-brand__bar--1 h-2 max-w-[4.5rem] flex-1 rounded-full" aria-hidden="true"></span>
+            <span class="vl-auth-brand__bar vl-auth-brand__bar--2 h-2 max-w-[3rem] flex-1 rounded-full" aria-hidden="true"></span>
+            <span class="vl-auth-brand__bar vl-auth-brand__bar--3 h-2 max-w-[5rem] flex-1 rounded-full" aria-hidden="true"></span>
         </div>
     </aside>
 
-    <div class="vl-auth-page__panel flex min-h-0 flex-1 flex-col bg-[#F0F9FF] md:bg-white">
+    <div class="vl-auth-page__panel flex min-h-0 flex-1 flex-col">
         <div class="vl-auth-page__panel-inner flex min-h-0 flex-1 flex-col items-center justify-center">
             <div class="vl-auth-page__stack flex w-full flex-col items-center">
                 <x-vl-lab-logo variant="login" />

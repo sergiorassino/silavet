@@ -46,6 +46,17 @@ Regla de uso:
 - Preferir logo dinámico desde `entorno.logo` cuando exista el helper.
 - Fallback: `asset('img/logo-main.png')`.
 
+### Logo en login (obligatorio)
+
+Caja máxima, **sin deformar** la imagen (cualquier forma: cuadrado, apaisado, alto o redondo):
+
+| Tope | Referencia |
+| --- | --- |
+| **Ancho ≤ 70 %** | Ancho de la tarjeta del formulario (`.vl-auth-card--login`) |
+| **Alto ≤ 60 %** | Alto de la misma tarjeta (campos usuario / contraseña) |
+
+Implementación: `resources/css/app.css` (`--vl-auth-logo-max-w-pct`, `--vl-auth-logo-max-h`) + ajuste en `vlAuthLogoFrame` (`resources/js/app.js`). No introducir tamaños fijos por tenant ni por shape en login.
+
 ---
 
 ## 3. Componentes visuales (convención `vl-*`)
@@ -65,10 +76,11 @@ Layout staff unificado: `resources/views/layouts/staff.blade.php`.
 ## 4. Criterio general
 
 - Misma sensación profesional y operativa que Sistemas Escolares.
-- Login split-screen con panel editorial celeste + formulario blanco.
-- Hero con degradé en dashboards y cabeceras de ABM.
-- Sidebar “bosque” con degradé celeste → gris oscuro.
+- Login split-screen con panel editorial tintado desde `entorno.colorFondoSistema` + formulario.
+- Hero con degradé en dashboards y cabeceras de ABM (tinte desde `entorno.colorFondoSistema`).
+- Sidebar “bosque” con degradé derivado del mismo color de sistema.
+- Fondo de página: degradé suave a partir de `colorFondoSistema` (default base `#0EA5E9` → celeste claro).
 - Portal clientes: mobile-first cuando se implemente.
-- Informes PDF respetan `entorno` (colores legacy del laboratorio).
+- Informes PDF respetan `entorno` (`colorInforme`, logo, firmas); el color de fondo UI no afecta el PDF.
 
 Para nuevas pantallas, seguir `.cursor/rules/ui-front-vl.mdc`.

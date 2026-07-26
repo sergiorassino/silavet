@@ -694,16 +694,20 @@ document.addEventListener('alpine:init', () => {
     }));
 
     /**
-     * Marco adaptativo del logo (login / sidebar): wide/square/tall y recorte
-     * si el PNG es cuadrado con marca horizontal (márgenes blancos).
+     * Marco adaptativo del logo (login / sidebar).
+     * Login: tope 70 % × 60 % de la tarjeta del formulario (usuario/clave), sin deformar.
+     * Sidebar: wide/square/tall; recorte si el PNG es cuadrado con marca horizontal.
      */
     Alpine.data('vlAuthLogoFrame', (config = {}) => ({
         shape: config.shape || 'square',
         cropped: false,
-        dense: false,
         contentAr: null,
         viewBox: null,
+        logoW: null,
+        logoH: null,
+        fitted: false,
         variant: config.variant || 'login',
+        _onResize: null,
 
         init() {
             this.$nextTick(() => {
@@ -712,30 +716,61 @@ document.addEventListener('alpine:init', () => {
                     this.onLoad({ target: img });
                 }
             });
+
+            if (this.variant === 'login') {
+                this._onResize = () => {
+                    const img = this.$el.querySelector('img');
+                    if (img && img.naturalWidth > 0) {
+                        this.fitLoginSize(img);
+                    }
+                };
+                window.addEventListener('resize', this._onResize);
+                this.$nextTick(() => {
+                    const card = this.loginCardEl();
+                    if (card && typeof ResizeObserver !== 'undefined') {
+                        this._cardRo = new ResizeObserver(() => this._onResize());
+                        this._cardRo.observe(card);
+                    }
+                });
+            }
+        },
+
+        loginCardEl() {
+            const stack = this.$el.closest('.vl-auth-page__stack');
+
+            return stack?.querySelector('.vl-auth-card--login')
+                || document.querySelector('.vl-auth-card--login');
         },
 
         get frameClass() {
-            const prefix = this.variant === 'sidebar'
-                ? 'vl-sidebar-brand__mark'
-                : 'vl-auth-logo-frame';
+            if (this.variant === 'login') {
+                return {
+                    'vl-auth-logo-frame--cropped': this.cropped,
+                    'vl-auth-logo-frame--fitted': this.fitted,
+                };
+            }
+
+            const prefix = 'vl-sidebar-brand__mark';
 
             return {
                 [`${prefix}--wide`]: this.shape === 'wide',
                 [`${prefix}--square`]: this.shape === 'square',
                 [`${prefix}--tall`]: this.shape === 'tall',
                 [`${prefix}--cropped`]: this.cropped,
-                [`${prefix}--dense`]: this.dense,
             };
         },
 
         get frameStyle() {
-            if (!this.cropped || !this.contentAr) {
-                return {};
-            }
-
-            const style = { '--vl-logo-ar': this.contentAr };
+            const style = {};
             if (this.viewBox) {
                 style['--vl-logo-view-box'] = this.viewBox;
+            }
+            if (this.contentAr && this.variant === 'sidebar' && this.shape === 'tall') {
+                style['--vl-logo-ar'] = this.contentAr;
+            }
+            if (this.fitted && this.logoW && this.logoH) {
+                style['--vl-logo-w'] = this.logoW;
+                style['--vl-logo-h'] = this.logoH;
             }
 
             return style;
@@ -747,6 +782,54 @@ document.addEventListener('alpine:init', () => {
                 && CSS.supports('object-view-box', 'inset(10%)');
         },
 
+        contentAspectRatio(img) {
+            if (this.contentAr) {
+                const match = String(this.contentAr).match(/([\d.]+)\s*\/\s*([\d.]+)/);
+                if (match && parseFloat(match[2]) > 0) {
+                    return parseFloat(match[1]) / parseFloat(match[2]);
+                }
+            }
+
+            return img.naturalWidth / img.naturalHeight;
+        },
+
+        fitLoginSize(img, attempt = 0) {
+            if (this.variant !== 'login' || !img) {
+                return;
+            }
+
+            const card = this.loginCardEl();
+            const slot = this.$el.closest('.vl-auth-logo-slot');
+            const refW = card?.clientWidth
+                || slot?.clientWidth
+                || this.$el.parentElement?.clientWidth
+                || 320;
+            const refH = card?.clientHeight || 0;
+
+            // La tarjeta del form es la referencia del 60 %; si aún no midió, reintentar.
+            if (refH < 32 && attempt < 12) {
+                requestAnimationFrame(() => this.fitLoginSize(img, attempt + 1));
+
+                return;
+            }
+
+            // Regla: ≤ 70 % del ancho y ≤ 60 % del alto de `.vl-auth-card--login`.
+            const maxW = Math.max(48, refW * 0.7);
+            const maxH = Math.max(48, (refH > 0 ? refH : 220) * 0.6);
+            const ar = this.contentAspectRatio(img);
+
+            let width = maxW;
+            let height = width / ar;
+            if (height > maxH) {
+                height = maxH;
+                width = height * ar;
+            }
+
+            this.logoW = `${Math.round(width * 100) / 100}px`;
+            this.logoH = `${Math.round(height * 100) / 100}px`;
+            this.fitted = true;
+        },
+
         onLoad(event) {
             const img = event.target;
             if (!img || !img.naturalWidth || !img.naturalHeight) {
@@ -756,7 +839,6 @@ document.addEventListener('alpine:init', () => {
             const ratio = img.naturalWidth / img.naturalHeight;
             let shape = ratio >= 1.2 ? 'wide' : (ratio <= 0.75 ? 'tall' : 'square');
             let cropped = false;
-            let dense = false;
             let contentAr = null;
             let viewBox = null;
             const bbox = this.contentBBox(img);
@@ -766,14 +848,10 @@ document.addEventListener('alpine:init', () => {
                 const contentRatio = bbox.w / bbox.h;
                 if (contentRatio >= 1.25) {
                     shape = 'wide';
-                    // object-fit:cover sobre el JPG cuadrado corta la marca;
-                    // object-view-box recorta solo el margen blanco.
                     if (canCrop) {
                         cropped = true;
                         contentAr = `${bbox.w} / ${bbox.h}`;
                         viewBox = this.insetFromBBox(bbox, img.naturalWidth, img.naturalHeight);
-                    } else {
-                        dense = true;
                     }
                 } else if (contentRatio <= 0.7) {
                     shape = 'tall';
@@ -785,25 +863,14 @@ document.addEventListener('alpine:init', () => {
                 }
             }
 
-            if (shape === 'wide') {
-                if (cropped) {
-                    dense = true;
-                } else if (ratio < 2.8) {
-                    dense = true;
-                } else if (bbox && bbox.h > 0) {
-                    const contentRatio = bbox.w / bbox.h;
-                    const heightFill = bbox.h / img.naturalHeight;
-                    if (contentRatio < 3.2 || heightFill > 0.5) {
-                        dense = true;
-                    }
-                }
-            }
-
             this.shape = shape;
             this.cropped = cropped;
-            this.dense = dense;
             this.contentAr = contentAr;
             this.viewBox = viewBox;
+
+            if (this.variant === 'login') {
+                this.$nextTick(() => this.fitLoginSize(img));
+            }
         },
 
         insetFromBBox(bbox, naturalW, naturalH) {

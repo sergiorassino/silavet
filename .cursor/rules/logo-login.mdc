@@ -1,0 +1,27 @@
+---
+description: Tamaño del logo en la pantalla de login (70 % × 60 %, proporción)
+globs: resources/views/components/vl-lab-logo.blade.php,resources/css/app.css,resources/js/app.js,resources/views/layouts/guest.blade.php,resources/views/livewire/auth/**
+alwaysApply: false
+---
+
+# Logo en login
+
+## Regla
+
+El logo del login (cualquier forma: cuadrado, apaisado, alto o redondo) se
+escala **manteniendo la proporción** dentro de esta caja máxima:
+
+1. **Ancho ≤ 70 %** del ancho de la tarjeta del formulario
+   (`.vl-auth-card--login`).
+2. **Alto ≤ 60 %** del alto de esa misma tarjeta
+   (la que tiene usuario y contraseña).
+
+## Implementación
+
+- CSS: fallback en `--vl-auth-logo-max-w-pct` / `--vl-auth-logo-max-h`.
+- JS: `vlAuthLogoFrame` → `fitLoginSize()` mide `.vl-auth-card--login` y
+  calcula el tamaño (incluye recorte de márgenes blancos vía
+  `object-view-box` si aplica).
+- **No** fijar tamaños por tenant ni por shape (`wide`/`square`/`tall`) en login.
+
+Detalle: `docs/04-identidad-visual.md` §2.

@@ -3,16 +3,27 @@
 <link href="https://fonts.googleapis.com/css2?family=Source+Sans+3:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
     :root {
-        /* Marca */
+        /* Marca — --vl-theme-base se sobrescribe desde entorno.colorFondoSistema */
+        --vl-theme-base: #0ea5e9;
         --vl-primary: #0ea5e9;
         --vl-accent-sky: #7dd3fc;
         --vl-light-blue: #bae6fd;
         --vl-ice: #e0f7ff;
 
-        /* Fondo sidebar — degradé celeste (más oscuro arriba, más claro abajo) */
-        --vl-sidebar-bg-top: #0c4a6e;
-        --vl-sidebar-bg-mid: #075985;
-        --vl-sidebar-bg-bottom: #0369a1;
+        /* Fondo app — degradé (un poco más marcado) a partir del color de sistema */
+        --vl-app-bg: color-mix(in srgb, var(--vl-theme-base) 18%, white);
+        --vl-app-bg-mid: color-mix(in srgb, var(--vl-theme-base) 11%, white);
+        --vl-app-bg-end: color-mix(in srgb, var(--vl-theme-base) 5%, white);
+
+        /* Hero — degradé */
+        --vl-hero-from: color-mix(in srgb, var(--vl-theme-base) 86%, black);
+        --vl-hero-via: color-mix(in srgb, var(--vl-theme-base) 72%, black);
+        --vl-hero-to: color-mix(in srgb, var(--vl-theme-base) 52%, black);
+
+        /* Fondo sidebar — degradé (más oscuro arriba, más claro abajo) */
+        --vl-sidebar-bg-top: color-mix(in srgb, var(--vl-theme-base) 48%, black);
+        --vl-sidebar-bg-mid: color-mix(in srgb, var(--vl-theme-base) 58%, black);
+        --vl-sidebar-bg-bottom: color-mix(in srgb, var(--vl-theme-base) 68%, black);
 
         /* Superficies y texto */
         --vl-hover-bg: rgba(255, 255, 255, 0.10);
