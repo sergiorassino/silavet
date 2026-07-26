@@ -34,6 +34,7 @@ Leer antes de implementar módulos:
 10. PDFs nuevos: TCPDF + Arial + **A4 vertical por defecto**. Informes respetan `entorno`.
 11. Menú lateral: iconos únicos (grupos `grupo-*` ≠ opciones). Catálogo: `vl-sidebar-icon`. Ver `docs/08-menus-de-navegacion.md` §6.
 12. **Persistencia:** form → columna de negocio acordada. Nunca guardar en otra columna ni éxito silencioso si falta la columna. Ver `docs/05-preferencias-y-convenciones.md` §13 y `.cursor/rules/persistencia-sin-silencio.mdc`.
+13. **Assets (Vite):** igual que Sistemas Escolares. Tras cambiar `resources/css/**` o `resources/js/**`, **correr `npm run build`** en la misma tarea e incluir `public/build/` en el despliegue. `public/build/` va en el repo; sin rebuild, producción no refleja el CSS/JS nuevo. Ver `docs/09-despliegue-sin-public-en-url.md`.
 
 ## Referencia de arquitectura
 

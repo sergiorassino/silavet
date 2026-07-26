@@ -31,7 +31,12 @@ Si el cambio implica **código o vistas**, al **final** debe figurar un bloque
 **Archivos para producción** con:
 
 1. **Lista de rutas** relativas a la raíz del repo (una por línea).
-2. **Assets compilados**, si aplica: `npm run build` o subir `public/build/`.
+2. **Assets compilados** (igual que Sistemas Escolares): si se tocó CSS o JS
+   empaquetado por Vite (`resources/css/**`, `resources/js/**`, o estilos que
+   dependan de ellos), el asistente **debe ejecutar `npm run build`** en la
+   misma tarea e incluir `public/build/` (manifest + assets nuevos) en la lista.
+   `public/build/` **va en el repo**; sin rebuild, producción sigue con CSS/JS
+   viejo aunque el Blade/PHP esté al día.
 3. **Comandos post-despliegue** opcionales (`php artisan view:clear`, etc.),
    **sin ejecutarlos** desde la herramienta del asistente.
 4. Si **no** hubo cambios desplegables, decirlo explícitamente.

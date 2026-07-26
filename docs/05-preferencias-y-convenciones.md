@@ -70,6 +70,10 @@ a todos los módulos. Ver [06-reglas-de-seguridad.md](06-reglas-de-seguridad.md)
 - Tailwind CSS 4 para estilos.
 - Clases del design system con prefijo `vl-*` (ver [04-identidad-visual.md](04-identidad-visual.md)).
 - Layout responsivo; portal de clientes **mobile-first**.
+- **Assets (igual que Sistemas Escolares):** si se modifica `resources/css/**` o
+  `resources/js/**`, correr `npm run build` en la misma tarea e incluir
+  `public/build/` en el commit/despliegue. Sin rebuild, producción no aplica el
+  cambio. Detalle: [09-despliegue-sin-public-en-url.md](09-despliegue-sin-public-en-url.md).
 
 ### Grillas / listados
 

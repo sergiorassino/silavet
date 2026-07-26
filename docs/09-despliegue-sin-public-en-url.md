@@ -23,7 +23,7 @@ Adaptado desde Sistemas Escolares. Mismas reglas técnicas; reemplazar referenci
    - Subcarpeta: `https://dominio.com/silavet` (sin barra final; sin `/public`).
    - Subdominio: `https://lab.ejemplo.com`.
 5. **`php artisan config:clear`** tras cambiar `.env`.
-6. **Assets:** igual que Sistemas Escolares: `public/build/` **va en el repo** (no está en `.gitignore`). En local, antes de publicar cambios de CSS/JS: `npm run build`, commit de `public/build/` y push. En el servidor, tras `git pull`, **borrar** `public/hot` si existe (solo sirve para Vite en desarrollo).
+6. **Assets:** igual que Sistemas Escolares: `public/build/` **va en el repo** (no está en `.gitignore`). **Siempre** que haya cambios en CSS/JS (`resources/css/**`, `resources/js/**`): correr `npm run build` en la misma tarea, commit de `public/build/` y push. Sin rebuild, producción sigue sirviendo CSS/JS viejo. En el servidor, tras `git pull`, **borrar** `public/hot` si existe (solo sirve para Vite en desarrollo).
 7. **Apache:** `mod_rewrite` activo y `AllowOverride All`.
 8. **HTTPS:** coherente con `SESSION_SECURE_COOKIE=true`.
 
