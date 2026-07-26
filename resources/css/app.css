@@ -45,6 +45,28 @@
         --vl-app-bg: color-mix(in srgb, var(--vl-theme-base) 18%, white);
         --vl-app-bg-mid: color-mix(in srgb, var(--vl-theme-base) 11%, white);
         --vl-app-bg-end: color-mix(in srgb, var(--vl-theme-base) 5%, white);
+
+        /*
+         * Escala primary/accent derivada del color de sistema.
+         * Así btn-primary, toggles, links y utilidades Tailwind siguen la gama elegida.
+         */
+        --color-primary-50: color-mix(in srgb, var(--vl-theme-base) 8%, white);
+        --color-primary-100: color-mix(in srgb, var(--vl-theme-base) 14%, white);
+        --color-primary-200: color-mix(in srgb, var(--vl-theme-base) 28%, white);
+        --color-primary-300: color-mix(in srgb, var(--vl-theme-base) 45%, white);
+        --color-primary-400: color-mix(in srgb, var(--vl-theme-base) 70%, white);
+        --color-primary-500: var(--vl-theme-base);
+        --color-primary-600: color-mix(in srgb, var(--vl-theme-base) 86%, black);
+        --color-primary-700: color-mix(in srgb, var(--vl-theme-base) 72%, black);
+        --color-primary-800: color-mix(in srgb, var(--vl-theme-base) 58%, black);
+        --color-primary-900: color-mix(in srgb, var(--vl-theme-base) 45%, black);
+
+        --color-accent-50: color-mix(in srgb, var(--vl-theme-base) 8%, white);
+        --color-accent-100: color-mix(in srgb, var(--vl-theme-base) 14%, white);
+        --color-accent-200: color-mix(in srgb, var(--vl-theme-base) 28%, white);
+        --color-accent-300: color-mix(in srgb, var(--vl-theme-base) 45%, white);
+        --color-accent-400: color-mix(in srgb, var(--vl-theme-base) 62%, white);
+        --color-accent-500: color-mix(in srgb, var(--vl-theme-base) 78%, white);
     }
 
     input[type="radio"],
@@ -2393,7 +2415,7 @@
     font-weight: 700;
     letter-spacing: -0.015em;
     line-height: 1.2;
-    color: #0369a1;
+    color: color-mix(in srgb, var(--vl-theme-base) 82%, black);
     text-align: center;
     text-shadow: none;
 }
