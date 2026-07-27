@@ -225,6 +225,21 @@
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.75"
                   d="M9 17h6"/>
             @break
+        @case('reactivos')
+            {{-- Frasco / tubo de ensayo --}}
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.75"
+                  d="M9 3h6m-5 0v7.5l-3 6A2 2 0 008.78 19h6.44A2 2 0 0017 16.5l-3-6V3"/>
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.75"
+                  d="M7.5 14.5h9"/>
+            @break
+        @case('reactivos-por-determinacion')
+            {{-- Frasco + vínculo a determinación --}}
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.75"
+                  d="M9 3h6m-5 0v7.5l-3 6A2 2 0 008.78 19h6.44A2 2 0 0017 16.5l-3-6V3"/>
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.75"
+                  d="M7.5 14.5h3m3 0h3"/>
+            <circle cx="12" cy="7" r="1" fill="currentColor" stroke="none"/>
+            @break
 
         @default
             @php throw new InvalidArgumentException("Icono de sidebar desconocido: {$name}"); @endphp

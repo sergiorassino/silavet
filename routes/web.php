@@ -18,6 +18,9 @@ use App\Livewire\Abm\Especies\EspecieIndex;
 use App\Livewire\Abm\Razas\RazaForm;
 use App\Livewire\Abm\Razas\RazaIndex;
 use App\Livewire\Abm\MuestrasPorDeterminacion\MuestrasPorDeterminacionIndex;
+use App\Livewire\Abm\Reactivos\ReactivoForm;
+use App\Livewire\Abm\Reactivos\ReactivoIndex;
+use App\Livewire\Abm\ReactivosPorDeterminacion\ReactivosPorDeterminacionIndex;
 use App\Livewire\Abm\Requerimientos\RequerimientoForm;
 use App\Livewire\Abm\Requerimientos\RequerimientoIndex;
 use App\Livewire\Abm\Usuarios\UsuarioForm;
@@ -173,6 +176,16 @@ Route::middleware(['auth', 'lab.context'])->group(function () {
 
     Route::prefix('abm/muestras-por-determinacion')->middleware(['menu.portal:laboratorio', 'permiso:8'])->group(function () {
         Route::get('/', MuestrasPorDeterminacionIndex::class)->name('abm.muestras-por-determinacion.index');
+    });
+
+    Route::prefix('abm/reactivos')->middleware(['menu.portal:laboratorio', 'permiso:7'])->group(function () {
+        Route::get('/', ReactivoIndex::class)->name('abm.reactivos.index');
+        Route::get('/nuevo', ReactivoForm::class)->name('abm.reactivos.create');
+        Route::get('/{id}/editar', ReactivoForm::class)->name('abm.reactivos.edit');
+    });
+
+    Route::prefix('abm/reactivos-por-determinacion')->middleware(['menu.portal:laboratorio', 'permiso:7'])->group(function () {
+        Route::get('/', ReactivosPorDeterminacionIndex::class)->name('abm.reactivos-por-determinacion.index');
     });
 
     Route::prefix('clientes/cuenta-corriente')->middleware(['menu.portal:laboratorio', 'permiso:6'])->group(function () {

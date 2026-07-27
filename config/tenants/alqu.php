@@ -11,6 +11,7 @@ return [
 
     'protocolos' => [
         'estados_flujo' => 3,
+        'nombre_protocolo_editable_en_edicion' => true,
     ],
 
     'tipodeterminaciones' => [

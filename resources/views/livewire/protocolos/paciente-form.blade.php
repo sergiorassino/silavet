@@ -88,8 +88,9 @@
                 <input wire:model="nombreProtocolo"
                        id="nombreProtocolo"
                        type="text"
+                       maxlength="50"
                        class="form-input font-semibold"
-                       readonly>
+                       @unless ($nombreProtocoloEditable) readonly @endunless>
                 @unless ($idPacientes)
                     <p class="mt-0.5 text-[10px] leading-tight text-neutral-500">Provisional — se confirma al guardar.</p>
                 @endunless

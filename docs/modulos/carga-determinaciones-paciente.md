@@ -97,6 +97,20 @@ Rate limits: save ~40/min, delete ~20/min por usuario (`prot-det-save:*` / `prot
 
 Hermanos: ABM tipos (`TipodeterminacionIndex`, permiso 2); Gestión de Derivaciones (`DerivacionIndex`, permiso 3).
 
+## Efecto sobre stock de reactivos
+
+Al **alta** de una determinación (`confirmarNueva`), tras crear la fila y materializar renglones,
+se llama a `StockReactivosService::descontarPorTipo($idTipo)` que descuenta de `reactivos.cantidad`
+la cantidad configurada en `reactivoxdeterminacion` para ese tipo.
+
+Al **baja** de una determinación (`eliminar`), tras borrar la fila y los renglones,
+se llama a `StockReactivosService::reponerPorTipo($idTipo)` que devuelve las mismas cantidades.
+
+Si el stock queda `<= minAviso`, se muestra `vl-swal-error` con título "Stock bajo" sin bloquear.
+Si el tipo no tiene reactivos configurados en `reactivoxdeterminacion`, no hay efecto.
+
+Detalle: [`docs/modulos/stock-reactivos.md`](stock-reactivos.md).
+
 ## Qué no hacer / reglas de negocio
 
 1. **No preseleccionar** centro ni Sí al elegir el tipo: siempre `idDerivaciones = 0` y fecha de envío vacía hasta que el usuario elija.

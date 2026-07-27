@@ -12,6 +12,7 @@ use App\Support\Precios\DescuentoDeterminacionResolver;
 use App\Support\Precios\PrecioDeterminacionResolver;
 use App\Support\Protocolos\PacienteListadoFiltros;
 use App\Support\Resultados\RenglonesMaterializer;
+use App\Support\Stock\StockReactivosService;
 use App\Support\Tipodeterminaciones\TipodeterminacionesGridConfig;
 use App\Support\UsuarioMenuPortal;
 use Illuminate\Support\Facades\RateLimiter;
@@ -206,6 +207,12 @@ class PacienteDeterminaciones extends Component
             (int) $paciente->idClientes
         );
 
+        $bajosMinimo = (new StockReactivosService)->descontarPorTipo($idTipo);
+        if (! empty($bajosMinimo)) {
+            $nombres = implode(', ', array_map(fn ($r) => $r['reactivo'].' ('.$r['cantidad'].')', $bajosMinimo));
+            $this->dispatch('vl-swal-error', mensaje: "Stock bajo mínimo: {$nombres}.", titulo: 'Stock bajo');
+        }
+
         $this->filaNueva = null;
         $this->sincronizarFilasDesdeBd();
         $this->actualizarTotalProtocolo();
@@ -335,6 +342,8 @@ class PacienteDeterminaciones extends Component
         $registro->delete();
 
         (new RenglonesMaterializer)->eliminarParaDeterminacion($this->idPacientes, $idTipo);
+
+        (new StockReactivosService)->reponerPorTipo($idTipo);
 
         unset($this->filas[$id]);
         $this->actualizarTotalProtocolo();

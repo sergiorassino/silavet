@@ -11,7 +11,7 @@
 | Concepto | Detalle |
 |----------|---------|
 | **Campo en BD** | `pacientes.nombreProtocolo` (string, hasta 50 caracteres) |
-| **Cuándo se asigna** | Solo al **alta** de un protocolo. En edición el número es fijo. |
+| **Cuándo se asigna** | Al **alta**, por el generador del tenant. En **edición** es fijo salvo que el tenant active `protocolos.nombre_protocolo_editable_en_edicion`. |
 | **Zona horaria** | `America/Argentina/Buenos_Aires` para prefijos con fecha |
 | **Vista previa** | El formulario muestra un número **provisional**; puede cambiar si otro usuario guarda antes. |
 | **Reserva definitiva** | Al guardar, bajo lock exclusivo + transacción, se confirma el siguiente libre. |
@@ -248,6 +248,20 @@ return [
     ],
 ];
 ```
+
+### Edición manual de `nombreProtocolo`
+
+Flag `protocolos.nombre_protocolo_editable_en_edicion` (default `false`):
+
+| Valor | Comportamiento en `PacienteForm` |
+|-------|----------------------------------|
+| `false` | Campo readonly en alta y edición; en UPDATE no se escribe desde el form |
+| `true` | Editable **solo en edición**; alta sigue con preview/generador. Unique al guardar |
+
+**Tenants con `true` hoy:** `alqu` (`config/tenants/alqu.php`).
+
+UI y save usan `config('tenant.protocolos.nombre_protocolo_editable_en_edicion')`,
+nunca `if (tenant === 'alqu')` en Blade.
 
 Tras cambiar config en producción: `php artisan config:clear` o `config:cache`.
 

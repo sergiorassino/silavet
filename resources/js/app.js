@@ -407,6 +407,74 @@ document.addEventListener('alpine:init', () => {
         },
     }));
 
+    /**
+     * Búsqueda de determinaciones en Estimación de costos.
+     * ↑↓ navegan el listado Livewire; Enter agrega; Esc limpia la búsqueda.
+     */
+    Alpine.data('vlEstCostosBusqueda', () => ({
+        indice: 0,
+
+        idsDesdeDom() {
+            const lista = this.$refs.lista;
+            if (! lista) {
+                return [];
+            }
+
+            return [...lista.querySelectorAll('[data-est-id]')].map((el) => Number(el.dataset.estId));
+        },
+
+        scrollActivo() {
+            const lista = this.$refs.lista;
+            if (! lista) {
+                return;
+            }
+            const item = lista.querySelectorAll('[data-est-idx]')[this.indice];
+            item?.scrollIntoView({ block: 'nearest' });
+        },
+
+        mover(delta) {
+            const ids = this.idsDesdeDom();
+            if (ids.length === 0) {
+                this.indice = 0;
+
+                return;
+            }
+            if (this.indice < 0 || this.indice >= ids.length) {
+                this.indice = 0;
+            } else {
+                this.indice = (this.indice + delta + ids.length) % ids.length;
+            }
+            this.$nextTick(() => this.scrollActivo());
+        },
+
+        async elegirId(id) {
+            if (! id) {
+                return;
+            }
+            await this.$wire.agregarDeterminacion(id);
+            this.indice = 0;
+            this.$nextTick(() => this.$refs.buscar?.focus());
+        },
+
+        async elegirIndice() {
+            const ids = this.idsDesdeDom();
+            if (ids.length === 0) {
+                return;
+            }
+            if (this.indice < 0 || this.indice >= ids.length) {
+                this.indice = 0;
+            }
+            await this.elegirId(ids[this.indice]);
+        },
+
+        init() {
+            this.$wire.$watch('busquedaDeterminacion', () => {
+                this.indice = 0;
+                this.$nextTick(() => this.scrollActivo());
+            });
+        },
+    }));
+
     Alpine.data('vlCargaResultados', (config) => ({
         estadoPaciente: config.estadoInicial || 'En Proc.',
 
@@ -477,25 +545,6 @@ document.addEventListener('alpine:init', () => {
                 }
             }
             el.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
-        },
-
-        caretAlInicio(el) {
-            if (el.tagName === 'SELECT') {
-                return true;
-            }
-            const start = el.selectionStart ?? 0;
-            const end = el.selectionEnd ?? 0;
-            return start === 0 && end === 0;
-        },
-
-        caretAlFinal(el) {
-            if (el.tagName === 'SELECT') {
-                return true;
-            }
-            const len = String(el.value ?? '').length;
-            const start = el.selectionStart ?? 0;
-            const end = el.selectionEnd ?? 0;
-            return start === len && end === len;
         },
 
         todoSeleccionado(el) {
@@ -602,29 +651,20 @@ document.addEventListener('alpine:init', () => {
                 destino = campos[idx + 1] || null;
             } else if (event.key === 'ArrowUp') {
                 destino = campos[idx - 1] || null;
-            } else if (event.key === 'ArrowRight') {
+            } else if (event.key === 'ArrowRight' || event.key === 'ArrowLeft') {
+                // ←/→ solo mueven el caret dentro del campo (nunca saltan).
                 // Con todo el texto seleccionado (p. ej. al bajar del select),
-                // ←/→ colapsan el caret para poder editar; no saltan de campo.
+                // colapsan el caret al margen para poder editar.
                 if (this.todoSeleccionado(actual) && String(actual.value ?? '').length > 0) {
                     event.preventDefault();
                     const len = String(actual.value ?? '').length;
-                    actual.setSelectionRange(len, len);
-                    return;
+                    if (event.key === 'ArrowRight') {
+                        actual.setSelectionRange(len, len);
+                    } else {
+                        actual.setSelectionRange(0, 0);
+                    }
                 }
-                if (!this.caretAlFinal(actual)) {
-                    return;
-                }
-                destino = campos[idx + 1] || null;
-            } else if (event.key === 'ArrowLeft') {
-                if (this.todoSeleccionado(actual) && String(actual.value ?? '').length > 0) {
-                    event.preventDefault();
-                    actual.setSelectionRange(0, 0);
-                    return;
-                }
-                if (!this.caretAlInicio(actual)) {
-                    return;
-                }
-                destino = campos[idx - 1] || null;
+                return;
             }
 
             if (!destino) {

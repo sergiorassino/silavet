@@ -19,7 +19,7 @@ class EstimacionCostos extends Component
 {
     public ?int $idClientes = null;
 
-    public string $idTipoSeleccionar = '';
+    public string $busquedaDeterminacion = '';
 
     /** @var array<int, array{idTipodeterminaciones: int, nombre: string, neto: string, descuento: string, precio: string}> */
     public array $seleccionados = [];
@@ -41,6 +41,7 @@ class EstimacionCostos extends Component
 
         if ($value === '' || $value === null) {
             $this->idClientes = null;
+            $this->busquedaDeterminacion = '';
             $this->recalcularPreciosSeleccionados();
 
             return;
@@ -48,17 +49,8 @@ class EstimacionCostos extends Component
 
         $this->idClientes = (int) $value;
         $this->assertClienteEnAlcance($this->idClientes);
+        $this->busquedaDeterminacion = '';
         $this->recalcularPreciosSeleccionados();
-    }
-
-    public function updatedIdTipoSeleccionar(mixed $value): void
-    {
-        if ($value === '' || $value === null) {
-            return;
-        }
-
-        $this->agregarDeterminacion((int) $value);
-        $this->idTipoSeleccionar = '';
     }
 
     public function agregarDeterminacion(int $idTipo): void
@@ -87,6 +79,7 @@ class EstimacionCostos extends Component
         }
 
         $this->seleccionados[] = $this->filaDesdeTipo($tipo);
+        $this->busquedaDeterminacion = '';
     }
 
     public function quitarDeterminacion(int $indice): void
@@ -105,7 +98,7 @@ class EstimacionCostos extends Component
     {
         abort_unless(tienePermiso(PermisosIaCatalog::LISTADOS_ESTADISTICOS), 403);
         $this->seleccionados = [];
-        $this->idTipoSeleccionar = '';
+        $this->busquedaDeterminacion = '';
     }
 
     public function render()
@@ -118,11 +111,16 @@ class EstimacionCostos extends Component
             ->get(['idClientes', 'nombre', 'descuento']);
 
         $idsYa = collect($this->seleccionados)->pluck('idTipodeterminaciones')->all();
+        $term = trim(mb_strtolower($this->busquedaDeterminacion));
 
-        $tiposDisponibles = Tipodeterminacion::query()
-            ->when($idsYa !== [], fn ($q) => $q->whereNotIn('idTipodeterminaciones', $idsYa))
-            ->orderBy('nombre')
-            ->get(['idTipodeterminaciones', 'nombre', 'precio']);
+        $tiposDisponibles = $term === ''
+            ? collect()
+            : Tipodeterminacion::query()
+                ->when($idsYa !== [], fn ($q) => $q->whereNotIn('idTipodeterminaciones', $idsYa))
+                ->whereRaw('LOWER(nombre) LIKE ?', ['%'.$term.'%'])
+                ->orderBy('nombre')
+                ->limit(40)
+                ->get(['idTipodeterminaciones', 'nombre', 'precio']);
 
         $cliente = $this->idClientes !== null
             ? $clientes->firstWhere('idClientes', $this->idClientes)

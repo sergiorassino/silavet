@@ -51,19 +51,56 @@
                 <h2 class="mb-3 text-sm font-semibold uppercase tracking-wide text-neutral-700">
                     Listado de determinaciones
                 </h2>
-                <label class="form-label" for="vl-est-costos-tipo">Agregar determinación</label>
-                <select wire:model.live="idTipoSeleccionar"
-                        id="vl-est-costos-tipo"
-                        class="form-input"
-                        @disabled(! $idClientes)>
-                    <option value="">Seleccione</option>
-                    @foreach ($tiposDisponibles as $tipo)
-                        <option value="{{ $tipo->idTipodeterminaciones }}">{{ $tipo->nombre }}</option>
-                    @endforeach
-                </select>
-                @unless ($idClientes)
-                    <p class="mt-2 text-xs text-amber-700">Primero elija un cliente.</p>
-                @endunless
+                <div x-data="vlEstCostosBusqueda">
+                    <label class="form-label" for="vl-est-costos-buscar">Agregar determinación</label>
+                    <input wire:model.live.debounce.400ms="busquedaDeterminacion"
+                           id="vl-est-costos-buscar"
+                           x-ref="buscar"
+                           type="search"
+                           placeholder="Escriba para buscar…"
+                           class="form-input"
+                           autocomplete="off"
+                           title="Escriba, use ↑↓ y Enter para agregar"
+                           @keydown.arrow-down.prevent="mover(1)"
+                           @keydown.arrow-up.prevent="mover(-1)"
+                           @keydown.enter.prevent="elegirIndice()"
+                           @keydown.escape.prevent="$wire.set('busquedaDeterminacion', '')"
+                           @disabled(! $idClientes)>
+                    @unless ($idClientes)
+                        <p class="mt-2 text-xs text-amber-700">Primero elija un cliente.</p>
+                    @else
+                        @if (trim($busquedaDeterminacion) === '')
+                            <p class="mt-2 text-xs text-neutral-500">
+                                Escriba unas letras; la búsqueda se hace al pausar.
+                                Con resultados: <strong class="font-semibold text-neutral-700">↑↓</strong> y
+                                <strong class="font-semibold text-neutral-700">Enter</strong> para agregar.
+                            </p>
+                        @elseif ($tiposDisponibles->isEmpty())
+                            <p class="mt-2 text-xs text-neutral-500">No hay determinaciones que coincidan.</p>
+                        @else
+                            <ul x-ref="lista"
+                                class="mt-2 max-h-56 overflow-y-auto divide-y divide-accent-100 rounded-lg border border-accent-200"
+                                role="listbox"
+                                aria-label="Resultados de búsqueda">
+                                @foreach ($tiposDisponibles as $tipo)
+                                    <li wire:key="est-buscar-{{ $tipo->idTipodeterminaciones }}"
+                                        role="option"
+                                        data-est-id="{{ $tipo->idTipodeterminaciones }}"
+                                        data-est-idx="{{ $loop->index }}"
+                                        :aria-selected="indice === {{ $loop->index }}"
+                                        @mouseenter="indice = {{ $loop->index }}"
+                                        @mousedown.prevent="elegirId({{ $tipo->idTipodeterminaciones }})"
+                                        :class="indice === {{ $loop->index }}
+                                            ? 'bg-primary-600 font-semibold text-white'
+                                            : 'text-neutral-800 hover:bg-accent-50'"
+                                        class="cursor-pointer px-3 py-2 text-sm">
+                                        {{ $tipo->nombre }}
+                                    </li>
+                                @endforeach
+                            </ul>
+                        @endif
+                    @endunless
+                </div>
             </div>
 
             <div class="rounded-lg border border-accent-200 p-4">

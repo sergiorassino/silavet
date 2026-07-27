@@ -270,7 +270,21 @@ class PacienteForm extends Component
 
         try {
             if ($this->idPacientes) {
-                $payload['nombreProtocolo'] = trim($data['nombreProtocolo']);
+                if ($this->nombreProtocoloEditableEnEdicion()) {
+                    $numero = trim($data['nombreProtocolo']);
+                    $yaExiste = Paciente::query()
+                        ->where('nombreProtocolo', $numero)
+                        ->where('idPacientes', '!=', $this->idPacientes)
+                        ->exists();
+
+                    if ($yaExiste) {
+                        $mensaje = 'Ya existe un protocolo con el número «'.$numero.'». Elija otro.';
+                        $this->dispatch('vl-swal-error', mensaje: $mensaje, titulo: 'Número en uso');
+                        throw ValidationException::withMessages(['nombreProtocolo' => $mensaje]);
+                    }
+
+                    $payload['nombreProtocolo'] = $numero;
+                }
                 $paciente = $this->pacienteEnAlcance($this->idPacientes);
                 $paciente->update($payload);
                 $mensaje = 'Protocolo actualizado correctamente.';
@@ -442,6 +456,11 @@ class PacienteForm extends Component
         );
     }
 
+    protected function nombreProtocoloEditableEnEdicion(): bool
+    {
+        return (bool) config('tenant.protocolos.nombre_protocolo_editable_en_edicion', false);
+    }
+
     protected static function tieneColumnaDni(): bool
     {
         return Schema::hasColumn('pacientes', 'dni');
@@ -503,6 +522,7 @@ class PacienteForm extends Component
         $sexos = SexoCatalog::opciones();
         $clienteBloqueado = $ctx->esCliente() && $ctx->idClientes;
         $usaTipoProtocolo = ProtocoloNumero::usaTipoProtocolo();
+        $nombreProtocoloEditable = (bool) $this->idPacientes && $this->nombreProtocoloEditableEnEdicion();
         $puedeEliminar = false;
 
         if ($this->idPacientes) {
@@ -521,6 +541,7 @@ class PacienteForm extends Component
             'sexos' => $sexos,
             'clienteBloqueado' => $clienteBloqueado,
             'usaTipoProtocolo' => $usaTipoProtocolo,
+            'nombreProtocoloEditable' => $nombreProtocoloEditable,
             'puedeEliminar' => $puedeEliminar,
             'urlVolver' => PacienteListadoFiltros::urlIndex($this->listadoFiltros, $this->idPacientes),
         ])->layout('layouts.staff', UsuarioMenuPortal::staffLayoutParams(labCtx()->idRoles));

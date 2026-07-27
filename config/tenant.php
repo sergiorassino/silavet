@@ -68,6 +68,12 @@ return [
         */
         'estados_flujo' => 4,
 
+        /*
+        | Si true, en edición de paciente el campo nombreProtocolo es editable.
+        | En alta siempre es de solo lectura (generado). Default: false. alqu: true.
+        */
+        'nombre_protocolo_editable_en_edicion' => false,
+
         'implementacion' => 'fecha_diaria',
 
         'anual_consecutivo' => [

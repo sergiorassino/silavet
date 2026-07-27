@@ -98,6 +98,21 @@
 
 <x-vl-sidebar-grupo group-key="gestionStock" label="Gestión de Stock" title="Gestión de Stock v1.0">
     <x-slot:icon><x-vl-sidebar-icon name="grupo-stock" /></x-slot:icon>
+
+    @if (tienePermiso(\App\Support\PermisosIaCatalog::REACTIVOS))
+        <a href="{{ route('abm.reactivos.index') }}"
+           class="vl-sidebar-link {{ request()->routeIs('abm.reactivos.*') ? 'is-active' : '' }}"
+           title="Reactivos e Insumos (v1.0)">
+            <x-vl-sidebar-icon name="reactivos" class="h-4 w-4 shrink-0 opacity-80" />
+            <span class="truncate">Reactivos e Insumos</span>
+        </a>
+        <a href="{{ route('abm.reactivos-por-determinacion.index') }}"
+           class="vl-sidebar-link {{ request()->routeIs('abm.reactivos-por-determinacion.*') ? 'is-active' : '' }}"
+           title="Reactivos por Determinación (v1.0)">
+            <x-vl-sidebar-icon name="reactivos-por-determinacion" class="h-4 w-4 shrink-0 opacity-80" />
+            <span class="truncate">Reactivos por Det.</span>
+        </a>
+    @endif
 </x-vl-sidebar-grupo>
 
 <x-vl-sidebar-grupo group-key="parametrosGenerales" label="Parámetros Generales" title="Parámetros Generales v1.0">

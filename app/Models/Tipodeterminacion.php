@@ -43,4 +43,9 @@ class Tipodeterminacion extends Model
     {
         return $this->hasMany(Renglonesxdeterminacion::class, 'idTipodeterminaciones', 'idTipodeterminaciones');
     }
+
+    public function consumosReactivos(): HasMany
+    {
+        return $this->hasMany(Reactivoxdeterminacion::class, 'idTipodeterminaciones', 'idTipodeterminaciones');
+    }
 }
