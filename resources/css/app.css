@@ -509,15 +509,21 @@
     }
 
     .vl-dash-hero h1 {
-        @apply text-xl font-bold sm:text-2xl;
+        @apply text-xl font-bold leading-snug sm:text-2xl;
     }
 
     .vl-dash-cta {
-        @apply relative flex shrink-0 flex-col justify-center rounded-2xl px-4 py-3 text-left transition-all duration-200;
-        min-width: 12rem;
+        @apply relative flex w-full shrink-0 flex-col justify-center rounded-2xl px-4 py-3 text-left transition-all duration-200 sm:w-auto;
+        min-width: 0;
         background: rgba(255, 255, 255, 0.12);
         border: 1px solid rgba(255, 255, 255, 0.22);
         box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.12);
+    }
+
+    @media (min-width: 640px) {
+        .vl-dash-cta {
+            min-width: 12rem;
+        }
     }
 
     .vl-dash-cta:hover {
@@ -938,46 +944,97 @@
     }
 
     .vl-hero-logo {
-        @apply flex shrink-0 items-center justify-center overflow-hidden rounded-2xl bg-white;
-        padding: 0.5rem 0.6rem;
+        @apply flex max-w-full shrink-0 items-center justify-center overflow-hidden rounded-2xl bg-white;
+        padding: 0.4rem 0.5rem;
         box-shadow:
             inset 0 1px 0 rgba(255, 255, 255, 0.9),
             0 6px 14px -10px rgba(7, 89, 133, 0.45);
     }
 
+    @media (min-width: 640px) {
+        .vl-hero-logo {
+            padding: 0.5rem 0.6rem;
+        }
+    }
+
     .vl-hero-logo--wide {
-        padding: 0.45rem 0.6rem;
+        padding: 0.35rem 0.5rem;
+        max-width: min(100%, 12rem);
+    }
+
+    @media (min-width: 640px) {
+        .vl-hero-logo--wide {
+            padding: 0.45rem 0.6rem;
+            max-width: none;
+        }
     }
 
     .vl-hero-logo--square {
-        width: 5.8rem;
-        height: 5.8rem;
-        padding: 0.35rem;
+        width: 4.5rem;
+        height: 4.5rem;
+        padding: 0.3rem;
+    }
+
+    @media (min-width: 640px) {
+        .vl-hero-logo--square {
+            width: 5.8rem;
+            height: 5.8rem;
+            padding: 0.35rem;
+        }
     }
 
     .vl-hero-logo--tall {
-        width: 4.7rem;
-        height: 5.8rem;
-        padding: 0.35rem;
+        width: 3.6rem;
+        height: 4.5rem;
+        padding: 0.3rem;
+    }
+
+    @media (min-width: 640px) {
+        .vl-hero-logo--tall {
+            width: 4.7rem;
+            height: 5.8rem;
+            padding: 0.35rem;
+        }
     }
 
     .vl-hero-logo__img {
         display: block;
         width: auto;
         height: auto;
-        max-height: 5.25rem;
-        max-width: 15.4rem;
+        max-height: 3.75rem;
+        max-width: 100%;
         object-fit: contain;
     }
 
+    @media (min-width: 640px) {
+        .vl-hero-logo__img {
+            max-height: 5.25rem;
+            max-width: 15.4rem;
+        }
+    }
+
     .vl-hero-logo--square .vl-hero-logo__img {
-        max-height: 5.1rem;
-        max-width: 5.1rem;
+        max-height: 3.9rem;
+        max-width: 3.9rem;
+    }
+
+    @media (min-width: 640px) {
+        .vl-hero-logo--square .vl-hero-logo__img {
+            max-height: 5.1rem;
+            max-width: 5.1rem;
+        }
     }
 
     .vl-hero-logo--tall .vl-hero-logo__img {
-        max-height: 5.1rem;
-        max-width: 3.85rem;
+        max-height: 3.9rem;
+        max-width: 2.9rem;
+    }
+
+    @media (min-width: 640px) {
+        .vl-hero-logo--tall .vl-hero-logo__img {
+            max-height: 5.1rem;
+            max-width: 3.85rem;
+        }
     }
 
     .vl-hero-logo__monogram {

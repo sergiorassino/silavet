@@ -74,8 +74,11 @@ use App\Livewire\Listados\EstimacionCostos;
 use App\Livewire\Listados\ExcelPacientes;
 use App\Livewire\Listados\HistorialDeterminaciones;
 use App\Livewire\Listados\ListadoEstadisticoPacientes;
+use App\Http\Controllers\WebManifestController;
 use App\Support\Auth\CerrarSesionAplicacion;
 use Illuminate\Support\Facades\Route;
+
+Route::get('/manifest.webmanifest', WebManifestController::class)->name('webmanifest');
 
 Route::get('/', fn () => redirect()->route('login'));
 
