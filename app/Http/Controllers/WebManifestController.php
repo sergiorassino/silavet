@@ -19,7 +19,9 @@ class WebManifestController extends Controller
             'name' => $name,
             'short_name' => $name,
             'description' => 'Sistema de laboratorio veterinario',
-            'start_url' => url('/'),
+            // /login (no la carpeta raíz): en Apache con Options -Indexes, url('/')
+            // es el directorio del proyecto y responde 403 Forbidden.
+            'start_url' => url('/login'),
             'scope' => url('/'),
             'display' => 'standalone',
             'background_color' => '#FFFFFF',
