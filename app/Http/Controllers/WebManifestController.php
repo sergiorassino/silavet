@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Support\Entorno\TemaFondoSistema;
 use Illuminate\Http\JsonResponse;
 
 /**
@@ -14,6 +15,7 @@ class WebManifestController extends Controller
     public function __invoke(): JsonResponse
     {
         $name = (string) config('app.name', 'SILAVET');
+        $themeColor = TemaFondoSistema::colorBase();
 
         return response()->json([
             'name' => $name,
@@ -25,7 +27,7 @@ class WebManifestController extends Controller
             'scope' => url('/'),
             'display' => 'standalone',
             'background_color' => '#FFFFFF',
-            'theme_color' => '#0EA5E9',
+            'theme_color' => $themeColor,
             'icons' => [
                 [
                     'src' => asset('img/icon-192.png'),
