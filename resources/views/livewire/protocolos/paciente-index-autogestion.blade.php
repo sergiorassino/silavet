@@ -47,7 +47,7 @@
         </div>
     @endif
 
-    <div class="vl-card overflow-hidden">
+    <div class="vl-card vl-pacientes-card">
         <div class="vl-toolbar border-b border-accent-200 px-5 py-3 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <input wire:model.live.debounce.300ms="busqueda"
                    type="search"
@@ -100,9 +100,8 @@
             </div>
         </div>
 
-        <div class="overflow-x-auto">
-            <table class="vl-pacientes-grid min-w-full text-xs">
-                <thead class="bg-accent-50/80">
+        <table class="vl-pacientes-grid min-w-full text-xs">
+                <thead>
                     <tr>
                         <th class="vl-pacientes-th vl-pacientes-th--icon" title="Informe PDF">INFOR.</th>
                         <th class="vl-pacientes-th vl-pacientes-th--num">#</th>
@@ -200,7 +199,7 @@
                                 <td class="vl-pacientes-td vl-pacientes-td--icon">
                                     <x-vl-grid-icon-btn
                                         title="Asistente IA"
-                                        variant="primary"
+                                        variant="neutral"
                                         wire:click="abrirModalIa({{ $paciente->idPacientes }})"
                                     >
                                         <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
@@ -229,7 +228,6 @@
                     @endforelse
                 </tbody>
             </table>
-        </div>
 
         @if ($pacientes->hasPages())
             <div class="vl-matriz-list-footer px-3 py-1.5 sm:px-4">

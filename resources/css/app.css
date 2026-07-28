@@ -1216,14 +1216,62 @@
         @apply bg-primary-600 text-white shadow-sm hover:bg-primary-700 hover:text-white;
     }
 
+    /* Sin scroll interno: sticky respecto al scroll de la página.
+     * No usar overflow-x/hidden en ancestros: rompe el sticky del thead. */
+    .vl-pacientes-card {
+        overflow: visible;
+    }
+
+    /*
+     * border-separate (no collapse): con sticky + border-collapse los bordes
+     * del thead desaparecen al hacer scroll en Chromium.
+     */
     .vl-pacientes-grid {
-        @apply w-full border-collapse border;
+        @apply w-full;
+        border-collapse: separate;
+        border-spacing: 0;
+    }
+
+    .vl-pacientes-th,
+    .vl-pacientes-td {
+        border-style: solid;
         border-color: #6a7282;
+        border-width: 0 1px 1px 0;
+    }
+
+    .vl-pacientes-th:first-child,
+    .vl-pacientes-td:first-child {
+        border-left-width: 1px;
     }
 
     .vl-pacientes-th {
-        @apply border bg-accent-50 px-1 py-2 text-left text-[9px] font-bold uppercase tracking-[0.08em] text-neutral-600 whitespace-nowrap;
-        border-color: #6a7282;
+        position: sticky;
+        top: 0;
+        z-index: 10;
+        @apply bg-accent-50 px-1 py-2 text-left text-[9px] font-bold uppercase tracking-[0.08em] text-neutral-600 whitespace-nowrap;
+        border-top-width: 1px;
+        /* El inferior lo dibuja ::after (sobrevive al scroll bajo sticky). */
+        border-bottom-width: 0;
+        background-clip: padding-box;
+    }
+
+    /* En mobile el layout staff tiene header sticky h-14. */
+    @media (max-width: 767px) {
+        .vl-pacientes-th {
+            top: 3.5rem;
+        }
+    }
+
+    /* Borde inferior dibujado encima del scroll (no depende del border del table). */
+    .vl-pacientes-th::after {
+        content: '';
+        position: absolute;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        height: 1px;
+        background-color: #6a7282;
+        pointer-events: none;
     }
 
     .vl-pacientes-th--num,
@@ -1232,8 +1280,7 @@
     }
 
     .vl-pacientes-td {
-        @apply border px-1 py-1.5 text-xs text-neutral-900 align-middle;
-        border-color: #6a7282;
+        @apply px-1 py-1.5 text-xs text-neutral-900 align-middle;
     }
 
     .vl-pacientes-td--num {

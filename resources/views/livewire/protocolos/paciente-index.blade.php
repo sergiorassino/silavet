@@ -61,7 +61,7 @@
         </div>
     </div>
 
-    <div class="vl-card overflow-hidden">
+    <div class="vl-card vl-pacientes-card">
         <div class="vl-toolbar border-b border-accent-200 px-5 py-3 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <input wire:model.live.debounce.300ms="busqueda"
                    type="search"
@@ -102,9 +102,8 @@
             </div>
         </div>
 
-        <div class="overflow-x-auto">
-            <table class="vl-pacientes-grid min-w-full text-xs">
-                <thead class="bg-accent-50/80">
+        <table class="vl-pacientes-grid min-w-full text-xs">
+                <thead>
                     <tr>
                         <th class="vl-pacientes-th vl-pacientes-th--num">#</th>
                         <th class="vl-pacientes-th vl-pacientes-th--icon" title="Editar paciente">Ed.</th>
@@ -198,7 +197,7 @@
                                             )) }}"
                                            title="{{ $afipEmitido ? 'Comprobantes AFIP (emitido)' : 'Comprobantes AFIP' }}"
                                            aria-label="{{ $afipEmitido ? 'Comprobantes AFIP (emitido)' : 'Comprobantes AFIP' }}"
-                                           class="vl-grid-icon-btn {{ $afipEmitido ? 'bg-orange-500 text-white ring-2 ring-orange-300 hover:bg-orange-600' : 'text-sky-700 hover:bg-sky-50' }}">
+                                           class="vl-grid-icon-btn {{ $afipEmitido ? 'bg-orange-500 text-white ring-2 ring-orange-300 hover:bg-orange-600' : 'text-neutral-600 hover:bg-neutral-100' }}">
                                             @if ($afipEmitido)
                                                 {{-- Círculo con tilde sólido: comprobante emitido --}}
                                                 <svg class="h-[26px] w-[26px]" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
@@ -271,7 +270,7 @@
                                     <a href="{{ route('protocolos.determinaciones', array_merge(['id' => $paciente->idPacientes], $this->filtrosListadoParaUrl())) }}"
                                        title="Determinaciones solicitadas"
                                        aria-label="Determinaciones solicitadas"
-                                       class="vl-grid-icon-btn text-primary-700 hover:bg-primary-50">
+                                       class="vl-grid-icon-btn text-neutral-600 hover:bg-neutral-100">
                                         <svg class="h-[26px] w-[26px]" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.75"
                                                   d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
@@ -304,7 +303,7 @@
                                         <a href="{{ route('protocolos.resultados', array_merge(['id' => $paciente->idPacientes], $this->filtrosListadoParaUrl())) }}"
                                            title="Cargar resultados"
                                            aria-label="Cargar resultados"
-                                           class="vl-grid-icon-btn text-primary-700 hover:bg-primary-50">
+                                           class="vl-grid-icon-btn text-red-600 hover:bg-red-50">
                                             <svg class="h-[26px] w-[26px]" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.75"
                                                       d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0115.75 21H5.25A2.25 2.25 0 013 18.75V8.25A2.25 2.25 0 015.25 6H10"/>
@@ -322,7 +321,7 @@
                                 <td class="vl-pacientes-td vl-pacientes-td--icon">
                                     <x-vl-grid-icon-btn
                                         title="Editar informe"
-                                        variant="danger"
+                                        variant="neutral"
                                         wire:click="abrirModalEdInf({{ $paciente->idPacientes }})"
                                     >
                                         <svg class="h-[26px] w-[26px]" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
@@ -334,7 +333,7 @@
                                 <td class="vl-pacientes-td vl-pacientes-td--icon">
                                     <x-vl-grid-icon-btn
                                         title="Observaciones"
-                                        variant="info"
+                                        variant="neutral"
                                         wire:click="abrirModalObs({{ $paciente->idPacientes }})"
                                     >
                                         <svg class="h-[26px] w-[26px]" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
@@ -390,7 +389,7 @@
                                 <td class="vl-pacientes-td vl-pacientes-td--icon">
                                     <x-vl-grid-icon-btn
                                         title="Enviar informe"
-                                        variant="success"
+                                        variant="neutral"
                                         wire:click="abrirModalEnvio({{ $paciente->idPacientes }})"
                                     >
                                         <svg class="h-[26px] w-[26px]" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
@@ -402,7 +401,7 @@
                                 <td class="vl-pacientes-td vl-pacientes-td--icon">
                                     <x-vl-grid-icon-btn
                                         title="Asistente IA"
-                                        variant="primary"
+                                        variant="neutral"
                                         wire:click="abrirModalIa({{ $paciente->idPacientes }})"
                                     >
                                         <svg class="h-[26px] w-[26px]" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
@@ -422,7 +421,7 @@
                                             )) }}"
                                            title="{{ $afipEmitido ? 'Comprobantes AFIP (emitido)' : 'Comprobantes AFIP' }}"
                                            aria-label="{{ $afipEmitido ? 'Comprobantes AFIP (emitido)' : 'Comprobantes AFIP' }}"
-                                           class="vl-grid-icon-btn {{ $afipEmitido ? 'bg-orange-500 text-white ring-2 ring-orange-300 hover:bg-orange-600' : 'text-sky-700 hover:bg-sky-50' }}">
+                                           class="vl-grid-icon-btn {{ $afipEmitido ? 'bg-orange-500 text-white ring-2 ring-orange-300 hover:bg-orange-600' : 'text-neutral-600 hover:bg-neutral-100' }}">
                                             @if ($afipEmitido)
                                                 {{-- Círculo con tilde sólido: comprobante emitido --}}
                                                 <svg class="h-[26px] w-[26px]" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
@@ -458,7 +457,6 @@
                     @endforelse
                 </tbody>
             </table>
-        </div>
 
         @if ($pacientes->hasPages())
             <div class="vl-matriz-list-footer px-3 py-1.5 sm:px-4">
