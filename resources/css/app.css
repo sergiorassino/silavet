@@ -1857,7 +1857,42 @@
         @apply pl-1 text-left;
     }
 
-    /* Carga de resultados */
+    /* Carga de resultados — cabecera fija al scroll de la página (vertical y horizontal).
+     * Sin overflow en ancestros entre sticky y el scrollport (mismo criterio que pacientes). */
+    .vl-carga-sticky {
+        position: sticky;
+        top: 0;
+        left: 0;
+        z-index: 25;
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+        width: 100%;
+        max-width: 100%;
+        box-sizing: border-box;
+        /* Opaco para que el formulario no se vea al pasar por debajo */
+        background-color: var(--vl-app-bg, #f0f9ff);
+        background-image: linear-gradient(
+            160deg,
+            var(--vl-app-bg, #f0f9ff) 0%,
+            var(--vl-app-bg-mid, #e8f6fe) 42%,
+            var(--vl-app-bg-end, #ffffff) 100%
+        );
+        padding-block: 0.25rem 0.75rem;
+    }
+
+    /* En mobile el layout staff tiene header sticky h-14. */
+    @media (max-width: 767px) {
+        .vl-carga-sticky {
+            top: 3.5rem;
+        }
+    }
+
+    .vl-carga-sticky-toolbar {
+        @apply flex flex-col gap-3 rounded-2xl border bg-white px-5 py-3 shadow-sm shadow-neutral-900/5 sm:flex-row sm:items-center sm:justify-between;
+        border-color: var(--color-accent-200);
+    }
+
     .vl-carga-form {
         @apply px-5 py-4 space-y-6 max-w-4xl mx-auto;
     }
@@ -1911,10 +1946,16 @@
     }
 
     /* Overlay aparte: en Windows el texto del <select> se pinta sobre padding/background. */
+    .vl-select-field,
     .vl-carga-select-field {
-        @apply relative mb-2 w-full max-w-xs;
+        @apply relative w-full;
     }
 
+    .vl-carga-select-field {
+        @apply mb-2 max-w-xs;
+    }
+
+    .vl-select-field::after,
     .vl-carga-select-field::after {
         content: "";
         position: absolute;
@@ -1930,6 +1971,13 @@
         background-position: right 0.45rem center;
         background-repeat: no-repeat;
         background-size: 1.35em 1.35em;
+    }
+
+    .vl-select-field > select {
+        appearance: none;
+        padding-right: 2.5rem;
+        background-image: none;
+        text-overflow: ellipsis;
     }
 
     .vl-carga-select {
@@ -2350,7 +2398,7 @@
     }
 
     .vl-det-grupo-master-item {
-        @apply flex w-full items-center gap-2 px-3 py-2.5 text-left text-sm transition-colors hover:bg-accent-50/70;
+        @apply flex w-full cursor-pointer items-center gap-2 px-3 py-2.5 text-left text-sm transition-colors hover:bg-accent-50/70;
     }
 
     .vl-det-grupo-master-item.is-active {
@@ -2416,6 +2464,64 @@
 
     .vl-det-grupo-item-picker {
         @apply flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm transition-colors hover:bg-primary-50;
+    }
+
+    /* ─── Valores de referencia (rangovalores) ─────────────────────────── */
+
+    .vl-rango-layout {
+        @apply grid gap-4 lg:grid-cols-[minmax(14rem,20rem)_1fr];
+    }
+
+    .vl-rango-grid {
+        @apply table-auto border-collapse;
+    }
+
+    .vl-rango-grid-wrap {
+        @apply flex justify-center overflow-x-auto px-4 py-3;
+    }
+
+    .vl-rango-th {
+        @apply border-b border-accent-200 px-2 py-1.5 text-left text-[10px] font-bold uppercase tracking-[0.08em] text-neutral-500 whitespace-nowrap;
+    }
+
+    .vl-rango-col--acciones {
+        @apply w-0 whitespace-nowrap pr-1 text-center;
+    }
+
+    .vl-rango-col--item {
+        @apply whitespace-nowrap px-3;
+    }
+
+    .vl-rango-col--sexo {
+        @apply whitespace-nowrap px-3;
+    }
+
+    .vl-rango-col--valor {
+        @apply whitespace-nowrap px-2;
+    }
+
+    .vl-rango-td {
+        @apply px-1 py-1 text-xs text-neutral-900 align-middle;
+    }
+
+    .vl-rango-row:hover {
+        @apply bg-accent-50/40;
+    }
+
+    .vl-rango-input {
+        @apply w-20 rounded border border-accent-300 bg-white px-1.5 py-1 text-right text-xs transition-colors focus:border-primary-400 focus:outline-none focus:ring-1 focus:ring-primary-400;
+    }
+
+    .vl-rango-grupo-header {
+        @apply bg-accent-100/70;
+    }
+
+    .vl-rango-grupo-th {
+        @apply px-2 py-1.5 text-sm font-semibold text-neutral-700 align-middle text-center;
+    }
+
+    .vl-rango-grupo-del-btn {
+        @apply cursor-pointer rounded px-2 py-0.5 text-[10px] font-medium text-red-600 hover:bg-red-50 hover:text-red-700 transition-colors;
     }
 }
 

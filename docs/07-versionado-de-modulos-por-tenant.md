@@ -83,6 +83,10 @@ variantes: [10-numero-de-protocolo.md](10-numero-de-protocolo.md).
 `tesoreria_pacientes`). Detalle flags: [11-tesoreria-por-tenant.md](11-tesoreria-por-tenant.md).
 Especificación del módulo: [modulos/tesoreria.md](modulos/tesoreria.md).
 
+**Ejemplo implementado:** automatización Serie Roja / Serie Blanca en carga de
+resultados (`tenant.hemograma_auto`). Flag + mapa rol → `idItems` por laboratorio.
+Doc: [modulos/carga-resultados.md](modulos/carga-resultados.md).
+
 ---
 
 ## 4. Identidad por tenant

@@ -158,4 +158,32 @@ return [
         ],
     ],
 
+    /*
+    | Automatización Serie Roja / Serie Blanca en carga de resultados.
+    | Por defecto desactivada. Cada lab que la use declara activo + mapa de
+    | roles semánticos → idItems (itemsinforme) de SU catálogo.
+    | Ver docs/modulos/carga-resultados.md.
+    */
+    'hemograma_auto' => [
+        'activo' => false,
+        'items' => [
+            'hto' => null,
+            'eritrocitos' => null,
+            'hb' => null,
+            'vcm' => null,
+            'chcm' => null,
+            'plaquetas' => null,
+            'plaquetas_conteo_manual' => null,
+            'leucocitos' => null,
+            'neutrofilos' => null,
+            'bandas' => null,
+            'linfocitos' => null,
+            'eosinofilos' => null,
+            'basofilos' => null,
+            'monocitos' => null,
+            'serie_roja' => null,
+            'serie_blanca' => null,
+        ],
+    ],
+
 ];

@@ -9,10 +9,13 @@ use App\Support\Autoanalizadores\AutoanalizadorConfig;
 use App\Support\Autoanalizadores\AutoanalizadorImportador;
 use App\Support\PermisosIaCatalog;
 use App\Support\Protocolos\PacienteListadoFiltros;
+use App\Support\Resultados\HemogramaAutoConfig;
+use App\Support\Resultados\HemogramaAutoPayload;
 use App\Support\Resultados\RenglonesMaterializer;
 use App\Support\Resultados\ResultadosCargaConsulta;
 use App\Support\Resultados\ResultadosEstadosCatalog;
 use App\Support\Resultados\ResultadosGuardarServicio;
+use App\Support\SexoCatalog;
 use App\Support\UsuarioMenuPortal;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Facades\Schema;
@@ -49,6 +52,9 @@ class PacienteResultados extends Component
 
     /** @var list<array{nombre: string, mtime: int, bytes: int}> */
     public array $archivosRecientes = [];
+
+    /** Mensaje inline tras subir CSV (sin Swal, para no romper el flujo por teclado). */
+    public string $mensajeUploadAa = '';
 
     public function mount(int $id): void
     {
@@ -105,6 +111,8 @@ class PacienteResultados extends Component
             return $this->redirect($this->urlVolver(), navigate: true);
         }
 
+        $this->dispatch('vl-swal-exito', mensaje: 'Guardado correctamente.');
+
         return null;
     }
 
@@ -120,13 +128,17 @@ class PacienteResultados extends Component
 
         $this->refrescarListaAparatosYArchivos();
         $this->archivoCsv = null;
+        $this->mensajeUploadAa = '';
+        $this->aparatoSeleccionado = '';
         $this->modalAutoanalizadorAbierto = true;
+        $this->dispatch('vl-aa-enfocar', target: 'upload');
     }
 
     public function cerrarModalAutoanalizador(): void
     {
         $this->modalAutoanalizadorAbierto = false;
         $this->archivoCsv = null;
+        $this->mensajeUploadAa = '';
         $this->resetValidation();
     }
 
@@ -166,9 +178,11 @@ class PacienteResultados extends Component
             $this->archivoCsv = null;
             $this->refrescarListaAparatosYArchivos();
             $this->archivoSeleccionado = $nombre;
-            $this->dispatch('vl-swal-exito', mensaje: 'Archivo guardado en AUTOANALIZADORES.');
+            $this->mensajeUploadAa = 'Archivo guardado en AUTOANALIZADORES.';
+            $this->dispatch('vl-aa-enfocar', target: 'archivo');
         } catch (Throwable $e) {
             $this->archivoCsv = null;
+            $this->mensajeUploadAa = '';
             $this->dispatch('vl-swal-error', mensaje: $e->getMessage());
         }
     }
@@ -226,13 +240,17 @@ class PacienteResultados extends Component
             ->loadMissing(['cliente', 'especie', 'raza']);
 
         $entorno = Entorno::query()->orderBy('id')->first();
+        $especieNombre = trim((string) ($paciente->especie?->nombre ?? ''));
+        $idEspecies = (int) ($paciente->idEspecies ?? 0);
+        $idSexos = SexoCatalog::idSexos($paciente->sexo ?? null);
+        $itemsHemograma = HemogramaAutoConfig::items();
 
         return view('livewire.protocolos.paciente-resultados', [
             'pacienteResumen' => [
                 'nombre' => (string) ($paciente->nombre ?: '—'),
                 'protocolo' => (string) ($paciente->nombreProtocolo ?: '—'),
                 'veterinaria' => (string) ($paciente->cliente?->nombre ?: '—'),
-                'especie' => (string) ($paciente->especie?->nombre ?: '—'),
+                'especie' => $especieNombre !== '' ? $especieNombre : '—',
                 'raza' => (string) ($paciente->raza?->nombre ?: '—'),
                 'sexo' => (string) ($paciente->sexo ?: '—'),
                 'edad' => (string) ($paciente->edad ?: '—'),
@@ -241,6 +259,14 @@ class PacienteResultados extends Component
             'estados' => ResultadosEstadosCatalog::valores(),
             'urlVolver' => $this->urlVolver(),
             'formulasJs' => $this->normalizarFormulas((string) ($entorno?->formulas ?? '')),
+            'hemogramaAuto' => HemogramaAutoPayload::paraPaciente($paciente),
+            'contextoFormulas' => [
+                // Nombre real (no "—"): formulas() compara JSespecie === 'Canino'|'Felino'.
+                'especieNombre' => $especieNombre,
+                'idEspecies' => $idEspecies,
+                'idSexos' => $idSexos,
+                'idConteoPlaquetas' => (int) ($itemsHemograma['plaquetas_conteo_manual'] ?? 0),
+            ],
             'autoanalizadoresDisponibles' => AutoanalizadorConfig::hayAparatosActivos(),
         ])->layout('layouts.staff', UsuarioMenuPortal::staffLayoutParams(labCtx()->idRoles));
     }
@@ -251,10 +277,6 @@ class PacienteResultados extends Component
             fn (array $a): array => ['clave' => $a['clave'], 'etiqueta' => $a['etiqueta']],
             AutoanalizadorConfig::aparatosActivos()
         );
-
-        if ($this->aparatoSeleccionado === '' && $this->aparatosDisponibles !== []) {
-            $this->aparatoSeleccionado = $this->aparatosDisponibles[0]['clave'];
-        }
 
         $this->archivosRecientes = (new AutoanalizadorCarpeta)->listarRecientes();
 

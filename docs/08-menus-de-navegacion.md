@@ -153,6 +153,7 @@ Fuente de verdad: `resources/views/components/vl-sidebar-icon.blade.php`.
 | `muestras-por-determinacion` | Muestras por Determinación |
 | `reactivos` | Reactivos e Insumos (Stock) |
 | `reactivos-por-determinacion` | Reactivos por Determinación (Stock) |
+| `valores-referencia` | Valores de Referencia (Parámetros Determinaciones) |
 
 Al sumar filas a esta tabla, verificar que el `name` nuevo no exista ya en el componente.
 

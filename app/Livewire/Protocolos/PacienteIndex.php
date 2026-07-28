@@ -250,8 +250,9 @@ class PacienteIndex extends Component
     {
         abort_unless(tienePermiso(PermisosIaCatalog::PROTOCOLOS), 403);
         $this->abortSiAutogestion();
-        // Con tesorería NeoLab los ingresos van a MovimientoIndex, no aquí.
-        abort_unless(! TesoreriaConfig::usaMovimientos(), 404);
+        // Ingresos: MovimientoIndex (tesoreria_movimientos) o tabla movimientos
+        // (tesoreria_pacientes). No hay alta de pago global en PacienteIndex.
+        abort_unless($this->pagoGlobalDisponible(), 404);
 
         $ctx = labCtx();
         $this->pagoGlobalIdPacientes = null;
@@ -268,7 +269,7 @@ class PacienteIndex extends Component
     {
         abort_unless(tienePermiso(PermisosIaCatalog::PROTOCOLOS), 403);
         $this->abortSiAutogestion();
-        abort_unless(! TesoreriaConfig::usaMovimientos(), 404);
+        abort_unless($this->pagoGlobalDisponible(), 404);
 
         $paciente = $this->pacienteEnAlcance($id);
         if ($paciente === null || ! $paciente->esPagoGlobal()) {
@@ -298,7 +299,7 @@ class PacienteIndex extends Component
     {
         $this->abortSiAutogestion();
         abort_unless(tienePermiso(PermisosIaCatalog::PROTOCOLOS), 403);
-        abort_unless(! TesoreriaConfig::usaMovimientos(), 404);
+        abort_unless($this->pagoGlobalDisponible(), 404);
 
         $uid = labCtx()->idUsuarios ?? 0;
         $key = 'protocolos-pago-global:'.$uid;
@@ -1255,8 +1256,10 @@ class PacienteIndex extends Component
             && FacturacionAfipConfig::esModoPaciente()
             && tienePermiso(PermisosIaCatalog::FACTURACION);
 
-        // Pago global en este listado solo si la caja no vive en `pacientes` (labvetciudad).
-        $mostrarPagoGlobal = ! $autogestion && ! TesoreriaConfig::usaMovimientos();
+        // Con tesorería dedicada no hay «Pago global» en este listado:
+        // - tesoreria_movimientos → ingresos en MovimientoIndex
+        // - tesoreria_pacientes → caja en tabla movimientos (labvetciudad)
+        $mostrarPagoGlobal = ! $autogestion && $this->pagoGlobalDisponible();
 
         $afipEmitidos = $mostrarColumnaAfip
             ? FacturacionAfipIndicadores::mapaConEmitido($pacientes->getCollection()->pluck('idPacientes')->all())
@@ -1315,6 +1318,17 @@ class PacienteIndex extends Component
         }
 
         return $paciente;
+    }
+
+    /**
+     * «Pago global» desde PacienteIndex.
+     * Oculto con tesoreria_pacientes (labvetciudad: caja en `movimientos`)
+     * y con tesoreria_movimientos (ingresos → MovimientoIndex).
+     */
+    private function pagoGlobalDisponible(): bool
+    {
+        return ! TesoreriaConfig::usaPacientes()
+            && ! TesoreriaConfig::usaMovimientos();
     }
 
     private function normalizarImporte(string $valor): string

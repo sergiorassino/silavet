@@ -1,6 +1,7 @@
 import './bootstrap';
 import Swal from 'sweetalert2';
 import './cantidad-determinaciones-comparac';
+import { instalarHemogramaAuto } from './hemograma-auto';
 
 window.Swal = Swal;
 
@@ -479,20 +480,84 @@ document.addEventListener('alpine:init', () => {
         estadoPaciente: config.estadoInicial || 'En Proc.',
 
         init() {
+            // Globales que usa el script legacy de entorno.formulas (ScriptCase).
+            // Independientes del flag hemograma_auto.
+            window.JSespecie = config.especieNombre || '';
+            window.JSidEspecies = Number(config.idEspecies || 0);
+            window.JSidSexos = Number(config.idSexos || 0);
+
             this.instalarFormulas(config.formulas || '');
+            // Prepara runner formulas + serie roja/blanca (no envuelve window.formulas).
+            instalarHemogramaAuto(config.hemogramaAuto || { activo: false });
+
             this.$nextTick(() => {
                 const form = document.getElementById('vl-form-carga');
                 if (!form) {
                     return;
                 }
+
                 const first = form.querySelector('input[type="text"]:not([readonly]):not([disabled]), textarea');
                 if (first) {
                     first.focus();
                 }
+                this.correrFormulas();
+            });
+        },
+
+        /**
+         * Llamado desde Blade (@change): scope Alpine seguro.
+         * Ejecuta entorno.formulas y, si el tenant lo activa, Serie Roja/Blanca.
+         */
+        correrFormulas() {
+            if (typeof window.__vlCorrerFormulasYHemograma === 'function') {
+                window.__vlCorrerFormulasYHemograma();
+                return;
+            }
+            try {
                 if (typeof window.formulas === 'function') {
                     window.formulas();
                 }
-            });
+            } catch (e) {
+                console.error('[carga-resultados] formulas() error:', e);
+            }
+        },
+
+        formatearYCalcular(idItems, estiloNum) {
+            if (typeof window.formatearNumero === 'function') {
+                window.formatearNumero(idItems, estiloNum);
+            }
+            this.correrFormulas();
+        },
+
+        formatearSolo(idItems, estiloNum) {
+            if (typeof window.formatearNumero === 'function') {
+                window.formatearNumero(idItems, estiloNum);
+            }
+        },
+
+        reemplazarComa(idItems, estiloNum) {
+            if (typeof window.reemplazarComaPorPunto === 'function') {
+                window.reemplazarComaPorPunto(idItems, estiloNum);
+            }
+        },
+
+        onSelectTipo4(idItems, idItems2) {
+            if (typeof window.comportamientoSelect === 'function') {
+                window.comportamientoSelect(idItems, idItems2);
+            }
+            // No correr formulas() (pisaría plaquetas); sí refrescar serie roja/blanca.
+            if (typeof window.__vlAplicarHemogramaAuto === 'function') {
+                window.__vlAplicarHemogramaAuto();
+            }
+        },
+
+        onInputTipo4(idItems, idItems2) {
+            if (typeof window.comportamientoInputSelect === 'function') {
+                window.comportamientoInputSelect(idItems, idItems2);
+            }
+            if (typeof window.__vlAplicarHemogramaAuto === 'function') {
+                window.__vlAplicarHemogramaAuto();
+            }
         },
 
         instalarFormulas(codigo) {
@@ -680,8 +745,9 @@ document.addEventListener('alpine:init', () => {
                 return;
             }
 
-            const modalAa = document.getElementById('modal-autoanalizador-titulo');
-            if (modalAa && modalAa.closest('[role="dialog"]')?.contains(document.activeElement)) {
+            const modalAa = document.getElementById('vl-modal-autoanalizador');
+            if (modalAa) {
+                this.onKeydownModalAutoanalizador(event, modalAa);
                 return;
             }
 
@@ -697,6 +763,149 @@ document.addEventListener('alpine:init', () => {
             }
 
             this.navegarCampos(event);
+        },
+
+        /**
+         * Modal autoanalizadores: Tab trap + Enter/↑↓ entre campos + ←→ en selects.
+         * El botón "Elegir archivo…" abre el file picker con Enter/Espacio (nativo).
+         */
+        onKeydownModalAutoanalizador(event, modal) {
+            if (event.key === 'F9' || event.key === 'F10') {
+                event.preventDefault();
+                return;
+            }
+
+            const focusables = this.camposModalAutoanalizador(modal);
+            if (focusables.length === 0) {
+                return;
+            }
+
+            if (event.key === 'Tab') {
+                const first = focusables[0];
+                const last = focusables[focusables.length - 1];
+                const actual = document.activeElement;
+                if (!modal.contains(actual)) {
+                    event.preventDefault();
+                    (event.shiftKey ? last : first).focus();
+                    return;
+                }
+                if (event.shiftKey && actual === first) {
+                    event.preventDefault();
+                    last.focus();
+                    return;
+                }
+                if (!event.shiftKey && actual === last) {
+                    event.preventDefault();
+                    first.focus();
+                }
+                return;
+            }
+
+            const keysNav = ['Enter', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'];
+            if (!keysNav.includes(event.key)) {
+                return;
+            }
+
+            let actual = document.activeElement;
+            if (!actual || !modal.contains(actual)) {
+                event.preventDefault();
+                focusables[0].focus();
+                return;
+            }
+
+            // Solo tratamos controles del modal (select / botones con data-vl-aa-campo).
+            const campo = actual.getAttribute?.('data-vl-aa-campo');
+            if (!campo) {
+                return;
+            }
+
+            if (actual.tagName === 'SELECT' && (event.key === 'ArrowLeft' || event.key === 'ArrowRight')) {
+                event.preventDefault();
+                this.cambiarOpcionSelect(actual, event.key === 'ArrowRight' ? 1 : -1);
+                return;
+            }
+
+            // Enter / Espacio en botones: comportamiento nativo (abre file picker o dispara acción).
+            if (actual.tagName === 'BUTTON' && (event.key === 'Enter' || event.key === ' ')) {
+                return;
+            }
+
+            if (event.key === 'ArrowLeft' || event.key === 'ArrowRight') {
+                return;
+            }
+
+            // Cadena Enter/↑↓: upload → aparato → archivo → importar (salta Cancelar).
+            const cadena = focusables.filter((el) => {
+                const c = el.getAttribute('data-vl-aa-campo');
+                return c === 'upload' || c === 'aparato' || c === 'archivo' || c === 'importar';
+            });
+            const idx = cadena.indexOf(actual);
+            if (idx < 0) {
+                // En Cancelar: ↑ vuelve a archivo; ↓/Enter a importar.
+                if (campo === 'cancelar') {
+                    event.preventDefault();
+                    if (event.key === 'ArrowUp') {
+                        document.getElementById('vl-aa-archivo')?.focus();
+                    } else {
+                        document.getElementById('vl-aa-importar')?.focus();
+                    }
+                }
+                return;
+            }
+
+            let destino = null;
+            if (event.key === 'Enter' || event.key === 'ArrowDown') {
+                destino = cadena[idx + 1] || null;
+            } else if (event.key === 'ArrowUp') {
+                destino = cadena[idx - 1] || null;
+            }
+
+            if (!destino) {
+                return;
+            }
+
+            event.preventDefault();
+            destino.focus();
+        },
+
+        camposModalAutoanalizador(modal) {
+            return Array.from(modal.querySelectorAll('[data-vl-aa-campo]')).filter((el) => {
+                if (el.disabled) {
+                    return false;
+                }
+                // Visible (botones/selects del diálogo).
+                return el.offsetParent !== null || el.getClientRects().length > 0;
+            });
+        },
+
+        enfocarAutoanalizador(target) {
+            const map = {
+                upload: 'vl-aa-upload-btn',
+                aparato: 'vl-aa-aparato',
+                archivo: 'vl-aa-archivo',
+                importar: 'vl-aa-importar',
+                cancelar: 'vl-aa-cancelar',
+            };
+            const id = map[target] || map.upload;
+
+            const intentar = (intentos) => {
+                if (document.querySelector('.swal2-container')) {
+                    if (intentos > 0) {
+                        setTimeout(() => intentar(intentos - 1), 80);
+                    }
+                    return;
+                }
+                const el = document.getElementById(id);
+                if (el) {
+                    el.focus();
+                    return;
+                }
+                if (intentos > 0) {
+                    setTimeout(() => intentar(intentos - 1), 40);
+                }
+            };
+
+            this.$nextTick(() => intentar(25));
         },
 
         recolectarPayload() {
@@ -725,9 +934,7 @@ document.addEventListener('alpine:init', () => {
         },
 
         async guardar(salir) {
-            if (typeof window.formulas === 'function') {
-                window.formulas();
-            }
+            this.correrFormulas();
             const { valores, valores2 } = this.recolectarPayload();
             await this.$wire.guardar(valores, valores2, this.estadoPaciente, !!salir);
         },

@@ -157,6 +157,8 @@ En listados de protocolos / dashboard de esta variante: **no** exigir
 5. **Saldos por Día:** una fila por día / saldos por `mediodepago`; expandir día → cuentas; expandir cuenta → movimientos + suma (`SaldosPorDiaConsulta`).
 6. **Eliminar** movimiento: si era el último Ingresos Diarios/Cadetería de ese protocolo → limpia `cargado` / `cargadoCadete`.
 7. En listado de protocolos: columna **Cadete** editable inline (`PacienteIndex::guardarCadete`).
+8. **Sin botón «Pago global»** en `PacienteIndex`: ese alta escribe ingresos en
+   `pacientes` (modelo NeoLab); aquí la caja es `movimientos`.
 
 Rate limits típicos: save ~30/min; delete caja ~10/min por usuario.
 
@@ -211,7 +213,8 @@ Modelos: `Paciente`, `Movimiento`, `Concepto`, `Proveedor`, `Cuenta`, `CuentaDet
 `MedioDePago`, `TipoMovimiento`, `Cliente`.
 
 Cross-cutting: `PacienteIndex` (cadete en labvetciudad; con `tesoreria_movimientos`
-solo lista `tipoRegistro = 1`, sin pagos); `DashboardLabConsulta`; AFIP
+solo lista `tipoRegistro = 1`, sin botón Pago global — ingresos en Tesorería;
+con `tesoreria_pacientes` tampoco hay Pago global); `DashboardLabConsulta`; AFIP
 (`FacturacionAfipConfig`, icono en `MovimientoIndex`).
 
 ## Qué no hacer / reglas de negocio
@@ -228,11 +231,14 @@ solo lista `tipoRegistro = 1`, sin pagos); `DashboardLabConsulta`; AFIP
 8. No eliminar conceptos/proveedores con movimientos (o proveedores) asociados.
 9. En labvetciudad **no exigir** `tipoRegistro = 1` en listados de protocolos.
 10. Con `tesoreria_movimientos`, **no** listar `tipoRegistro = 2` (pagos) en
-    `PacienteIndex`; esos registros son de Tesorería.
-11. Conceptos Ingresos Diarios / Cadetería: resolver por **nombre** de config, no hardcodear ids.
-12. No alterar tablas legacy; columnas nuevas solo con migración aditiva + SQL entregado.
-13. AFIP modo `movimiento` solo sobre ingresos NeoLab en `pacientes`, no sobre `movimientos`.
-14. Diálogos: `vlSwal*`; sin `wire:confirm` / `alert`.
+    `PacienteIndex`; esos registros son de Tesorería. Tampoco el botón
+    **Pago global** (ingresos → `MovimientoIndex`).
+11. Con `tesoreria_pacientes`, **no** mostrar ni permitir **Pago global** en
+    `PacienteIndex` (caja en `movimientos`).
+12. Conceptos Ingresos Diarios / Cadetería: resolver por **nombre** de config, no hardcodear ids.
+13. No alterar tablas legacy; columnas nuevas solo con migración aditiva + SQL entregado.
+14. AFIP modo `movimiento` solo sobre ingresos NeoLab en `pacientes`, no sobre `movimientos`.
+15. Diálogos: `vlSwal*`; sin `wire:confirm` / `alert`.
 
 ## Checklist al modificar
 
@@ -245,6 +251,7 @@ solo lista `tipoRegistro = 1`, sin pagos); `DashboardLabConsulta`; AFIP
 - [ ] Si Ingresos Diarios / Cadetería: ¿flags `cargado*` y selectores de protocolo intactos?
 - [ ] Si protocolos en labvetciudad: ¿filtro `tipoRegistro` y columna Cadete intactos?
 - [ ] Con `tesoreria_movimientos`: ¿`PacienteIndex` lista solo `tipoRegistro = 1` (sin pagos)?
+- [ ] Con `tesoreria_pacientes`: ¿sin botón «Pago global» en `PacienteIndex`?
 - [ ] Si AFIP: ¿`facturacion_afip.modo` y el id es `pacientes.idPacientes`?
 - [ ] ¿Permiso 6 + rate limits + paginación 50 + `vlSwal*`?
 - [ ] ¿Tenant nuevo a caja: BD con `movimientos`/`conceptos`/`tipomovimiento`/`proveedores` + config `tesoreria_pacientes`?

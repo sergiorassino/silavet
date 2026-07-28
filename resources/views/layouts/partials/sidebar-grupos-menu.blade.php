@@ -204,6 +204,12 @@
             <x-vl-sidebar-icon name="automatizacion" class="h-4 w-4 shrink-0 opacity-80" />
             <span class="truncate">Script de Automatización</span>
         </a>
+        <a href="{{ route('admin.valores-referencia.index') }}"
+           class="vl-sidebar-link {{ request()->routeIs('admin.valores-referencia.*') ? 'is-active' : '' }}"
+           title="Valores de Referencia (v1.0)">
+            <x-vl-sidebar-icon name="valores-referencia" class="h-4 w-4 shrink-0 opacity-80" />
+            <span class="truncate">Valores de Referencia</span>
+        </a>
     @endif
 </x-vl-sidebar-grupo>
 

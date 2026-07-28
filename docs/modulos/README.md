@@ -12,6 +12,8 @@ en esta carpeta (si existe) y respetar las reglas de negocio ahí listadas.
 | Módulo | Archivo |
 |--------|---------|
 | Carga de determinaciones al paciente (protocolo) | [carga-determinaciones-paciente.md](carga-determinaciones-paciente.md) |
+| Carga de resultados (informe + hemograma auto) | [carga-resultados.md](carga-resultados.md) |
+| Valores de referencia (rangovalores) | [valores-referencia.md](valores-referencia.md) |
 | Stock de reactivos e insumos | [stock-reactivos.md](stock-reactivos.md) |
 | Tesorería (variantes por tenant) | [tesoreria.md](tesoreria.md) |
 | Resumen cliente entre fechas (PDF) | [resumen-cliente-entre-fechas.md](resumen-cliente-entre-fechas.md) |

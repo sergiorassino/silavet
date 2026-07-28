@@ -33,6 +33,7 @@ use App\Livewire\Clientes\ResumenClienteEntreFechas;
 use App\Livewire\Abm\DetPorGrupo\DetPorGrupoIndex;
 use App\Livewire\Abm\Grupos\GrupoForm;
 use App\Livewire\Abm\Grupos\GrupoIndex;
+use App\Livewire\Abm\Rangovalores\RangovalorIndex;
 use App\Livewire\Abm\Itemsinforme\ItemsinformeIndex;
 use App\Livewire\Abm\Tipodeterminaciones\TipodeterminacionIndex;
 use App\Livewire\Admin\EntornoForm;
@@ -138,6 +139,10 @@ Route::middleware(['auth', 'lab.context'])->group(function () {
 
         Route::prefix('automatizacion')->middleware('permiso:8')->group(function () {
             Route::get('/script', ScriptAutomatizacionForm::class)->name('admin.automatizacion.script');
+        });
+
+        Route::prefix('valores-referencia')->middleware('permiso:8')->group(function () {
+            Route::get('/', RangovalorIndex::class)->name('admin.valores-referencia.index');
         });
     });
 

@@ -62,4 +62,30 @@ return [
             ],
         ],
     ],
+
+    /*
+    | Serie Roja / Serie Blanca — ids de itemsinforme de este laboratorio
+    | (misma numeración que el ScriptCase / Excel de hemograma automático).
+    */
+    'hemograma_auto' => [
+        'activo' => true,
+        'items' => [
+            'hto' => 3,
+            'eritrocitos' => 1,
+            'hb' => 29,
+            'vcm' => 2,
+            'chcm' => 5,
+            'plaquetas' => 18,
+            'plaquetas_conteo_manual' => 239,
+            'leucocitos' => 6,
+            'neutrofilos' => 10,
+            'bandas' => 9,
+            'linfocitos' => 7,
+            'eosinofilos' => 11,
+            'basofilos' => 12,
+            'monocitos' => 8,
+            'serie_roja' => 209,
+            'serie_blanca' => 210,
+        ],
+    ],
 ];

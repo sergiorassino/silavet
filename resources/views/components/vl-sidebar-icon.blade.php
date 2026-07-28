@@ -241,6 +241,14 @@
             <circle cx="12" cy="7" r="1" fill="currentColor" stroke="none"/>
             @break
 
+        @case('valores-referencia')
+            {{-- Escala / rango numérico (min-max), distinto a items-informe y determinaciones --}}
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.75"
+                  d="M3 17l4-8 4 5 3-4 4 7"/>
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.75"
+                  d="M3 20h18"/>
+            @break
+
         @default
             @php throw new InvalidArgumentException("Icono de sidebar desconocido: {$name}"); @endphp
     @endswitch
