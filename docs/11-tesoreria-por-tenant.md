@@ -38,8 +38,9 @@ Helper: `App\Support\Tesoreria\TesoreriaConfig`
 - Persiste ingresos/egresos como filas en `pacientes`.
 - Listado: toggle **Hoy** / **Historial** + filtro opcional Desde/Hasta sobre `fechhoy`.
 - Incluye menú de transferencias y ABM de `cuentas` / `cuentasdetalle`.
-- En **Gestión de pacientes** (`PacienteIndex`) **no** se listan pagos/ingresos
-  (`tipoRegistro = 2`); solo protocolos (`tipoRegistro = 1`).
+- En **Gestión de pacientes** staff (`PacienteIndex`) **no** se listan pagos/ingresos
+  (`tipoRegistro = 2`); solo protocolos (`tipoRegistro = 1`). En **autogestión
+  cliente** sí se listan protocolos y pagos globales (`tipoRegistro IN (1, 2)`).
 
 ---
 

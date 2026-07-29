@@ -5,6 +5,7 @@ namespace App\Support\Dashboard;
 use App\Models\Notificacion;
 use App\Models\Paciente;
 use App\Support\CuentaCorriente\CuentaCorrienteConsulta;
+use App\Support\Precios\DescuentoPerfilesVolumenConsulta;
 use App\Support\Resultados\ResultadosEstadosCatalog;
 use App\Support\Security\OpaqueRouteToken;
 use Carbon\Carbon;
@@ -23,8 +24,6 @@ final class DashboardClienteConsulta
     public const LIMITE_AVISOS_PANEL = 100;
 
     public const LIMITE_ACTIVIDAD = 8;
-
-    public const LIMITE_MOVIMIENTOS_CC = 5;
 
     /**
      * @return array{
@@ -68,14 +67,8 @@ final class DashboardClienteConsulta
      *     cuentaCorriente: array{
      *         saldo: float,
      *         saldoFormateado: string,
-     *         pendientes: list<array{
-     *             idPacientes: int,
-     *             protocolo: string,
-     *             nombre: string,
-     *             fecha: string,
-     *             saldoPendiente: float,
-     *             saldoPendienteFormateado: string
-     *         }>
+     *         descuentosMes: float,
+     *         descuentosMesFormateado: string
      *     },
      *     actividadReciente: list<array{
      *         idPacientes: int,
@@ -312,52 +305,26 @@ final class DashboardClienteConsulta
     }
 
     /**
+     * Resumen destacado: saldo actual + descuentos del mes en curso
+     * (misma suma que el encabezado de pacientes en autogestión).
+     *
      * @return array{
      *     saldo: float,
      *     saldoFormateado: string,
-     *     pendientes: list<array{
-     *         idPacientes: int,
-     *         protocolo: string,
-     *         nombre: string,
-     *         fecha: string,
-     *         saldoPendiente: float,
-     *         saldoPendienteFormateado: string
-     *     }>
+     *     descuentosMes: float,
+     *     descuentosMesFormateado: string
      * }
      */
     private static function resumenCuentaCorriente(int $idClientes): array
     {
         $saldo = CuentaCorrienteConsulta::saldoClienteHoy($idClientes);
-
-        $pendientes = Paciente::query()
-            ->where('idClientes', $idClientes)
-            ->whereRaw('COALESCE(tipoRegistro, 0) NOT IN (?, ?)', [
-                Paciente::TIPO_INGRESO,
-                Paciente::TIPO_EGRESO,
-            ])
-            ->whereRaw('(COALESCE(precio, 0) - COALESCE(pagado, 0)) > 0.009')
-            ->orderByDesc('fechhoy')
-            ->orderByDesc('idPacientes')
-            ->limit(self::LIMITE_MOVIMIENTOS_CC)
-            ->get(['idPacientes', 'nombreProtocolo', 'nombre', 'fechhoy', 'precio', 'pagado', 'tipoRegistro'])
-            ->map(function (Paciente $p) {
-                $saldoPendiente = CuentaCorrienteConsulta::movimientoNetoProtocolo($p);
-
-                return [
-                    'idPacientes' => (int) $p->idPacientes,
-                    'protocolo' => trim((string) ($p->nombreProtocolo ?? '')) ?: '—',
-                    'nombre' => trim((string) ($p->nombre ?? '')) ?: '—',
-                    'fecha' => $p->fechhoyFormateada(),
-                    'saldoPendiente' => $saldoPendiente,
-                    'saldoPendienteFormateado' => CuentaCorrienteConsulta::formatearMoneda($saldoPendiente),
-                ];
-            })
-            ->all();
+        $descuentosMes = DescuentoPerfilesVolumenConsulta::sumaDescuentosMesActual($idClientes, now());
 
         return [
             'saldo' => $saldo,
             'saldoFormateado' => CuentaCorrienteConsulta::formatearMoneda($saldo),
-            'pendientes' => $pendientes,
+            'descuentosMes' => $descuentosMes,
+            'descuentosMesFormateado' => CuentaCorrienteConsulta::formatearMoneda($descuentosMes),
         ];
     }
 

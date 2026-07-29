@@ -548,6 +548,18 @@
         @apply flex shrink-0 flex-wrap items-center gap-3;
     }
 
+    .vl-dash-cli-destacado {
+        @apply mb-3 rounded-xl border border-primary-100 bg-primary-50/70 px-4 py-4 text-center text-sm leading-relaxed text-primary-800 sm:px-6 sm:py-5 sm:text-base;
+    }
+
+    .vl-dash-cli-destacado-saldo {
+        @apply font-bold tabular-nums;
+    }
+
+    .vl-dash-cli-destacado-desc {
+        @apply mt-1 tabular-nums;
+    }
+
     .vl-dash-grid {
         @apply grid gap-3 lg:grid-cols-2;
     }

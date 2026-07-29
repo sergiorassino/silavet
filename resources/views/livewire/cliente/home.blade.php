@@ -33,13 +33,22 @@
         </div>
     </div>
 
+    <section class="vl-dash-cli-destacado" aria-label="Resumen de cuenta corriente">
+        <p class="vl-dash-cli-destacado-saldo">
+            Saldo Cuenta Corriente: $ {{ $cc['saldoFormateado'] }}
+        </p>
+        <p class="vl-dash-cli-destacado-desc">
+            Descuentos obtenidos durante el mes: $ {{ $cc['descuentosMesFormateado'] }}
+        </p>
+    </section>
+
     <div class="vl-dash-grid">
         {{-- 1. Estado de mis casos --}}
         <section class="vl-card vl-dash-metric vl-dash-metric--wide" aria-labelledby="cli-dash-hoy-title">
             <div class="vl-dash-metric-head">
                 <div>
                     <p class="vl-dash-metric-label">Hoy</p>
-                    <h2 id="cli-dash-hoy-title" class="vl-dash-metric-title">Estado de mis casos</h2>
+                    <h2 id="cli-dash-hoy-title" class="vl-dash-metric-title">Estado de mis casos de HOY</h2>
                 </div>
             </div>
 
@@ -88,7 +97,7 @@
             </div>
         </section>
 
-        {{-- 3. Avisos del laboratorio --}}
+        {{-- 2. Avisos del laboratorio (media columna en PC, junto a Últimos informes) --}}
         <section class="vl-card vl-dash-metric" aria-labelledby="cli-dash-avisos-title">
             <div class="vl-dash-metric-head">
                 <div>
@@ -144,45 +153,8 @@
             <div class="vl-dash-metric-accent vl-dash-metric-accent--amber" aria-hidden="true"></div>
         </section>
 
-        {{-- 4. Cuenta corriente --}}
-        <section class="vl-card vl-dash-metric" aria-labelledby="cli-dash-cc-title">
-            <div class="vl-dash-metric-head">
-                <div>
-                    <p class="vl-dash-metric-label">Cuenta corriente</p>
-                    <h2 id="cli-dash-cc-title" class="vl-dash-metric-title">Saldo actual</h2>
-                </div>
-            </div>
-            <p class="vl-dash-kpi">$ {{ $cc['saldoFormateado'] }}</p>
-            <p class="vl-dash-metric-hint">Resumen de tu cuenta con el laboratorio.</p>
-
-            @if ($cc['pendientes'] !== [])
-                <ul class="vl-dash-cli-feed mt-3">
-                    @foreach ($cc['pendientes'] as $mov)
-                        <li class="vl-dash-cli-feed-item" wire:key="cc-{{ $mov['idPacientes'] }}">
-                            <div class="vl-dash-cli-feed-main">
-                                <p class="vl-dash-cli-feed-title">
-                                    {{ $mov['protocolo'] }}
-                                    <span class="text-neutral-400">·</span>
-                                    {{ $mov['nombre'] }}
-                                </p>
-                                <p class="vl-dash-cli-feed-meta">{{ $mov['fecha'] }}</p>
-                            </div>
-                            <span class="vl-dash-cli-feed-amount">$ {{ $mov['saldoPendienteFormateado'] }}</span>
-                        </li>
-                    @endforeach
-                </ul>
-            @else
-                <p class="vl-dash-metric-hint mt-2">Sin protocolos con saldo pendiente reciente.</p>
-            @endif
-
-            <a href="{{ route('cliente.pacientes', ['vista' => 'historial']) }}" class="vl-dash-metric-link">
-                Ver pacientes
-            </a>
-            <div class="vl-dash-metric-accent vl-dash-metric-accent--sky" aria-hidden="true"></div>
-        </section>
-
-        {{-- 2. Últimos informes --}}
-        <section class="vl-card vl-dash-metric vl-dash-metric--wide" aria-labelledby="cli-dash-inf-title">
+        {{-- 3. Últimos informes (media columna en PC, junto a Avisos) --}}
+        <section class="vl-card vl-dash-metric" aria-labelledby="cli-dash-inf-title">
             <div class="vl-dash-metric-head">
                 <div>
                     <p class="vl-dash-metric-label">Informes</p>
@@ -279,30 +251,5 @@
                 </div>
             @endif
         </section>
-
-        {{-- Accesos rápidos --}}
-        <a href="{{ route('cliente.lista-precios') }}"
-           class="vl-card vl-dash-metric block transition hover:ring-2 hover:ring-primary-200">
-            <div class="vl-dash-metric-head">
-                <div>
-                    <p class="vl-dash-metric-label">Tarifario</p>
-                    <h2 class="vl-dash-metric-title">Lista de precios</h2>
-                </div>
-                <x-vl-sidebar-icon name="lista-precios" class="h-7 w-7 text-primary-600 opacity-80" />
-            </div>
-            <p class="mt-2 text-sm text-neutral-600">PDF de precios vigente del laboratorio.</p>
-        </a>
-
-        <a href="{{ route('cliente.estimacion-costos') }}"
-           class="vl-card vl-dash-metric block transition hover:ring-2 hover:ring-primary-200">
-            <div class="vl-dash-metric-head">
-                <div>
-                    <p class="vl-dash-metric-label">Presupuesto</p>
-                    <h2 class="vl-dash-metric-title">Estimación de costos</h2>
-                </div>
-                <x-vl-sidebar-icon name="estimacion-costos" class="h-7 w-7 text-primary-600 opacity-80" />
-            </div>
-            <p class="mt-2 text-sm text-neutral-600">Armá una estimación con tus precios y descuentos.</p>
-        </a>
     </div>
 </div>

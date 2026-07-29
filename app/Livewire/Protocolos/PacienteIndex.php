@@ -1165,15 +1165,7 @@ class PacienteIndex extends Component
 
         $pacientes = Paciente::query()
             ->with($with)
-            // NeoLab / alqu (tesoreria_movimientos): solo protocolos; pagos (tipoRegistro=2)
-            // e ingresos/egresos viven en Tesorería (MovimientoIndex), no en este listado.
-            // labvetciudad (tesoreria_pacientes): protocolos legacy suelen tener tipoRegistro=0.
-            ->when(
-                ! TesoreriaConfig::usaPacientes(),
-                function ($q) {
-                    $q->where('pacientes.tipoRegistro', Paciente::TIPO_PROTOCOLO);
-                }
-            )
+            ->tap(fn ($q) => $this->aplicarFiltroTipoRegistroListado($q))
             ->when(
                 $ctx->esCliente() && $ctx->idClientes,
                 function ($q) use ($ctx) {
@@ -1286,17 +1278,38 @@ class PacienteIndex extends Component
 
         return Paciente::query()
             ->with('cliente')
-            ->when(
-                ! TesoreriaConfig::usaPacientes(),
-                function ($q) {
-                    $q->where('pacientes.tipoRegistro', Paciente::TIPO_PROTOCOLO);
-                }
-            )
+            ->tap(fn ($q) => $this->aplicarFiltroTipoRegistroListado($q))
             ->when($ctx->esCliente() && $ctx->idClientes, function ($q) use ($ctx) {
                 $q->where('pacientes.idClientes', $ctx->idClientes);
             })
             ->where('pacientes.idPacientes', $id)
             ->first();
+    }
+
+    /**
+     * Filtro de `tipoRegistro` del listado / alcance:
+     * - labvetciudad (`tesoreria_pacientes`): sin filtro (protocolos legacy suelen ser 0).
+     * - Autogestión cliente (`tesoreria_movimientos`): protocolos (1) + pagos globales (2).
+     * - Staff NeoLab (`tesoreria_movimientos`): solo protocolos (1); ingresos/egresos en Tesorería.
+     *
+     * @param  \Illuminate\Database\Eloquent\Builder<\App\Models\Paciente>  $query
+     */
+    protected function aplicarFiltroTipoRegistroListado($query): void
+    {
+        if (TesoreriaConfig::usaPacientes()) {
+            return;
+        }
+
+        if (labCtx()->esCliente()) {
+            $query->whereIn('pacientes.tipoRegistro', [
+                Paciente::TIPO_PROTOCOLO,
+                Paciente::TIPO_INGRESO,
+            ]);
+
+            return;
+        }
+
+        $query->where('pacientes.tipoRegistro', Paciente::TIPO_PROTOCOLO);
     }
 
     /**

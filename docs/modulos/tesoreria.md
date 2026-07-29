@@ -126,8 +126,10 @@ En listados de protocolos / dashboard de esta variante: **no** exigir
    solo `fechhoy` de hoy) / **Historial** (con filtro opcional Desde/Hasta).
 2. Alta/edición (modal): tipo → fecha/hora → (ingreso: cliente | egreso: cuenta + detalle) → importe → medio de pago → observaciones.
 3. Persistencia: `Paciente::create` / `update` (misma tabla que protocolos).
-4. **Gestión de pacientes (`PacienteIndex`):** solo `tipoRegistro = 1` (protocolos).
-   Los pagos / ingresos (`tipoRegistro = 2`) **no** se listan ahí; van a Tesorería.
+4. **Gestión de pacientes (`PacienteIndex`) staff:** solo `tipoRegistro = 1`
+   (protocolos). Los pagos / ingresos (`tipoRegistro = 2`) **no** se listan ahí;
+   van a Tesorería. **Autogestión cliente** (`cliente.pacientes`): sí lista
+   `tipoRegistro IN (1, 2)` (protocolos + pagos globales del cliente).
 5. **Resumen bajo el listado**:
    - **Total Devengado / Ingresos / Egresos:** mismo rango de fechas que el filtro
      Hoy / Historial (Desde–Hasta).
@@ -213,9 +215,10 @@ Modelos: `Paciente`, `Movimiento`, `Concepto`, `Proveedor`, `Cuenta`, `CuentaDet
 `MedioDePago`, `TipoMovimiento`, `Cliente`.
 
 Cross-cutting: `PacienteIndex` (cadete en labvetciudad; con `tesoreria_movimientos`
-solo lista `tipoRegistro = 1`, sin botón Pago global — ingresos en Tesorería;
-con `tesoreria_pacientes` tampoco hay Pago global); `DashboardLabConsulta`; AFIP
-(`FacturacionAfipConfig`, icono en `MovimientoIndex`).
+staff lista solo `tipoRegistro = 1`, sin botón Pago global — ingresos en Tesorería;
+autogestión cliente lista `tipoRegistro IN (1, 2)`; con `tesoreria_pacientes`
+tampoco hay Pago global); `DashboardLabConsulta`; AFIP (`FacturacionAfipConfig`,
+icono en `MovimientoIndex`).
 
 ## Qué no hacer / reglas de negocio
 
@@ -231,8 +234,9 @@ con `tesoreria_pacientes` tampoco hay Pago global); `DashboardLabConsulta`; AFIP
 8. No eliminar conceptos/proveedores con movimientos (o proveedores) asociados.
 9. En labvetciudad **no exigir** `tipoRegistro = 1` en listados de protocolos.
 10. Con `tesoreria_movimientos`, **no** listar `tipoRegistro = 2` (pagos) en
-    `PacienteIndex`; esos registros son de Tesorería. Tampoco el botón
-    **Pago global** (ingresos → `MovimientoIndex`).
+    `PacienteIndex` **staff**; esos registros son de Tesorería. En **autogestión
+    cliente** sí listar `tipoRegistro` 1 y 2. Tampoco el botón **Pago global**
+    en staff (ingresos → `MovimientoIndex`).
 11. Con `tesoreria_pacientes`, **no** mostrar ni permitir **Pago global** en
     `PacienteIndex` (caja en `movimientos`).
 12. Conceptos Ingresos Diarios / Cadetería: resolver por **nombre** de config, no hardcodear ids.
@@ -250,7 +254,8 @@ con `tesoreria_pacientes` tampoco hay Pago global); `DashboardLabConsulta`; AFIP
 - [ ] ¿`usaPacientes()` / `usaMovimientos()` siguen alineados con sidebar y `routes/web.php`?
 - [ ] Si Ingresos Diarios / Cadetería: ¿flags `cargado*` y selectores de protocolo intactos?
 - [ ] Si protocolos en labvetciudad: ¿filtro `tipoRegistro` y columna Cadete intactos?
-- [ ] Con `tesoreria_movimientos`: ¿`PacienteIndex` lista solo `tipoRegistro = 1` (sin pagos)?
+- [ ] Con `tesoreria_movimientos`: ¿`PacienteIndex` staff lista solo `tipoRegistro = 1`?
+- [ ] Autogestión cliente: ¿lista `tipoRegistro` 1 y 2 (protocolos + pagos globales)?
 - [ ] Con `tesoreria_pacientes`: ¿sin botón «Pago global» en `PacienteIndex`?
 - [ ] Si AFIP: ¿`facturacion_afip.modo` y el id es `pacientes.idPacientes`?
 - [ ] ¿Permiso 6 + rate limits + paginación 50 + `vlSwal*`?
