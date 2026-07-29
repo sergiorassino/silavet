@@ -164,6 +164,47 @@ document.addEventListener('livewire:init', () => {
         }
         window.__vlIaChatWin = null;
     });
+
+    // 419 CSRF en subcarpeta / PWA: mismo patrón que Sistemas Escolares.
+    // Evita el diálogo nativo en bucle; recarga con cache-bust y, si falla de nuevo, avisa.
+    if (typeof Livewire.interceptRequest === 'function') {
+        let vl419Recargando = false;
+
+        Livewire.interceptRequest(({ onError }) => {
+            onError(({ response, preventDefault }) => {
+                if (response.status !== 419) {
+                    return;
+                }
+
+                preventDefault();
+
+                if (vl419Recargando) {
+                    return;
+                }
+
+                const storageKey = 'vl-lw419-recarga';
+                const ahora = Date.now();
+                const ultima = Number.parseInt(sessionStorage.getItem(storageKey) || '0', 10);
+
+                if (ultima > 0 && ahora - ultima < 4000) {
+                    if (typeof window.vlSwalError === 'function') {
+                        window.vlSwalError(
+                            'No se pudo restablecer la sesión. Cierre el navegador por completo e intente de nuevo.',
+                            'Sesión expirada',
+                        );
+                    }
+                    return;
+                }
+
+                sessionStorage.setItem(storageKey, String(ahora));
+                vl419Recargando = true;
+
+                const url = new URL(window.location.href);
+                url.searchParams.set('_ses', String(ahora));
+                window.location.replace(url.toString());
+            });
+        });
+    }
 });
 
 document.addEventListener('alpine:init', () => {
@@ -500,17 +541,21 @@ document.addEventListener('alpine:init', () => {
                 if (first) {
                     first.focus();
                 }
-                this.correrFormulas();
+                // Al entrar: solo formulas(). Serie Roja/Blanca se aplica al editar orígenes.
+                this.correrFormulas({ aplicarHemograma: false });
             });
         },
 
         /**
-         * Llamado desde Blade (@change): scope Alpine seguro.
-         * Ejecuta entorno.formulas y, si el tenant lo activa, Serie Roja/Blanca.
+         * Llamado desde Blade (@change) y al guardar.
+         * Ejecuta entorno.formulas; Serie Roja/Blanca solo si aplicarHemograma !== false
+         * y el tenant lo tiene activo (no al arrancar el form).
+         *
+         * @param {{ aplicarHemograma?: boolean }} [opciones]
          */
-        correrFormulas() {
+        correrFormulas(opciones = {}) {
             if (typeof window.__vlCorrerFormulasYHemograma === 'function') {
-                window.__vlCorrerFormulasYHemograma();
+                window.__vlCorrerFormulasYHemograma(opciones);
                 return;
             }
             try {
@@ -934,7 +979,8 @@ document.addEventListener('alpine:init', () => {
         },
 
         async guardar(salir) {
-            this.correrFormulas();
+            // formulas sí; hemograma no (ya se aplicó al editar orígenes si correspondía).
+            this.correrFormulas({ aplicarHemograma: false });
             const { valores, valores2 } = this.recolectarPayload();
             await this.$wire.guardar(valores, valores2, this.estadoPaciente, !!salir);
         },

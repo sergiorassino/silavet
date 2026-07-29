@@ -44,6 +44,8 @@ class AppServiceProvider extends ServiceProvider
             if (str_starts_with($appUrl, 'https://')) {
                 URL::forceScheme('https');
             }
+
+            // data-update-uri de Livewire: LivewireDeploymentScripts (evita prefijo duplicado / 419).
         }
 
         Auth::provider('usuario', function ($app, array $config) {

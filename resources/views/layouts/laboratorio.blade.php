@@ -21,6 +21,6 @@
         </main>
     </div>
 </div>
-@livewireScripts
+@include('layouts.partials.livewire-scripts')
 </body>
 </html>

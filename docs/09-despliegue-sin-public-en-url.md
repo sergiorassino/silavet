@@ -48,6 +48,7 @@ php artisan lb:migrate-legacy --force
 | CSS/JS rotos | `public/hot` presente, falta `public/build/`, o `APP_URL` incorrecto. |
 | Login no persiste | `APP_URL` sin path de subcarpeta → cookies mal scoped. |
 | Livewire 404 en AJAX | `APP_URL` mal; `URL::forceRootUrl` en `AppServiceProvider`. |
+| Login / Livewire **419** (“This page has expired”) | Falta `LivewireDeploymentScripts` (`data-update-uri` con `APP_URL` completo) o `SESSION_DOMAIN=null` literal / cookie Secure. |
 | `livewire.js` 403 | Hosting bloquea `/vendor/`; usar ruta Laravel alternativa. |
 | Logo no se guarda | Permisos en `public/entorno/` y `storage/app/livewire-tmp`. |
 | `The logoUpload failed to upload` / `upload-file` **401** | Firma HTTPS/subcarpeta: ver **Subida de archivos Livewire**. |
@@ -61,7 +62,7 @@ ni login: la URL firmada no coincide con la que ve PHP.
 
 | Petición | Qué valida | Por qué falla en producción |
 |----------|------------|-----------------------------|
-| `…/update` | Sesión + CSRF | Suele andar si Livewire/AJAX general funciona. |
+| `…/update` | Sesión + CSRF | URI incorrecta en subcarpeta → **419**. Se corrige con `LivewireDeploymentScripts` (`data-update-uri` con `APP_URL` completo). |
 | `…/upload-file` | **Firma** (host + https + path de `APP_URL`) | `public/index.php` recorta la subcarpeta; sin `X-Forwarded-Prefix` / HTTPS la firma no cuadra → **401** → mensaje *"failed to upload"*. |
 
 Checklist:
@@ -96,6 +97,7 @@ Checklist:
 - `public/.htaccess` — front controller Laravel
 - `public/index.php` — ajuste de `REQUEST_URI` según `APP_URL`
 - `AppServiceProvider` — `session.path`, `asset_url`, Livewire en subcarpeta
+- `App\Support\LivewireDeploymentScripts` — `data-update-uri` / scripts Livewire con `APP_URL`
 - `resources/views/layouts/partials/livewire-scripts.blade.php`
 
 ---
@@ -113,5 +115,7 @@ DB_DATABASE=lb_neolab
 SESSION_SECURE_COOKIE=true
 SESSION_DOMAIN=
 ```
+
+`SESSION_DOMAIN` debe quedar **vacío** (`SESSION_DOMAIN=`). No usar `null` (puede quedar como texto `"null"` en la cookie).
 
 Tras desplegar: `php artisan config:clear` y `php artisan view:clear`.

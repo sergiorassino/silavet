@@ -4,10 +4,16 @@
  *
  * No reemplaza entorno.formulas: expone un runner que (1) ejecuta formulas(),
  * (2) preserva plaquetas si el cálculo quedó vacío sin conteo manual, (3) aplica
- * el texto automático. vlCargaResultados llama a ese runner; window.formulas
- * queda como el script de entorno sin envolver.
+ * el texto automático solo si opciones.aplicarHemograma !== false.
+ * vlCargaResultados llama a ese runner; window.formulas queda como el script
+ * de entorno sin envolver. Al entrar al form se llama con aplicarHemograma:false.
  */
 export function instalarHemogramaAuto(config) {
+    /**
+     * @param {{ aplicarHemograma?: boolean }} [opciones]
+     * aplicarHemograma=false: solo formulas() (p. ej. al entrar al form).
+     * Por defecto true: formulas + Serie Roja/Blanca si el tenant lo activa.
+     */
     window.__vlCorrerFormulasYHemograma = function correrSoloFormulas() {
         if (typeof window.formulas === 'function') {
             window.formulas();
@@ -279,7 +285,8 @@ export function instalarHemogramaAuto(config) {
         }
     }
 
-    window.__vlCorrerFormulasYHemograma = function correrFormulasYHemograma() {
+    window.__vlCorrerFormulasYHemograma = function correrFormulasYHemograma(opciones) {
+        const aplicarHemograma = !opciones || opciones.aplicarHemograma !== false;
         const campoPlt = idPlaquetas ? document.getElementById(String(idPlaquetas)) : null;
         const plaquetasPrevias = campoPlt ? campoPlt.value : null;
 
@@ -293,6 +300,8 @@ export function instalarHemogramaAuto(config) {
 
         preservarPlaquetasSiCalculoVacio(plaquetasPrevias);
 
-        window.__vlAplicarHemogramaAuto();
+        if (aplicarHemograma) {
+            window.__vlAplicarHemogramaAuto();
+        }
     };
 }

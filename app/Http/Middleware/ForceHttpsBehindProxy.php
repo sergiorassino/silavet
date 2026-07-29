@@ -10,6 +10,7 @@ use Symfony\Component\HttpFoundation\Response;
 /**
  * Despliegue en subcarpeta sin /public en la URL (ver public/index.php y docs/09).
  *
+ * - Livewire `update`: URLs fijadas en LivewireDeploymentScripts (sesión + CSRF).
  * - Livewire `upload-file`: URL firmada; si PHP no ve la misma URL pública que al firmar → 401
  *   y el mensaje "The … failed to upload". Causas: HTTPS no detectado detrás del proxy,
  *   o path de APP_URL ausente al validar (porque index.php recorta REQUEST_URI).

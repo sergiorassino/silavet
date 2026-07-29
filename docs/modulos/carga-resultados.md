@@ -142,18 +142,29 @@ IDs DOM: el operador edita `#idItems`; el diferencial absoluto vive en `#idItems
 4. Inyecta el script de entorno → `window.formulas` (función **pura**, sin envolver).
 5. `instalarHemogramaAuto` registra el runner `__vlCorrerFormulasYHemograma`
    (y `__vlAplicarHemogramaAuto` si está activo).
-6. Focus al primer campo + una corrida del runner.
+6. Focus al primer campo + una corrida del runner **solo con `formulas()`**
+   (`aplicarHemograma: false`). Serie Roja/Blanca **no** se escribe al entrar.
 
 ### B. Runner de cálculo (orden fijo)
 
-`correrFormulas()` → `__vlCorrerFormulasYHemograma`:
+`correrFormulas(opciones)` → `__vlCorrerFormulasYHemograma(opciones)`:
 
 1. Guarda el valor actual de plaquetas (si el mapa lo declara).
 2. Ejecuta `window.formulas()` en `try/catch` (un error del entorno **no** corta el resto).
 3. Si el cálculo dejó plaquetas vacío/`PENDIENTE`/`NaN` **y** no hay conteo manual
    usable → **restaura** el valor previo (el script de entorno pisa plaquetas cuando
    el conteo es inválido).
-4. Si hemograma activo → aplica Serie Roja / Serie Blanca.
+4. Si `opciones.aplicarHemograma !== false` **y** hemograma activo → aplica
+   Serie Roja / Serie Blanca.
+
+**Cuándo corre cada parte**
+
+| Momento | `formulas()` | Serie Roja/Blanca |
+|---------|:------------:|:-----------------:|
+| Arranque del form | sí | **no** |
+| `@change` de campo que dispara cálculo (`formatearYCalcular`) | sí | sí (si tenant activo) |
+| Tipo 4 (select/input plaquetas) | **no** | sí (`__vlAplicarHemogramaAuto`) |
+| Guardar (F9 / F10) | sí | **no** (ya se aplicó al editar) |
 
 **No** hay listener `change` delegado en todo el form: eso duplicaba `formulas()`
 y disparaba en campos con `actualiza = 0` o al editar los destinos de texto.
@@ -219,7 +230,8 @@ auto es solo `Normal.`, se conserva el manual.
 
 ### D. Guardar
 
-1. Runner de cálculo (mismo orden que arriba).
+1. Runner de cálculo **solo `formulas()`** (`aplicarHemograma: false`; el texto
+   Serie Roja/Blanca ya se actualizó al editar orígenes).
 2. Recolecta `[data-renglon][data-campo=valor|valor2]` del DOM (`wire:ignore` en filas).
 3. `ResultadosGuardarServicio` → UPDATE `renglones` + estado en `pacientes`.
 4. Sin salir: `vl-swal-exito`. Con salir: redirect al listado de origen.
@@ -300,6 +312,8 @@ conteo manual).
 
 ## Qué no hacer / trampas
 
+- **No** aplicar Serie Roja/Blanca al arrancar el form ni al guardar: solo al
+  editar orígenes (`formatearYCalcular` / tipo 4). Al entrar sí corre `formulas()`.
 - **No** hardcodear `idItems` en PHP/JS fuera del mapa del tenant.
 - **No** `if (tenant === 'labvetciudad')` en Blade: usar payload /
   `config('tenant.hemograma_auto…')`.
@@ -321,12 +335,13 @@ conteo manual).
 ## Checklist al modificar
 
 1. ¿El cambio respeta el orden runner: `formulas` → preservar plaquetas → hemograma?
-2. ¿Labs **sin** `hemograma_auto` siguen igual (solo formulas + carga manual)?
-3. ¿El mapa del tenant tiene los `idItems` correctos de **su** `itemsinforme`?
-4. ¿Hay filas en `rangovalores` para la especie (y sexo) de prueba? Si sexo vacío,
+2. ¿Al **entrar** al form corre solo `formulas()` (sin Serie Roja/Blanca)?
+3. ¿Labs **sin** `hemograma_auto` siguen igual (solo formulas + carga manual)?
+4. ¿El mapa del tenant tiene los `idItems` correctos de **su** `itemsinforme`?
+5. ¿Hay filas en `rangovalores` para la especie (y sexo) de prueba? Si sexo vacío,
    ¿el fallback por especie sigue siendo aceptable?
-5. ¿Tipo 4 sigue sin disparar `formulas()`?
-6. ¿Diferencial se lee de `_2`/`_T`?
-7. Tras JS/CSS: `npm run build` + `public/build/` en la lista de producción.
-8. Actualizar **este** documento si cambian roles, frases, disparos o el contrato
+6. ¿Tipo 4 sigue sin disparar `formulas()`?
+7. ¿Diferencial se lee de `_2`/`_T`?
+8. Tras JS/CSS: `npm run build` + `public/build/` en la lista de producción.
+9. Actualizar **este** documento si cambian roles, frases, disparos o el contrato
    del runner.
