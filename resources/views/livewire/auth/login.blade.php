@@ -15,10 +15,36 @@
             </p>
         </noscript>
 
-        <form wire:submit.prevent="login" class="vl-auth-form" autocomplete="on">
+        {{--
+            Un solo POST Livewire en el submit: sincroniza DOM→estado (autofill) con
+            $wire.set(..., false) y luego login(). Evita carrera CSRF 419 con syncs
+            concurrentes / wire:model.live que recargaban la pantalla de login.
+        --}}
+        <form class="vl-auth-form"
+              autocomplete="on"
+              x-data
+              x-on:submit.prevent="
+                  if (window.__vlLoginSubmitting) { return; }
+                  window.__vlLoginSubmitting = true;
+                  window.dispatchEvent(new CustomEvent('vl-login-submit'));
+                  if (typeof window.__vlLoginAutofillLock === 'function') {
+                      window.__vlLoginAutofillLock();
+                  }
+                  const dniEl = $el.querySelector('#dni');
+                  const passwordEl = $el.querySelector('#password');
+                  const dni = (dniEl?.value || '').replace(/[^a-zA-Z0-9]/g, '').slice(0, 10);
+                  const password = passwordEl?.value || '';
+                  $wire.set('dni', dni, false);
+                  $wire.set('password', password, false);
+                  try {
+                      await $wire.login();
+                  } finally {
+                      window.__vlLoginSubmitting = false;
+                  }
+              ">
             <div>
                 <label class="vl-auth-label" for="dni">DNI (usuario)</label>
-                <input wire:model.live.debounce.400ms="dni"
+                <input wire:model="dni"
                        id="dni"
                        type="text"
                        maxlength="10"
