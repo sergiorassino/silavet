@@ -31,6 +31,12 @@ class MovimientoIndex extends Component
 
     public const VISTA_HISTORIAL = 'historial';
 
+    public const FILTRO_TIPO_TODOS = 'todos';
+
+    public const FILTRO_TIPO_INGRESO = 'ingreso';
+
+    public const FILTRO_TIPO_EGRESO = 'egreso';
+
     public bool $formAbierto = false;
 
     public ?int $idPacientes = null;
@@ -58,6 +64,9 @@ class MovimientoIndex extends Component
     /** `hoy` | `historial` — filtro rápido del listado. */
     public string $vista = self::VISTA_HOY;
 
+    /** `todos` | `ingreso` | `egreso` — filtro por tipo de movimiento. */
+    public string $filtroTipo = self::FILTRO_TIPO_TODOS;
+
     /** Rango opcional (vista historial); formato Y-m-d. */
     public string $fechaDesde = '';
 
@@ -68,6 +77,7 @@ class MovimientoIndex extends Component
         abort_unless(tienePermiso(PermisosIaCatalog::FACTURACION), 403);
         abort_unless(TesoreriaConfig::usaMovimientos(), 404);
         $this->vista = self::VISTA_HOY;
+        $this->filtroTipo = self::FILTRO_TIPO_TODOS;
         $this->reiniciarFechaHora();
     }
 
@@ -77,6 +87,11 @@ class MovimientoIndex extends Component
     }
 
     public function updatingVista(): void
+    {
+        $this->resetPage();
+    }
+
+    public function updatingFiltroTipo(): void
     {
         $this->resetPage();
     }
@@ -102,6 +117,24 @@ class MovimientoIndex extends Component
     public function verHistorial(): void
     {
         $this->vista = self::VISTA_HISTORIAL;
+        $this->resetPage();
+    }
+
+    public function filtrarTipoTodos(): void
+    {
+        $this->filtroTipo = self::FILTRO_TIPO_TODOS;
+        $this->resetPage();
+    }
+
+    public function filtrarTipoIngreso(): void
+    {
+        $this->filtroTipo = self::FILTRO_TIPO_INGRESO;
+        $this->resetPage();
+    }
+
+    public function filtrarTipoEgreso(): void
+    {
+        $this->filtroTipo = self::FILTRO_TIPO_EGRESO;
         $this->resetPage();
     }
 
@@ -265,6 +298,37 @@ class MovimientoIndex extends Component
         $this->dispatch('vl-swal-exito', mensaje: $mensaje);
     }
 
+    public function eliminar(): void
+    {
+        abort_unless(tienePermiso(PermisosIaCatalog::FACTURACION), 403);
+
+        if ($this->idPacientes === null) {
+            $this->dispatch('vl-swal-error', mensaje: 'No hay movimiento seleccionado.');
+
+            return;
+        }
+
+        $uid = labCtx()->idUsuarios ?? 0;
+        $key = 'tesoreria-movimientos-del:'.$uid;
+        abort_if(RateLimiter::tooManyAttempts($key, 10), 429);
+
+        $movimiento = $this->movimientoEnAlcance($this->idPacientes);
+        if ($movimiento === null) {
+            $this->dispatch('vl-swal-error', mensaje: 'No se encontró el movimiento.');
+            $this->cancelarFormulario();
+
+            return;
+        }
+
+        RateLimiter::hit($key, 60);
+
+        $movimiento->delete();
+
+        $this->cancelarFormulario();
+        $this->resetPage();
+        $this->dispatch('vl-swal-exito', mensaje: 'Movimiento eliminado correctamente.');
+    }
+
     public function facturacionPlaceholder(): void
     {
         $this->dispatch(
@@ -279,6 +343,8 @@ class MovimientoIndex extends Component
         $desde = $this->fechaFiltroNormalizada($this->fechaDesde);
         $hasta = $this->fechaFiltroNormalizada($this->fechaHasta);
 
+        $filtroTipo = $this->filtroTipoEfectivo();
+
         $movimientos = Paciente::query()
             ->with([
                 'cliente:idClientes,nombre,cuit',
@@ -286,7 +352,15 @@ class MovimientoIndex extends Component
                 'cuentaDetalle:id,idCuentas,nombreCuentasDetalle',
                 'cuentaDetalle.cuenta:id,nombreCuenta',
             ])
-            ->whereIn('tipoRegistro', [Paciente::TIPO_INGRESO, Paciente::TIPO_EGRESO])
+            ->when($filtroTipo === self::FILTRO_TIPO_INGRESO, function ($q) {
+                $q->where('tipoRegistro', Paciente::TIPO_INGRESO);
+            })
+            ->when($filtroTipo === self::FILTRO_TIPO_EGRESO, function ($q) {
+                $q->where('tipoRegistro', Paciente::TIPO_EGRESO);
+            })
+            ->when($filtroTipo === self::FILTRO_TIPO_TODOS, function ($q) {
+                $q->whereIn('tipoRegistro', [Paciente::TIPO_INGRESO, Paciente::TIPO_EGRESO]);
+            })
             ->when($vista === self::VISTA_HOY, function ($q) {
                 $q->whereDate('fechhoy', now()->toDateString());
             })
@@ -366,6 +440,7 @@ class MovimientoIndex extends Component
             'mostrarColumnaAfip' => $mostrarColumnaAfip,
             'afipEmitidos' => $afipEmitidos,
             'vistaEfectiva' => $vista,
+            'filtroTipoEfectivo' => $filtroTipo,
             'resumen' => MovimientosResumenConsulta::paraRango($resumenDesde, $resumenHasta),
             'urlAfipFn' => static fn (int $id): string => route('facturacion.afip.comprobantes', [
                 'ref' => OpaqueRouteToken::forCompAfipPaciente($id),
@@ -378,6 +453,15 @@ class MovimientoIndex extends Component
         return $this->vista === self::VISTA_HISTORIAL
             ? self::VISTA_HISTORIAL
             : self::VISTA_HOY;
+    }
+
+    private function filtroTipoEfectivo(): string
+    {
+        return match ($this->filtroTipo) {
+            self::FILTRO_TIPO_INGRESO => self::FILTRO_TIPO_INGRESO,
+            self::FILTRO_TIPO_EGRESO => self::FILTRO_TIPO_EGRESO,
+            default => self::FILTRO_TIPO_TODOS,
+        };
     }
 
     private function fechaFiltroNormalizada(string $valor): ?string

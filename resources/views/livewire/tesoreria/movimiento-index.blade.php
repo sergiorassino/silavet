@@ -39,6 +39,26 @@
                         </div>
                     </div>
                 @endif
+                <div class="vl-pacientes-vista-toggle" role="group" aria-label="Tipo de movimiento">
+                    <button type="button"
+                            wire:click="filtrarTipoTodos"
+                            class="vl-pacientes-vista-toggle-btn {{ $filtroTipoEfectivo === 'todos' ? 'is-active' : '' }}"
+                            aria-pressed="{{ $filtroTipoEfectivo === 'todos' ? 'true' : 'false' }}">
+                        Todos
+                    </button>
+                    <button type="button"
+                            wire:click="filtrarTipoIngreso"
+                            class="vl-pacientes-vista-toggle-btn {{ $filtroTipoEfectivo === 'ingreso' ? 'is-active' : '' }}"
+                            aria-pressed="{{ $filtroTipoEfectivo === 'ingreso' ? 'true' : 'false' }}">
+                        Ingreso
+                    </button>
+                    <button type="button"
+                            wire:click="filtrarTipoEgreso"
+                            class="vl-pacientes-vista-toggle-btn {{ $filtroTipoEfectivo === 'egreso' ? 'is-active' : '' }}"
+                            aria-pressed="{{ $filtroTipoEfectivo === 'egreso' ? 'true' : 'false' }}">
+                        Egreso
+                    </button>
+                </div>
                 <div class="vl-pacientes-vista-toggle" role="group" aria-label="Vista del listado">
                     <button type="button"
                             wire:click="verHoy"
@@ -326,18 +346,33 @@
                         </form>
                     </div>
 
-                    <div class="flex justify-end gap-2 border-t border-accent-200 px-5 py-3">
-                        <button type="button"
-                                wire:click="cancelarFormulario"
-                                class="rounded-xl border border-accent-200 px-4 py-2 text-sm font-medium text-neutral-700 hover:bg-accent-50">
-                            Cancelar
-                        </button>
-                        <button type="button"
-                                wire:click="guardar"
-                                wire:loading.attr="disabled"
-                                class="btn-primary">
-                            {{ $idPacientes ? 'Guardar' : 'Agregar' }}
-                        </button>
+                    <div class="flex flex-wrap items-center justify-between gap-2 border-t border-accent-200 px-5 py-3">
+                        <div>
+                            @if ($idPacientes)
+                                <button type="button"
+                                        x-on:click="window.vlSwalConfirmar('¿Eliminar este movimiento? Esta acción no se puede deshacer.', 'Eliminar movimiento', { confirmButtonText: 'Sí, eliminar', icon: 'warning' }).then(ok => ok && $wire.eliminar())"
+                                        wire:loading.attr="disabled"
+                                        wire:target="eliminar"
+                                        class="rounded-xl border border-red-200 px-4 py-2 text-sm font-medium text-red-700 hover:bg-red-50">
+                                    <span wire:loading.remove wire:target="eliminar">Eliminar</span>
+                                    <span wire:loading wire:target="eliminar">Eliminando…</span>
+                                </button>
+                            @endif
+                        </div>
+                        <div class="flex flex-wrap gap-2">
+                            <button type="button"
+                                    wire:click="cancelarFormulario"
+                                    class="rounded-xl border border-accent-200 px-4 py-2 text-sm font-medium text-neutral-700 hover:bg-accent-50">
+                                Cancelar
+                            </button>
+                            <button type="button"
+                                    wire:click="guardar"
+                                    wire:loading.attr="disabled"
+                                    wire:target="guardar"
+                                    class="btn-primary">
+                                {{ $idPacientes ? 'Guardar' : 'Agregar' }}
+                            </button>
+                        </div>
                     </div>
                 </div>
             </div>

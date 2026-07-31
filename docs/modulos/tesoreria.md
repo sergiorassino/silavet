@@ -122,15 +122,19 @@ En listados de protocolos / dashboard de esta variante: **no** exigir
 
 ### A) `tesoreria_movimientos` (NeoLab / mayoría)
 
-1. Listado: `pacientes` con `tipoRegistro IN (2, 3)`. Toggle **Hoy** (default:
-   solo `fechhoy` de hoy) / **Historial** (con filtro opcional Desde/Hasta).
+1. Listado: `pacientes` con `tipoRegistro IN (2, 3)`. Toggle **Todos / Ingreso /
+   Egreso** (default Todos) y **Hoy** (default: solo `fechhoy` de hoy) /
+   **Historial** (con filtro opcional Desde/Hasta). El filtro de tipo afecta
+   solo el listado; el resumen bajo la grilla sigue el rango de fechas.
 2. Alta/edición (modal): tipo → fecha/hora → (ingreso: cliente | egreso: cuenta + detalle) → importe → medio de pago → observaciones.
 3. Persistencia: `Paciente::create` / `update` (misma tabla que protocolos).
-4. **Gestión de pacientes (`PacienteIndex`) staff:** solo `tipoRegistro = 1`
+4. **Eliminar** (solo en modal de edición): confirma con `vlSwalConfirmar` y borra la fila
+   `pacientes` (ingreso/egreso) vía `MovimientoIndex::eliminar` (rate limit 10/min).
+5. **Gestión de pacientes (`PacienteIndex`) staff:** solo `tipoRegistro = 1`
    (protocolos). Los pagos / ingresos (`tipoRegistro = 2`) **no** se listan ahí;
    van a Tesorería. **Autogestión cliente** (`cliente.pacientes`): sí lista
    `tipoRegistro IN (1, 2)` (protocolos + pagos globales del cliente).
-5. **Resumen bajo el listado**:
+6. **Resumen bajo el listado**:
    - **Total Devengado / Ingresos / Egresos:** mismo rango de fechas que el filtro
      Hoy / Historial (Desde–Hasta).
    - **Total Devengado:** suma de precios de determinaciones (o `pacientes.precio`
@@ -139,8 +143,8 @@ En listados de protocolos / dashboard de esta variante: **no** exigir
    - **Saldo** por medio: acumulado histórico (ingresos − egresos) **hasta** la fecha
      tope del filtro (`Hasta`, o hoy en vista Hoy); no es el neto del período.
    - **Saldo Total Entre Cuentas:** suma de esos saldos acumulados.
-6. **Transferencias Intercuenta:** dos filas en `pacientes` (egreso origen + ingreso destino), `idClientes = 1`, mismo importe/obs, distinto `idMediodepago`.
-7. ABM de `cuentas` y `cuentasdetalle`.
+7. **Transferencias Intercuenta:** dos filas en `pacientes` (egreso origen + ingreso destino), `idClientes = 1`, mismo importe/obs, distinto `idMediodepago`.
+8. ABM de `cuentas` y `cuentasdetalle`.
 
 ### B) `tesoreria_pacientes` (labvetciudad)
 
@@ -249,7 +253,7 @@ icono en `MovimientoIndex`).
 - [ ] ¿Se leyó este doc + `docs/11-tesoreria-por-tenant.md`?
 - [ ] ¿Queda clara la variante (`TesoreriaConfig::implementacion()` / slug)?
 - [ ] ¿El cambio toca solo la rama correcta (tabla + Livewire + menú/rutas)?
-- [ ] ¿Listado NeoLab: Hoy / Historial y Desde/Hasta sobre `fechhoy` intactos?
+- [ ] ¿Listado NeoLab: Todos/Ingreso/Egreso + Hoy / Historial y Desde/Hasta sobre `fechhoy` intactos?
 - [ ] ¿Resumen NeoLab: Devengado/ingresos/egresos del rango; saldos acumulados hasta `Hasta`/hoy?
 - [ ] ¿`usaPacientes()` / `usaMovimientos()` siguen alineados con sidebar y `routes/web.php`?
 - [ ] Si Ingresos Diarios / Cadetería: ¿flags `cargado*` y selectores de protocolo intactos?
