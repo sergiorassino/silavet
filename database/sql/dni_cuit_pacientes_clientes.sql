@@ -1,7 +1,8 @@
--- Asegura dni VARCHAR(8) y cuit VARCHAR(11) en pacientes y clientes.
+-- Asegura dni VARCHAR(8) y cuit VARCHAR(13) en pacientes y clientes.
 -- Idempotente. Ejecutar manualmente en el cliente MySQL (no desde el agente).
 -- Alternativa por lab: php artisan lb:switch <slug> && php artisan lb:migrate-legacy --force
 --
+-- Longitud cuit 13 = formato visual 99-99999999-9.
 -- Nota: MODIFY trunca valores más largos que el nuevo tamaño.
 
 SET @silavet_schema := DATABASE();
@@ -48,7 +49,7 @@ PREPARE silavet_stmt FROM @silavet_sql;
 EXECUTE silavet_stmt;
 DEALLOCATE PREPARE silavet_stmt;
 
--- ---- pacientes.cuit VARCHAR(11) ----
+-- ---- pacientes.cuit VARCHAR(13) ----
 SET @silavet_sql := (
     SELECT IF(
         EXISTS (
@@ -67,8 +68,8 @@ SET @silavet_sql := (
                   AND TABLE_NAME = 'pacientes'
                   AND COLUMN_NAME = 'dni'
             ),
-            'ALTER TABLE `pacientes` ADD COLUMN `cuit` VARCHAR(11) NOT NULL DEFAULT \'\' AFTER `dni`',
-            'ALTER TABLE `pacientes` ADD COLUMN `cuit` VARCHAR(11) NOT NULL DEFAULT \'\''
+            'ALTER TABLE `pacientes` ADD COLUMN `cuit` VARCHAR(13) NOT NULL DEFAULT \'\' AFTER `dni`',
+            'ALTER TABLE `pacientes` ADD COLUMN `cuit` VARCHAR(13) NOT NULL DEFAULT \'\''
         ),
         IF(
             EXISTS (
@@ -78,10 +79,10 @@ SET @silavet_sql := (
                   AND COLUMN_NAME = 'cuit'
                   AND (
                       LOWER(DATA_TYPE) <> 'varchar'
-                      OR CHARACTER_MAXIMUM_LENGTH <> 11
+                      OR CHARACTER_MAXIMUM_LENGTH <> 13
                   )
             ),
-            'ALTER TABLE `pacientes` MODIFY COLUMN `cuit` VARCHAR(11) NOT NULL DEFAULT \'\'',
+            'ALTER TABLE `pacientes` MODIFY COLUMN `cuit` VARCHAR(13) NOT NULL DEFAULT \'\'',
             'SELECT 1'
         )
     )
@@ -90,7 +91,7 @@ PREPARE silavet_stmt FROM @silavet_sql;
 EXECUTE silavet_stmt;
 DEALLOCATE PREPARE silavet_stmt;
 
--- ---- clientes.cuit VARCHAR(11) ----
+-- ---- clientes.cuit VARCHAR(13) ----
 SET @silavet_sql := (
     SELECT IF(
         EXISTS (
@@ -109,8 +110,8 @@ SET @silavet_sql := (
                   AND TABLE_NAME = 'clientes'
                   AND COLUMN_NAME = 'whatsapp'
             ),
-            'ALTER TABLE `clientes` ADD COLUMN `cuit` VARCHAR(11) NOT NULL DEFAULT \'\' AFTER `whatsapp`',
-            'ALTER TABLE `clientes` ADD COLUMN `cuit` VARCHAR(11) NOT NULL DEFAULT \'\''
+            'ALTER TABLE `clientes` ADD COLUMN `cuit` VARCHAR(13) NOT NULL DEFAULT \'\' AFTER `whatsapp`',
+            'ALTER TABLE `clientes` ADD COLUMN `cuit` VARCHAR(13) NOT NULL DEFAULT \'\''
         ),
         IF(
             EXISTS (
@@ -120,10 +121,10 @@ SET @silavet_sql := (
                   AND COLUMN_NAME = 'cuit'
                   AND (
                       LOWER(DATA_TYPE) <> 'varchar'
-                      OR CHARACTER_MAXIMUM_LENGTH <> 11
+                      OR CHARACTER_MAXIMUM_LENGTH <> 13
                   )
             ),
-            'ALTER TABLE `clientes` MODIFY COLUMN `cuit` VARCHAR(11) NOT NULL DEFAULT \'\'',
+            'ALTER TABLE `clientes` MODIFY COLUMN `cuit` VARCHAR(13) NOT NULL DEFAULT \'\'',
             'SELECT 1'
         )
     )
@@ -177,8 +178,8 @@ DEALLOCATE PREPARE silavet_stmt;
 -- Forzar DEFAULT '' (nunca 0) y limpiar sentinel '0' en filas existentes.
 -- (Omitir ALTER/UPDATE de una columna si aún no existe en ese lab.)
 ALTER TABLE `pacientes` MODIFY COLUMN `dni` VARCHAR(8) NOT NULL DEFAULT '';
-ALTER TABLE `pacientes` MODIFY COLUMN `cuit` VARCHAR(11) NOT NULL DEFAULT '';
-ALTER TABLE `clientes` MODIFY COLUMN `cuit` VARCHAR(11) NOT NULL DEFAULT '';
+ALTER TABLE `pacientes` MODIFY COLUMN `cuit` VARCHAR(13) NOT NULL DEFAULT '';
+ALTER TABLE `clientes` MODIFY COLUMN `cuit` VARCHAR(13) NOT NULL DEFAULT '';
 ALTER TABLE `clientes` MODIFY COLUMN `dni` VARCHAR(8) NOT NULL DEFAULT '';
 
 UPDATE `pacientes` SET `dni` = '' WHERE `dni` IN ('0', 0);
