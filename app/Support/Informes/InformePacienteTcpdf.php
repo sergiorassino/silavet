@@ -34,10 +34,14 @@ final class InformePacienteTcpdf extends Fpdi
 
     private const LINEA_MEMBRETE_GROSOR = 1.0;
 
-    /** Y del logo: debajo de la barra superior (evita solapamiento). */
-    private const LOGO_Y = 18.5;
+    /** Banda del logo: bajo la barra superior hasta la línea del membrete. */
+    private const LOGO_Y = 18.0;
 
-    private const LOGO_TAM = 30.0;
+    /** Ancho máx. de la banda (~1/3 izq. del área útil; contacto a la derecha). */
+    private const LOGO_ANCHO_BANDA = 72.0;
+
+    /** Holgura inferior antes de la línea del membrete (mm). */
+    private const LOGO_HOLGURA_INF = 1.5;
 
     /** Margen inferior del contenido (mm). La reserva grande solo aplica al pie de firmas. */
     private const MARGEN_INFERIOR = 12.0;
@@ -205,13 +209,15 @@ final class InformePacienteTcpdf extends Fpdi
             'color' => [0, 0, 0],
         ]);
 
+        $altoBandaLogo = self::LINEA_MEMBRETE_Y - self::LOGO_Y - self::LOGO_HOLGURA_INF;
         if ($logoFile !== null) {
-            TcpdfLogoInstitucional::dibujar(
+            // Cuadrado → lado = alto de banda; rectangular → recuadro ~1/3 izq.
+            TcpdfLogoInstitucional::dibujarEnBanda(
                 $this,
                 self::MARGEN,
                 self::LOGO_Y,
-                self::LOGO_TAM,
-                self::LOGO_TAM,
+                self::LOGO_ANCHO_BANDA,
+                $altoBandaLogo,
                 $logoFile,
             );
         }
@@ -219,7 +225,7 @@ final class InformePacienteTcpdf extends Fpdi
         // Contacto a la derecha, itálica, tres líneas (como el sistema viejo).
         TcpdfFuenteArial::aplicar($this, 'I', 8);
         $this->SetTextColor(0, 0, 0);
-        $yContacto = self::LOGO_Y + 8.0;
+        $yContacto = self::LOGO_Y + max(4.0, ($altoBandaLogo - 12.0) / 2);
         $lineas = array_values(array_filter([$direccion, $telefono, $email], static fn (string $l): bool => $l !== ''));
         foreach ($lineas as $i => $linea) {
             $this->SetXY(self::MARGEN, $yContacto + ($i * 4.0));
