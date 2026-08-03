@@ -16,8 +16,8 @@ return new class extends Migration
     /** @var list<array{0: string, 1: string, 2: int}> */
     private const COLUMNAS = [
         ['pacientes', 'dni', 8],
-        ['pacientes', 'cuit', 11],
-        ['clientes', 'cuit', 11],
+        ['pacientes', 'cuit', 13],
+        ['clientes', 'cuit', 13],
         ['clientes', 'dni', 8],
     ];
 

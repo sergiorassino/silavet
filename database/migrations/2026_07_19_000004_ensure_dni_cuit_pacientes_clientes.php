@@ -1,7 +1,7 @@
 <?php
 
 /**
- * Asegura `dni` VARCHAR(8) y `cuit` VARCHAR(11) en `pacientes` y `clientes`.
+ * Asegura `dni` VARCHAR(8) y `cuit` VARCHAR(13) en `pacientes` y `clientes`.
  * Se aplica con: php artisan lb:migrate-legacy --force
  *
  * Idempotente:
@@ -9,6 +9,7 @@
  * - Si existe con otro tipo/longitud o default distinto de '' → MODIFY.
  * - Valores sentinel '0' (vacío legacy) → ''.
  *
+ * Longitud cuit 13 = formato visual 99-99999999-9 (CuitInput::FORMATTED_LENGTH).
  * No elimina columnas en down(): pueden ser legacy preexistentes.
  */
 
@@ -21,8 +22,8 @@ return new class extends Migration
     public function up(): void
     {
         $this->ensureVarchar('pacientes', 'dni', 8, 'propietario');
-        $this->ensureVarchar('pacientes', 'cuit', 11, 'dni');
-        $this->ensureVarchar('clientes', 'cuit', 11, 'whatsapp');
+        $this->ensureVarchar('pacientes', 'cuit', 13, 'dni');
+        $this->ensureVarchar('clientes', 'cuit', 13, 'whatsapp');
         $this->ensureVarchar('clientes', 'dni', 8, 'cuit');
     }
 
