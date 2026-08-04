@@ -450,6 +450,168 @@ document.addEventListener('alpine:init', () => {
     }));
 
     /**
+     * Combobox genérico de búsqueda para selects de formulario (ej. Cliente en alta de paciente).
+     * Filtra en el cliente por la cadena completa; sincroniza con Livewire solo al confirmar.
+     *
+     * Config: { opciones: [{id, nombre}], idInicial, nombreInicial, propiedad }
+     *   - propiedad: nombre de la propiedad Livewire a actualizar ($wire.set).
+     */
+    Alpine.data('vlSearchSelect', (config = {}) => ({
+        opciones: Array.isArray(config.opciones) ? config.opciones : [],
+        consulta: String(config.nombreInicial || ''),
+        idSeleccionado: String(config.idInicial || ''),
+        nombreConfirmado: String(config.nombreInicial || ''),
+        propiedad: String(config.propiedad || ''),
+        abierto: false,
+        indice: -1,
+
+        get filtrados() {
+            const term = this.consulta.trim().toLowerCase();
+            if (term === '') {
+                return this.opciones;
+            }
+            return this.opciones.filter((o) => String(o.nombre || '').toLowerCase().includes(term));
+        },
+
+        abrir() {
+            this.abierto = true;
+            this.$nextTick(() => {
+                this.posicionarLista();
+                this.scrollActivo();
+            });
+        },
+
+        cerrar() {
+            this.abierto = false;
+            this.indice = -1;
+        },
+
+        alSalir() {
+            if (!this.abierto) {
+                return;
+            }
+            this.cerrar();
+            // Si cerró sin confirmar selección, restaura el texto anterior.
+            this.consulta = this.nombreConfirmado;
+        },
+
+        onInput() {
+            this.abierto = true;
+            this.indice = this.filtrados.length > 0 ? 0 : -1;
+            this.$nextTick(() => {
+                this.posicionarLista();
+                this.scrollActivo();
+            });
+        },
+
+        posicionarLista() {
+            const input = this.$refs.input;
+            const lista = this.$refs.lista;
+            if (!input || !lista || !this.abierto) {
+                return;
+            }
+            const r = input.getBoundingClientRect();
+            const ancho = Math.max(r.width, 220);
+            lista.style.position = 'fixed';
+            lista.style.left = `${Math.round(r.left)}px`;
+            lista.style.top = `${Math.round(r.bottom + 2)}px`;
+            lista.style.width = `${Math.round(ancho)}px`;
+            lista.style.right = 'auto';
+            lista.style.minWidth = '12rem';
+        },
+
+        onKeydown(event) {
+            if (event.key === 'ArrowDown') {
+                event.preventDefault();
+                event.stopPropagation();
+                if (!this.abierto) {
+                    this.abrir();
+                }
+                if (this.filtrados.length === 0) {
+                    return;
+                }
+                this.indice = this.indice < 0 ? 0
+                    : (this.indice < this.filtrados.length - 1 ? this.indice + 1 : 0);
+                this.$nextTick(() => { this.posicionarLista(); this.scrollActivo(); });
+                return;
+            }
+
+            if (event.key === 'ArrowUp') {
+                event.preventDefault();
+                event.stopPropagation();
+                if (!this.abierto) {
+                    this.abrir();
+                }
+                if (this.filtrados.length === 0) {
+                    return;
+                }
+                this.indice = this.indice < 0 ? this.filtrados.length - 1
+                    : (this.indice > 0 ? this.indice - 1 : this.filtrados.length - 1);
+                this.$nextTick(() => { this.posicionarLista(); this.scrollActivo(); });
+                return;
+            }
+
+            if (event.key === 'Enter') {
+                event.preventDefault();
+                event.stopPropagation();
+                if (this.abierto && this.indice >= 0 && this.filtrados[this.indice]) {
+                    this.elegir(this.filtrados[this.indice]);
+                }
+                return;
+            }
+
+            if (event.key === 'Tab') {
+                if (this.abierto) {
+                    this.cerrar();
+                    this.consulta = this.nombreConfirmado;
+                }
+                return;
+            }
+
+            if (event.key === 'Escape') {
+                if (this.abierto) {
+                    event.preventDefault();
+                    event.stopPropagation();
+                    this.cerrar();
+                    this.consulta = this.nombreConfirmado;
+                }
+            }
+        },
+
+        scrollActivo() {
+            const lista = this.$refs.lista;
+            if (!lista || this.indice < 0) {
+                return;
+            }
+            const item = lista.querySelector(`[data-combo-idx="${this.indice}"]`);
+            if (item) {
+                item.scrollIntoView({ block: 'nearest' });
+            }
+        },
+
+        async elegir(item) {
+            if (!item) {
+                return;
+            }
+            this.consulta = String(item.nombre || '');
+            this.nombreConfirmado = this.consulta;
+            this.idSeleccionado = String(item.id);
+            this.cerrar();
+            const id = item.id !== '' ? Number(item.id) : null;
+            await this.$wire.set(this.propiedad, id);
+        },
+
+        async limpiar() {
+            this.consulta = '';
+            this.nombreConfirmado = '';
+            this.idSeleccionado = '';
+            this.cerrar();
+            await this.$wire.set(this.propiedad, null);
+            this.$nextTick(() => this.$refs.input?.focus());
+        },
+    }));
+
+    /**
      * Búsqueda de determinaciones en Estimación de costos.
      * ↑↓ navegan el listado Livewire; Enter agrega; Esc limpia la búsqueda.
      */

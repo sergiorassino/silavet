@@ -1836,6 +1836,40 @@
         @apply px-2.5 py-1.5 text-xs text-neutral-500;
     }
 
+    /* ── Combobox de búsqueda genérico (ej. select CLIENTE en alta de paciente) ── */
+    .vl-search-select {
+        @apply relative w-full;
+    }
+
+    .vl-search-select-wrapper {
+        @apply relative w-full;
+    }
+
+    .vl-search-select-clear {
+        @apply absolute right-2 top-1/2 -translate-y-1/2 flex h-5 w-5 items-center justify-center rounded
+               text-neutral-400 hover:bg-neutral-100 hover:text-neutral-600 transition-colors;
+    }
+
+    .vl-search-select-lista {
+        @apply z-50 max-h-64 overflow-y-auto rounded-lg border border-accent-200 bg-white py-1 shadow-lg;
+    }
+
+    .vl-search-select-item {
+        @apply cursor-pointer px-3 py-1.5 text-sm text-neutral-800;
+    }
+
+    .vl-search-select-item.is-active {
+        @apply bg-primary-600 font-semibold text-white;
+    }
+
+    .vl-search-select-item:hover:not(.is-active) {
+        @apply bg-primary-50 text-primary-900;
+    }
+
+    .vl-search-select-vacio {
+        @apply px-3 py-1.5 text-sm text-neutral-500;
+    }
+
     .vl-prot-det-input--precio {
         @apply min-w-[4.5rem] max-w-[6.5rem] text-right tabular-nums;
     }
