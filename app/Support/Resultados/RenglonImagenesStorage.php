@@ -70,6 +70,9 @@ final class RenglonImagenesStorage
             ]);
         }
 
+        // Aplica EXIF Orientation a los píxeles (TCPDF no lo hace; evita rotación en PDF).
+        ImagenOrientacionExif::normalizarArchivo($destino);
+
         return $nombreNuevo;
     }
 

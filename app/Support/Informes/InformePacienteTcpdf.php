@@ -4,6 +4,7 @@ namespace App\Support\Informes;
 
 use App\Support\Pdf\TcpdfFuenteArial;
 use App\Support\Pdf\TcpdfLogoInstitucional;
+use App\Support\Resultados\ImagenOrientacionExif;
 use Illuminate\Http\Response;
 use setasign\Fpdi\Tcpdf\Fpdi;
 use Throwable;
@@ -527,11 +528,18 @@ final class InformePacienteTcpdf extends Fpdi
             $x = self::MARGEN + (($this->anchoUtil() - self::ANCHO_IMAGEN) / 2);
             $y = $this->GetY();
 
+            $rutaPdf = $ruta;
+            $temporal = null;
             try {
-                $this->Image($ruta, $x, $y, self::ANCHO_IMAGEN, 0, '', '', '', false, 150, '', false, false, 1);
+                [$rutaPdf, $esTemporal] = ImagenOrientacionExif::rutaParaPdf($ruta);
+                if ($esTemporal) {
+                    $temporal = $rutaPdf;
+                }
+
+                $this->Image($rutaPdf, $x, $y, self::ANCHO_IMAGEN, 0, '', '', '', false, 150, '', false, false, 1);
                 $nuevoY = method_exists($this, 'getImageRBY') ? (float) $this->getImageRBY() : $this->GetY();
                 if ($nuevoY <= $y + 1) {
-                    $info = @getimagesize($ruta);
+                    $info = @getimagesize($rutaPdf);
                     $h = self::ANCHO_IMAGEN * 0.75;
                     if (is_array($info) && ($info[0] ?? 0) > 0) {
                         $h = self::ANCHO_IMAGEN * ((float) $info[1] / (float) $info[0]);
@@ -543,6 +551,10 @@ final class InformePacienteTcpdf extends Fpdi
             } catch (Throwable) {
                 TcpdfFuenteArial::aplicar($this, '', 8);
                 $this->Cell(0, 5, '[Imagen no disponible]', 0, 1, 'C');
+            } finally {
+                if (is_string($temporal) && $temporal !== '' && is_file($temporal)) {
+                    @unlink($temporal);
+                }
             }
 
             $obs = trim((string) ($img['observacion'] ?? ''));
