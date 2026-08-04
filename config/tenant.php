@@ -70,7 +70,8 @@ return [
 
         /*
         | Si true, en edición de paciente el campo nombreProtocolo es editable.
-        | En alta siempre es de solo lectura (generado). Default: false. alqu: true.
+        | En alta: de solo lectura (generado) salvo implementacion vacio (queda vacío).
+        | Default: false. alqu: true.
         */
         'nombre_protocolo_editable_en_edicion' => false,
 
@@ -91,6 +92,12 @@ return [
             'largo_secuencia_len' => 3,
             'tipo_default' => 'L',
         ],
+
+        /*
+        | vacio: no genera número; nombreProtocolo queda '' al alta (bio).
+        | Sin parámetros de secuencia.
+        */
+        'vacio' => [],
     ],
 
     /*

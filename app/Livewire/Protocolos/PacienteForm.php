@@ -165,7 +165,12 @@ class PacienteForm extends Component
                 'string',
                 Rule::in(['L', 'C']),
             ],
-            'nombreProtocolo' => [$this->idPacientes ? 'required' : 'nullable', 'string', 'max:50'],
+            'nombreProtocolo' => [
+                Rule::requiredIf((bool) $this->idPacientes && ! ProtocoloNumero::dejaNombreProtocoloVacio()),
+                'nullable',
+                'string',
+                'max:50',
+            ],
             'nombre' => ['required', 'string', 'max:50'],
             'propietario' => ['nullable', 'string', 'max:100'],
             'dni' => ['nullable', 'string', 'max:8'],
@@ -270,20 +275,11 @@ class PacienteForm extends Component
 
         try {
             if ($this->idPacientes) {
-                if ($this->nombreProtocoloEditableEnEdicion()) {
-                    $numero = trim($data['nombreProtocolo']);
-                    $yaExiste = Paciente::query()
-                        ->where('nombreProtocolo', $numero)
-                        ->where('idPacientes', '!=', $this->idPacientes)
-                        ->exists();
-
-                    if ($yaExiste) {
-                        $mensaje = 'Ya existe un protocolo con el número «'.$numero.'». Elija otro.';
-                        $this->dispatch('vl-swal-error', mensaje: $mensaje, titulo: 'Número en uso');
-                        throw ValidationException::withMessages(['nombreProtocolo' => $mensaje]);
-                    }
-
-                    $payload['nombreProtocolo'] = $numero;
+                if ($this->nombreProtocoloEditableEnEdicion() || ProtocoloNumero::dejaNombreProtocoloVacio()) {
+                    $payload['nombreProtocolo'] = $this->nombreProtocoloAPersistir(
+                        trim((string) ($data['nombreProtocolo'] ?? '')),
+                        $this->idPacientes
+                    );
                 }
                 $paciente = $this->pacienteEnAlcance($this->idPacientes);
                 $paciente->update($payload);
@@ -292,19 +288,34 @@ class PacienteForm extends Component
                 $filtrosVolver = $this->listadoFiltros;
             } else {
                 try {
-                    $tipo = ProtocoloNumero::usaTipoProtocolo()
-                        ? ($data['tipoProtocolo'] ?? 'L')
-                        : null;
-
                     $nuevoId = null;
-                    ProtocoloNumero::withSiguienteReservado($payload['fechhoy'], function (string $numero) use ($payload, &$nuevoId): void {
+
+                    if (ProtocoloNumero::dejaNombreProtocoloVacio()) {
+                        $numero = $this->nombreProtocoloAPersistir(
+                            trim((string) ($data['nombreProtocolo'] ?? '')),
+                            null
+                        );
                         $creado = Paciente::create(array_merge($payload, [
                             'nombreProtocolo' => $numero,
                             'tipoRegistro' => 1,
                             'estado' => ResultadosEstadosCatalog::EN_PROC,
                         ]));
                         $nuevoId = (int) $creado->idPacientes;
-                    }, $tipo);
+                    } else {
+                        $tipo = ProtocoloNumero::usaTipoProtocolo()
+                            ? ($data['tipoProtocolo'] ?? 'L')
+                            : null;
+
+                        ProtocoloNumero::withSiguienteReservado($payload['fechhoy'], function (string $numero) use ($payload, &$nuevoId): void {
+                            $creado = Paciente::create(array_merge($payload, [
+                                'nombreProtocolo' => $numero,
+                                'tipoRegistro' => 1,
+                                'estado' => ResultadosEstadosCatalog::EN_PROC,
+                            ]));
+                            $nuevoId = (int) $creado->idPacientes;
+                        }, $tipo);
+                    }
+
                     $this->idPacientes = $nuevoId;
                 } catch (RuntimeException $e) {
                     throw ValidationException::withMessages([
@@ -461,6 +472,29 @@ class PacienteForm extends Component
         return (bool) config('tenant.protocolos.nombre_protocolo_editable_en_edicion', false);
     }
 
+    /**
+     * Valida unicidad solo si el número no está vacío (varios vacíos coexisten en `vacio`).
+     */
+    protected function nombreProtocoloAPersistir(string $numero, ?int $exceptoIdPacientes): string
+    {
+        if ($numero === '') {
+            return '';
+        }
+
+        $yaExiste = Paciente::query()
+            ->where('nombreProtocolo', $numero)
+            ->when($exceptoIdPacientes !== null, fn ($q) => $q->where('idPacientes', '!=', $exceptoIdPacientes))
+            ->exists();
+
+        if ($yaExiste) {
+            $mensaje = 'Ya existe un protocolo con el número «'.$numero.'». Elija otro.';
+            $this->dispatch('vl-swal-error', mensaje: $mensaje, titulo: 'Número en uso');
+            throw ValidationException::withMessages(['nombreProtocolo' => $mensaje]);
+        }
+
+        return $numero;
+    }
+
     protected static function tieneColumnaDni(): bool
     {
         return Schema::hasColumn('pacientes', 'dni');
@@ -473,7 +507,7 @@ class PacienteForm extends Component
 
     protected function actualizarPreviewProtocolo(): void
     {
-        if ($this->fechhoy === '') {
+        if ($this->fechhoy === '' || ProtocoloNumero::dejaNombreProtocoloVacio()) {
             return;
         }
 
@@ -522,7 +556,9 @@ class PacienteForm extends Component
         $sexos = SexoCatalog::opciones();
         $clienteBloqueado = $ctx->esCliente() && $ctx->idClientes;
         $usaTipoProtocolo = ProtocoloNumero::usaTipoProtocolo();
-        $nombreProtocoloEditable = (bool) $this->idPacientes && $this->nombreProtocoloEditableEnEdicion();
+        $dejaNombreProtocoloVacio = ProtocoloNumero::dejaNombreProtocoloVacio();
+        $nombreProtocoloEditable = $dejaNombreProtocoloVacio
+            || ((bool) $this->idPacientes && $this->nombreProtocoloEditableEnEdicion());
         $puedeEliminar = false;
 
         if ($this->idPacientes) {
@@ -541,6 +577,7 @@ class PacienteForm extends Component
             'sexos' => $sexos,
             'clienteBloqueado' => $clienteBloqueado,
             'usaTipoProtocolo' => $usaTipoProtocolo,
+            'dejaNombreProtocoloVacio' => $dejaNombreProtocoloVacio,
             'nombreProtocoloEditable' => $nombreProtocoloEditable,
             'puedeEliminar' => $puedeEliminar,
             'urlVolver' => PacienteListadoFiltros::urlIndex($this->listadoFiltros, $this->idPacientes),

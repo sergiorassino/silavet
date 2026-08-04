@@ -11,10 +11,10 @@
 | Concepto | Detalle |
 |----------|---------|
 | **Campo en BD** | `pacientes.nombreProtocolo` (string, hasta 50 caracteres) |
-| **Cuándo se asigna** | Al **alta**, por el generador del tenant. En **edición** es fijo salvo que el tenant active `protocolos.nombre_protocolo_editable_en_edicion`. |
+| **Cuándo se asigna** | Al **alta**, por el generador del tenant (salvo `vacio`, que deja `''`). En **edición** es fijo salvo que el tenant active `protocolos.nombre_protocolo_editable_en_edicion`. |
 | **Zona horaria** | `America/Argentina/Buenos_Aires` para prefijos con fecha |
-| **Vista previa** | El formulario muestra un número **provisional**; puede cambiar si otro usuario guarda antes. |
-| **Reserva definitiva** | Al guardar, bajo lock exclusivo + transacción, se confirma el siguiente libre. |
+| **Vista previa** | El formulario muestra un número **provisional** (o vacío si `vacio`); puede cambiar si otro usuario guarda antes. |
+| **Reserva definitiva** | Al guardar, bajo lock exclusivo + transacción, se confirma el siguiente libre (`vacio` no usa lock). |
 | **Config por tenant** | `config('tenant.protocolos.implementacion')` + overrides en `config/tenants/{slug}.php` |
 
 En la UI y la documentación interna, **protocolo** = registro analítico en `pacientes`
@@ -32,6 +32,7 @@ y no deben renombrarse una vez en producción.
 | `fecha_diaria` | `YYMMDD` + secuencia diaria | 9 (`260706001`) | **Implementada** | ScriptCase opción 2 |
 | `dual_corto_largo` | Largo: `YYMMDDNNN` · Corto: `C` + 9 dígitos | 9 o 10 | **Implementada** | ScriptCase opción 3 |
 | `anual_consecutivo` | `AA` + secuencia anual | 7 (`2600001`) | **Implementada** | ScriptCase opción 1 |
+| `vacio` | (sin número) | 0 (`''`) | **Implementada** | Pedido Bio |
 
 **Tenants configurados hoy:**
 
@@ -41,6 +42,7 @@ y no deben renombrarse una vez en producción.
 | `neolab` | `fecha_diaria` | `config/tenants/neolab.php` |
 | `labvetciudad` | `anual_consecutivo` | `config/tenants/labvetciudad.php` |
 | `civetfranca` | `dual_corto_largo` | `config/tenants/civetfranca.php` |
+| `bio` | `vacio` | `config/tenants/bio.php` |
 
 ---
 
@@ -200,7 +202,50 @@ No requiere campos extra. Solo fecha + vista previa del protocolo.
 
 ---
 
-## 6. Concurrencia y consistencia
+## 6. Variante `vacio`
+
+Usada por **bio**. No genera número de protocolo: al alta `nombreProtocolo` queda
+como cadena vacía. Varios protocolos pueden compartir el valor vacío (no hay
+chequeo de unicidad ni lock).
+
+### Formato
+
+Vacío (`''`).
+
+### Reglas
+
+1. Vista previa inicial = `''` (no se autocompleta al cambiar la fecha).
+2. El usuario puede dejarlo vacío o cargar un número a mano (campo **editable** en alta y edición).
+3. Al guardar se persiste el valor del form (`''` o el texto ingresado). Si no está vacío, se valida unicidad.
+4. Sin `GET_LOCK` ni reserva de secuencia.
+5. Validación: el campo **no** es obligatorio en alta ni en edición.
+6. UI: label sin asterisco; texto de ayuda «Opcional — sin número automático».
+
+### Configuración
+
+```php
+// config/tenants/bio.php
+'protocolos' => [
+    'implementacion' => 'vacio',
+],
+```
+
+Sin parámetros adicionales (`config/tenant.php` → `protocolos.vacio` = `[]`).
+
+### UI
+
+Sin campos extra. El input de protocolo queda **editable** (alta y edición) para carga
+manual opcional; vacío por defecto.
+
+### Código
+
+- Generador: `App\Support\ProtocoloNumero\Generators\VacioGenerator`
+- Helper: `ProtocoloNumero::dejaNombreProtocoloVacio()`
+- Sin lock MySQL
+
+---
+
+## 7. Concurrencia y consistencia
 
 Varios usuarios pueden crear protocolos a la vez. Para evitar duplicados:
 
@@ -235,7 +280,7 @@ ProtocoloNumero::withContextoReservado($ctx, $callback);
 
 ---
 
-## 7. Configuración por tenant
+## 8. Configuración por tenant
 
 Patrón estándar del proyecto: defaults en `config/tenant.php`, solo diferencias en
 `config/tenants/{slug}.php`.
@@ -270,7 +315,7 @@ instalación; no hay `tenant_id` en `pacientes`.
 
 ---
 
-## 8. Agregar una nueva variante
+## 9. Agregar una nueva variante
 
 Checklist obligatorio para no romper otros laboratorios:
 
@@ -303,27 +348,29 @@ app/Support/
     └── Generators/
         ├── AnualConsecutivoGenerator.php
         ├── FechaDiariaGenerator.php
-        └── DualCortoLargoGenerator.php
+        ├── DualCortoLargoGenerator.php
+        └── VacioGenerator.php
 ```
 
 ---
 
-## 9. Tests
+## 10. Tests
 
 `tests/Unit/ProtocoloNumeroTest.php` valida:
 
 - formato de cada implementación activa;
-- flag `ProtocoloNumero::usaTipoProtocolo()` según config.
+- flag `ProtocoloNumero::usaTipoProtocolo()` según config;
+- flag `ProtocoloNumero::dejaNombreProtocoloVacio()` y preview vacío para `vacio`.
 
 Al agregar variantes, incluir al menos:
 
-- primer número del período (día / año / global);
-- incremento cuando ya existen registros;
+- primer número del período (día / año / global), o vacío si aplica;
+- incremento cuando ya existen registros (omitir si la variante no numera);
 - formato exacto (regex + longitud).
 
 ---
 
-## 10. Decisiones de diseño
+## 11. Decisiones de diseño
 
 | Decisión | Motivo |
 |----------|--------|
@@ -331,10 +378,11 @@ Al agregar variantes, incluir al menos:
 | Clase por variante | Fácil agregar formatos sin tocar las existentes |
 | Preview sin lock | Mejor UX; el número definitivo se fija al guardar |
 | Lock por secuencia, no global | Dos días, años o tipos (largo/corto) no se bloquean entre sí |
+| `vacio` sin lock ni unicidad | Varios casos sin número; no hay secuencia que proteger |
 
 ---
 
-## 11. Referencias
+## 12. Referencias
 
 - Modelo de datos: `pacientes.nombreProtocolo` en [02-modelo-de-datos.md](02-modelo-de-datos.md)
 - Personalización por tenant: [07-versionado-de-modulos-por-tenant.md](07-versionado-de-modulos-por-tenant.md)

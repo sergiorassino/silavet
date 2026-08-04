@@ -5,6 +5,7 @@ namespace App\Support\ProtocoloNumero;
 use App\Support\ProtocoloNumero\Generators\AnualConsecutivoGenerator;
 use App\Support\ProtocoloNumero\Generators\DualCortoLargoGenerator;
 use App\Support\ProtocoloNumero\Generators\FechaDiariaGenerator;
+use App\Support\ProtocoloNumero\Generators\VacioGenerator;
 use InvalidArgumentException;
 
 class ProtocoloNumeroRegistry
@@ -14,6 +15,7 @@ class ProtocoloNumeroRegistry
         'anual_consecutivo' => AnualConsecutivoGenerator::class,
         'fecha_diaria' => FechaDiariaGenerator::class,
         'dual_corto_largo' => DualCortoLargoGenerator::class,
+        'vacio' => VacioGenerator::class,
     ];
 
     public static function resolver(): ProtocoloNumeroGenerator
@@ -30,5 +32,10 @@ class ProtocoloNumeroRegistry
     public static function usaTipoProtocolo(): bool
     {
         return config('tenant.protocolos.implementacion') === 'dual_corto_largo';
+    }
+
+    public static function dejaNombreProtocoloVacio(): bool
+    {
+        return config('tenant.protocolos.implementacion') === 'vacio';
     }
 }

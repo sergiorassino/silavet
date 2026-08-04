@@ -84,7 +84,7 @@
             @endif
 
             <div class="vl-form-field">
-                <label class="form-label" for="nombreProtocolo">Protocolo *</label>
+                <label class="form-label" for="nombreProtocolo">Protocolo @unless ($dejaNombreProtocoloVacio)*@endunless</label>
                 <input wire:model="nombreProtocolo"
                        id="nombreProtocolo"
                        type="text"
@@ -92,7 +92,11 @@
                        class="form-input font-semibold"
                        @unless ($nombreProtocoloEditable) readonly @endunless>
                 @unless ($idPacientes)
-                    <p class="mt-0.5 text-[10px] leading-tight text-neutral-500">Provisional — se confirma al guardar.</p>
+                    @if ($dejaNombreProtocoloVacio)
+                        <p class="mt-0.5 text-[10px] leading-tight text-neutral-500">Opcional — sin número automático.</p>
+                    @else
+                        <p class="mt-0.5 text-[10px] leading-tight text-neutral-500">Provisional — se confirma al guardar.</p>
+                    @endif
                 @endunless
                 @error('nombreProtocolo') <p class="form-error">{{ $message }}</p> @enderror
             </div>

@@ -67,4 +67,35 @@ class ProtocoloNumeroTest extends TestCase
         Config::set('tenant.protocolos.implementacion', 'dual_corto_largo');
         $this->assertTrue(ProtocoloNumero::usaTipoProtocolo());
     }
+
+    public function test_previsualizar_vacio_devuelve_cadena_vacia(): void
+    {
+        Config::set('tenant.protocolos.implementacion', 'vacio');
+
+        $this->assertSame('', ProtocoloNumero::previsualizarParaFecha('2026-07-06'));
+        $this->assertTrue(ProtocoloNumero::dejaNombreProtocoloVacio());
+    }
+
+    public function test_with_siguiente_reservado_vacio_pasa_cadena_vacia(): void
+    {
+        Config::set('tenant.protocolos.implementacion', 'vacio');
+
+        $recibido = null;
+        ProtocoloNumero::withSiguienteReservado('2026-07-06', function (string $numero) use (&$recibido): string {
+            $recibido = $numero;
+
+            return 'ok';
+        });
+
+        $this->assertSame('', $recibido);
+    }
+
+    public function test_deja_nombre_protocolo_vacio_solo_en_implementacion_vacio(): void
+    {
+        Config::set('tenant.protocolos.implementacion', 'fecha_diaria');
+        $this->assertFalse(ProtocoloNumero::dejaNombreProtocoloVacio());
+
+        Config::set('tenant.protocolos.implementacion', 'vacio');
+        $this->assertTrue(ProtocoloNumero::dejaNombreProtocoloVacio());
+    }
 }
