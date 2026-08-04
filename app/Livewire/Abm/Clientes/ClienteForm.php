@@ -42,12 +42,12 @@ class ClienteForm extends Component
         if ($id) {
             $cliente = Cliente::findOrFail($id);
             $this->idClientes = $cliente->idClientes;
-            $this->nombre = (string) $cliente->nombre;
-            $this->direccion = (string) ($cliente->direccion ?? '');
-            $this->telefono1 = (string) ($cliente->telefono1 ?? '');
-            $this->telefono2 = (string) ($cliente->telefono2 ?? '');
-            $this->email = (string) ($cliente->email ?? '');
-            $this->whatsapp = (string) ($cliente->whatsapp ?? '');
+            $this->nombre = trim((string) $cliente->nombre);
+            $this->direccion = trim((string) ($cliente->direccion ?? ''));
+            $this->telefono1 = trim((string) ($cliente->telefono1 ?? ''));
+            $this->telefono2 = trim((string) ($cliente->telefono2 ?? ''));
+            $this->email = trim((string) ($cliente->email ?? ''));
+            $this->whatsapp = trim((string) ($cliente->whatsapp ?? ''));
             $this->dni = self::tieneColumnaDni()
                 ? (string) ($cliente->dni ?? '')
                 : '';
@@ -122,14 +122,19 @@ class ClienteForm extends Component
         $key = 'cliente-save:'.auth()->id();
         abort_if(RateLimiter::tooManyAttempts($key, 30), 429);
 
-        $data = $this->validate();
+        // Trim antes de validar: datos legacy suelen traer espacios (ej. email)
+        // que hacen fallar la regla `email` aunque el mail sea válido.
+        $this->nombre = trim($this->nombre);
+        $this->direccion = trim($this->direccion);
+        $this->telefono1 = trim($this->telefono1);
+        $this->telefono2 = trim($this->telefono2);
+        $this->email = trim($this->email);
+        $this->whatsapp = trim($this->whatsapp);
+        $this->dni = trim($this->dni);
+        $this->cuit = trim($this->cuit);
+        $this->descuento = trim($this->descuento);
 
-        $data['nombre'] = trim($data['nombre']);
-        $data['direccion'] = trim((string) ($data['direccion'] ?? ''));
-        $data['telefono1'] = trim((string) ($data['telefono1'] ?? ''));
-        $data['telefono2'] = trim((string) ($data['telefono2'] ?? ''));
-        $data['email'] = trim((string) ($data['email'] ?? ''));
-        $data['whatsapp'] = trim((string) ($data['whatsapp'] ?? ''));
+        $data = $this->validate();
 
         $dni = trim((string) ($data['dni'] ?? ''));
         $cuit = CuitInput::normalize(trim((string) ($data['cuit'] ?? '')));
@@ -153,7 +158,8 @@ class ClienteForm extends Component
             $data['dni'] = $dni;
         }
         if (self::tieneColumnaCuit()) {
-            $data['cuit'] = $cuit !== '' ? $cuit : null;
+            // NOT NULL DEFAULT '' (legacy): vacío = '', nunca null.
+            $data['cuit'] = $cuit;
         }
 
         $descuento = trim((string) ($data['descuento'] ?? ''));
