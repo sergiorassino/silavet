@@ -50,7 +50,8 @@ final class InformePacienteTcpdf extends Fpdi
     /** Reserva inferior para firmas (mm). */
     private const RESERVA_FOOTER = 38.0;
 
-    private const ANCHO_IMAGEN = 100.0;
+    /** Ancho máx. de imágenes de campo (mm). */
+    private const ANCHO_IMAGEN = 56.0;
 
     /** Interlineado de filas (+10 % sobre el legacy ~5,6 mm). */
     private const ALTO_FILA = 6.16;
