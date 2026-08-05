@@ -4,20 +4,19 @@ namespace App\Http\Controllers\Clientes;
 
 use App\Http\Controllers\Controller;
 use App\Models\Cliente;
-use App\Support\CuentaCorriente\CuentaCorrienteConsulta;
+use App\Support\CuentaCorriente\CuentaCorrienteMovimientosConsulta;
 use App\Support\CuentaCorriente\LabEntornoPdf;
-use App\Support\CuentaCorriente\ResumenClienteEntreFechasTcpdf;
+use App\Support\CuentaCorriente\ResumenClienteEntreFechasMovimientosTcpdf;
 use App\Support\PermisosIaCatalog;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Validation\ValidationException;
 
-class ResumenClienteEntreFechasPdfController extends Controller
+class ResumenClienteEntreFechasMovimientosPdfController extends Controller
 {
     public function __invoke(Request $request)
     {
         abort_unless(tienePermiso(PermisosIaCatalog::FACTURACION), 403);
-        abort_unless(\App\Support\Tesoreria\TesoreriaConfig::usaMovimientos(), 404);
 
         $key = 'resumen-cliente-fechas-pdf:'.(auth()->id() ?? 'guest');
         if (RateLimiter::tooManyAttempts($key, 15)) {
@@ -48,10 +47,10 @@ class ResumenClienteEntreFechasPdfController extends Controller
             ]);
         }
 
-        $filas = CuentaCorrienteConsulta::protocolosCliente($idClientes, $desde, $hasta);
-        $saldoActual = CuentaCorrienteConsulta::saldoClienteHoy($idClientes);
+        $filas = CuentaCorrienteMovimientosConsulta::movimientosCliente($idClientes, $desde, $hasta);
+        $saldoActual = CuentaCorrienteMovimientosConsulta::saldoClienteHoy($idClientes);
 
-        $pdf = ResumenClienteEntreFechasTcpdf::generar([
+        $pdf = ResumenClienteEntreFechasMovimientosTcpdf::generar([
             'header' => LabEntornoPdf::datosHeader(),
             'cliente_nombre' => (string) $cliente->nombre,
             'fecha_desde' => $desde,
@@ -60,6 +59,6 @@ class ResumenClienteEntreFechasPdfController extends Controller
             'filas' => $filas->all(),
         ]);
 
-        return ResumenClienteEntreFechasTcpdf::respuestaHttp($pdf, 'resumen-cliente-entre-fechas.pdf');
+        return ResumenClienteEntreFechasMovimientosTcpdf::respuestaHttp($pdf, 'resumen-cliente-entre-fechas.pdf');
     }
 }

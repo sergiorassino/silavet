@@ -19,7 +19,7 @@ class ResumenClienteEntreFechas extends Component
     public function mount(): void
     {
         abort_unless(tienePermiso(PermisosIaCatalog::FACTURACION), 403);
-        abort_unless(Schema::hasTable('pacientes'), 404, 'La tabla de pacientes no está disponible.');
+        abort_unless(\App\Support\Tesoreria\TesoreriaConfig::usaMovimientos(), 404);
 
         $hoy = now();
         $this->fechaDesde = $hoy->copy()->startOfMonth()->toDateString();

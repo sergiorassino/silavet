@@ -5,7 +5,12 @@ use App\Http\Controllers\Clientes\CuentaCorrienteClientesExcelController;
 use App\Http\Controllers\Clientes\CuentaCorrienteClientesPdfController;
 use App\Http\Controllers\Clientes\CuentaCorrienteDetalleExcelController;
 use App\Http\Controllers\Clientes\CuentaCorrienteDetallePdfController;
+use App\Http\Controllers\Clientes\CuentaCorrienteMovimientosClientesExcelController;
+use App\Http\Controllers\Clientes\CuentaCorrienteMovimientosClientesPdfController;
+use App\Http\Controllers\Clientes\CuentaCorrienteMovimientosDetalleExcelController;
+use App\Http\Controllers\Clientes\CuentaCorrienteMovimientosDetallePdfController;
 use App\Http\Controllers\Clientes\ResumenClienteEntreFechasPdfController;
+use App\Http\Controllers\Clientes\ResumenClienteEntreFechasMovimientosPdfController;
 use App\Http\Controllers\Facturacion\CompAfipPdfController;
 use App\Http\Controllers\Protocolos\EtiquetasTuboPdfController;
 use App\Http\Controllers\Protocolos\InformePacientePdfController;
@@ -29,6 +34,8 @@ use App\Livewire\Cliente\ClienteHome;
 use App\Livewire\Cliente\ListaPrecios;
 use App\Livewire\Clientes\CuentaCorrienteDetalle;
 use App\Livewire\Clientes\CuentaCorrienteIndex;
+use App\Livewire\Clientes\CuentaCorrienteMovimientosDetalle;
+use App\Livewire\Clientes\CuentaCorrienteMovimientosIndex;
 use App\Livewire\Clientes\ResumenClienteEntreFechas;
 use App\Livewire\Abm\DetPorGrupo\DetPorGrupoIndex;
 use App\Livewire\Abm\Grupos\GrupoForm;
@@ -197,17 +204,29 @@ Route::middleware(['auth', 'lab.context'])->group(function () {
     });
 
     Route::prefix('clientes/cuenta-corriente')->middleware(['menu.portal:laboratorio', 'permiso:6'])->group(function () {
-        Route::get('/', CuentaCorrienteIndex::class)->name('clientes.cuenta-corriente.index');
-        Route::get('/pdf', CuentaCorrienteClientesPdfController::class)->name('clientes.cuenta-corriente.pdf');
-        Route::get('/excel', CuentaCorrienteClientesExcelController::class)->name('clientes.cuenta-corriente.excel');
-        Route::get('/{id}', CuentaCorrienteDetalle::class)->name('clientes.cuenta-corriente.detalle');
-        Route::get('/{id}/pdf', CuentaCorrienteDetallePdfController::class)->name('clientes.cuenta-corriente.detalle.pdf');
-        Route::get('/{id}/excel', CuentaCorrienteDetalleExcelController::class)->name('clientes.cuenta-corriente.detalle.excel');
+        if (TesoreriaConfig::usaPacientes()) {
+            Route::get('/', CuentaCorrienteMovimientosIndex::class)->name('clientes.cuenta-corriente.index');
+            Route::get('/pdf', CuentaCorrienteMovimientosClientesPdfController::class)->name('clientes.cuenta-corriente.pdf');
+            Route::get('/excel', CuentaCorrienteMovimientosClientesExcelController::class)->name('clientes.cuenta-corriente.excel');
+            Route::get('/{id}', CuentaCorrienteMovimientosDetalle::class)->name('clientes.cuenta-corriente.detalle');
+            Route::get('/{id}/pdf', CuentaCorrienteMovimientosDetallePdfController::class)->name('clientes.cuenta-corriente.detalle.pdf');
+            Route::get('/{id}/excel', CuentaCorrienteMovimientosDetalleExcelController::class)->name('clientes.cuenta-corriente.detalle.excel');
+        } else {
+            Route::get('/', CuentaCorrienteIndex::class)->name('clientes.cuenta-corriente.index');
+            Route::get('/pdf', CuentaCorrienteClientesPdfController::class)->name('clientes.cuenta-corriente.pdf');
+            Route::get('/excel', CuentaCorrienteClientesExcelController::class)->name('clientes.cuenta-corriente.excel');
+            Route::get('/{id}', CuentaCorrienteDetalle::class)->name('clientes.cuenta-corriente.detalle');
+            Route::get('/{id}/pdf', CuentaCorrienteDetallePdfController::class)->name('clientes.cuenta-corriente.detalle.pdf');
+            Route::get('/{id}/excel', CuentaCorrienteDetalleExcelController::class)->name('clientes.cuenta-corriente.detalle.excel');
+        }
     });
 
     Route::prefix('clientes/resumen-entre-fechas')->middleware(['menu.portal:laboratorio', 'permiso:6'])->group(function () {
         Route::get('/', ResumenClienteEntreFechas::class)->name('clientes.resumen-entre-fechas.index');
-        Route::get('/pdf', ResumenClienteEntreFechasPdfController::class)
+        $resumenPdfController = TesoreriaConfig::usaPacientes()
+            ? ResumenClienteEntreFechasMovimientosPdfController::class
+            : ResumenClienteEntreFechasPdfController::class;
+        Route::get('/pdf', $resumenPdfController)
             ->middleware(['throttle:30,1', 'no-store'])
             ->name('clientes.resumen-entre-fechas.pdf');
     });

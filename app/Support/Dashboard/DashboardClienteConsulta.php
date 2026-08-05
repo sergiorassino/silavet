@@ -4,7 +4,7 @@ namespace App\Support\Dashboard;
 
 use App\Models\Notificacion;
 use App\Models\Paciente;
-use App\Support\CuentaCorriente\CuentaCorrienteConsulta;
+use App\Support\CuentaCorriente\CuentaCorrienteFacade;
 use App\Support\Precios\DescuentoPerfilesVolumenConsulta;
 use App\Support\Resultados\ResultadosEstadosCatalog;
 use App\Support\Security\OpaqueRouteToken;
@@ -317,14 +317,14 @@ final class DashboardClienteConsulta
      */
     private static function resumenCuentaCorriente(int $idClientes): array
     {
-        $saldo = CuentaCorrienteConsulta::saldoClienteHoy($idClientes);
+        $saldo = CuentaCorrienteFacade::saldoClienteHoy($idClientes);
         $descuentosMes = DescuentoPerfilesVolumenConsulta::sumaDescuentosMesActual($idClientes, now());
 
         return [
             'saldo' => $saldo,
-            'saldoFormateado' => CuentaCorrienteConsulta::formatearMoneda($saldo),
+            'saldoFormateado' => CuentaCorrienteFacade::formatearMoneda($saldo),
             'descuentosMes' => $descuentosMes,
-            'descuentosMesFormateado' => CuentaCorrienteConsulta::formatearMoneda($descuentosMes),
+            'descuentosMesFormateado' => CuentaCorrienteFacade::formatearMoneda($descuentosMes),
         ];
     }
 

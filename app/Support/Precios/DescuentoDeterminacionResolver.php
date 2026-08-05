@@ -4,7 +4,7 @@ namespace App\Support\Precios;
 
 use App\Models\Cliente;
 use App\Models\Tipodeterminacion;
-use App\Support\CuentaCorriente\CuentaCorrienteConsulta;
+use App\Support\CuentaCorriente\CuentaCorrienteFacade;
 use Carbon\CarbonInterface;
 
 class DescuentoDeterminacionResolver
@@ -105,8 +105,8 @@ class DescuentoDeterminacionResolver
     public static function encabezadoAutogestion(int $idClientes, ?CarbonInterface $fechaReferencia = null): array
     {
         $fecha = $fechaReferencia ?? now();
-        $saldo = CuentaCorrienteConsulta::saldoClienteHoy($idClientes);
-        $saldoFormateado = CuentaCorrienteConsulta::formatearMoneda($saldo);
+        $saldo = CuentaCorrienteFacade::saldoClienteHoy($idClientes);
+        $saldoFormateado = CuentaCorrienteFacade::formatearMoneda($saldo);
 
         if (! DescuentoDeterminacionConfig::usaPerfilesVolumenMesAnterior()) {
             return [
@@ -140,7 +140,7 @@ class DescuentoDeterminacionResolver
             'saldoFormateado' => $saldoFormateado,
             'mostrarDetalleVolumen' => true,
             'descuentosMes' => $descuentosMes,
-            'descuentosMesFormateado' => CuentaCorrienteConsulta::formatearMoneda($descuentosMes),
+            'descuentosMesFormateado' => CuentaCorrienteFacade::formatearMoneda($descuentosMes),
             'perfilesMesAnterior' => $perfilesMesAnterior,
             'porcentajeEsteMes' => $porcentajeEsteMes,
             'porcentajeEsteMesFormateado' => DescuentoPerfilesVolumenConsulta::formatearPorcentaje($porcentajeEsteMes),

@@ -106,6 +106,16 @@ return [
     | - tesoreria_movimientos: ingresos/egresos en tabla pacientes (mayoría de labs).
     | - tesoreria_pacientes: caja sobre tabla movimientos (labvetciudad).
     */
+    /*
+    | Cuenta corriente de clientes.
+    | - id_cuenta_cc: id de mediodepago que se toma como "CC" para el saldo
+    |   (variante tesoreria_pacientes). Default: 1.
+    | Ver docs/modulos/cuenta-corriente.md.
+    */
+    'cuenta_corriente' => [
+        'id_cuenta_cc' => 1,
+    ],
+
     'tesoreria' => [
         'implementacion' => 'tesoreria_movimientos',
 

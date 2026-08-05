@@ -8,6 +8,7 @@ use App\Models\Notificacion;
 use App\Models\Paciente;
 use App\Models\Renglon;
 use App\Support\CuentaCorriente\CuentaCorrienteConsulta;
+use App\Support\CuentaCorriente\CuentaCorrienteFacade;
 use App\Support\Envio\InformeEnvioServicio;
 use App\Support\Facturacion\FacturacionAfipConfig;
 use App\Support\Facturacion\FacturacionAfipIndicadores;
@@ -1235,7 +1236,11 @@ class PacienteIndex extends Component
         $encabezadoDescuento = null;
         if ($autogestion && $ctx->idClientes) {
             $idCliente = (int) $ctx->idClientes;
-            $saldosAcumulados = CuentaCorrienteConsulta::mapaSaldoAcumuladoPorProtocolo($idCliente);
+            // Para tesoreria_pacientes no existe el mapa de saldo por protocolo;
+            // el saldo total se muestra vía facade en encabezadoDescuento.
+            if (! TesoreriaConfig::usaPacientes()) {
+                $saldosAcumulados = CuentaCorrienteConsulta::mapaSaldoAcumuladoPorProtocolo($idCliente);
+            }
             $encabezadoDescuento = DescuentoDeterminacionResolver::encabezadoAutogestion($idCliente);
         }
 

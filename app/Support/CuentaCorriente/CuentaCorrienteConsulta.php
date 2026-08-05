@@ -78,6 +78,7 @@ final class CuentaCorrienteConsulta
                         ->orWhere('clientes.telefono2', 'like', "%{$term}%");
                 });
             })
+            ->orderByDesc('saldo_total')
             ->orderBy('clientes.nombre');
     }
 

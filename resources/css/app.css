@@ -1402,6 +1402,15 @@
         font-weight: 500;
     }
 
+    /* Cuenta corriente movimientos — fila con monto negativo (pagos/ingresos) */
+    .vl-cc-mov-row--negativo {
+        background-color: #fefce8;
+    }
+
+    .vl-cc-mov-row--negativo > .vl-pacientes-td {
+        font-weight: 500;
+    }
+
     /* Tesorería / Movimientos — grilla condensada + colores NeoLab */
     .vl-movimientos-grid {
         @apply w-full border-collapse border border-neutral-300 text-[11px] leading-tight;

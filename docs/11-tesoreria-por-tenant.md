@@ -3,6 +3,7 @@
 > Cómo se elige la implementación de tesorería según el tenant.
 > Complementa [07-versionado-de-modulos-por-tenant.md](07-versionado-de-modulos-por-tenant.md) §3.3.
 > Especificación operativa del módulo: [modulos/tesoreria.md](modulos/tesoreria.md).
+> **Cuenta corriente de clientes por variante:** [modulos/cuenta-corriente.md](modulos/cuenta-corriente.md).
 
 ---
 
