@@ -79,7 +79,8 @@ final class InformeEnvioServicio
         }
 
         $cta = trim((string) ($entorno->ctaEnvioMail ?? ''));
-        $pass = (string) ($entorno->passEnvioMail ?? '');
+        // Gmail muestra la app password como "xxxx xxxx xxxx xxxx"; SMTP espera 16 chars sin espacios.
+        $pass = preg_replace('/\s+/', '', (string) ($entorno->passEnvioMail ?? '')) ?? '';
         $from = self::direccionRemitente($entorno);
         $fromName = self::nombreRemitente($entorno);
 

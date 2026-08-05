@@ -3,10 +3,12 @@
  * Activa solo si el tenant envía hemogramaAuto.activo + mapa de idItems.
  *
  * No reemplaza entorno.formulas: expone un runner que (1) ejecuta formulas(),
- * (2) preserva plaquetas si el cálculo quedó vacío sin conteo manual, (3) aplica
- * el texto automático solo si opciones.aplicarHemograma !== false.
+ * (2) preserva plaquetas si el cálculo quedó vacío sin conteo manual, (3) marca
+ * en rojo valores fuera de rangovalores, (4) aplica el texto Serie Roja/Blanca
+ * solo si opciones.aplicarHemograma !== false.
  * vlCargaResultados llama a ese runner; window.formulas queda como el script
- * de entorno sin envolver. Al entrar al form se llama con aplicarHemograma:false.
+ * de entorno sin envolver. Al entrar al form se llama con aplicarHemograma:false
+ * (sí aplica estilos fuera de rango; no escribe leyendas).
  */
 export function instalarHemogramaAuto(config) {
     /**
@@ -163,18 +165,65 @@ export function instalarHemogramaAuto(config) {
         texto = texto.replace(/\bPENDIENTE\b/gi, ' ');
         const frases = listarFrasesAutomaticas();
         for (let i = 0; i < frases.length; i++) {
-            texto = texto.replace(new RegExp(escaparRegex(frases[i]), 'gi'), ' ');
+            // Incluye el punto de la frase automática para no dejar puntos huérfanos
+            // al inicio/medio de Serie Roja / Serie Blanca.
+            texto = texto.replace(new RegExp(escaparRegex(frases[i]) + '\\.?', 'gi'), ' ');
         }
-        texto = texto.replace(/\s*\.\s*\./g, '.').replace(/^\s*\.\s*/, '').replace(/\s*\.\s*$/, '').replace(/\s+/g, ' ').trim();
+        texto = texto.replace(/^[.\s]+/, '').replace(/[.\s]+$/, '').replace(/\s+/g, ' ').trim();
+        if (/^[.\s]*$/.test(texto)) return '';
         return texto;
     }
 
     function combinarManualYAutomatico(textoManual, textoAuto) {
         textoManual = (textoManual || '').trim();
         textoAuto = (textoAuto || '').trim();
-        if (!textoManual) return textoAuto;
+        if (!textoManual || /^[.\s]+$/.test(textoManual)) return textoAuto;
         if (!textoAuto || /^normal\.?$/i.test(textoAuto)) return textoManual;
-        return (textoManual.replace(/\.$/, '') + '. ' + textoAuto).replace(/\s+/g, ' ').trim();
+        const manualLimpio = textoManual.replace(/\.+$/, '').trim();
+        if (!manualLimpio) return textoAuto;
+        return (manualLimpio + '. ' + textoAuto).replace(/\s+/g, ' ').trim();
+    }
+
+    function aplicarEstiloFueraDeRango(campo, clase) {
+        if (!campo) return;
+        if (clase === 'bajo' || clase === 'alto') {
+            campo.classList.add('vl-fuera-rango');
+        } else {
+            campo.classList.remove('vl-fuera-rango');
+        }
+    }
+
+    /**
+     * Colorea en rojo/negrita los valores fuera de rangovalores.
+     * Un valor: campo idItems. Dos valores: segunda columna (idItems_T / _2).
+     * Corre siempre que haya hemograma activo (también al entrar al form).
+     */
+    function aplicarEstilosFueraDeRango() {
+        if (!idEspecies || !rangos.length) return;
+
+        const idsVistos = {};
+        for (let i = 0; i < rangos.length; i++) {
+            const r = rangos[i];
+            if (r.idEspecies != idEspecies) continue;
+            const idItems = r.idItems;
+            if (idsVistos[idItems]) continue;
+            idsVistos[idItems] = true;
+
+            const tieneSegunda =
+                document.getElementById(String(idItems) + '_2')
+                || document.getElementById(String(idItems) + '_T');
+            const dosValores = !!tieneSegunda;
+            const ev = evaluarItem(idItems, dosValores);
+
+            let campo = null;
+            if (dosValores) {
+                campo = document.getElementById(String(idItems) + '_T')
+                    || document.getElementById(String(idItems) + '_2');
+            } else {
+                campo = document.getElementById(String(idItems));
+            }
+            aplicarEstiloFueraDeRango(campo, ev.clase);
+        }
     }
 
     function armarSerieRoja() {
@@ -260,6 +309,7 @@ export function instalarHemogramaAuto(config) {
 
     window.__vlAplicarHemogramaAuto = function () {
         try {
+            aplicarEstilosFueraDeRango();
             aplicarAutomatizacionesRango();
         } catch (e) {
             console.error('[hemograma-auto] error:', e);
@@ -300,8 +350,20 @@ export function instalarHemogramaAuto(config) {
 
         preservarPlaquetasSiCalculoVacio(plaquetasPrevias);
 
+        // Estilos fuera de rango: siempre (también al entrar al form).
+        // Serie Roja/Blanca: solo si aplicarHemograma !== false.
+        try {
+            aplicarEstilosFueraDeRango();
+        } catch (e) {
+            console.error('[hemograma-auto] estilos error:', e);
+        }
+
         if (aplicarHemograma) {
-            window.__vlAplicarHemogramaAuto();
+            try {
+                aplicarAutomatizacionesRango();
+            } catch (e) {
+                console.error('[hemograma-auto] error:', e);
+            }
         }
     };
 }

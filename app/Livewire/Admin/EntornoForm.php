@@ -440,7 +440,7 @@ class EntornoForm extends Component
             $payload['colorFondoSistema'] = strtoupper((string) $data['colorFondoSistema']);
         }
 
-        $passNueva = trim((string) ($data['passEnvioMail'] ?? ''));
+        $passNueva = preg_replace('/\s+/', '', trim((string) ($data['passEnvioMail'] ?? ''))) ?? '';
         if ($passNueva !== '') {
             $payload['passEnvioMail'] = $passNueva;
         }

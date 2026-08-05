@@ -9,7 +9,8 @@ Ruta: `admin/valores-referencia` · `permiso:8` (PARAMETROS).
 Gestionar los rangos de referencia (mínimo / máximo) por ítem de informe, especie y
 sexo almacenados en `rangovalores`. Son los valores que usa la automatización de
 Serie Roja / Serie Blanca (ver `docs/modulos/carga-resultados.md`) para clasificar
-un resultado como bajo, normal o alto.
+un resultado como bajo, normal o alto, y para marcar en rojo en la carga los
+valores fuera de rango.
 
 ## Flujo de carga
 

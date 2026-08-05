@@ -703,7 +703,7 @@ document.addEventListener('alpine:init', () => {
                 if (first) {
                     first.focus();
                 }
-                // Al entrar: solo formulas(). Serie Roja/Blanca se aplica al editar orígenes.
+                // Al entrar: formulas() + estilos fuera de rango. Serie Roja/Blanca al editar.
                 this.correrFormulas({ aplicarHemograma: false });
             });
         },

@@ -1992,6 +1992,12 @@
         @apply bg-accent-50 text-neutral-600;
     }
 
+    /* Valor fuera de rangovalores (hemograma auto / ScriptCase). */
+    .vl-carga-form .vl-fuera-rango {
+        color: #dc2626 !important;
+        font-weight: 700;
+    }
+
     .vl-carga-textarea {
         @apply w-full text-sm leading-tight;
         padding-block: 0.25rem;

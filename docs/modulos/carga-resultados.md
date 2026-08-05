@@ -154,17 +154,20 @@ IDs DOM: el operador edita `#idItems`; el diferencial absoluto vive en `#idItems
 3. Si el cálculo dejó plaquetas vacío/`PENDIENTE`/`NaN` **y** no hay conteo manual
    usable → **restaura** el valor previo (el script de entorno pisa plaquetas cuando
    el conteo es inválido).
-4. Si `opciones.aplicarHemograma !== false` **y** hemograma activo → aplica
+4. Si hemograma activo → marca en rojo/negrita (`vl-fuera-rango`) los campos cuyo
+   valor está fuera de `rangovalores` (un valor: `#idItems`; diferencial: `#id_T`
+   / `#id_2`). También al entrar al form.
+5. Si `opciones.aplicarHemograma !== false` **y** hemograma activo → aplica
    Serie Roja / Serie Blanca.
 
 **Cuándo corre cada parte**
 
-| Momento | `formulas()` | Serie Roja/Blanca |
-|---------|:------------:|:-----------------:|
-| Arranque del form | sí | **no** |
-| `@change` de campo que dispara cálculo (`formatearYCalcular`) | sí | sí (si tenant activo) |
-| Tipo 4 (select/input plaquetas) | **no** | sí (`__vlAplicarHemogramaAuto`) |
-| Guardar (F9 / F10) | sí | **no** (ya se aplicó al editar) |
+| Momento | `formulas()` | Estilo fuera de rango | Serie Roja/Blanca |
+|---------|:------------:|:---------------------:|:-----------------:|
+| Arranque del form | sí | sí | **no** |
+| `@change` de campo que dispara cálculo (`formatearYCalcular`) | sí | sí | sí (si tenant activo) |
+| Tipo 4 (select/input plaquetas) | **no** | sí | sí (`__vlAplicarHemogramaAuto`) |
+| Guardar (F9 / F10) | sí | sí | **no** (leyendas ya al editar) |
 
 **No** hay listener `change` delegado en todo el form: eso duplicaba `formulas()`
 y disparaba en campos con `actualiza = 0` o al editar los destinos de texto.
@@ -224,9 +227,11 @@ Solo se concatenan desviaciones (bajo/alto). “Normal” en un ítem **no** agr
 
 #### Texto manual del operador
 
-Al escribir el destino se quitan frases automáticas conocidas (y marcadores
-`{{AUTO:id}}…{{/AUTO:id}}` si existieran) y se recombina manual + auto. Si el
-auto es solo `Normal.`, se conserva el manual.
+Al escribir el destino se quitan frases automáticas conocidas (incluyendo el
+punto opcional que las sigue, para no dejar `.` huérfanos al inicio) y
+marcadores `{{AUTO:id}}…{{/AUTO:id}}` si existieran; luego se recombina
+manual + auto. Si el manual queda solo puntos/espacios, se ignora. Si el auto
+es solo `Normal.`, se conserva el manual.
 
 ### D. Guardar
 
@@ -313,7 +318,8 @@ conteo manual).
 ## Qué no hacer / trampas
 
 - **No** aplicar Serie Roja/Blanca al arrancar el form ni al guardar: solo al
-  editar orígenes (`formatearYCalcular` / tipo 4). Al entrar sí corre `formulas()`.
+  editar orígenes (`formatearYCalcular` / tipo 4). Al entrar sí corre `formulas()`
+  y el coloreo fuera de rango (si hemograma activo).
 - **No** hardcodear `idItems` en PHP/JS fuera del mapa del tenant.
 - **No** `if (tenant === 'labvetciudad')` en Blade: usar payload /
   `config('tenant.hemograma_auto…')`.
@@ -334,8 +340,8 @@ conteo manual).
 
 ## Checklist al modificar
 
-1. ¿El cambio respeta el orden runner: `formulas` → preservar plaquetas → hemograma?
-2. ¿Al **entrar** al form corre solo `formulas()` (sin Serie Roja/Blanca)?
+1. ¿El cambio respeta el orden runner: `formulas` → preservar plaquetas → estilos → hemograma?
+2. ¿Al **entrar** al form corre `formulas()` + estilos (sin Serie Roja/Blanca)?
 3. ¿Labs **sin** `hemograma_auto` siguen igual (solo formulas + carga manual)?
 4. ¿El mapa del tenant tiene los `idItems` correctos de **su** `itemsinforme`?
 5. ¿Hay filas en `rangovalores` para la especie (y sexo) de prueba? Si sexo vacío,
