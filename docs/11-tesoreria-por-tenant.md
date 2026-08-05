@@ -102,8 +102,11 @@ Con `tesoreria_pacientes` se muestran **Movimientos**, **Movimientos entre Cuent
 Tesorería (no transferencias ni ABM de cuentas contables NeoLab).
 
 **Saldos por Día** (`App\Livewire\Tesoreria\SaldosPorDiaIndex`): una fila por día con
-saldo inicial/final por cuenta (`mediodepago`); al expandir, variación del día por cuenta;
-al expandir una cuenta, movimientos de ese día + fila Suma.
+saldo inicial/final por cuenta (`mediodepago`, columnas en el orden de la tabla:
+`orden` si existe, si no `id`); al expandir, variación del día por cuenta;
+al expandir una cuenta, movimientos de ese día + fila Suma. Los encabezados usan
+abreviaturas; las variantes de **Mercado Pago** muestran el sufijo del nombre
+(`MP …`) para no colapsar varias cuentas en la misma etiqueta.
 
 **Gestión de Conceptos** (`App\Livewire\Tesoreria\ConceptoIndex` / `ConceptoForm`): ABM de
 `conceptos` (`tipoConcepto`, `concepto`, `orden`). No elimina si hay movimientos o proveedores asociados.

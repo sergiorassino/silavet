@@ -48,7 +48,13 @@ final class InformePacienteTcpdf extends Fpdi
     private const MARGEN_INFERIOR = 12.0;
 
     /** Reserva inferior para firmas (mm). */
-    private const RESERVA_FOOTER = 38.0;
+    private const RESERVA_FOOTER = 42.0;
+
+    /** Ancho de imagen de firma en el pie (mm). */
+    private const ANCHO_FIRMA = 40.0;
+
+    /** Holgura entre la firma y el texto del sello (mm). */
+    private const GAP_FIRMA_SELLO = 1.0;
 
     /** Ancho máx. de imágenes de campo (mm). */
     private const ANCHO_IMAGEN = 56.0;
@@ -596,7 +602,6 @@ final class InformePacienteTcpdf extends Fpdi
 
         $anchoCol = $this->anchoUtil() / 3;
         $yInicio = $this->GetY() + 4;
-        $altoFirma = 16.0;
 
         $firmas = [
             ['file' => $f['firmaIzq'] ?? null, 't1' => $f['texto1footerIzq'] ?? '', 't2' => $f['texto2footerIzq'] ?? ''],
@@ -604,26 +609,50 @@ final class InformePacienteTcpdf extends Fpdi
             ['file' => $f['firmaDer'] ?? null, 't1' => $f['texto1footerDer'] ?? '', 't2' => $f['texto2footerDer'] ?? ''],
         ];
 
+        // 1.ª pasada: firmas. El sello se alinea bajo la más alta (+ holgura mínima).
+        $yTexto = $yInicio;
         foreach ($firmas as $i => $col) {
             $x = self::MARGEN + ($i * $anchoCol);
             $file = is_string($col['file'] ?? null) ? $col['file'] : null;
-            if ($file !== null && is_file($file)) {
-                try {
-                    $this->Image($file, $x + (($anchoCol - 28) / 2), $yInicio, 28, 0, '', '', '', false, 150);
-                } catch (Throwable) {
-                    // Firma ilegible: continuar con textos.
-                }
+            if ($file === null || ! is_file($file)) {
+                continue;
             }
 
+            try {
+                $anchoFirma = min(self::ANCHO_FIRMA, $anchoCol);
+                $this->Image(
+                    $file,
+                    $x + (($anchoCol - $anchoFirma) / 2),
+                    $yInicio,
+                    $anchoFirma,
+                    0,
+                    '',
+                    '',
+                    '',
+                    false,
+                    150
+                );
+                $yImg = method_exists($this, 'getImageRBY')
+                    ? (float) $this->getImageRBY()
+                    : $yInicio + 14.0;
+                $yTexto = max($yTexto, $yImg + self::GAP_FIRMA_SELLO);
+            } catch (Throwable) {
+                // Firma ilegible: continuar con textos.
+            }
+        }
+
+        // 2.ª pasada: textos del sello (alineados entre columnas).
+        foreach ($firmas as $i => $col) {
+            $x = self::MARGEN + ($i * $anchoCol);
             TcpdfFuenteArial::aplicar($this, '', 6);
-            $this->SetXY($x, $yInicio + $altoFirma);
+            $this->SetXY($x, $yTexto);
             $this->MultiCell($anchoCol, 3.2, trim((string) $col['t1']), 0, 'C', false, 1);
             $this->SetX($x);
             $this->MultiCell($anchoCol, 3.2, trim((string) $col['t2']), 0, 'C', false, 1);
         }
 
         // Barra inferior gruesa debajo del bloque de firmas (legacy).
-        $yBarra = max($this->GetY() + 3, $yInicio + $altoFirma + 10);
+        $yBarra = max($this->GetY() + 3, $yTexto + 10);
         $this->setLineStyle([
             'width' => 3.0,
             'cap' => 'round',

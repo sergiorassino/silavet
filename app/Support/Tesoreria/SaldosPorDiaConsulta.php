@@ -26,11 +26,12 @@ final class SaldosPorDiaConsulta
             return collect();
         }
 
+        // Mismo orden que en mediodepago: columna orden si existe; si no, por id (carga en tabla).
         $query = MedioDePago::query();
         if (Schema::hasColumn('mediodepago', 'orden')) {
             $query->orderBy('orden');
         }
-        $query->orderBy('nombreMedioPago');
+        $query->orderBy('id');
 
         return $query
             ->where('id', '!=', 4)
@@ -110,13 +111,25 @@ final class SaldosPorDiaConsulta
         }
 
         $lower = mb_strtolower($nombre);
+
+        // Variantes Mercado Pago: el algoritmo genérico (2 primeras palabras)
+        // colapsaba todas en "MERCA. PAGO."; hay que conservar el sufijo.
+        if (preg_match('/^mercado\s+pago\b/u', $lower) === 1) {
+            $resto = trim((string) preg_replace('/^mercado\s+pago\b/ui', '', $nombre));
+            $resto = trim((string) preg_replace('/^[\s\-–—:|\/]+/u', '', $resto));
+            if ($resto === '') {
+                return 'M. PAGO';
+            }
+
+            return 'MP '.self::abreviarColaDistintiva($resto);
+        }
+
         $map = [
             'cuenta corriente' => 'CTA. CORR.',
             'efectivo' => 'EFECT.',
             'banco santander' => 'SANT.',
             'bando santander' => 'SANT.',
             'santander' => 'SANT.',
-            'mercado pago' => 'M. PAGO',
         ];
         if (isset($map[$lower])) {
             return $map[$lower];
@@ -142,6 +155,39 @@ final class SaldosPorDiaConsulta
         }
 
         return $partes !== [] ? implode(' ', $partes) : mb_strtoupper(mb_substr($nombre, 0, 8));
+    }
+
+    /**
+     * Abrevia la parte distintiva tras un prefijo común (p. ej. "Mercado Pago").
+     */
+    private static function abreviarColaDistintiva(string $cola): string
+    {
+        $palabras = preg_split('/\s+/u', trim($cola)) ?: [];
+        $palabras = array_values(array_filter($palabras, static fn (string $p): bool => $p !== ''));
+        if ($palabras === []) {
+            return '';
+        }
+
+        if (count($palabras) === 1) {
+            $w = mb_strtoupper($palabras[0]);
+
+            return mb_strlen($w) <= 12 ? $w : (mb_substr($w, 0, 10).'.');
+        }
+
+        $partes = [];
+        foreach ($palabras as $p) {
+            $p = mb_strtoupper($p);
+            if (mb_strlen($p) <= 3) {
+                $partes[] = $p;
+            } else {
+                $partes[] = mb_strlen($p) <= 6 ? $p : (mb_substr($p, 0, 5).'.');
+            }
+            if (count($partes) >= 3) {
+                break;
+            }
+        }
+
+        return implode(' ', $partes);
     }
 
     /**
