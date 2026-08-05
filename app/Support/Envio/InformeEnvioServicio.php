@@ -97,15 +97,24 @@ final class InformeEnvioServicio
         Config::set('mail.from.address', $from);
         Config::set('mail.from.name', $fromName);
 
+        $host = trim((string) config('mail.mailers.smtp.host', ''));
+        $port = (int) config('mail.mailers.smtp.port', 0);
+
         try {
             app('mail.manager')->purge('smtp');
             Mail::mailer('smtp')->to($email)->send(new InformeProtocoloMail($paciente, $entorno, $contactos));
         } catch (Throwable $e) {
             report($e);
 
+            $detalle = self::mensajeErrorSmtp($e);
+            $servidor = $host !== '' ? $host.($port > 0 ? ":{$port}" : '') : '(MAIL_HOST vacío)';
+
             return [
                 'ok' => false,
-                'error' => 'No se pudo enviar el mail. Verifique SMTP (.env) y la cuenta de envío en Parámetros.',
+                'error' => 'No se pudo enviar el mail'
+                    .($detalle !== '' ? ': '.$detalle : '.')
+                    .' La cuenta va en Parámetros (entorno); el servidor SMTP en .env'
+                    ." (MAIL_HOST/MAIL_PORT/MAIL_ENCRYPTION → {$servidor}).",
             ];
         }
 
@@ -197,5 +206,26 @@ final class InformeEnvioServicio
         }
 
         return Entorno::query()->find(1);
+    }
+
+    /**
+     * Resume el fallo SMTP para el usuario, sin volcar credenciales ni stack.
+     */
+    private static function mensajeErrorSmtp(Throwable $e): string
+    {
+        $msg = trim($e->getMessage());
+        if ($msg === '') {
+            return '';
+        }
+
+        // Evitar strings enormes o con passwords en querystrings.
+        $msg = preg_replace('/password=[^&\s]+/i', 'password=***', $msg) ?? $msg;
+        $msg = preg_replace('/\s+/', ' ', $msg) ?? $msg;
+
+        if (mb_strlen($msg) > 220) {
+            $msg = mb_substr($msg, 0, 217).'…';
+        }
+
+        return $msg;
     }
 }

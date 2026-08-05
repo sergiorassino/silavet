@@ -242,6 +242,7 @@
                     <div>
                         <label class="form-label mb-1" for="ctaEnvioMail">Cuenta de envío</label>
                         <input wire:model="ctaEnvioMail" id="ctaEnvioMail" type="text" maxlength="120" class="form-input py-1.5 text-sm">
+                        <p class="mt-1 text-xs text-neutral-500">Usuario SMTP. El servidor (host/puerto) se configura en el .env del servidor (MAIL_HOST, MAIL_PORT, MAIL_ENCRYPTION).</p>
                         @error('ctaEnvioMail') <p class="form-error">{{ $message }}</p> @enderror
                     </div>
                     <div>
