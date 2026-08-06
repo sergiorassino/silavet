@@ -22,8 +22,14 @@ final class OpaqueRouteToken
 
     public const PURPOSE_COMP_AFIP_PACIENTE = 'facturacion.compafip-paciente';
 
-    /** Vigencia del token (segundos). */
+    /** Informe público (WhatsApp / links sin login). */
+    public const PURPOSE_INFORME_PUBLICO = 'protocolos.informe-publico';
+
+    /** Vigencia del token autenticado (segundos). */
     private const TTL_SEGUNDOS = 7200;
+
+    /** Vigencia del token público — 30 días. */
+    private const TTL_PUBLICO_SEGUNDOS = 2592000;
 
     public static function forInformePaciente(int $idPacientes, ?int $idUsuario = null): string
     {
@@ -166,6 +172,43 @@ final class OpaqueRouteToken
         }
 
         return ['id' => $id, 'u' => $u];
+    }
+
+    /**
+     * Token público para descarga del informe sin login (WhatsApp, links externos).
+     * No lleva idUsuario; válido 30 días.
+     */
+    public static function forInformePublico(int $idPacientes): string
+    {
+        return self::encodePayload(self::PURPOSE_INFORME_PUBLICO, [
+            'id' => $idPacientes,
+            't' => time(),
+            'n' => bin2hex(random_bytes(4)),
+        ]);
+    }
+
+    /**
+     * @return array{id: int}|null
+     */
+    public static function decodeInformePublico(string $ref): ?array
+    {
+        $data = self::decodePayload($ref, self::PURPOSE_INFORME_PUBLICO);
+        if ($data === null) {
+            return null;
+        }
+
+        $id = (int) ($data['id'] ?? 0);
+        $t = (int) ($data['t'] ?? 0);
+
+        if ($id <= 0 || $t <= 0) {
+            return null;
+        }
+
+        if ((time() - $t) > self::TTL_PUBLICO_SEGUNDOS) {
+            return null;
+        }
+
+        return ['id' => $id];
     }
 
     /**

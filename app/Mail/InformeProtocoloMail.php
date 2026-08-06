@@ -9,6 +9,7 @@ use App\Support\Envio\InformeEnvioServicio;
 use Illuminate\Bus\Queueable;
 use Illuminate\Mail\Mailable;
 use Illuminate\Mail\Mailables\Address;
+use Illuminate\Mail\Mailables\Attachment;
 use Illuminate\Mail\Mailables\Content;
 use Illuminate\Mail\Mailables\Envelope;
 use Illuminate\Queue\SerializesModels;
@@ -32,6 +33,8 @@ class InformeProtocoloMail extends Mailable
         public Paciente $paciente,
         public Entorno $entorno,
         public array $contactos,
+        public string $pdfBinario,
+        public string $pdfNombre,
     ) {}
 
     public function envelope(): Envelope
@@ -65,5 +68,17 @@ class InformeProtocoloMail extends Mailable
                 ],
             ],
         );
+    }
+
+    /** @return array<int, Attachment> */
+    public function attachments(): array
+    {
+        $binario = $this->pdfBinario;
+        $nombre = $this->pdfNombre;
+
+        return [
+            Attachment::fromData(static fn () => $binario, $nombre)
+                ->withMime('application/pdf'),
+        ];
     }
 }

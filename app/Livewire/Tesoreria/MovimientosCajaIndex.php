@@ -115,6 +115,12 @@ class MovimientosCajaIndex extends Component
     {
         $this->idPacientes = null;
         $this->idCadete = null;
+
+        // La fecha elegida filtra protocolos y también es la del movimiento (fechhora).
+        if ($this->fechaElegirProtocolos !== ''
+            && preg_match('/^\d{4}-\d{2}-\d{2}$/', $this->fechaElegirProtocolos) === 1) {
+            $this->fecha = $this->fechaElegirProtocolos;
+        }
     }
 
     public function updatedIdPacientes(): void

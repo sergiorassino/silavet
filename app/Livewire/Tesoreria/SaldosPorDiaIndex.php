@@ -36,9 +36,9 @@ class SaldosPorDiaIndex extends Component
         abort_unless(TesoreriaConfig::usaPacientes(), 404);
         abort_unless(Schema::hasTable('movimientos'), 404);
 
-        $hoy = now();
-        $this->fechaDesde = $hoy->copy()->startOfMonth()->toDateString();
-        $this->fechaHasta = $hoy->toDateString();
+        $hoy = now()->toDateString();
+        $this->fechaDesde = $hoy;
+        $this->fechaHasta = $hoy;
     }
 
     public function updatingFechaDesde(): void
@@ -80,10 +80,9 @@ class SaldosPorDiaIndex extends Component
 
     public function render()
     {
-        $desde = $this->fechaNormalizada($this->fechaDesde)
-            ?? now()->startOfMonth()->toDateString();
-        $hasta = $this->fechaNormalizada($this->fechaHasta)
-            ?? now()->toDateString();
+        $hoy = now()->toDateString();
+        $desde = $this->fechaNormalizada($this->fechaDesde) ?? $hoy;
+        $hasta = $this->fechaNormalizada($this->fechaHasta) ?? $hoy;
 
         if ($desde > $hasta) {
             [$desde, $hasta] = [$hasta, $desde];

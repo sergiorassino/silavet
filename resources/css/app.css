@@ -1521,11 +1521,11 @@
     }
 
     .vl-saldos-dia-th--tone-a {
-        background-color: #fff8dc;
+        background-color: #d8d8d8;
     }
 
     .vl-saldos-dia-th--tone-b {
-        @apply bg-slate-50;
+        @apply bg-white;
     }
 
     .vl-saldos-dia-td {
@@ -1541,7 +1541,7 @@
     }
 
     .vl-saldos-dia-td--tone-a {
-        background-color: #fff8dc;
+        background-color: #e0e0e0;
     }
 
     .vl-saldos-dia-td--tone-b {
@@ -1553,7 +1553,11 @@
     }
 
     .vl-saldos-dia-row--open > .vl-saldos-dia-td--tone-a {
-        background-color: #f5efd0;
+        background-color: #d0d0d0;
+    }
+
+    .vl-saldos-dia-row--open > .vl-saldos-dia-td--tone-b {
+        @apply bg-white;
     }
 
     .vl-saldos-dia-row--cuenta > .vl-saldos-dia-td {

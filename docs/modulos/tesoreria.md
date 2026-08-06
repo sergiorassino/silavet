@@ -158,9 +158,15 @@ En listados de protocolos / dashboard de esta variante: **no** exigir
 | Ingreso + **Cadetería** | Protocolo con `cadete > 0` → monto = `cadete`; marca `cargadoCadete` |
 | Resto de ingresos | Sin protocolo ni proveedor |
 
+   El selector **Fecha de los Protocolos a Cargar** (hoy y hasta
+   `dias_protocolos` días atrás) filtra los protocolos y, al cambiarlo,
+   sincroniza la **fecha del movimiento** (`fechhora` / campo “Fecha y hora
+   del Registro”). Así un ingreso cargado “con fecha de ayer” queda
+   registrado con esa fecha, no con la de hoy.
+
 3. **Nuevo Asiento** (modal en el listado): transferencia con **cliente obligatorio** → dos filas en `movimientos` (egreso origen + ingreso destino).
 4. **Movimientos entre Cuentas** (página de menú): mismo par de inserts **sin cliente** (`idClientes = 0`).
-5. **Saldos por Día:** una fila por día / saldos por `mediodepago` (columnas en el mismo orden que la tabla: `orden` si existe, si no `id`); expandir día → cuentas; expandir cuenta → movimientos + suma (`SaldosPorDiaConsulta`). Encabezados abreviados; variantes **Mercado Pago** incluyen el sufijo del nombre (`MP …`).
+5. **Saldos por Día:** filtros **Desde / Hasta** destacados encima de la grilla (por defecto ambas fechas = hoy; editables). Una fila por día / saldos por `mediodepago` (columnas en el mismo orden que la tabla: `orden` si existe, si no `id`); expandir día → cuentas; expandir cuenta → movimientos + suma (`SaldosPorDiaConsulta`). Encabezados abreviados; variantes **Mercado Pago** incluyen el sufijo del nombre (`MP …`).
 6. **Eliminar** movimiento: si era el último Ingresos Diarios/Cadetería de ese protocolo → limpia `cargado` / `cargadoCadete`.
 7. En listado de protocolos: columna **Cadete** editable inline (`PacienteIndex::guardarCadete`).
 8. **Sin botón «Pago global»** en `PacienteIndex`: ese alta escribe ingresos en

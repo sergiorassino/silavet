@@ -13,24 +13,38 @@
         </div>
     </div>
 
-    <div class="vl-card overflow-hidden">
-        <div class="vl-toolbar flex flex-wrap items-end gap-3 border-b border-accent-200 px-3 py-2">
+    <div class="vl-card overflow-hidden mb-4 border-primary-200 bg-accent-50/70 shadow-sm">
+        <div class="vl-toolbar flex flex-wrap items-end gap-4 border-b border-primary-200/60 px-5 py-4">
             <div>
-                <label class="mb-0.5 block text-[10px] font-bold uppercase tracking-wide text-neutral-500" for="spdDesde">Desde</label>
+                <label class="mb-1 block text-xs font-semibold uppercase tracking-wide text-primary-800" for="spdDesde">
+                    Desde
+                </label>
                 <input id="spdDesde"
                        type="date"
                        wire:model.live="fechaDesde"
-                       class="form-input text-xs">
+                       class="form-input tabular-nums">
             </div>
             <div>
-                <label class="mb-0.5 block text-[10px] font-bold uppercase tracking-wide text-neutral-500" for="spdHasta">Hasta</label>
+                <label class="mb-1 block text-xs font-semibold uppercase tracking-wide text-primary-800" for="spdHasta">
+                    Hasta
+                </label>
                 <input id="spdHasta"
                        type="date"
                        wire:model.live="fechaHasta"
-                       class="form-input text-xs">
+                       class="form-input tabular-nums">
             </div>
+            <p class="pb-1 text-sm text-neutral-700">
+                Período:
+                <span class="font-semibold tabular-nums">
+                    {{ \Carbon\Carbon::parse($fechaDesde ?: now())->format('d/m/Y') }}
+                    —
+                    {{ \Carbon\Carbon::parse($fechaHasta ?: now())->format('d/m/Y') }}
+                </span>
+            </p>
         </div>
+    </div>
 
+    <div class="vl-card overflow-hidden">
         <div class="overflow-x-auto">
             <table class="vl-saldos-dia-grid">
                 <thead>

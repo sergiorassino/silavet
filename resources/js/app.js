@@ -128,6 +128,19 @@ document.addEventListener('livewire:init', () => {
         window.open(url, '_blank', 'noopener,noreferrer');
     });
 
+    Livewire.on('vl-abrir-whatsapp', ({ url }) => {
+        if (!url || typeof url !== 'string') {
+            return;
+        }
+        // Reutilizar la pestaña de WhatsApp si sigue abierta; abrir una nueva si se cerró.
+        if (window._vlWhatsappWin && !window._vlWhatsappWin.closed) {
+            window._vlWhatsappWin.location.href = url;
+            window._vlWhatsappWin.focus();
+        } else {
+            window._vlWhatsappWin = window.open(url, '_blank');
+        }
+    });
+
     Livewire.on('vl-ia-chatgpt', ({ prompt, url }) => {
         if (!prompt || typeof prompt !== 'string') {
             return;

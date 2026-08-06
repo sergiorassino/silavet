@@ -553,7 +553,7 @@ class PacienteIndex extends Component
         }
 
         $this->cerrarModalEnvio();
-        $this->dispatch('vl-abrir-url', url: $resultado['url']);
+        $this->dispatch('vl-abrir-whatsapp', url: $resultado['url']);
         $this->dispatch('vl-swal-exito', mensaje: 'Se abrió WhatsApp Web para completar el envío.');
     }
 

@@ -6,6 +6,9 @@ use App\Mail\InformeProtocoloMail;
 use App\Models\Entorno;
 use App\Models\Paciente;
 use App\Support\Entorno\LabInstitucional;
+use App\Support\Informes\InformePacienteConsulta;
+use App\Support\Informes\InformePacienteTcpdf;
+use App\Support\Security\OpaqueRouteToken;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Schema;
@@ -101,9 +104,25 @@ final class InformeEnvioServicio
         $host = trim((string) config('mail.mailers.smtp.host', ''));
         $port = (int) config('mail.mailers.smtp.port', 0);
 
+        // Generar el PDF antes de conectar con SMTP; si falla, error visible sin enviar mail vacío.
+        $datosPdf = InformePacienteConsulta::armar($paciente);
+        if ($datosPdf === null) {
+            return ['ok' => false, 'error' => 'No se pudo armar el informe PDF. Verifique que el protocolo tenga datos completos.'];
+        }
+
+        try {
+            $pdfObj = InformePacienteTcpdf::generar($datosPdf);
+            $pdfNombre = InformePacienteTcpdf::nombreArchivo($datosPdf);
+            $pdfBinario = $pdfObj->Output($pdfNombre, 'S');
+        } catch (Throwable $ePdf) {
+            report($ePdf);
+
+            return ['ok' => false, 'error' => 'Error al generar el PDF del informe: '.mb_substr(trim($ePdf->getMessage()), 0, 150)];
+        }
+
         try {
             app('mail.manager')->purge('smtp');
-            Mail::mailer('smtp')->to($email)->send(new InformeProtocoloMail($paciente, $entorno, $contactos));
+            Mail::mailer('smtp')->to($email)->send(new InformeProtocoloMail($paciente, $entorno, $contactos, $pdfBinario, $pdfNombre));
         } catch (Throwable $e) {
             report($e);
 
@@ -171,14 +190,51 @@ final class InformeEnvioServicio
             return ['ok' => false, 'error' => 'El destinatario no tiene un WhatsApp válido.'];
         }
 
-        $lab = LabInstitucional::datos()['nombre'];
+        $lab = LabInstitucional::datos();
         $protocolo = $contactos['protocolo'] !== '' ? $contactos['protocolo'] : '—';
         $nombre = $contactos['nombre'] !== '' ? $contactos['nombre'] : '—';
+        $propietario = trim((string) ($paciente->propietario ?? ''));
 
-        $texto = "Hola, le enviamos información del protocolo {$protocolo}"
-            ." (paciente: {$nombre}) desde {$lab}.";
+        // URL pública del informe (token opaco, sin login, válido 30 días).
+        $ref = OpaqueRouteToken::forInformePublico((int) $paciente->idPacientes);
+        $urlInforme = route('protocolos.informe-publico', ['ref' => $ref]);
 
-        $url = 'https://wa.me/'.$telefono.'?text='.rawurlencode($texto);
+        // Datos de firma: usar pie de mail si están cargados, si no los del laboratorio.
+        $entorno = self::entornoMail();
+        $firmaNombre = $entorno !== null ? trim((string) ($entorno->nombrePieMail ?? '')) : '';
+        $firmaDireccion = $entorno !== null ? trim((string) ($entorno->direccionPieMail ?? '')) : '';
+        $firmaTelefono = $entorno !== null ? trim((string) ($entorno->telefonoPieMail ?? '')) : '';
+
+        if ($firmaNombre === '') {
+            $firmaNombre = $lab['nombre'];
+        }
+        if ($firmaDireccion === '') {
+            $firmaDireccion = $lab['direccion'];
+        }
+        if ($firmaTelefono === '') {
+            $firmaTelefono = $lab['telefono'];
+        }
+
+        $texto = "Hola, {$firmaNombre}\n";
+        $texto .= "Ya se encuentran disponibles los resultados de los análisis de:\n";
+        $texto .= "Paciente: {$nombre}";
+        if ($propietario !== '') {
+            $texto .= ", Propietario: {$propietario}";
+        }
+        $texto .= "\n\n";
+        $texto .= "Puede visualizarlos haciendo click en el siguiente link "
+            ."(o copiando y pegando el link en un navegador):\n";
+        $texto .= "{$urlInforme}\n\n";
+        $texto .= "Atte.\nSaludos cordiales.\n";
+        $texto .= $firmaNombre;
+        if ($firmaDireccion !== '') {
+            $texto .= "\n{$firmaDireccion}";
+        }
+        if ($firmaTelefono !== '') {
+            $texto .= "\nWhatsApp {$firmaTelefono}";
+        }
+
+        $url = 'https://web.whatsapp.com/send?phone='.$telefono.'&text='.rawurlencode($texto);
 
         return ['ok' => true, 'url' => $url];
     }

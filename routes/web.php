@@ -14,6 +14,7 @@ use App\Http\Controllers\Clientes\ResumenClienteEntreFechasMovimientosPdfControl
 use App\Http\Controllers\Facturacion\CompAfipPdfController;
 use App\Http\Controllers\Protocolos\EtiquetasTuboPdfController;
 use App\Http\Controllers\Protocolos\InformePacientePdfController;
+use App\Http\Controllers\Protocolos\InformePublicoPdfController;
 use App\Livewire\Abm\Clientes\ClienteForm;
 use App\Livewire\Abm\Clientes\ClienteIndex;
 use App\Livewire\Abm\Derivaciones\DerivacionForm;
@@ -87,6 +88,12 @@ use App\Support\Auth\CerrarSesionAplicacion;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/manifest.webmanifest', WebManifestController::class)->name('webmanifest');
+
+// Informe público — sin login, acceso por link de WhatsApp (token opaco, TTL 30 días).
+Route::get('/informe-publico/{ref}', InformePublicoPdfController::class)
+    ->middleware(['throttle:20,1', 'no-store'])
+    ->where('ref', '[A-Za-z0-9_-]+')
+    ->name('protocolos.informe-publico');
 
 Route::get('/', fn () => redirect()->route('login'));
 

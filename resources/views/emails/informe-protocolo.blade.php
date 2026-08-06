@@ -19,7 +19,7 @@
                 <tr>
                     <td style="padding:24px;">
                         <p style="margin:0 0 12px;font-size:15px;line-height:1.5;">
-                            Le informamos los datos del protocolo de laboratorio:
+                            Le enviamos el informe del protocolo de laboratorio <strong>adjunto en PDF</strong> a este correo.
                         </p>
                         <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="font-size:14px;line-height:1.6;">
                             <tr>
@@ -44,6 +44,8 @@
                             </tr>
                         </table>
                         <p style="margin:20px 0 0;font-size:13px;line-height:1.5;color:#5E8A8A;">
+                            El informe puede abrirse directamente desde su navegador (Chrome, Edge, Firefox).<br>
+                            En caso de dificultades, puede usar un lector de PDF como Adobe Acrobat Reader o Vista Previa (Mac).<br>
                             Ante cualquier consulta, responda a este correo o comuníquese con el laboratorio.
                         </p>
                     </td>

@@ -102,7 +102,8 @@ Con `tesoreria_pacientes` se muestran **Movimientos**, **Movimientos entre Cuent
 **Saldos por Día**, **Gestión de Conceptos** y **Gestión de Proveedores** en el grupo
 Tesorería (no transferencias ni ABM de cuentas contables NeoLab).
 
-**Saldos por Día** (`App\Livewire\Tesoreria\SaldosPorDiaIndex`): una fila por día con
+**Saldos por Día** (`App\Livewire\Tesoreria\SaldosPorDiaIndex`): filtros Desde/Hasta
+destacados antes de la grilla (por defecto ambas = hoy). Una fila por día con
 saldo inicial/final por cuenta (`mediodepago`, columnas en el orden de la tabla:
 `orden` si existe, si no `id`); al expandir, variación del día por cuenta;
 al expandir una cuenta, movimientos de ese día + fila Suma. Los encabezados usan
