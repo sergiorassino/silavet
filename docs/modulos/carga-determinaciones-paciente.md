@@ -13,8 +13,8 @@ resultados; al baja los elimina. Recalcula totales del protocolo (`pacientes.pre
 
 No emite PDF ni es portal de clientes. No carga resultados reales: al materializar,
 `renglones.valor` queda en `"PENDIENTE"` (excepto `tipoItem` 2 valor fijo y 3 título,
-que quedan vacíos; y `tipoItem` 8 texto largo, que copia `itemsinforme.textos`)
-y `valor2` vacío.
+que quedan vacíos; y `tipoItem` 8 texto largo, que copia `itemsinforme.textos`),
+`valor2` vacío, y `renglones.mostrar` copia `itemsinforme.mostrar` (0/1).
 
 Entrada: listado de protocolos → icono determinaciones →
 `route('protocolos.determinaciones', $idPacientes)`.
@@ -76,7 +76,7 @@ Rate limits: save ~40/min, delete ~20/min por usuario (`prot-det-save:*` / `prot
 |------|---------------|----------------|
 | Filas pedidas | `PacienteDeterminaciones` → `determinaciones` | Listados, derivaciones, facturación |
 | Totales protocolo | `actualizarTotalProtocolo()` → `pacientes.precio` / `neto` | Listado protocolos, informes |
-| Renglones (`valor` = PENDIENTE; tipoItem 2/3 vacío; 8 = textos) | `RenglonesMaterializer` al alta/baja | Módulo de resultados |
+| Renglones (`valor` = PENDIENTE; tipoItem 2/3 vacío; 8 = textos; `mostrar` ← `itemsinforme`) | `RenglonesMaterializer` al alta/baja | Módulo de resultados |
 | Precio de lista | — | `tipodeterminaciones.precio` (lista 1; no usa precio2/3) |
 | Default destino del tipo | ABM tipodeterminaciones (`destino`) | **No** se aplica al cargar en protocolo |
 | Centros | ABM centros de derivación | Select modo catálogo |

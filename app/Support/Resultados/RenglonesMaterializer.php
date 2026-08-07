@@ -20,6 +20,7 @@ use Illuminate\Support\Facades\Schema;
  * - resto: "PENDIENTE"
  *
  * `valor2` siempre vacío.
+ * `mostrar` copia `itemsinforme.mostrar` (0/1; default 1 si viene null).
  */
 class RenglonesMaterializer
 {
@@ -94,7 +95,7 @@ class RenglonesMaterializer
                 'valor2' => '',
                 'tipoHtml' => null,
                 'idAnalizador' => (string) ($item->idAnalizador ?? ''),
-                'mostrar' => 1,
+                'mostrar' => (int) ($item->mostrar ?? 1) === 1 ? 1 : 0,
             ];
         }
 

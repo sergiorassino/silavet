@@ -32,6 +32,7 @@ class Itemsinforme extends Model
         'refComun',
         'actualiza',
         'idAnalizador',
+        'mostrar',
     ];
 
     protected function casts(): array
@@ -43,6 +44,7 @@ class Itemsinforme extends Model
             'letra' => 'integer',
             'negrita' => 'integer',
             'actualiza' => 'integer',
+            'mostrar' => 'integer',
         ];
     }
 
