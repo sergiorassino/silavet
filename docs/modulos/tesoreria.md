@@ -148,7 +148,11 @@ En listados de protocolos / dashboard de esta variante: **no** exigir
 
 ### B) `tesoreria_pacientes` (labvetciudad)
 
-1. Listado: tabla `movimientos` (orden `fechhora` desc).
+1. Listado: tabla `movimientos` (orden `fechhora` desc). Filtros **Desde / Hasta**
+   sobre `fechhora` (por defecto ambas = hoy; si se invierten se intercambian) y
+   búsqueda de texto. Botón **Exportar Excel** en el hero: descarga `.xlsx` con
+   las mismas columnas de la grilla (respeta fechas + búsqueda; todas las filas
+   coincidentes, no solo la página actual).
 2. Formulario según tipo / concepto:
 
 | Situación | Campos extras |
@@ -181,7 +185,7 @@ Rate limits típicos: save ~30/min; delete caja ~10/min por usuario.
 | Variante activa | config tenant + `TesoreriaConfig` | Rutas, sidebar, guards Livewire |
 | Caja NeoLab | `MovimientoIndex` / `TransferenciaIntercuenta` → `pacientes` | Listados, AFIP modo movimiento, resumen del día |
 | Resumen NeoLab | `MovimientosResumenConsulta` (solo lee `determinaciones` + `pacientes`) | `MovimientoIndex` |
-| Caja labvetciudad | `MovimientosCajaIndex` / asientos / entre cuentas → `movimientos` | Saldos por día |
+| Caja labvetciudad | `MovimientosCajaIndex` / asientos / entre cuentas → `movimientos` | Saldos por día; Excel (`MovimientosCajaExporter`) |
 | Cuentas contables NeoLab | ABM `Cuenta*` / `CuentaDetalle*` | Formulario de egresos NeoLab |
 | Conceptos / proveedores | ABM `Concepto*` / `Proveedor*` | Formulario de caja labvetciudad |
 | “Cuenta” en caja labvetciudad | ABM medios de pago (fuera de este menú) | `mediodepago` vía `idCuentas` |
@@ -200,6 +204,9 @@ Rate limits típicos: save ~30/min; delete caja ~10/min por usuario.
 |-------|------|
 | Config helper | `app/Support/Tesoreria/TesoreriaConfig.php` |
 | Resumen caja NeoLab | `app/Support/Tesoreria/MovimientosResumenConsulta.php` |
+| Listado caja labvetciudad | `app/Support/Tesoreria/MovimientosCajaConsulta.php` |
+| Excel caja labvetciudad | `app/Support/Tesoreria/MovimientosCajaExporter.php` |
+| Excel controller | `app/Http/Controllers/Tesoreria/MovimientosCajaExcelController.php` |
 | Saldos | `app/Support/Tesoreria/SaldosPorDiaConsulta.php` |
 | Config default | `config/tenant.php` → `tesoreria` |
 | Override labvetciudad | `config/tenants/labvetciudad.php` |
@@ -215,7 +222,7 @@ Rate limits típicos: save ~30/min; delete caja ~10/min por usuario.
 | movimientos | `TransferenciaIntercuenta` | `transferencia-intercuenta.blade.php` |
 | movimientos | `CuentaIndex` / `CuentaForm` | `cuenta-*.blade.php` |
 | movimientos | `CuentaDetalleIndex` / `CuentaDetalleForm` | `cuenta-detalle-*.blade.php` |
-| pacientes | `MovimientosCajaIndex` | `movimientos-caja-index.blade.php` |
+| pacientes | `MovimientosCajaIndex` | `movimientos-caja-index.blade.php` (+ Excel vía `tesoreria.movimientos.excel`) |
 | pacientes | `MovimientosEntreCuentas` | `movimientos-entre-cuentas.blade.php` |
 | pacientes | `SaldosPorDiaIndex` | `saldos-por-dia-index.blade.php` |
 | pacientes | `ConceptoIndex` / `ConceptoForm` | `concepto-*.blade.php` |
@@ -269,5 +276,6 @@ icono en `MovimientoIndex`).
 - [ ] Con `tesoreria_pacientes`: ¿sin botón «Pago global» en `PacienteIndex`?
 - [ ] Si AFIP: ¿`facturacion_afip.modo` y el id es `pacientes.idPacientes`?
 - [ ] ¿Permiso 6 + rate limits + paginación 50 + `vlSwal*`?
+- [ ] ¿Export Excel (solo `tesoreria_pacientes`): ruta `tesoreria.movimientos.excel` + mismos filtros (Desde/Hasta + búsqueda) que la grilla?
 - [ ] ¿Tenant nuevo a caja: BD con `movimientos`/`conceptos`/`tipomovimiento`/`proveedores` + config `tesoreria_pacientes`?
 - [ ] ¿Si cambió el comportamiento documentado, se actualizó este archivo y/o `docs/11-…`?

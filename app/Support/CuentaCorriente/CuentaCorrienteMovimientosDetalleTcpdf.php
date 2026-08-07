@@ -11,7 +11,7 @@ use TCPDF;
  * Detalle de cuenta corriente por cliente, variante tesoreria_pacientes
  * (tabla `movimientos`) — TCPDF vertical A4.
  *
- * Columnas: #, Nombre, Cuenta, Concepto, Fecha/Hora, Monto, Obs.
+ * Columnas: #, Nombre, Cuenta, Fecha/Hora, Monto, Obs.
  */
 final class CuentaCorrienteMovimientosDetalleTcpdf extends TCPDF
 {
@@ -90,7 +90,7 @@ final class CuentaCorrienteMovimientosDetalleTcpdf extends TCPDF
         $this->SetY($y);
 
         $w = $this->anchosColumnas();
-        $titulos = ['#', 'Nombre', 'Cuenta', 'Concepto', 'Fecha/Hora', 'Monto', 'Obs'];
+        $titulos = ['#', 'Nombre', 'Cuenta', 'Fecha/Hora', 'Monto', 'Obs'];
         TcpdfFuenteArial::aplicar($this, 'B', 6);
         $this->SetFillColor(193, 215, 218);
         $this->SetTextColor(51, 51, 51);
@@ -123,10 +123,9 @@ final class CuentaCorrienteMovimientosDetalleTcpdf extends TCPDF
             $this->Cell($w[0], 4, (string) $numero, 1, 0, 'C', $fill);
             $this->Cell($w[1], 4, $this->truncar((string) ($fila->etiquetaPaciente ?? ''), $maxChars[1]), 1, 0, 'L', $fill);
             $this->Cell($w[2], 4, $this->truncar((string) ($fila->cuentaLabel ?? ''), $maxChars[2]), 1, 0, 'C', $fill);
-            $this->Cell($w[3], 4, $this->truncar((string) ($fila->concepto ?? ''), $maxChars[3]), 1, 0, 'L', $fill);
-            $this->Cell($w[4], 4, $fechhora, 1, 0, 'C', $fill);
-            $this->Cell($w[5], 4, CuentaCorrienteMovimientosConsulta::formatearMoneda($monto), 1, 0, 'R', $fill);
-            $this->Cell($w[6], 4, $this->truncar((string) ($fila->obs ?? ''), $maxChars[6]), 1, 1, 'L', $fill);
+            $this->Cell($w[3], 4, $fechhora, 1, 0, 'C', $fill);
+            $this->Cell($w[4], 4, CuentaCorrienteMovimientosConsulta::formatearMoneda($monto), 1, 0, 'R', $fill);
+            $this->Cell($w[5], 4, $this->truncar((string) ($fila->obs ?? ''), $maxChars[5]), 1, 1, 'L', $fill);
 
             if ($fill) {
                 $this->SetFillColor(255, 255, 255);
@@ -139,18 +138,18 @@ final class CuentaCorrienteMovimientosDetalleTcpdf extends TCPDF
         $fechaDesde = trim((string) ($this->datos['fecha_desde'] ?? ''));
         if ($saldoAnterior !== null && $fechaDesde !== '') {
             TcpdfFuenteArial::aplicar($this, 'B', 6);
-            $anchoEtiqueta = array_sum(array_slice($w, 0, 5));
+            $anchoEtiqueta = array_sum(array_slice($w, 0, 4));
             $this->Cell($anchoEtiqueta, 4, 'Saldo anterior al '.Carbon::parse($fechaDesde)->format('d/m/Y'), 1, 0, 'R', true);
-            $this->Cell($w[5], 4, CuentaCorrienteMovimientosConsulta::formatearMoneda((float) $saldoAnterior), 1, 0, 'R', true);
-            $this->Cell($w[6], 4, '', 1, 1, 'L', true);
+            $this->Cell($w[4], 4, CuentaCorrienteMovimientosConsulta::formatearMoneda((float) $saldoAnterior), 1, 0, 'R', true);
+            $this->Cell($w[5], 4, '', 1, 1, 'L', true);
             TcpdfFuenteArial::aplicar($this, '', 6);
         }
 
         $this->Ln(2);
         TcpdfFuenteArial::aplicar($this, 'B', 7);
-        $anchoEtiqueta = array_sum(array_slice($w, 0, 5));
+        $anchoEtiqueta = array_sum(array_slice($w, 0, 4));
         $this->Cell($anchoEtiqueta, 4, 'Total período:', 0, 0, 'R');
-        $this->Cell($w[5], 4, CuentaCorrienteMovimientosConsulta::formatearMoneda((float) ($this->datos['total_monto'] ?? 0)), 0, 1, 'R');
+        $this->Cell($w[4], 4, CuentaCorrienteMovimientosConsulta::formatearMoneda((float) ($this->datos['total_monto'] ?? 0)), 0, 1, 'R');
     }
 
     /**
@@ -160,14 +159,13 @@ final class CuentaCorrienteMovimientosDetalleTcpdf extends TCPDF
     {
         $anchoUtil = $this->getPageWidth() - (self::MARGEN * 2);
         $wNum = 5.0;
-        $wCuenta = 16.0;
-        $wFechhora = 30.0;
-        $wMonto = 22.0;
-        $wConcepto = 28.0;
-        $wNombre = 28.0;
-        $wObs = max(18.0, $anchoUtil - ($wNum + $wNombre + $wCuenta + $wConcepto + $wFechhora + $wMonto));
+        $wCuenta = 22.0;
+        $wFechhora = 32.0;
+        $wMonto = 24.0;
+        $wNombre = 36.0;
+        $wObs = max(24.0, $anchoUtil - ($wNum + $wNombre + $wCuenta + $wFechhora + $wMonto));
 
-        return [$wNum, $wNombre, $wCuenta, $wConcepto, $wFechhora, $wMonto, $wObs];
+        return [$wNum, $wNombre, $wCuenta, $wFechhora, $wMonto, $wObs];
     }
 
     /**

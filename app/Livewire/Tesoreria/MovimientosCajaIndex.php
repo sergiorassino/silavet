@@ -10,6 +10,7 @@ use App\Models\Paciente;
 use App\Models\Proveedor;
 use App\Models\TipoMovimiento;
 use App\Support\PermisosIaCatalog;
+use App\Support\Tesoreria\MovimientosCajaConsulta;
 use App\Support\Tesoreria\TesoreriaConfig;
 use App\Support\UsuarioMenuPortal;
 use Carbon\Carbon;
@@ -63,6 +64,11 @@ class MovimientosCajaIndex extends Component
 
     public string $busqueda = '';
 
+    /** Filtro de listado: Y-m-d (por defecto hoy). */
+    public string $fechaDesde = '';
+
+    public string $fechaHasta = '';
+
     /** Modal Asiento (transferencia entre cuentas → 2 filas en movimientos). */
     public string $asientoFecha = '';
 
@@ -85,12 +91,36 @@ class MovimientosCajaIndex extends Component
         abort_unless(Schema::hasTable('movimientos'), 404);
 
         $this->fechaElegirProtocolos = now()->toDateString();
+        $hoy = now()->toDateString();
+        $this->fechaDesde = $hoy;
+        $this->fechaHasta = $hoy;
         $this->reiniciarFechaHora();
     }
 
     public function updatingBusqueda(): void
     {
         $this->resetPage();
+    }
+
+    public function updatingFechaDesde(): void
+    {
+        $this->resetPage();
+    }
+
+    public function updatingFechaHasta(): void
+    {
+        $this->resetPage();
+    }
+
+    public function getExcelUrlProperty(): string
+    {
+        [$desde, $hasta] = $this->rangoFechasFiltro();
+
+        return route('tesoreria.movimientos.excel', array_filter([
+            'busqueda' => trim($this->busqueda) !== '' ? trim($this->busqueda) : null,
+            'desde' => $desde,
+            'hasta' => $hasta,
+        ]));
     }
 
     public function updatedIdTipoMovimiento(): void
@@ -520,35 +550,9 @@ class MovimientosCajaIndex extends Component
 
     public function render()
     {
-        $movimientos = Movimiento::query()
-            ->with([
-                'cuenta:id,nombreMedioPago',
-                'tipoMovimiento:id,tipoMovimiento',
-                'cliente:idClientes,nombre',
-                'paciente:idPacientes,nombre,fechhoy',
-                'concepto:id,concepto',
-                'proveedor:id,proveedor',
-            ])
-            ->when(trim($this->busqueda) !== '', function ($q) {
-                $term = trim($this->busqueda);
-                $q->where(function ($inner) use ($term) {
-                    $inner->where('obs', 'like', "%{$term}%")
-                        ->orWhere('comprobante', 'like', "%{$term}%")
-                        ->orWhere('monto', 'like', "%{$term}%")
-                        ->orWhereHas('cliente', fn ($c) => $c->where('nombre', 'like', "%{$term}%"))
-                        ->orWhereHas('cuenta', fn ($c) => $c->where('nombreMedioPago', 'like', "%{$term}%"))
-                        ->orWhereHas('concepto', fn ($c) => $c->where('concepto', 'like', "%{$term}%"))
-                        ->orWhereHas('proveedor', fn ($c) => $c->where('proveedor', 'like', "%{$term}%"))
-                        ->orWhereHas('paciente', fn ($c) => $c->where('nombre', 'like', "%{$term}%"));
+        [$desde, $hasta] = $this->rangoFechasFiltro();
 
-                    if (ctype_digit($term)) {
-                        $inner->orWhere('id', (int) $term)
-                            ->orWhere('idPacientes', (int) $term);
-                    }
-                });
-            })
-            ->orderByDesc('fechhora')
-            ->orderByDesc('id')
+        $movimientos = MovimientosCajaConsulta::listado($this->busqueda, $desde, $hasta)
             ->paginate(self::POR_PAGINA);
 
         $tipos = Schema::hasTable('tipomovimiento')
@@ -601,6 +605,36 @@ class MovimientosCajaIndex extends Component
     private function esEgreso(): bool
     {
         return (int) $this->idTipoMovimiento === TipoMovimiento::EGRESO;
+    }
+
+    /**
+     * @return array{0: string, 1: string} [desde, hasta] Y-m-d; si se invierten, se intercambian.
+     */
+    private function rangoFechasFiltro(): array
+    {
+        $hoy = now()->toDateString();
+        $desde = $this->fechaFiltroNormalizada($this->fechaDesde) ?? $hoy;
+        $hasta = $this->fechaFiltroNormalizada($this->fechaHasta) ?? $hoy;
+
+        if ($desde > $hasta) {
+            return [$hasta, $desde];
+        }
+
+        return [$desde, $hasta];
+    }
+
+    private function fechaFiltroNormalizada(string $valor): ?string
+    {
+        $valor = trim($valor);
+        if ($valor === '' || preg_match('/^\d{4}-\d{2}-\d{2}$/', $valor) !== 1) {
+            return null;
+        }
+
+        try {
+            return Carbon::createFromFormat('Y-m-d', $valor)->toDateString();
+        } catch (\Throwable) {
+            return null;
+        }
     }
 
     private function movimientoEnAlcance(int $id): ?Movimiento

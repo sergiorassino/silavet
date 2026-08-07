@@ -7,6 +7,10 @@
                 <p class="mt-1 text-sm text-white/80">Ingresos y egresos de caja (tabla movimientos).</p>
             </x-vl-hero-heading>
             <div class="flex shrink-0 flex-col gap-2 sm:flex-row sm:items-center">
+                <a href="{{ $this->excelUrl }}"
+                   class="btn-secondary shrink-0 border-white/40 bg-white/15 text-white hover:bg-white/25">
+                    Exportar Excel
+                </a>
                 <button type="button"
                         wire:click="abrirFormularioAsiento"
                         class="btn-secondary shrink-0 border-white/40 bg-white/15 text-white hover:bg-white/25">
@@ -22,11 +26,35 @@
     </div>
 
     <div class="vl-card overflow-hidden">
-        <div class="vl-toolbar border-b border-accent-200 px-3 py-2">
-            <input wire:model.live.debounce.300ms="busqueda"
-                   type="search"
-                   placeholder="Buscar por cliente, cuenta, concepto, monto…"
-                   class="form-input max-w-md text-xs">
+        <div class="vl-toolbar flex flex-wrap items-end gap-3 border-b border-accent-200 px-3 py-2 sm:gap-4">
+            <div>
+                <label class="mb-1 block text-xs font-semibold uppercase tracking-wide text-primary-800" for="movCajaDesde">
+                    Desde
+                </label>
+                <input id="movCajaDesde"
+                       type="date"
+                       wire:model.live="fechaDesde"
+                       class="form-input text-xs tabular-nums">
+            </div>
+            <div>
+                <label class="mb-1 block text-xs font-semibold uppercase tracking-wide text-primary-800" for="movCajaHasta">
+                    Hasta
+                </label>
+                <input id="movCajaHasta"
+                       type="date"
+                       wire:model.live="fechaHasta"
+                       class="form-input text-xs tabular-nums">
+            </div>
+            <div class="min-w-[12rem] flex-1">
+                <label class="mb-1 block text-xs font-semibold uppercase tracking-wide text-primary-800" for="movCajaBusqueda">
+                    Buscar
+                </label>
+                <input id="movCajaBusqueda"
+                       wire:model.live.debounce.300ms="busqueda"
+                       type="search"
+                       placeholder="Cliente, cuenta, concepto, monto…"
+                       class="form-input max-w-md text-xs">
+            </div>
         </div>
 
         <div class="overflow-x-auto">

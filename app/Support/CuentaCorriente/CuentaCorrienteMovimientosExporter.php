@@ -22,7 +22,6 @@ final class CuentaCorrienteMovimientosExporter
         '#',
         'Nombre',
         'Id Cuentas',
-        'Concepto',
         'Fecha/Hora',
         'Monto',
         'Obs',
@@ -100,7 +99,6 @@ final class CuentaCorrienteMovimientosExporter
                 $numero,
                 (string) ($mov->etiquetaPaciente ?? ''),
                 (string) ($mov->cuentaLabel ?? ''),
-                (string) ($mov->concepto ?? ''),
                 $fechhora,
                 $monto,
                 (string) ($mov->obs ?? ''),
@@ -114,7 +112,6 @@ final class CuentaCorrienteMovimientosExporter
                 '',
                 '',
                 '',
-                '',
                 'Saldo anterior al '.Carbon::parse($desde)->format('d/m/Y'),
                 round($saldoAnterior, 2),
                 '',
@@ -123,7 +120,6 @@ final class CuentaCorrienteMovimientosExporter
         }
 
         $this->escribirFila($hoja, $fila, [
-            '',
             '',
             '',
             '',

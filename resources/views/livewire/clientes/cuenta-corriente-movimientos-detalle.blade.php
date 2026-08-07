@@ -58,7 +58,6 @@
                         <th class="vl-pacientes-th vl-pacientes-th--num">#</th>
                         <th class="vl-pacientes-th">Nombre</th>
                         <th class="vl-pacientes-th">Id Cuentas</th>
-                        <th class="vl-pacientes-th">Concepto</th>
                         <th class="vl-pacientes-th whitespace-nowrap">Fechhora</th>
                         <th class="vl-pacientes-th vl-pacientes-th--num">Monto</th>
                         <th class="vl-pacientes-th">Obs</th>
@@ -70,7 +69,6 @@
                             <td class="vl-pacientes-td vl-pacientes-td--num">{{ $loop->iteration }}</td>
                             <td class="vl-pacientes-td">{{ $fila->etiquetaPaciente ?: '—' }}</td>
                             <td class="vl-pacientes-td whitespace-nowrap">{{ $fila->cuentaLabel ?: $fila->idCuentas }}</td>
-                            <td class="vl-pacientes-td">{{ $fila->concepto ?: '—' }}</td>
                             <td class="vl-pacientes-td whitespace-nowrap tabular-nums">
                                 {{ $fila->fechhora !== '' ? \Carbon\Carbon::parse($fila->fechhora)->format('d/m/Y H:i:s') : '—' }}
                             </td>
@@ -81,14 +79,14 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="7" class="vl-pacientes-td text-center text-neutral-500 py-8">
+                            <td colspan="6" class="vl-pacientes-td text-center text-neutral-500 py-8">
                                 No hay movimientos en el período seleccionado.
                             </td>
                         </tr>
                     @endforelse
                     @if ($saldoAnterior !== null)
                         <tr class="bg-accent-50/60 font-semibold">
-                            <td colspan="5" class="vl-pacientes-td text-right">
+                            <td colspan="4" class="vl-pacientes-td text-right">
                                 Saldo anterior al {{ \Carbon\Carbon::parse($fechaDesde)->format('d/m/Y') }}
                             </td>
                             <td class="vl-pacientes-td vl-pacientes-td--num whitespace-nowrap tabular-nums">
@@ -101,7 +99,7 @@
                 @if ($filas->isNotEmpty() || $saldoAnterior !== null)
                     <tfoot class="bg-accent-50/60 border-t border-accent-200">
                         <tr>
-                            <td colspan="5" class="vl-pacientes-td text-right font-semibold">
+                            <td colspan="4" class="vl-pacientes-td text-right font-semibold">
                                 Total período:
                             </td>
                             <td class="vl-pacientes-td vl-pacientes-td--num font-semibold whitespace-nowrap tabular-nums">

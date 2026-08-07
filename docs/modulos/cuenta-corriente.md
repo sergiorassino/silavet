@@ -60,6 +60,7 @@ Config `id_cuenta_cc` (solo variante `tesoreria_pacientes`):
 **Detalle por cliente:** solo movimientos de la cuenta CC (`idCuentas =
 id_cuenta_cc`), orden `fechhora` DESC; filtrable por Desde/Hasta. El saldo del
 encabezado, el saldo anterior y el total del período usan el mismo filtro.
+Columnas: #, Nombre, Id Cuentas, Fechhora, Monto, Obs (sin Concepto).
 
 **Resalte de filas:** filas con `monto < 0` (egresos del cliente) se destacan
 con fondo ámbar (`vl-cc-mov-row--negativo`).

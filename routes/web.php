@@ -12,6 +12,7 @@ use App\Http\Controllers\Clientes\CuentaCorrienteMovimientosDetallePdfController
 use App\Http\Controllers\Clientes\ResumenClienteEntreFechasPdfController;
 use App\Http\Controllers\Clientes\ResumenClienteEntreFechasMovimientosPdfController;
 use App\Http\Controllers\Facturacion\CompAfipPdfController;
+use App\Http\Controllers\Tesoreria\MovimientosCajaExcelController;
 use App\Http\Controllers\Protocolos\EtiquetasTuboPdfController;
 use App\Http\Controllers\Protocolos\InformePacientePdfController;
 use App\Http\Controllers\Protocolos\InformePublicoPdfController;
@@ -255,6 +256,12 @@ Route::middleware(['auth', 'lab.context'])->group(function () {
             ? MovimientosCajaIndex::class
             : MovimientoIndex::class;
         Route::get('/', $movimientosComponent)->name('tesoreria.movimientos.index');
+
+        if (TesoreriaConfig::usaPacientes()) {
+            Route::get('/excel', MovimientosCajaExcelController::class)
+                ->middleware(['throttle:10,1', 'no-store'])
+                ->name('tesoreria.movimientos.excel');
+        }
     });
 
     if (TesoreriaConfig::usaPacientes()) {
