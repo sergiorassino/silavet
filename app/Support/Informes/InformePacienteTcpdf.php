@@ -739,43 +739,66 @@ final class InformePacienteTcpdf extends Fpdi
             return;
         }
 
-        // Marco legacy (NeoLab / Malvina): rectángulo negro de puntas redondeadas bajo el membrete.
-        $marcoX = 15.0;
-        $marcoY = 65.0;
-        $marcoW = 180.0;
-        $marcoH = 220.0;
-        $radio = 5.5;
-        $contenidoX = 20.0;
-        $contenidoW = 160.0;
-
         for ($n = 1; $n <= $pageCount; $n++) {
             $this->AddPage('P', [self::PAGE_W, self::PAGE_H]);
-            $this->dibujarMembrete();
 
-            $this->SetDrawColor(0, 0, 0);
-            $this->SetFillColor(255, 255, 255);
-            $this->SetLineWidth(0.5);
-            $this->RoundedRect($marcoX, $marcoY, $marcoW, $marcoH, $radio, '1111', 'DF');
-            $this->SetLineWidth(0.2);
+            if ($n === 1) {
+                $this->SetY(4.0);
+                $this->dibujarTituloAdjunto();
+                $areaX = self::MARGEN;
+                $areaY = $this->GetY();
+                $areaW = $this->anchoUtil();
+                $areaH = max(20.0, self::PAGE_H - $areaY);
+            } else {
+                // Misma caja horizontal que el cuerpo del informe.
+                $areaX = self::MARGEN;
+                $areaY = 0.0;
+                $areaW = $this->anchoUtil();
+                $areaH = self::PAGE_H;
+            }
 
             try {
                 $pageId = $this->importPage($n);
                 $size = $this->getTemplateSize($pageId);
-                $srcW = max(1.0, (float) ($size['width'] ?? $contenidoW));
-                $srcH = max(1.0, (float) ($size['height'] ?? $marcoH));
+                $srcW = max(1.0, (float) ($size['width'] ?? $areaW));
+                $srcH = max(1.0, (float) ($size['height'] ?? $areaH));
 
-                // Encajar dentro del marco (máx. 160×220 mm), alineado arriba como el legado.
-                $innerH = $marcoH;
-                $scale = min($contenidoW / $srcW, $innerH / $srcH);
+                // Encajar la página entera en el área útil (mismos márgenes que ADJUNTO).
+                $scale = min($areaW / $srcW, $areaH / $srcH);
                 $w = $srcW * $scale;
-                $x = $marcoX + (($marcoW - $w) / 2.0);
-                $this->useImportedPage($pageId, $x, $marcoY, $w);
+                $h = $srcH * $scale;
+                $x = $areaX + (($areaW - $w) / 2.0);
+                $this->useImportedPage($pageId, $x, $areaY, $w, $h);
             } catch (Throwable) {
+                if ($n !== 1) {
+                    $this->SetY(4.0);
+                    $this->dibujarTituloAdjunto();
+                }
                 TcpdfFuenteArial::aplicar($this, '', 10);
-                $this->SetXY($contenidoX, $marcoY + 20);
-                $this->Cell($contenidoW, 6, 'No se pudo incorporar la página '.$n.' del adjunto.', 0, 1, 'C');
+                $this->SetX(self::MARGEN);
+                $this->Cell($this->anchoUtil(), 6, 'No se pudo incorporar la página '.$n.' del adjunto.', 0, 1, 'C');
             }
         }
+    }
+
+    /** Banda compacta ADJUNTO (misma página; deja el máximo alto para el PDF). */
+    private function dibujarTituloAdjunto(): void
+    {
+        $x = self::MARGEN;
+        $w = $this->anchoUtil();
+        $y = $this->GetY();
+        $h = 6.5;
+
+        $this->SetFillColor($this->colorRgb[0], $this->colorRgb[1], $this->colorRgb[2]);
+        $this->Rect($x, $y, $w, $h, 'F');
+
+        TcpdfFuenteArial::aplicar($this, 'B', 11);
+        $this->SetTextColor(255, 255, 255);
+        $this->SetXY($x, $y + 0.9);
+        $this->Cell($w, 4.5, 'ADJUNTO', 0, 1, 'C');
+        $this->SetTextColor(0, 0, 0);
+
+        $this->SetY($y + $h + 1.0);
     }
 
     private function asegurarEspacio(float $necesarioMm): void
