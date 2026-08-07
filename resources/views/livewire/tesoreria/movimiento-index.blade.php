@@ -286,13 +286,68 @@
 
                             @if ((int) $tipoRegistro === \App\Models\Paciente::TIPO_INGRESO)
                                 <div class="vl-form-field">
-                                    <label class="form-label" for="idClientes">Cliente</label>
-                                    <select wire:model="idClientes" id="idClientes" class="form-select">
-                                        <option value="">Seleccione</option>
-                                        @foreach ($clientes as $cliente)
-                                            <option value="{{ $cliente->idClientes }}">{{ $cliente->nombre }}</option>
-                                        @endforeach
-                                    </select>
+                                    <label class="form-label" for="vl-mov-cliente-input">Cliente</label>
+                                    @php
+                                        $clienteOpciones = $clientes
+                                            ->map(fn ($c) => ['id' => (string) $c->idClientes, 'nombre' => $c->nombre])
+                                            ->values()
+                                            ->all();
+                                        $clienteNombreInicial = $clientes->firstWhere('idClientes', $idClientes)?->nombre ?? '';
+                                    @endphp
+                                    <div class="vl-search-select"
+                                         wire:ignore
+                                         x-data="vlSearchSelect({
+                                             opciones: @js($clienteOpciones),
+                                             idInicial: @js((string) ($idClientes ?? '')),
+                                             nombreInicial: @js($clienteNombreInicial),
+                                             propiedad: 'idClientes',
+                                         })"
+                                         @click.outside="alSalir()">
+                                        <div class="vl-search-select-wrapper">
+                                            <input id="vl-mov-cliente-input"
+                                                   x-ref="input"
+                                                   type="text"
+                                                   class="form-input w-full"
+                                                   :class="idSeleccionado !== '' ? 'pr-8' : ''"
+                                                   placeholder="Escriba para buscar…"
+                                                   autocomplete="off"
+                                                   spellcheck="false"
+                                                   x-model="consulta"
+                                                   @focus="abrir()"
+                                                   @input="onInput()"
+                                                   @keydown="onKeydown($event)">
+                                            <button type="button"
+                                                    class="vl-search-select-clear"
+                                                    x-show="idSeleccionado !== ''"
+                                                    x-cloak
+                                                    title="Limpiar selección"
+                                                    aria-label="Limpiar selección"
+                                                    @mousedown.prevent="limpiar()">
+                                                <svg class="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                                                </svg>
+                                            </button>
+                                        </div>
+                                        <ul x-ref="lista"
+                                            class="vl-search-select-lista"
+                                            x-show="abierto"
+                                            x-cloak
+                                            role="listbox"
+                                            aria-label="Opciones de cliente">
+                                            <template x-for="(item, index) in filtrados" :key="item.id">
+                                                <li role="option"
+                                                    :data-combo-idx="index"
+                                                    class="vl-search-select-item"
+                                                    :class="indice === index ? 'is-active' : ''"
+                                                    :aria-selected="indice === index"
+                                                    @mouseenter="indice = index"
+                                                    @mousedown.prevent="elegir(item)"
+                                                    x-text="item.nombre"></li>
+                                            </template>
+                                            <li x-show="filtrados.length === 0"
+                                                class="vl-search-select-vacio">Sin coincidencias</li>
+                                        </ul>
+                                    </div>
                                     @error('idClientes') <p class="form-error">{{ $message }}</p> @enderror
                                 </div>
                             @else
