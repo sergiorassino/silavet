@@ -5,7 +5,7 @@
                 <p class="vl-eyebrow">Clientes · Cuenta corriente</p>
                 <h1 class="text-2xl font-bold sm:text-3xl">{{ $cliente->nombre }}</h1>
                 <p class="mt-2 text-sm text-white/80">
-                    Movimientos del cliente.
+                    Movimientos en cuenta corriente.
                     Saldo total al día de hoy:
                     <span class="font-semibold tabular-nums">{{ \App\Support\CuentaCorriente\CuentaCorrienteMovimientosConsulta::formatearMoneda($saldoHoy) }}</span>
                 </p>

@@ -101,8 +101,9 @@ final class CuentaCorrienteMovimientosConsulta
     }
 
     /**
-     * Movimientos del cliente en el período, todas las cuentas, orden `fechhora` DESC.
-     * El saldo del encabezado sigue calculándose sólo sobre idCuentas = CC.
+     * Movimientos de cuenta corriente del cliente en el período.
+     * Solo `idCuentas = id_cuenta_cc` (mismo criterio que saldo / saldo anterior).
+     * Orden `fechhora` DESC.
      *
      * @return Collection<int, object{
      *   id: int,
@@ -124,10 +125,12 @@ final class CuentaCorrienteMovimientosConsulta
     ): Collection {
         $desde = trim((string) $fechaDesde);
         $hasta = trim((string) $fechaHasta);
+        $idCuentaCc = self::idCuentaCc();
 
         return Movimiento::query()
             ->with(['cuenta', 'concepto'])
             ->where('idClientes', $idClientes)
+            ->where('idCuentas', $idCuentaCc)
             ->when($desde !== '', fn ($q) => $q->whereDate('fechhora', '>=', Carbon::parse($desde)->toDateString()))
             ->when($hasta !== '', fn ($q) => $q->whereDate('fechhora', '<=', Carbon::parse($hasta)->toDateString()))
             ->orderByDesc('fechhora')

@@ -38,6 +38,7 @@ El switch de controller ocurre en `routes/web.php` con `TesoreriaConfig::usaPaci
 
 **Variante `tesoreria_pacientes`:**
 - `movimientos`: `idClientes`, `fechhora`, `idCuentas`, `idConcepto`, `monto`, `obs`, `idPacientes`
+  — solo filas con `idCuentas = id_cuenta_cc` (mismo criterio que el saldo CC)
 - `mediodepago`, `conceptos`: labels de cuenta y concepto
 - `clientes`: nombre; misma exclusión `tipoCliente = 1`
 
@@ -52,7 +53,8 @@ El switch de controller ocurre en `routes/web.php` con `TesoreriaConfig::usaPaci
 ## Fuente de verdad
 
 - `tesoreria_movimientos`: `CuentaCorrienteConsulta::protocolosCliente` / `saldoClienteHoy`.
-- `tesoreria_pacientes`: `CuentaCorrienteMovimientosConsulta::movimientosCliente` / `saldoClienteHoy`.
+- `tesoreria_pacientes`: `CuentaCorrienteMovimientosConsulta::movimientosCliente`
+  (filtrado a `id_cuenta_cc`) / `saldoClienteHoy`.
 - No usar `pacientes.saldo` crudo del legacy ni `tmpSaldo`.
 
 ## Archivos clave
