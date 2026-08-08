@@ -162,6 +162,9 @@ En listados de protocolos / dashboard de esta variante: **no** exigir
 | Ingreso + **Cadetería** | Protocolo con `cadete > 0` → monto = `cadete`; marca `cargadoCadete` |
 | Resto de ingresos | Sin protocolo ni proveedor |
 
+   Los selectores de protocolo (Ingresos Diarios / Cadetería) usan el mismo
+   orden que el módulo Pacientes (`Paciente::scopeOrdenListado`).
+
    El selector **Fecha de los Protocolos a Cargar** (hoy y hasta
    `dias_protocolos` días atrás) filtra los protocolos y, al cambiarlo,
    sincroniza la **fecha del movimiento** (`fechhora` / campo “Fecha y hora

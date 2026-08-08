@@ -682,7 +682,8 @@ class MovimientosCajaIndex extends Component
             ->from('pacientes')
             ->join('clientes', 'pacientes.idClientes', '=', 'clientes.idClientes')
             ->whereDate('pacientes.fechhoy', $this->fechaElegirProtocolos)
-            ->orderByDesc('pacientes.fechhoy')
+            // Mismo orden que el módulo Pacientes (Paciente::scopeOrdenListado).
+            ->ordenListado()
             ->select([
                 'pacientes.idPacientes',
                 DB::raw("CONCAT(
@@ -721,7 +722,8 @@ class MovimientosCajaIndex extends Component
             ->join('clientes', 'pacientes.idClientes', '=', 'clientes.idClientes')
             ->whereDate('pacientes.fechhoy', $this->fechaElegirProtocolos)
             ->where('pacientes.cadete', '>', 0)
-            ->orderByDesc('pacientes.fechhoy')
+            // Mismo orden que el módulo Pacientes (Paciente::scopeOrdenListado).
+            ->ordenListado()
             ->select([
                 'pacientes.idPacientes',
                 DB::raw("CONCAT(
