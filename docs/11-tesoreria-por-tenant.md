@@ -64,7 +64,7 @@ Helper: `App\Support\Tesoreria\TesoreriaConfig`
 
 | Situación | Campos extras |
 |-----------|---------------|
-| Egreso | Proveedores (opcional, filtrado por concepto) |
+| Egreso | Proveedores (obligatorio, filtrado por concepto) |
 | Ingreso + concepto **Ingresos Diarios** | Selector de protocolo (`pacientes` del día elegido) |
 | Ingreso + concepto **Cadetería** | Selector de protocolo con `cadete > 0` |
 | Resto de ingresos | Sin selector de protocolo ni proveedor |
@@ -114,7 +114,7 @@ abreviaturas; las variantes de **Mercado Pago** muestran el sufijo del nombre
 `conceptos` (`tipoConcepto`, `concepto`, `orden`). No elimina si hay movimientos o proveedores asociados.
 
 **Gestión de Proveedores** (`App\Livewire\Tesoreria\ProveedorIndex` / `ProveedorForm`): ABM de
-`proveedores` (`idConceptos`, `proveedor`, `cuit`). No elimina si hay movimientos asociados.
+`proveedores` (`idConceptos`, `proveedor`, `cuit` NOT NULL: vacío = `''`, no null). No elimina si hay movimientos asociados.
 
 Con `tesoreria_movimientos`: **Movimientos**, **Transferencias Intercuenta**,
 **Gestión de Cuentas Contables** y **Gestión de Cuentas Detalle**.

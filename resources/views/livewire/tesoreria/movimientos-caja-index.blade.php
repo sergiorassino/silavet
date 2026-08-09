@@ -199,7 +199,7 @@
 
                             @if ($esEgreso)
                                 <div class="vl-form-field">
-                                    <label class="form-label" for="idProveedores">Proveedores</label>
+                                    <label class="form-label" for="idProveedores">Proveedores <span class="text-red-600">*</span></label>
                                     <select wire:model="idProveedores" id="idProveedores" class="form-select" @disabled(! $idConcepto)>
                                         <option value="">Seleccione</option>
                                         @foreach ($proveedores as $proveedor)

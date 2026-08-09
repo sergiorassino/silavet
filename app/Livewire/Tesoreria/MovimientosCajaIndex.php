@@ -381,7 +381,7 @@ class MovimientosCajaIndex extends Component
 
         if ($esEgreso) {
             $reglas['idProveedores'] = [
-                'nullable',
+                'required',
                 'integer',
                 Rule::exists('proveedores', 'id')->where(
                     fn ($q) => $q->where('idConceptos', (int) $this->idConcepto)
@@ -404,6 +404,7 @@ class MovimientosCajaIndex extends Component
             'idCuentas.exists' => 'La cuenta seleccionada no es válida.',
             'idConcepto.required' => 'Seleccione el concepto.',
             'idConcepto.exists' => 'El concepto seleccionado no es válido.',
+            'idProveedores.required' => 'Seleccione el proveedor.',
             'idProveedores.exists' => 'El proveedor seleccionado no es válido.',
             'idPacientes.required' => 'Debe seleccionar un protocolo de pacientes.',
             'idPacientes.exists' => 'El protocolo seleccionado no es válido.',
