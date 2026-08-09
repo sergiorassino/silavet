@@ -95,8 +95,8 @@ class ProveedorForm extends Component
         $data = $this->validate();
         $data['proveedor'] = trim($data['proveedor']);
         $data['idConceptos'] = (int) $data['idConceptos'];
-        $cuit = CuitInput::normalize(trim((string) ($data['cuit'] ?? '')));
-        $data['cuit'] = $cuit !== '' ? $cuit : null;
+        // NOT NULL legacy: vacío = '', nunca null (mismo criterio que clientes.cuit).
+        $data['cuit'] = CuitInput::normalize(trim((string) ($data['cuit'] ?? '')));
 
         if ($this->idProveedor) {
             $reg = Proveedor::query()->findOrFail($this->idProveedor);

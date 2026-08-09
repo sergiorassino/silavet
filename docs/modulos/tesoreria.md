@@ -106,7 +106,7 @@ Catálogos: `clientes`, `cuentas`, `cuentasdetalle`, `mediodepago`.
 | `idTipoMovimiento` | `1` ingreso / `2` egreso (`TipoMovimiento::INGRESO` / `EGRESO`) |
 | `idCuentas` | FK a **`mediodepago.id`** (UI etiqueta “Cuenta”; **no** es `cuentas`) |
 | `idConcepto` | `conceptos` con `tipoConcepto` = tipo de movimiento |
-| `idProveedores` | egresos opcionales; filtrados por `idConceptos` |
+| `idProveedores` | egresos **obligatorio**; filtrados por `idConceptos` |
 | `idPacientes` / `idClientes` | Ingresos Diarios / Cadetería (tomados del protocolo) |
 | `monto` | ingresos positivos; egresos **negativos** |
 | `fechhora`, `comprobante`, `obs` | metadatos |
@@ -157,7 +157,7 @@ En listados de protocolos / dashboard de esta variante: **no** exigir
 
 | Situación | Campos extras |
 |-----------|---------------|
-| Egreso | Proveedor opcional (filtrado por concepto) |
+| Egreso | Proveedor obligatorio (filtrado por concepto) |
 | Ingreso + **Ingresos Diarios** | Selector de protocolo del día → monto = `pacientes.precio`; marca `cargado` |
 | Ingreso + **Cadetería** | Protocolo con `cadete > 0` → monto = `cadete`; marca `cargadoCadete` |
 | Resto de ingresos | Sin protocolo ni proveedor |
