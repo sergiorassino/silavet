@@ -69,7 +69,7 @@ Helper: `App\Support\Tesoreria\TesoreriaConfig`
 | Ingreso + concepto **Cadetería** | Selector de protocolo con `cadete > 0` |
 | Resto de ingresos | Sin selector de protocolo ni proveedor |
 
-Al elegir un protocolo de Ingresos Diarios o Cadetería se completa el monto (y se guarda `idClientes` / `idPacientes`). Los egresos se persisten con **monto negativo**.
+Al elegir un protocolo de Ingresos Diarios o Cadetería se **sugiere** el monto desde `pacientes.precio` / `cadete` (el usuario puede editarlo). Al guardar (alta o edición) se persiste el importe del formulario, no se vuelve a tomar del protocolo; sí se guardan `idClientes` / `idPacientes`. Los egresos se persisten con **monto negativo**.
 
 En el modal de edición hay botón **Eliminar** (con confirmación). Si era el último movimiento
 de Ingresos Diarios o Cadetería para ese protocolo, se limpia `cargado` / `cargadoCadete`.

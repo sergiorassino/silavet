@@ -158,8 +158,8 @@ En listados de protocolos / dashboard de esta variante: **no** exigir
 | Situación | Campos extras |
 |-----------|---------------|
 | Egreso | Proveedor obligatorio (filtrado por concepto) |
-| Ingreso + **Ingresos Diarios** | Selector de protocolo del día → monto = `pacientes.precio`; marca `cargado` |
-| Ingreso + **Cadetería** | Protocolo con `cadete > 0` → monto = `cadete`; marca `cargadoCadete` |
+| Ingreso + **Ingresos Diarios** | Selector de protocolo del día → **sugiere** monto = `pacientes.precio` (editable; al guardar se persiste el del form); marca `cargado` |
+| Ingreso + **Cadetería** | Protocolo con `cadete > 0` → **sugiere** monto = `cadete` (editable; al guardar se persiste el del form); marca `cargadoCadete` |
 | Resto de ingresos | Sin protocolo ni proveedor |
 
    Los selectores de protocolo (Ingresos Diarios / Cadetería) usan el mismo
