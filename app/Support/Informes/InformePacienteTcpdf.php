@@ -259,12 +259,15 @@ final class InformePacienteTcpdf extends Fpdi
         TcpdfFuenteArial::aplicar($this, 'I', 9);
         $this->SetTextColor(0, 0, 0);
 
+        $medico = trim((string) ($p['medico_solicitante'] ?? ''));
+        $medicoCelda = $medico !== '' ? 'M.V. Solicitante: '.$medico : '';
+
         $filas = [
             ['Protocolo: '.($p['protocolo'] ?? ''), 'Especie: '.($p['especie'] ?? '')],
             ['Fecha: '.($p['fecha'] ?? ''), 'Raza: '.($p['raza'] ?? '')],
             ['Paciente: '.($p['nombre'] ?? ''), 'Sexo: '.($p['sexo'] ?? '')],
             ['Tutor Responsable: '.($p['propietario'] ?? ''), 'Edad: '.($p['edad'] ?? '')],
-            ['Veterinaria: '.($p['cliente'] ?? ''), ''],
+            ['Veterinaria: '.($p['cliente'] ?? ''), $medicoCelda],
         ];
 
         foreach ($filas as $fila) {

@@ -9,6 +9,7 @@ use App\Models\Paciente;
 use App\Models\Renglon;
 use App\Support\CuentaCorriente\CuentaCorrienteConsulta;
 use App\Support\CuentaCorriente\CuentaCorrienteFacade;
+use App\Support\EmailList;
 use App\Support\Envio\InformeEnvioServicio;
 use App\Support\Facturacion\FacturacionAfipConfig;
 use App\Support\Facturacion\FacturacionAfipIndicadores;
@@ -488,15 +489,14 @@ class PacienteIndex extends Component
         abort_if(RateLimiter::tooManyAttempts($key, 20), 429);
 
         $this->validate([
-            'envioClienteEmail' => ['nullable', 'email', 'max:150'],
+            'envioClienteEmail' => ['nullable', 'string', 'max:'.EmailList::MAX_LENGTH, EmailList::rule()],
             'envioClienteWhatsapp' => ['nullable', 'string', 'max:20'],
             'envioPacienteEmail' => ['nullable', 'email', 'max:150'],
             'envioPacienteWhatsapp' => ['nullable', 'string', 'max:20'],
             'envioDestinatario' => ['required', 'in:cliente,paciente'],
             'envioForma' => ['required', 'in:mail,whatsapp'],
         ], [
-            'envioClienteEmail.email' => 'El email del cliente no es válido.',
-            'envioClienteEmail.max' => 'El email del cliente no puede superar 150 caracteres.',
+            'envioClienteEmail.max' => 'El email del cliente no puede superar '.EmailList::MAX_LENGTH.' caracteres.',
             'envioClienteWhatsapp.max' => 'El WhatsApp del cliente no puede superar 20 caracteres.',
             'envioPacienteEmail.email' => 'El email del paciente no es válido.',
             'envioPacienteEmail.max' => 'El email del paciente no puede superar 150 caracteres.',
@@ -527,7 +527,7 @@ class PacienteIndex extends Component
         $paciente->email = trim($this->envioPacienteEmail);
         $paciente->whatsapp = trim($this->envioPacienteWhatsapp);
         if ($paciente->cliente !== null) {
-            $paciente->cliente->email = trim($this->envioClienteEmail);
+            $paciente->cliente->email = EmailList::normalize($this->envioClienteEmail);
             $paciente->cliente->whatsapp = trim($this->envioClienteWhatsapp);
         }
 
@@ -540,7 +540,11 @@ class PacienteIndex extends Component
             }
 
             $this->cerrarModalEnvio();
-            $this->dispatch('vl-swal-exito', mensaje: 'Mail enviado correctamente.');
+            $enviados = (int) ($resultado['enviados'] ?? 1);
+            $mensaje = $enviados > 1
+                ? "Mail enviado correctamente a {$enviados} destinatarios."
+                : 'Mail enviado correctamente.';
+            $this->dispatch('vl-swal-exito', mensaje: $mensaje);
 
             return;
         }
@@ -1373,14 +1377,13 @@ class PacienteIndex extends Component
             return;
         }
 
-        $this->envioClienteEmail = trim($this->envioClienteEmail);
+        $this->envioClienteEmail = EmailList::normalize($this->envioClienteEmail);
         $this->envioClienteWhatsapp = trim($this->envioClienteWhatsapp);
 
         $this->validateOnly('envioClienteEmail', [
-            'envioClienteEmail' => ['nullable', 'email', 'max:150'],
+            'envioClienteEmail' => ['nullable', 'string', 'max:'.EmailList::MAX_LENGTH, EmailList::rule()],
         ], [
-            'envioClienteEmail.email' => 'El email del cliente no es válido.',
-            'envioClienteEmail.max' => 'El email del cliente no puede superar 150 caracteres.',
+            'envioClienteEmail.max' => 'El email del cliente no puede superar '.EmailList::MAX_LENGTH.' caracteres.',
         ]);
         $this->validateOnly('envioClienteWhatsapp', [
             'envioClienteWhatsapp' => ['nullable', 'string', 'max:20'],

@@ -57,7 +57,11 @@
             <div class="grid gap-4 sm:grid-cols-2">
                 <div>
                     <label class="form-label mb-1" for="email">Email</label>
-                    <input wire:model="email" id="email" type="email" maxlength="150" class="form-input py-1.5 text-sm">
+                    <input wire:model="email" id="email" type="text" maxlength="500"
+                           class="form-input py-1.5 text-sm"
+                           placeholder="uno@mail.com;otro@mail.com"
+                           autocomplete="off">
+                    <p class="mt-0.5 text-xs text-neutral-500">Varios emails separados por ;</p>
                     @error('email') <p class="form-error">{{ $message }}</p> @enderror
                 </div>
                 <div>
