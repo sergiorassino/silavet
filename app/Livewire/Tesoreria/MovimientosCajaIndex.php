@@ -219,17 +219,19 @@ class MovimientosCajaIndex extends Component
         $this->idCuentas = (int) ($mov->idCuentas ?: 0) ?: null;
         $this->idConcepto = (int) ($mov->idConcepto ?: 0) ?: null;
         $this->idProveedores = (int) ($mov->idProveedores ?: 0) ?: null;
+        // Fecha de protocolos antes del paciente: updatedFechaElegirProtocolos limpia idPacientes.
+        $this->fechaElegirProtocolos = $mov->paciente?->fechhoy?->toDateString()
+            ?? now()->toDateString();
         $this->idPacientes = (int) ($mov->idPacientes ?: 0) ?: null;
         $this->idCadete = TesoreriaConfig::esConceptoCadeteria($this->idConcepto)
             ? $this->idPacientes
             : null;
+        // Monto del movimiento al final (updatedIdPacientes / updatedIdCadete pueden sugerir precio).
         $this->monto = number_format(abs((float) $mov->monto), 2, '.', '');
         $this->comprobante = (string) ($mov->comprobante ?? '');
         $this->obs = (string) ($mov->obs ?? '');
         $this->fecha = $mov->fechhora?->format('Y-m-d') ?? now()->toDateString();
         $this->hora = $mov->fechhora?->format('H:i:s') ?? now()->format('H:i:s');
-        $this->fechaElegirProtocolos = $mov->paciente?->fechhoy?->toDateString()
-            ?? now()->toDateString();
         $this->formAbierto = true;
         $this->resetErrorBag();
     }
@@ -427,7 +429,7 @@ class MovimientosCajaIndex extends Component
 
         if ($esIngresosDiarios || $esCadeteria) {
             $idProtocolo = $esCadeteria ? (int) $this->idCadete : (int) $this->idPacientes;
-            $paciente = Paciente::query()->whereKey($idProtocolo)->first(['idPacientes', 'idClientes', 'precio', 'cadete']);
+            $paciente = Paciente::query()->whereKey($idProtocolo)->first(['idPacientes', 'idClientes']);
             if ($paciente === null) {
                 $this->dispatch('vl-swal-error', mensaje: 'No se encontró el protocolo seleccionado.');
 
@@ -435,11 +437,8 @@ class MovimientosCajaIndex extends Component
             }
             $idPacientes = (int) $paciente->idPacientes;
             $idClientes = (int) ($paciente->idClientes ?? 0);
-            if ($esCadeteria) {
-                $montoFinal = abs(round((float) $paciente->cadete, 2));
-            } else {
-                $montoFinal = abs(round((float) $paciente->precio, 2));
-            }
+            // Monto: se sugiere al elegir protocolo (updatedIdPacientes / updatedIdCadete);
+            // al guardar siempre se persiste el importe del formulario (alta o edición).
         }
 
         $payload = [
