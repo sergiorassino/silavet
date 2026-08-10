@@ -1,14 +1,14 @@
 <?php
 
 /**
- * Alinea `usuarios` con la estructura de referencia de lb_alqu (campos AFIP).
- * Labs sin sistema nuevo suelen tener solo id/apenom/dni/password/permisos_ia.
+ * Alinea `usuarios` con la estructura de referencia de lb_alqu
+ * (idRoles + campos AFIP). Algunos labs no tienen idRoles ni los campos AFIP.
  *
  * Se aplica con: php artisan lb:migrate-legacy --force
  * (o php artisan migrate --force sobre el tenant activo)
  *
- * Idempotente: solo ADD COLUMN si falta. No modifica tipos de columnas ya
- * existentes ni borra nada en down() (pueden ser legacy preexistentes).
+ * Idempotente: solo ADD COLUMN / INDEX si falta. No modifica tipos de columnas
+ * ya existentes ni borra nada en down() (pueden ser legacy preexistentes).
  *
  * SQL manual: database/sql/usuarios_campos_afip_como_alqu.sql
  */
@@ -20,12 +20,17 @@ use Illuminate\Support\Facades\Schema;
 return new class extends Migration
 {
     /**
-     * Columnas de negocio AFIP presentes en lb_alqu.usuarios (orden de ADD).
+     * Columnas presentes en lb_alqu.usuarios que pueden faltar en otros labs.
      * Definición MySQL idéntica a SHOW FULL COLUMNS de lb_alqu.
      *
      * @var list<array{name: string, ddl: string, after: string}>
      */
     private const COLUMNAS = [
+        [
+            'name' => 'idRoles',
+            'ddl' => '`idRoles` int(11) DEFAULT NULL',
+            'after' => 'idClientes',
+        ],
         [
             'name' => 'permisoAfip',
             'ddl' => '`permisoAfip` int(1) NOT NULL DEFAULT 0',
@@ -117,12 +122,14 @@ return new class extends Migration
         foreach (self::COLUMNAS as $col) {
             $this->ensureColumn($col['name'], $col['ddl'], $col['after']);
         }
+
+        $this->ensureIndexIdRoles();
     }
 
     public function down(): void
     {
         // Intencionalmente vacío: columnas pueden existir en BD legacy (alqu/neolab)
-        // o haber sido creadas por esta migración; no eliminar datos AFIP.
+        // o haber sido creadas por esta migración; no eliminar datos.
     }
 
     private function ensureColumn(string $name, string $ddl, string $preferredAfter): void
@@ -140,12 +147,14 @@ return new class extends Migration
 
     /**
      * Coloca la columna después del ancla si existe; si no, busca anclas previas
-     * de la cadena (permisos_ia → password) para no fallar en labs intermedios.
+     * para no fallar en labs con columnas parciales.
      */
     private function resolveAfter(string $preferredAfter): ?string
     {
         $fallbackChain = [
             $preferredAfter,
+            'idClientes',
+            'idUsuarios',
             'permisos_ia',
             'password',
             'dni',
@@ -159,6 +168,30 @@ return new class extends Migration
         }
 
         return null;
+    }
+
+    /** Índice KEY `idRoles` como en lb_alqu (no-op si ya existe). */
+    private function ensureIndexIdRoles(): void
+    {
+        if (! isset($this->columnasConocidas['idRoles'])) {
+            return;
+        }
+
+        $existe = DB::selectOne(
+            'SELECT 1 AS ok
+             FROM INFORMATION_SCHEMA.STATISTICS
+             WHERE TABLE_SCHEMA = DATABASE()
+               AND TABLE_NAME = ?
+               AND INDEX_NAME = ?
+             LIMIT 1',
+            ['usuarios', 'idRoles']
+        );
+
+        if ($existe !== null) {
+            return;
+        }
+
+        DB::statement('ALTER TABLE `usuarios` ADD INDEX `idRoles` (`idRoles`)');
     }
 
     /** @return array<string, true> */

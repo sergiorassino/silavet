@@ -57,17 +57,20 @@ class UsuarioIndex extends Component
 
         $usuarios = Usuario::query()
             ->with(['rol', 'cliente'])
+            ->leftJoin('clientes', 'clientes.idClientes', '=', 'usuarios.idClientes')
+            ->select('usuarios.*')
             ->when($term !== '', function ($q) use ($term) {
                 $q->where(function ($inner) use ($term) {
-                    $inner->where('apenom', 'like', "%{$term}%")
-                        ->orWhere('dni', 'like', "%{$term}%")
-                        ->orWhere('cuit', 'like', "%{$term}%")
-                        ->orWhere('razonSocial', 'like', "%{$term}%")
+                    $inner->where('usuarios.apenom', 'like', "%{$term}%")
+                        ->orWhere('usuarios.dni', 'like', "%{$term}%")
+                        ->orWhere('usuarios.cuit', 'like', "%{$term}%")
+                        ->orWhere('usuarios.razonSocial', 'like', "%{$term}%")
                         ->orWhereHas('rol', fn ($r) => $r->where('rol', 'like', "%{$term}%"))
                         ->orWhereHas('cliente', fn ($c) => $c->where('nombre', 'like', "%{$term}%"));
                 });
             })
-            ->orderBy('apenom')
+            ->orderBy('clientes.nombre')
+            ->orderBy('usuarios.apenom')
             ->paginate(self::POR_PAGINA);
 
         return view('livewire.abm.usuarios.usuario-index', compact('usuarios'))

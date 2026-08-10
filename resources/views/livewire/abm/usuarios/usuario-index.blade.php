@@ -22,10 +22,10 @@
             <table class="min-w-full text-sm">
                 <thead class="bg-accent-50/80">
                     <tr>
+                        <th class="table-header">Cliente</th>
                         <th class="table-header">Nombre</th>
                         <th class="table-header">DNI</th>
                         <th class="table-header">Rol</th>
-                        <th class="table-header">Cliente</th>
                         <th class="table-header text-center">AFIP</th>
                         <th class="table-header text-center">Acciones</th>
                     </tr>
@@ -33,10 +33,10 @@
                 <tbody class="divide-y divide-accent-100">
                     @forelse ($usuarios as $usuario)
                         <tr class="hover:bg-accent-50/40" wire:key="usuario-{{ $usuario->idUsuarios }}">
+                            <td class="table-cell">{{ $usuario->cliente?->nombre ?: '—' }}</td>
                             <td class="table-cell font-medium">{{ $usuario->apenom }}</td>
                             <td class="table-cell tabular-nums">{{ $usuario->dni }}</td>
                             <td class="table-cell">{{ $usuario->rol?->rol ?: '—' }}</td>
-                            <td class="table-cell">{{ $usuario->cliente?->nombre ?: '—' }}</td>
                             <td class="table-cell text-center">
                                 @if ((int) $usuario->permisoAfip === 1)
                                     <span class="inline-flex rounded-full bg-emerald-50 px-2 py-0.5 text-xs font-medium text-emerald-700">Sí</span>
