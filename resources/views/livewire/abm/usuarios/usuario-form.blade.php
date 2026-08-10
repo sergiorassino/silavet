@@ -37,7 +37,7 @@
                     <label class="form-label mb-1" for="password">Contraseña *</label>
                     <input wire:model="password" id="password" type="text" maxlength="10" class="form-input py-1.5 text-sm" autocomplete="new-password">
                     @error('password') <p class="form-error">{{ $message }}</p> @enderror
-                    <p class="mt-1 text-xs text-neutral-500">Máximo 10 caracteres (texto plano, legado NeoLab).</p>
+                    <p class="mt-1 text-xs text-neutral-500">Máximo 10 caracteres (texto plano).</p>
                 </div>
             </div>
 
