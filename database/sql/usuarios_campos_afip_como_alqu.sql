@@ -1,11 +1,72 @@
--- Alinea `usuarios` con la estructura AFIP de lb_alqu (referencia SILAVET).
+-- Alinea `usuarios` con la estructura de lb_alqu (referencia SILAVET):
+-- idRoles + campos AFIP (permisoAfip … crt).
 -- Idempotente. Ejecutar manualmente en el cliente MySQL (no desde el agente).
 -- Alternativa por lab: php artisan lb:switch <slug> && php artisan lb:migrate-legacy --force
 --
--- Agrega solo columnas faltantes (permisoAfip … crt). No modifica tipos existentes.
+-- Agrega solo columnas/índices faltantes. No modifica tipos existentes.
 -- No toca permisos_ia (migración 2026_07_03_000001 / permisos_ia_catalogo_inicial.sql).
 
 SET @silavet_schema := DATABASE();
+
+-- ---- idRoles ----
+SET @silavet_sql := (
+    SELECT IF(
+        EXISTS (
+            SELECT 1 FROM INFORMATION_SCHEMA.TABLES
+            WHERE TABLE_SCHEMA = @silavet_schema AND TABLE_NAME = 'usuarios'
+        ) AND NOT EXISTS (
+            SELECT 1 FROM INFORMATION_SCHEMA.COLUMNS
+            WHERE TABLE_SCHEMA = @silavet_schema
+              AND TABLE_NAME = 'usuarios'
+              AND COLUMN_NAME = 'idRoles'
+        ),
+        IF(
+            EXISTS (
+                SELECT 1 FROM INFORMATION_SCHEMA.COLUMNS
+                WHERE TABLE_SCHEMA = @silavet_schema
+                  AND TABLE_NAME = 'usuarios'
+                  AND COLUMN_NAME = 'idClientes'
+            ),
+            'ALTER TABLE `usuarios` ADD COLUMN `idRoles` int(11) DEFAULT NULL AFTER `idClientes`',
+            IF(
+                EXISTS (
+                    SELECT 1 FROM INFORMATION_SCHEMA.COLUMNS
+                    WHERE TABLE_SCHEMA = @silavet_schema
+                      AND TABLE_NAME = 'usuarios'
+                      AND COLUMN_NAME = 'idUsuarios'
+                ),
+                'ALTER TABLE `usuarios` ADD COLUMN `idRoles` int(11) DEFAULT NULL AFTER `idUsuarios`',
+                'ALTER TABLE `usuarios` ADD COLUMN `idRoles` int(11) DEFAULT NULL'
+            )
+        ),
+        'SELECT 1'
+    )
+);
+PREPARE silavet_stmt FROM @silavet_sql;
+EXECUTE silavet_stmt;
+DEALLOCATE PREPARE silavet_stmt;
+
+-- ---- índice idRoles (como lb_alqu) ----
+SET @silavet_sql := (
+    SELECT IF(
+        EXISTS (
+            SELECT 1 FROM INFORMATION_SCHEMA.COLUMNS
+            WHERE TABLE_SCHEMA = @silavet_schema
+              AND TABLE_NAME = 'usuarios'
+              AND COLUMN_NAME = 'idRoles'
+        ) AND NOT EXISTS (
+            SELECT 1 FROM INFORMATION_SCHEMA.STATISTICS
+            WHERE TABLE_SCHEMA = @silavet_schema
+              AND TABLE_NAME = 'usuarios'
+              AND INDEX_NAME = 'idRoles'
+        ),
+        'ALTER TABLE `usuarios` ADD INDEX `idRoles` (`idRoles`)',
+        'SELECT 1'
+    )
+);
+PREPARE silavet_stmt FROM @silavet_sql;
+EXECUTE silavet_stmt;
+DEALLOCATE PREPARE silavet_stmt;
 
 -- ---- permisoAfip ----
 SET @silavet_sql := (
