@@ -5,6 +5,7 @@ namespace App\Livewire\Abm\Clientes;
 use App\Models\Cliente;
 use App\Support\CuitInput;
 use App\Support\DniInput;
+use App\Support\EmailList;
 use App\Support\Precios\DescuentoDeterminacionConfig;
 use App\Support\PermisosIaCatalog;
 use App\Support\UsuarioMenuPortal;
@@ -79,7 +80,7 @@ class ClienteForm extends Component
             'direccion' => ['nullable', 'string', 'max:200'],
             'telefono1' => ['nullable', 'string', 'max:50'],
             'telefono2' => ['nullable', 'string', 'max:50'],
-            'email' => ['nullable', 'email', 'max:150'],
+            'email' => ['nullable', 'string', 'max:'.EmailList::MAX_LENGTH, EmailList::rule()],
             'whatsapp' => ['nullable', 'string', 'max:20'],
             'dni' => ['nullable', 'string', 'max:8'],
             'cuit' => [
@@ -107,8 +108,7 @@ class ClienteForm extends Component
             'direccion.max' => 'La dirección no puede superar 200 caracteres.',
             'telefono1.max' => 'El teléfono 1 no puede superar 50 caracteres.',
             'telefono2.max' => 'El teléfono 2 no puede superar 50 caracteres.',
-            'email.email' => 'Ingrese un email válido.',
-            'email.max' => 'El email no puede superar 150 caracteres.',
+            'email.max' => 'El email no puede superar '.EmailList::MAX_LENGTH.' caracteres.',
             'whatsapp.max' => 'El WhatsApp no puede superar 20 caracteres.',
             'dni.max' => 'El DNI no puede superar 8 caracteres.',
             'descuento.numeric' => 'El descuento debe ser un número.',
@@ -128,7 +128,7 @@ class ClienteForm extends Component
         $this->direccion = trim($this->direccion);
         $this->telefono1 = trim($this->telefono1);
         $this->telefono2 = trim($this->telefono2);
-        $this->email = trim($this->email);
+        $this->email = EmailList::normalize($this->email);
         $this->whatsapp = trim($this->whatsapp);
         $this->dni = trim($this->dni);
         $this->cuit = trim($this->cuit);

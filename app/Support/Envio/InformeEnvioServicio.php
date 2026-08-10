@@ -5,6 +5,7 @@ namespace App\Support\Envio;
 use App\Mail\InformeProtocoloMail;
 use App\Models\Entorno;
 use App\Models\Paciente;
+use App\Support\EmailList;
 use App\Support\Entorno\LabInstitucional;
 use App\Support\Informes\InformePacienteConsulta;
 use App\Support\Informes\InformePacienteTcpdf;
@@ -57,6 +58,25 @@ final class InformeEnvioServicio
             : $contactos['paciente_email'];
     }
 
+    /**
+     * Destinos de mail: el cliente admite varios (separados por ; o ,);
+     * el paciente (propietario) sigue siendo uno solo.
+     *
+     * @return list<string>
+     */
+    public static function emailsDestino(array $contactos, string $destinatario): array
+    {
+        $raw = self::emailDestino($contactos, $destinatario);
+
+        if ($destinatario === self::DEST_CLIENTE) {
+            return EmailList::parse($raw);
+        }
+
+        $email = trim($raw);
+
+        return $email !== '' ? [$email] : [];
+    }
+
     public static function whatsappDestino(array $contactos, string $destinatario): string
     {
         return $destinatario === self::DEST_CLIENTE
@@ -67,12 +87,22 @@ final class InformeEnvioServicio
     /**
      * @return array{ok: true}|array{ok: false, error: string}
      */
+    /**
+     * @return array{ok: true, enviados: int}|array{ok: false, error: string}
+     */
     public static function enviarMail(Paciente $paciente, string $destinatario): array
     {
         $contactos = self::contactos($paciente);
-        $email = self::emailDestino($contactos, $destinatario);
+        $emails = self::emailsDestino($contactos, $destinatario);
 
-        if ($email === '' || filter_var($email, FILTER_VALIDATE_EMAIL) === false) {
+        $validos = [];
+        foreach ($emails as $email) {
+            if (filter_var($email, FILTER_VALIDATE_EMAIL) !== false) {
+                $validos[] = $email;
+            }
+        }
+
+        if ($validos === []) {
             return ['ok' => false, 'error' => 'El destinatario no tiene un email válido.'];
         }
 
@@ -120,25 +150,51 @@ final class InformeEnvioServicio
             return ['ok' => false, 'error' => 'Error al generar el PDF del informe: '.mb_substr(trim($ePdf->getMessage()), 0, 150)];
         }
 
+        $enviados = 0;
+        $fallidos = [];
+        $ultimoError = '';
+
         try {
             app('mail.manager')->purge('smtp');
-            Mail::mailer('smtp')->to($email)->send(new InformeProtocoloMail($paciente, $entorno, $contactos, $pdfBinario, $pdfNombre));
-        } catch (Throwable $e) {
-            report($e);
+        } catch (Throwable $ePurge) {
+            report($ePurge);
+        }
 
-            $detalle = self::mensajeErrorSmtp($e);
+        foreach ($validos as $email) {
+            try {
+                Mail::mailer('smtp')->to($email)->send(
+                    new InformeProtocoloMail($paciente, $entorno, $contactos, $pdfBinario, $pdfNombre)
+                );
+                $enviados++;
+            } catch (Throwable $e) {
+                report($e);
+                $fallidos[] = $email;
+                $ultimoError = self::mensajeErrorSmtp($e);
+            }
+        }
+
+        if ($enviados === 0) {
             $servidor = $host !== '' ? $host.($port > 0 ? ":{$port}" : '') : '(MAIL_HOST vacío)';
 
             return [
                 'ok' => false,
                 'error' => 'No se pudo enviar el mail'
-                    .($detalle !== '' ? ': '.$detalle : '.')
+                    .($ultimoError !== '' ? ': '.$ultimoError : '.')
                     .' La cuenta va en Parámetros (entorno); el servidor SMTP en .env'
                     ." (MAIL_HOST/MAIL_PORT/MAIL_ENCRYPTION → {$servidor}).",
             ];
         }
 
-        return ['ok' => true];
+        if ($fallidos !== []) {
+            return [
+                'ok' => false,
+                'error' => 'Se envió a '.$enviados.' destinatario(s), pero falló en: '
+                    .implode(', ', $fallidos)
+                    .($ultimoError !== '' ? ' ('.$ultimoError.')' : ''),
+            ];
+        }
+
+        return ['ok' => true, 'enviados' => $enviados];
     }
 
     /**

@@ -30,11 +30,12 @@
                                         <label class="sr-only" for="envioClienteEmail">Email del cliente</label>
                                         <input wire:model.blur="envioClienteEmail"
                                                id="envioClienteEmail"
-                                               type="email"
-                                               maxlength="150"
+                                               type="text"
+                                               maxlength="500"
                                                class="form-input"
-                                               placeholder="Email"
-                                               autocomplete="off">
+                                               placeholder="Email (; varios)"
+                                               autocomplete="off"
+                                               title="Varios emails separados por ;">
                                         @error('envioClienteEmail') <p class="form-error">{{ $message }}</p> @enderror
                                     </div>
                                     <div class="vl-form-field">
