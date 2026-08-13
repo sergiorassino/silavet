@@ -36,6 +36,7 @@ class CompAfip extends Model
         'CAE',
         'CAEFchVto',
         'idCompAfipAsoc',
+        'idMovimientos',
     ];
 
     protected function casts(): array
@@ -53,12 +54,23 @@ class CompAfip extends Model
             'CondicionIVAReceptorId' => 'integer',
             'CAEFchVto' => 'date',
             'idCompAfipAsoc' => 'integer',
+            'idMovimientos' => 'integer',
         ];
     }
 
     public static function tieneColumnaAsoc(): bool
     {
         return Schema::hasColumn('compafip', 'idCompAfipAsoc');
+    }
+
+    public static function tieneColumnaMovimientos(): bool
+    {
+        return Schema::hasColumn('compafip', 'idMovimientos');
+    }
+
+    public function movimiento(): BelongsTo
+    {
+        return $this->belongsTo(Movimiento::class, 'idMovimientos', 'id');
     }
 
     public function paciente(): BelongsTo

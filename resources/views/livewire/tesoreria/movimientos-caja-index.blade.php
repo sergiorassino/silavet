@@ -63,6 +63,7 @@
                     <tr>
                         <th class="vl-movimientos-th vl-movimientos-th--icon"></th>
                         <th class="vl-movimientos-th whitespace-nowrap">Fechhora</th>
+                        <th class="vl-movimientos-th whitespace-nowrap">Fecha de carga</th>
                         <th class="vl-movimientos-th">Cuenta</th>
                         <th class="vl-movimientos-th whitespace-nowrap">Ingreso / Egreso</th>
                         <th class="vl-movimientos-th">Cliente</th>
@@ -72,6 +73,9 @@
                         <th class="vl-movimientos-th">Comprobante</th>
                         <th class="vl-movimientos-th vl-movimientos-th--num">Monto</th>
                         <th class="vl-movimientos-th">Obs</th>
+                        @if ($mostrarColumnaAfip)
+                            <th class="vl-movimientos-th vl-movimientos-th--icon">AFIP</th>
+                        @endif
                     </tr>
                 </thead>
                 <tbody>
@@ -96,6 +100,9 @@
                             <td class="vl-movimientos-td whitespace-nowrap">
                                 {{ $mov->fechhora?->format('d/m/Y H:i:s') ?? '—' }}
                             </td>
+                            <td class="vl-movimientos-td whitespace-nowrap">
+                                {{ $mov->fechhoraCarga?->format('d/m/Y H:i:s') ?? '—' }}
+                            </td>
                             <td class="vl-movimientos-td">{{ $mov->cuenta?->nombreMedioPago ?: '—' }}</td>
                             <td class="vl-movimientos-td font-medium">
                                 {{ $mov->tipoMovimiento?->tipoMovimiento ?: '—' }}
@@ -115,10 +122,35 @@
                             <td class="vl-movimientos-td max-w-[12rem] truncate" title="{{ $mov->obs }}">
                                 {{ $mov->obs ?: '' }}
                             </td>
+                            @if ($mostrarColumnaAfip)
+                                <td class="vl-movimientos-td vl-movimientos-td--icon">
+                                    @if ($mov->esIngreso())
+                                        @php
+                                            $afipEmitido = isset($afipEmitidos[(int) $mov->id]);
+                                        @endphp
+                                        <a href="{{ $urlAfipFn((int) $mov->id) }}"
+                                           title="{{ $afipEmitido ? 'Comprobantes AFIP (emitido)' : 'Comprobantes AFIP' }}"
+                                           aria-label="{{ $afipEmitido ? 'Comprobantes AFIP (emitido)' : 'Comprobantes AFIP' }}"
+                                           class="vl-grid-icon-btn {{ $afipEmitido ? 'bg-orange-500 text-white ring-2 ring-orange-300 hover:bg-orange-600' : 'text-sky-700 hover:bg-sky-50' }}">
+                                            @if ($afipEmitido)
+                                                <svg class="h-[26px] w-[26px]" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                                                    <path fill-rule="evenodd" clip-rule="evenodd"
+                                                          d="M2.25 12c0-5.385 4.365-9.75 9.75-9.75s9.75 4.365 9.75 9.75-4.365 9.75-9.75 9.75S2.25 17.385 2.25 12Zm13.36-1.814a.75.75 0 10-1.22-.872l-3.236 4.53L9.53 12.22a.75.75 0 00-1.06 1.06l2.25 2.25a.75.75 0 001.14-.094l3.75-5.25z"/>
+                                                </svg>
+                                            @else
+                                                <svg class="h-[26px] w-[26px]" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.75"
+                                                          d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                                                </svg>
+                                            @endif
+                                        </a>
+                                    @endif
+                                </td>
+                            @endif
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="11" class="vl-movimientos-td py-6 text-center text-neutral-500">
+                            <td colspan="{{ $mostrarColumnaAfip ? 13 : 12 }}" class="vl-movimientos-td py-6 text-center text-neutral-500">
                                 No hay movimientos registrados.
                             </td>
                         </tr>

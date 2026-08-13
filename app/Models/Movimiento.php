@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Support\Facades\Schema;
 
 class Movimiento extends Model
 {
@@ -23,6 +24,7 @@ class Movimiento extends Model
         'fechaCheque',
         'numCheque',
         'fechhora',
+        'fechhoraCarga',
         'comprobante',
         'monto',
         'obs',
@@ -32,6 +34,7 @@ class Movimiento extends Model
     {
         return [
             'fechhora' => 'datetime',
+            'fechhoraCarga' => 'datetime',
             'fechaCheque' => 'date',
             'monto' => 'decimal:2',
             'idCuentas' => 'integer',
@@ -72,6 +75,18 @@ class Movimiento extends Model
     public function proveedor(): BelongsTo
     {
         return $this->belongsTo(Proveedor::class, 'idProveedores', 'id');
+    }
+
+    public static function tieneColumnaFechhoraCarga(): bool
+    {
+        return Schema::hasTable('movimientos')
+            && Schema::hasColumn('movimientos', 'fechhoraCarga');
+    }
+
+    public static function mensajeColumnaCargaFaltante(): string
+    {
+        return 'No se puede registrar el movimiento: falta la columna movimientos.fechhoraCarga. '
+            .'Ejecute la migración (php artisan lb:migrate-legacy --force) o el SQL de database/sql/movimientos_fechhora_carga.sql.';
     }
 
     public function esEgreso(): bool

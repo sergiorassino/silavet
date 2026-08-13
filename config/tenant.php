@@ -129,11 +129,12 @@ return [
     /*
     | Facturación AFIP — individual (sin masiva). Emisor y certs en `usuarios`.
     | - modo paciente: icono en protocolos (tipoRegistro 1→paciente, 2→cliente).
-    | - modo movimiento: icono en movimientos, solo ingresos (→cliente).
+    | - modo movimiento: icono en movimientos NeoLab, solo ingresos (→cliente).
+    | - modo movimiento_caja: icono en movimientos labvetciudad; al facturar elige receptor.
     */
     'facturacion_afip' => [
         'habilitado' => false,
-        /** @var 'paciente'|'movimiento' */
+        /** @var 'paciente'|'movimiento'|'movimiento_caja' */
         'modo' => 'paciente',
         'produccion' => true,
         /** Si true, no llama a AFIP (CAE simulado). Default: true hasta homologación/producción real. */

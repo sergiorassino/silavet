@@ -109,7 +109,8 @@ Catálogos: `clientes`, `cuentas`, `cuentasdetalle`, `mediodepago`.
 | `idProveedores` | egresos **obligatorio**; filtrados por `idConceptos` |
 | `idPacientes` / `idClientes` | Ingresos Diarios / Cadetería (tomados del protocolo) |
 | `monto` | ingresos positivos; egresos **negativos** |
-| `fechhora`, `comprobante`, `obs` | metadatos |
+| `fechhora`, `comprobante`, `obs` | metadatos de negocio |
+| `fechhoraCarga` | fecha/hora **real de alta** (now al crear; no se pisa al editar). Distinta de `fechhora`, que puede quedar con fecha de protocolos anteriores. |
 
 Flags en protocolo (misma variante): `pacientes.cadete`, `cargado`, `cargadoCadete`
 (`✅` al cargar; se vacían si se elimina el último movimiento del concepto para ese protocolo).
@@ -169,10 +170,12 @@ En listados de protocolos / dashboard de esta variante: **no** exigir
    `dias_protocolos` días atrás) filtra los protocolos y, al cambiarlo,
    sincroniza la **fecha del movimiento** (`fechhora` / campo “Fecha y hora
    del Registro”). Así un ingreso cargado “con fecha de ayer” queda
-   registrado con esa fecha, no con la de hoy.
+   registrado con esa fecha, no con la de hoy. La **fecha/hora de carga**
+   (`fechhoraCarga`) se guarda siempre con el momento real del alta y no
+   se modifica al editar.
 
-3. **Nuevo Asiento** (modal en el listado): transferencia con **cliente obligatorio** → dos filas en `movimientos` (egreso origen + ingreso destino).
-4. **Movimientos entre Cuentas** (página de menú): mismo par de inserts **sin cliente** (`idClientes = 0`).
+3. **Nuevo Asiento** (modal en el listado): transferencia con **cliente obligatorio** → dos filas en `movimientos` (egreso origen + ingreso destino); ambas reciben `fechhoraCarga` = ahora.
+4. **Movimientos entre Cuentas** (página de menú): mismo par de inserts **sin cliente** (`idClientes = 0`); ambas filas también reciben `fechhoraCarga` = ahora.
 5. **Saldos por Día:** filtros **Desde / Hasta** destacados encima de la grilla (por defecto ambas fechas = hoy; editables). Una fila por día / saldos por `mediodepago` (columnas en el mismo orden que la tabla: `orden` si existe, si no `id`); expandir día → cuentas; expandir cuenta → movimientos + suma (`SaldosPorDiaConsulta`). Encabezados abreviados; variantes **Mercado Pago** incluyen el sufijo del nombre (`MP …`).
 6. **Eliminar** movimiento: si era el último Ingresos Diarios/Cadetería de ese protocolo → limpia `cargado` / `cargadoCadete`.
 7. En listado de protocolos: columna **Cadete** editable inline (`PacienteIndex::guardarCadete`).
@@ -197,9 +200,10 @@ Rate limits típicos: save ~30/min; delete caja ~10/min por usuario.
 
 ### AFIP (relacionado, no es el núcleo)
 
-- Config: `tenant.facturacion_afip` (`modo`: `paciente` \| `movimiento`).
-- **`modo = movimiento`** (ej. alqu): icono en `MovimientoIndex` sobre **ingresos** en `pacientes`; emite contra ese `idPacientes`.
-- **No** aplica a la UI de tabla `movimientos` (`MovimientosCajaIndex`).
+- Config: `tenant.facturacion_afip` (`modo`: `paciente` | `movimiento` | `movimiento_caja`).
+- **`modo = movimiento`** (ej. alqu): icono en `MovimientoIndex` sobre **ingresos** en `pacientes`; emite contra ese `idPacientes` (receptor = cliente del ingreso).
+- **`modo = movimiento_caja`** (labvetciudad): icono en `MovimientosCajaIndex` sobre **ingresos** en tabla `movimientos`; comprobantes en `compafip.idMovimientos`. Al emitir factura/comanda el usuario elige receptor: **cliente**, **paciente** o **consumidor final**; en pantalla se muestra el DNI (y CUIT del cliente si existe) y se puede cargar el DNI faltante (`clientes.dni` / `pacientes.dni`) antes de emitir. Nota de crédito y comanda igual que la variante NeoLab. Emisor = usuario logueado (certificados en gestión de usuarios).
+- **`modo = paciente`**: icono en listado de protocolos.
 
 ## Archivos clave
 
@@ -261,7 +265,7 @@ icono en `MovimientoIndex`).
     `PacienteIndex` (caja en `movimientos`).
 12. Conceptos Ingresos Diarios / Cadetería: resolver por **nombre** de config, no hardcodear ids.
 13. No alterar tablas legacy; columnas nuevas solo con migración aditiva + SQL entregado.
-14. AFIP modo `movimiento` solo sobre ingresos NeoLab en `pacientes`, no sobre `movimientos`.
+14. AFIP modo `movimiento` solo sobre ingresos NeoLab en `pacientes`. Modo `movimiento_caja` solo sobre ingresos en tabla `movimientos` (labvetciudad).
 15. Diálogos: `vlSwal*`; sin `wire:confirm` / `alert`.
 
 ## Checklist al modificar
@@ -277,8 +281,9 @@ icono en `MovimientoIndex`).
 - [ ] Con `tesoreria_movimientos`: ¿`PacienteIndex` staff lista solo `tipoRegistro = 1`?
 - [ ] Autogestión cliente: ¿lista `tipoRegistro` 1 y 2 (protocolos + pagos globales)?
 - [ ] Con `tesoreria_pacientes`: ¿sin botón «Pago global» en `PacienteIndex`?
-- [ ] Si AFIP: ¿`facturacion_afip.modo` y el id es `pacientes.idPacientes`?
+- [ ] Si AFIP: ¿`facturacion_afip.modo` correcto (`movimiento` → `pacientes.idPacientes`; `movimiento_caja` → `movimientos.id` + `compafip.idMovimientos`)?
 - [ ] ¿Permiso 6 + rate limits + paginación 50 + `vlSwal*`?
 - [ ] ¿Export Excel (solo `tesoreria_pacientes`): ruta `tesoreria.movimientos.excel` + mismos filtros (Desde/Hasta + búsqueda) que la grilla?
 - [ ] ¿Tenant nuevo a caja: BD con `movimientos`/`conceptos`/`tipomovimiento`/`proveedores` + config `tesoreria_pacientes`?
+- [ ] ¿Alta de caja (`MovimientosCajaIndex` / asiento / entre cuentas) escribe `fechhoraCarga` = ahora y no la pisa al editar?
 - [ ] ¿Si cambió el comportamiento documentado, se actualizó este archivo y/o `docs/11-…`?

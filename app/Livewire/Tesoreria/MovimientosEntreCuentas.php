@@ -78,6 +78,12 @@ class MovimientosEntreCuentas extends Component
             'monto.gt' => 'El monto debe ser mayor a cero.',
         ]);
 
+        if (! Movimiento::tieneColumnaFechhoraCarga()) {
+            $this->dispatch('vl-swal-error', mensaje: Movimiento::mensajeColumnaCargaFaltante());
+
+            return;
+        }
+
         RateLimiter::hit($key, 60);
 
         $importe = abs(round((float) $this->monto, 2));
@@ -90,6 +96,7 @@ class MovimientosEntreCuentas extends Component
             'idConcepto' => 0,
             'idProveedores' => 0,
             'fechhora' => $fechhora,
+            'fechhoraCarga' => now(),
             'comprobante' => '',
             'obs' => $obs !== '' ? $obs : null,
             'fechaCheque' => null,
