@@ -40,7 +40,7 @@ return [
     | Gestión de determinaciones (grid admin).
     | - mostrar_columna_perfil: tenant alqu = true; resto = false (default).
     | - derivacion: si_no (Sí/No en destino) | catalogo (select derivaciones).
-    |   neolab y laboratoriosiv usan catalogo; resto usa si_no.
+    |   alqu, neolab, laboratoriosiv y labvetciudad usan catalogo; resto usa si_no.
     */
     'tipodeterminaciones' => [
         'mostrar_columna_perfil' => false,
@@ -64,7 +64,7 @@ return [
     'protocolos' => [
         /*
         | Estados del flujo del protocolo: 3 (En Proc., Parcial, Final) o 4 (+ Final/Env).
-        | neolab y la mayoría usan 4; alqu usa 3.
+        | neolab y la mayoría usan 4; alqu y labvetciudad usan 3.
         */
         'estados_flujo' => 4,
 
