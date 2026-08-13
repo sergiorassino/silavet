@@ -9,7 +9,10 @@ use App\Models\Movimiento;
 use App\Models\Paciente;
 use App\Models\Proveedor;
 use App\Models\TipoMovimiento;
+use App\Support\Facturacion\FacturacionAfipConfig;
+use App\Support\Facturacion\FacturacionAfipIndicadores;
 use App\Support\PermisosIaCatalog;
+use App\Support\Security\OpaqueRouteToken;
 use App\Support\Tesoreria\MovimientosCajaConsulta;
 use App\Support\Tesoreria\TesoreriaConfig;
 use App\Support\UsuarioMenuPortal;
@@ -300,6 +303,12 @@ class MovimientosCajaIndex extends Component
             'asientoMonto.gt' => 'El monto debe ser mayor a cero.',
         ]);
 
+        if (! Movimiento::tieneColumnaFechhoraCarga()) {
+            $this->dispatch('vl-swal-error', mensaje: Movimiento::mensajeColumnaCargaFaltante());
+
+            return;
+        }
+
         RateLimiter::hit($key, 60);
 
         $importe = abs(round((float) $this->asientoMonto, 2));
@@ -313,6 +322,7 @@ class MovimientosCajaIndex extends Component
             'idConcepto' => 0,
             'idProveedores' => 0,
             'fechhora' => $fechhora,
+            'fechhoraCarga' => now(),
             'comprobante' => '',
             'obs' => $obs !== '' ? $obs : null,
             'fechaCheque' => null,
@@ -419,6 +429,12 @@ class MovimientosCajaIndex extends Component
             'hora.required' => 'Ingrese la hora del registro.',
         ]);
 
+        if ($this->idMovimiento === null && ! Movimiento::tieneColumnaFechhoraCarga()) {
+            $this->dispatch('vl-swal-error', mensaje: Movimiento::mensajeColumnaCargaFaltante());
+
+            return;
+        }
+
         RateLimiter::hit($key, 60);
 
         $montoAbs = abs(round((float) $this->monto, 2));
@@ -470,7 +486,9 @@ class MovimientosCajaIndex extends Component
             if ($this->idMovimiento !== null) {
                 Movimiento::query()->whereKey($this->idMovimiento)->update($payload);
             } else {
-                Movimiento::create($payload);
+                Movimiento::create(array_merge($payload, [
+                    'fechhoraCarga' => now(),
+                ]));
             }
 
             if ($idPacientes > 0 && Schema::hasColumn('pacientes', 'cargado')) {
@@ -586,6 +604,15 @@ class MovimientosCajaIndex extends Component
             ? Cliente::query()->orderBy('nombre')->get(['idClientes', 'nombre'])
             : collect();
 
+        $mostrarColumnaAfip = FacturacionAfipConfig::habilitada()
+            && FacturacionAfipConfig::esModoMovimientoCaja();
+
+        $afipEmitidos = $mostrarColumnaAfip
+            ? FacturacionAfipIndicadores::mapaConEmitidoPorMovimiento(
+                $movimientos->getCollection()->pluck('id')->all()
+            )
+            : [];
+
         return view('livewire.tesoreria.movimientos-caja-index', [
             'movimientos' => $movimientos,
             'tipos' => $tipos,
@@ -599,6 +626,11 @@ class MovimientosCajaIndex extends Component
             'mostrarPaciente' => TesoreriaConfig::esConceptoIngresosDiarios($this->idConcepto),
             'mostrarCadeteria' => TesoreriaConfig::esConceptoCadeteria($this->idConcepto),
             'esEgreso' => $this->esEgreso(),
+            'mostrarColumnaAfip' => $mostrarColumnaAfip,
+            'afipEmitidos' => $afipEmitidos,
+            'urlAfipFn' => static fn (int $id): string => route('facturacion.afip.comprobantes', [
+                'ref' => OpaqueRouteToken::forCompAfipMovimiento($id),
+            ]),
         ])->layout('layouts.staff', UsuarioMenuPortal::staffLayoutParams(labCtx()->idRoles));
     }
 

@@ -14,6 +14,15 @@ final class FacturacionAfipConfig
 
     public const MODO_MOVIMIENTO = 'movimiento';
 
+    /** Tesorería tabla `movimientos` (labvetciudad). */
+    public const MODO_MOVIMIENTO_CAJA = 'movimiento_caja';
+
+    public const RECEPTOR_CLIENTE = 'cliente';
+
+    public const RECEPTOR_PACIENTE = 'paciente';
+
+    public const RECEPTOR_CONSUMIDOR_FINAL = 'consumidor_final';
+
     public const FORMATO_A4 = 'A4';
 
     public const FORMATO_TERMICA80 = 'termica80';
@@ -34,7 +43,7 @@ final class FacturacionAfipConfig
         }
 
         $modo = (string) ($cfg['modo'] ?? self::MODO_PACIENTE);
-        if (! in_array($modo, [self::MODO_PACIENTE, self::MODO_MOVIMIENTO], true)) {
+        if (! in_array($modo, [self::MODO_PACIENTE, self::MODO_MOVIMIENTO, self::MODO_MOVIMIENTO_CAJA], true)) {
             $modo = self::MODO_PACIENTE;
         }
 
@@ -75,6 +84,28 @@ final class FacturacionAfipConfig
     public static function esModoMovimiento(): bool
     {
         return self::modo() === self::MODO_MOVIMIENTO;
+    }
+
+    public static function esModoMovimientoCaja(): bool
+    {
+        return self::modo() === self::MODO_MOVIMIENTO_CAJA;
+    }
+
+    /**
+     * @return list<string>
+     */
+    public static function tiposReceptorCaja(): array
+    {
+        return [
+            self::RECEPTOR_CLIENTE,
+            self::RECEPTOR_PACIENTE,
+            self::RECEPTOR_CONSUMIDOR_FINAL,
+        ];
+    }
+
+    public static function esTipoReceptorCajaValido(string $tipo): bool
+    {
+        return in_array($tipo, self::tiposReceptorCaja(), true);
     }
 
     /**

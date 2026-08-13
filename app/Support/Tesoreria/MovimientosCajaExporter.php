@@ -15,6 +15,7 @@ final class MovimientosCajaExporter
     /** @var list<string> */
     public const ENCABEZADOS = [
         'Fechhora',
+        'Fecha de carga',
         'Cuenta',
         'Ingreso / Egreso',
         'Cliente',
@@ -53,6 +54,7 @@ final class MovimientosCajaExporter
 
             $this->escribirFila($hoja, $fila, [
                 $mov->fechhora?->format('d/m/Y H:i:s') ?? '',
+                $mov->fechhoraCarga?->format('d/m/Y H:i:s') ?? '',
                 (string) ($mov->cuenta?->nombreMedioPago ?? ''),
                 (string) ($mov->tipoMovimiento?->tipoMovimiento ?? ''),
                 $cliente,

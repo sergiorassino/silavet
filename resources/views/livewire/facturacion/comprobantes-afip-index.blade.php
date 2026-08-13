@@ -26,6 +26,113 @@
 
     <div class="vl-card mb-3 p-4">
         <h2 class="mb-3 text-sm font-semibold uppercase tracking-wide text-neutral-500">Emitir</h2>
+
+        @if ($esModoCaja ?? false)
+            @php
+                $docs = $docsReceptor ?? [];
+            @endphp
+            <div class="mb-4">
+                <p class="form-label mb-2">Facturar a</p>
+                <div class="flex flex-col gap-3">
+                    {{-- Cliente --}}
+                    <div class="flex flex-col gap-2 rounded-lg border border-accent-200 px-3 py-2 sm:flex-row sm:flex-wrap sm:items-center">
+                        <label class="inline-flex min-w-[7rem] items-center gap-2 text-sm font-medium">
+                            <input type="radio"
+                                   wire:model.live="tipoReceptor"
+                                   value="cliente"
+                                   @disabled(! $puedeReceptorCliente)
+                                   class="rounded border-neutral-300 text-primary-600 focus:ring-primary-500 disabled:opacity-40">
+                            <span @class(['text-neutral-400' => ! $puedeReceptorCliente])>Cliente</span>
+                        </label>
+                        @if ($puedeReceptorCliente)
+                            <div class="flex flex-1 flex-wrap items-center gap-2 text-sm">
+                                @if (($docs['clienteDni'] ?? '') !== '')
+                                    <span class="text-neutral-600">
+                                        DNI <strong class="tabular-nums text-neutral-900">{{ $docs['clienteDni'] }}</strong>
+                                    </span>
+                                @else
+                                    <span class="text-neutral-500">DNI —</span>
+                                @endif
+                                @if (($docs['clienteCuitFmt'] ?? '') !== '')
+                                    <span class="text-neutral-600">
+                                        CUIT <strong class="tabular-nums text-neutral-900">{{ $docs['clienteCuitFmt'] }}</strong>
+                                    </span>
+                                @endif
+                                @if (! ($docs['clienteTieneIdentificacion'] ?? false))
+                                    <input type="text"
+                                           wire:model.live.debounce.300ms="dniClienteEdit"
+                                           inputmode="numeric"
+                                           maxlength="8"
+                                           placeholder="Cargar DNI"
+                                           class="form-input w-28 py-1 text-sm tabular-nums">
+                                    <button type="button"
+                                            wire:click="guardarDniCliente"
+                                            wire:loading.attr="disabled"
+                                            class="btn-secondary py-1 text-xs">
+                                        Guardar DNI
+                                    </button>
+                                    @error('dniClienteEdit')
+                                        <span class="text-xs text-red-600">{{ $message }}</span>
+                                    @enderror
+                                @endif
+                            </div>
+                        @endif
+                    </div>
+
+                    {{-- Paciente --}}
+                    <div class="flex flex-col gap-2 rounded-lg border border-accent-200 px-3 py-2 sm:flex-row sm:flex-wrap sm:items-center">
+                        <label class="inline-flex min-w-[7rem] items-center gap-2 text-sm font-medium">
+                            <input type="radio"
+                                   wire:model.live="tipoReceptor"
+                                   value="paciente"
+                                   @disabled(! $puedeReceptorPaciente)
+                                   class="rounded border-neutral-300 text-primary-600 focus:ring-primary-500 disabled:opacity-40">
+                            <span @class(['text-neutral-400' => ! $puedeReceptorPaciente])>Paciente</span>
+                        </label>
+                        @if ($puedeReceptorPaciente)
+                            <div class="flex flex-1 flex-wrap items-center gap-2 text-sm">
+                                @if (($docs['pacienteDni'] ?? '') !== '')
+                                    <span class="text-neutral-600">
+                                        DNI <strong class="tabular-nums text-neutral-900">{{ $docs['pacienteDni'] }}</strong>
+                                    </span>
+                                @else
+                                    <span class="text-neutral-500">DNI —</span>
+                                    <input type="text"
+                                           wire:model.live.debounce.300ms="dniPacienteEdit"
+                                           inputmode="numeric"
+                                           maxlength="8"
+                                           placeholder="Cargar DNI"
+                                           class="form-input w-28 py-1 text-sm tabular-nums">
+                                    <button type="button"
+                                            wire:click="guardarDniPaciente"
+                                            wire:loading.attr="disabled"
+                                            class="btn-secondary py-1 text-xs">
+                                        Guardar DNI
+                                    </button>
+                                    @error('dniPacienteEdit')
+                                        <span class="text-xs text-red-600">{{ $message }}</span>
+                                    @enderror
+                                @endif
+                            </div>
+                        @endif
+                    </div>
+
+                    {{-- Consumidor final --}}
+                    <label class="inline-flex items-center gap-2 rounded-lg border border-accent-200 px-3 py-2 text-sm font-medium">
+                        <input type="radio"
+                               wire:model.live="tipoReceptor"
+                               value="consumidor_final"
+                               class="rounded border-neutral-300 text-primary-600 focus:ring-primary-500">
+                        <span>Consumidor final</span>
+                    </label>
+                </div>
+                <p class="mt-2 text-xs text-neutral-500">
+                    Aplica a factura y comanda. Si falta el DNI, carguelo aquí (se guarda en el cliente o protocolo).
+                    La nota de crédito replica los datos de la factura seleccionada.
+                </p>
+            </div>
+        @endif
+
         <div class="flex flex-wrap items-end gap-3">
             <button type="button"
                     wire:click="emitirFactura"

@@ -22,6 +22,8 @@ final class OpaqueRouteToken
 
     public const PURPOSE_COMP_AFIP_PACIENTE = 'facturacion.compafip-paciente';
 
+    public const PURPOSE_COMP_AFIP_MOVIMIENTO = 'facturacion.compafip-movimiento';
+
     /** Informe público (WhatsApp / links sin login). */
     public const PURPOSE_INFORME_PUBLICO = 'protocolos.informe-publico';
 
@@ -155,6 +157,41 @@ final class OpaqueRouteToken
     public static function decodeCompAfipPaciente(string $ref): ?array
     {
         $data = self::decodePayload($ref, self::PURPOSE_COMP_AFIP_PACIENTE);
+        if ($data === null) {
+            return null;
+        }
+
+        $id = (int) ($data['id'] ?? 0);
+        $u = (int) ($data['u'] ?? 0);
+        $t = (int) ($data['t'] ?? 0);
+
+        if ($id <= 0 || $u <= 0 || $t <= 0) {
+            return null;
+        }
+
+        if ((time() - $t) > self::TTL_SEGUNDOS) {
+            return null;
+        }
+
+        return ['id' => $id, 'u' => $u];
+    }
+
+    public static function forCompAfipMovimiento(int $idMovimientos, ?int $idUsuario = null): string
+    {
+        return self::encodePayload(self::PURPOSE_COMP_AFIP_MOVIMIENTO, [
+            'id' => $idMovimientos,
+            'u' => $idUsuario ?? (int) (auth()->id() ?? 0),
+            't' => time(),
+            'n' => bin2hex(random_bytes(4)),
+        ]);
+    }
+
+    /**
+     * @return array{id: int, u: int}|null
+     */
+    public static function decodeCompAfipMovimiento(string $ref): ?array
+    {
+        $data = self::decodePayload($ref, self::PURPOSE_COMP_AFIP_MOVIMIENTO);
         if ($data === null) {
             return null;
         }

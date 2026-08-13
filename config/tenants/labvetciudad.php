@@ -11,6 +11,12 @@ return [
         'implementacion' => 'tesoreria_pacientes',
     ],
 
+    'facturacion_afip' => [
+        'habilitado' => true,
+        'modo' => 'movimiento_caja',
+        'simular' => true,
+    ],
+
     'autoanalizadores' => [
         'aparatos' => [
             'mindray_bc20' => [
