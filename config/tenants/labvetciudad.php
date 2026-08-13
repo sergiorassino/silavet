@@ -4,11 +4,16 @@ return [
     'nombre' => 'LabVet Ciudad',
 
     'protocolos' => [
+        'estados_flujo' => 3,
         'implementacion' => 'anual_consecutivo',
     ],
 
     'tesoreria' => [
         'implementacion' => 'tesoreria_pacientes',
+    ],
+
+    'tipodeterminaciones' => [
+        'derivacion' => 'catalogo',
     ],
 
     'facturacion_afip' => [
