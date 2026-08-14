@@ -288,7 +288,12 @@ final class DeterminacionesPorClienteConsulta
             ->join('pacientes as p', 'd.idPacientes', '=', 'p.idPacientes')
             ->leftJoin('clientes as c', 'p.idClientes', '=', 'c.idClientes')
             ->leftJoin('tipodeterminaciones as td', 'd.idTipodeterminaciones', '=', 'td.idTipodeterminaciones')
-            ->where('p.tipoRegistro', Paciente::TIPO_PROTOCOLO)
+            // Protocolos analíticos: 1 (SILAVET) y 0/NULL (legacy, p.ej. labvetciudad).
+            // Excluye ingresos/egresos de tesorería (2 y 3), que no llevan determinaciones.
+            ->whereRaw('COALESCE(p.tipoRegistro, 0) NOT IN (?, ?)', [
+                Paciente::TIPO_INGRESO,
+                Paciente::TIPO_EGRESO,
+            ])
             ->when($idClientes !== null, fn ($q) => $q->where('p.idClientes', $idClientes))
             ->when($ctx->esCliente() && $ctx->idClientes, fn ($q) => $q->where('p.idClientes', $ctx->idClientes))
             ->when($busqueda !== '', function ($q) use ($busqueda) {
