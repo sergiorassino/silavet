@@ -209,7 +209,11 @@ function vlCantidadDeterminacionesChartFactory(config = {}) {
 
                 const blob = await resp.blob();
                 const url = URL.createObjectURL(blob);
-                window.open(url, '_blank', 'noopener,noreferrer');
+                if (typeof window.vlAbrirUrl === 'function') {
+                    window.vlAbrirUrl(url);
+                } else {
+                    window.open(url, '_blank', 'noopener,noreferrer');
+                }
                 setTimeout(() => URL.revokeObjectURL(url), 60_000);
             } catch (e) {
                 console.error(e);
