@@ -103,9 +103,9 @@
         <table class="vl-pacientes-grid min-w-full text-xs">
                 <thead>
                     <tr>
+                        <th class="vl-pacientes-th vl-pacientes-th--num">#</th>
                         <th class="vl-pacientes-th vl-pacientes-th--icon" title="Informe PDF">INFOR.</th>
                         <th class="vl-pacientes-th vl-pacientes-th--icon" title="Determinaciones solicitadas">DETERM.</th>
-                        <th class="vl-pacientes-th vl-pacientes-th--num">#</th>
                         <th class="vl-pacientes-th">Fechhoy</th>
                         <th class="vl-pacientes-th">Protocolo</th>
                         <th class="vl-pacientes-th">Nombre</th>
@@ -130,11 +130,11 @@
                         @endphp
                         @if ($paciente->esPagoGlobal())
                             <tr class="vl-pacientes-row {{ $paciente->filaClaseCss() }}" wire:key="pac-cli-{{ $paciente->idPacientes }}">
-                                <td class="vl-pacientes-td vl-pacientes-td--icon"></td>
-                                <td class="vl-pacientes-td vl-pacientes-td--icon"></td>
-                                <td class="vl-pacientes-td vl-pacientes-td--num">
+                                <td class="vl-pacientes-td text-center tabular-nums">
                                     {{ ($pacientes->currentPage() - 1) * $pacientes->perPage() + $loop->iteration }}
                                 </td>
+                                <td class="vl-pacientes-td vl-pacientes-td--icon"></td>
+                                <td class="vl-pacientes-td vl-pacientes-td--icon"></td>
                                 <td class="vl-pacientes-td whitespace-nowrap">{{ $paciente->fechhoyFormateada() }}</td>
                                 <td class="vl-pacientes-td font-semibold whitespace-nowrap">—</td>
                                 <td class="vl-pacientes-td">
@@ -157,6 +157,9 @@
                             </tr>
                         @else
                             <tr class="vl-pacientes-row {{ $paciente->filaClaseCss() }}" wire:key="pac-cli-{{ $paciente->idPacientes }}">
+                                <td class="vl-pacientes-td text-center tabular-nums">
+                                    {{ ($pacientes->currentPage() - 1) * $pacientes->perPage() + $loop->iteration }}
+                                </td>
                                 <td class="vl-pacientes-td vl-pacientes-td--icon">
                                     @if (tienePermiso(\App\Support\PermisosIaCatalog::INFORMES))
                                         <a href="{{ route($rutaInforme, ['ref' => \App\Support\Security\OpaqueRouteToken::forInformePaciente((int) $paciente->idPacientes)]) }}"
@@ -187,9 +190,6 @@
                                                   d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
                                         </svg>
                                     </a>
-                                </td>
-                                <td class="vl-pacientes-td vl-pacientes-td--num">
-                                    {{ ($pacientes->currentPage() - 1) * $pacientes->perPage() + $loop->iteration }}
                                 </td>
                                 <td class="vl-pacientes-td whitespace-nowrap">{{ $paciente->fechhoyFormateada() }}</td>
                                 <td class="vl-pacientes-td font-semibold whitespace-nowrap">{{ $paciente->nombreProtocolo ?: '—' }}</td>
