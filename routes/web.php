@@ -74,12 +74,14 @@ use App\Support\Tesoreria\TesoreriaConfig;
 use App\Http\Controllers\Listados\CantidadDeterminacionesComparacChartPdfController;
 use App\Http\Controllers\Listados\CantidadDeterminacionesComparacExcelController;
 use App\Http\Controllers\Listados\CantidadDeterminacionesComparacPdfController;
+use App\Http\Controllers\Listados\DeterminacionesPorClienteExcelController;
 use App\Http\Controllers\Listados\ExcelPacientesExcelController;
 use App\Http\Controllers\Listados\HistorialDeterminacionesExcelController;
 use App\Http\Controllers\Listados\HistorialDeterminacionesPdfController;
 use App\Http\Controllers\Listados\ListadoEstadisticoPacientesExcelController;
 use App\Http\Controllers\Listados\ListadoEstadisticoPacientesPdfController;
 use App\Livewire\Listados\CantidadDeterminacionesComparac;
+use App\Livewire\Listados\DeterminacionesPorCliente;
 use App\Livewire\Listados\EstimacionCostos;
 use App\Livewire\Listados\ExcelPacientes;
 use App\Livewire\Listados\HistorialDeterminaciones;
@@ -350,6 +352,11 @@ Route::middleware(['auth', 'lab.context'])->group(function () {
         Route::get('/excel-pacientes/excel', ExcelPacientesExcelController::class)
             ->middleware('throttle:10,1')
             ->name('listados.excel-pacientes.excel');
+        Route::get('/determinaciones-por-cliente', DeterminacionesPorCliente::class)
+            ->name('listados.determinaciones-por-cliente');
+        Route::get('/determinaciones-por-cliente/excel', DeterminacionesPorClienteExcelController::class)
+            ->middleware('throttle:10,1')
+            ->name('listados.determinaciones-por-cliente.excel');
     });
 
     Route::prefix('protocolos')->middleware(['menu.portal:staff', 'permiso:4'])->group(function () {
