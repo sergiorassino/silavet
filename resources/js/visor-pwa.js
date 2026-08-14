@@ -1,10 +1,11 @@
+import pdfWorkerSrc from 'pdfjs-dist/build/pdf.worker.min.mjs?url';
+
 /**
  * Visor in-app para PWA instalada en celular.
  *
- * En display: standalone, target=_blank / window.open de una URL del mismo
- * origen abre otra ventana de la app (con cruz nativa). Cerrar esa ventana
- * cierra también el sistema. Aquí el PDF/documento se muestra en un overlay
- * propio; la cruz solo oculta el visor.
+ * En standalone, abrir un PDF del mismo origen (target=_blank / iframe)
+ * crea otra ventana de la app. Chrome no dibuja PDFs en iframe y esa
+ * ventana con cruz cierra el sistema. Se renderiza con PDF.js en overlay.
  */
 
 let visorEl = null;
@@ -13,6 +14,8 @@ let visorAbort = null;
 let visorHistoryPushed = false;
 let visorNombreDescarga = 'documento.pdf';
 let visorAbierto = false;
+let visorPdfDoc = null;
+let visorPdfJs = null;
 
 function vlEsPwaStandalone() {
     if (window.matchMedia('(display-mode: standalone)').matches) {
@@ -56,7 +59,7 @@ function vlNombreDesdeDisposition(header) {
         try {
             return decodeURIComponent(star[1].trim()) || 'documento.pdf';
         } catch {
-            // seguir con filename= simple
+            // filename= simple
         }
     }
     const basic = header.match(/filename="?([^";]+)"?/i);
@@ -90,6 +93,64 @@ function vlLimpiarBlob() {
     }
 }
 
+async function vlDestruirPdf() {
+    if (visorPdfDoc) {
+        try {
+            await visorPdfDoc.destroy();
+        } catch {
+            // ignore
+        }
+        visorPdfDoc = null;
+    }
+}
+
+function vlPaginasEl() {
+    return visorEl?.querySelector('.vl-visor-pwa__paginas') ?? null;
+}
+
+function vlVaciarPaginas() {
+    const paginas = vlPaginasEl();
+    if (paginas) {
+        paginas.replaceChildren();
+    }
+}
+
+async function cargarPdfJs() {
+    if (visorPdfJs) {
+        return visorPdfJs;
+    }
+
+    const pdfjs = await import('pdfjs-dist');
+    pdfjs.GlobalWorkerOptions.workerSrc = vlUrlAssetVite(pdfWorkerSrc);
+    visorPdfJs = pdfjs;
+
+    return pdfjs;
+}
+
+/**
+ * El worker de PDF.js debe cargarse desde la misma carpeta /build que el JS.
+ * En instalación con subcarpeta, una ruta "/build/..." apuntaría al dominio raíz.
+ */
+function vlUrlAssetVite(src) {
+    if (!src || typeof src !== 'string') {
+        return src;
+    }
+    if (/^(https?:|blob:|data:)/i.test(src)) {
+        return src;
+    }
+    if (src.startsWith('/')) {
+        const scripts = document.querySelectorAll('script[src]');
+        for (const script of scripts) {
+            const match = String(script.src || '').match(/^(.*\/build\/)assets\//);
+            if (match) {
+                return match[1] + src.replace(/^\/+/, '').replace(/^build\//, '');
+            }
+        }
+    }
+
+    return src;
+}
+
 function vlAsegurarVisor() {
     if (visorEl) {
         return visorEl;
@@ -120,7 +181,7 @@ function vlAsegurarVisor() {
         </div>
         <div class="vl-visor-pwa__cuerpo">
             <p class="vl-visor-pwa__estado" hidden></p>
-            <iframe class="vl-visor-pwa__frame" title="Documento"></iframe>
+            <div class="vl-visor-pwa__paginas"></div>
         </div>
     `;
 
@@ -135,6 +196,7 @@ function vlAsegurarVisor() {
         a.href = visorBlobUrl;
         a.download = visorNombreDescarga;
         a.rel = 'noopener';
+        a.target = '_self';
         document.body.appendChild(a);
         a.click();
         a.remove();
@@ -163,7 +225,6 @@ function vlSetEstado(texto) {
 function vlMostrarVisor(titulo) {
     const root = vlAsegurarVisor();
     root.querySelector('.vl-visor-pwa__titulo').textContent = titulo;
-    root.querySelector('.vl-visor-pwa__frame').title = titulo;
     root.removeAttribute('hidden');
     root.setAttribute('aria-hidden', 'false');
     root.classList.add('is-open');
@@ -180,8 +241,8 @@ function vlOcultarVisor() {
         visorAbort.abort();
         visorAbort = null;
     }
-    const iframe = visorEl.querySelector('.vl-visor-pwa__frame');
-    iframe.src = 'about:blank';
+    vlVaciarPaginas();
+    vlDestruirPdf();
     vlLimpiarBlob();
     visorEl.setAttribute('hidden', '');
     visorEl.setAttribute('aria-hidden', 'true');
@@ -205,9 +266,60 @@ export function vlCerrarVisorPwa(desdeAtras) {
     vlOcultarVisor();
 }
 
+function vlAnchoPaginas() {
+    const cuerpo = visorEl?.querySelector('.vl-visor-pwa__cuerpo');
+    const w = (cuerpo?.clientWidth || window.innerWidth || 320) - 16;
+
+    return Math.max(240, w);
+}
+
+async function vlRenderPdf(bytes, signal) {
+    const pdfjs = await cargarPdfJs();
+    if (signal.aborted) {
+        return;
+    }
+
+    const loadingTask = pdfjs.getDocument({ data: bytes });
+    const pdf = await loadingTask.promise;
+    if (signal.aborted) {
+        await pdf.destroy();
+
+        return;
+    }
+    visorPdfDoc = pdf;
+
+    const paginas = vlPaginasEl();
+    const dpr = window.devicePixelRatio || 1;
+    const maxCssWidth = vlAnchoPaginas();
+
+    for (let n = 1; n <= pdf.numPages; n += 1) {
+        if (signal.aborted) {
+            return;
+        }
+        const page = await pdf.getPage(n);
+        const unscaled = page.getViewport({ scale: 1 });
+        const cssWidth = Math.min(maxCssWidth, unscaled.width);
+        const scale = (cssWidth / unscaled.width) * dpr;
+        const viewport = page.getViewport({ scale });
+        const canvas = document.createElement('canvas');
+        canvas.className = 'vl-visor-pwa__canvas';
+        canvas.width = Math.floor(viewport.width);
+        canvas.height = Math.floor(viewport.height);
+        canvas.style.width = `${Math.floor(viewport.width / dpr)}px`;
+        canvas.style.height = `${Math.floor(viewport.height / dpr)}px`;
+        if (signal.aborted) {
+            return;
+        }
+        paginas.appendChild(canvas);
+        await page.render({
+            canvasContext: canvas.getContext('2d', { alpha: false }),
+            viewport,
+        }).promise;
+    }
+}
+
 async function vlAbrirVisorPwa(url) {
     const root = vlAsegurarVisor();
-    const iframe = root.querySelector('.vl-visor-pwa__frame');
     const titulo = vlTituloDesdeUrl(url);
 
     if (!visorAbierto) {
@@ -219,10 +331,11 @@ async function vlAbrirVisorPwa(url) {
         visorAbort.abort();
     }
     visorAbort = new AbortController();
-    const signal = visorAbort.signal;
+    const { signal } = visorAbort;
 
+    await vlDestruirPdf();
     vlLimpiarBlob();
-    iframe.src = 'about:blank';
+    vlVaciarPaginas();
     vlMostrarVisor(titulo);
     vlSetEstado('Cargando…');
     root.querySelector('.vl-visor-pwa__descargar').disabled = true;
@@ -236,27 +349,49 @@ async function vlAbrirVisorPwa(url) {
         if (!res.ok) {
             throw new Error(`HTTP ${res.status}`);
         }
+
         visorNombreDescarga = vlNombreDesdeDisposition(res.headers.get('Content-Disposition'));
-        const blob = await res.blob();
+        const buffer = await res.arrayBuffer();
         if (signal.aborted) {
             return;
         }
-        const ctype = (res.headers.get('Content-Type') || blob.type || '').split(';')[0].trim().toLowerCase();
-        const esPdf = ctype === 'application/pdf' || visorNombreDescarga.toLowerCase().endsWith('.pdf');
-        const paraMostrar = esPdf && blob.type !== 'application/pdf'
-            ? new Blob([blob], { type: 'application/pdf' })
-            : blob;
-        visorBlobUrl = URL.createObjectURL(paraMostrar);
-        iframe.src = visorBlobUrl;
-        vlSetEstado('');
+
+        const ctype = (res.headers.get('Content-Type') || '').split(';')[0].trim().toLowerCase();
+        const blob = new Blob([buffer], { type: ctype || 'application/octet-stream' });
+        visorBlobUrl = URL.createObjectURL(blob);
         root.querySelector('.vl-visor-pwa__descargar').disabled = false;
+
+        const esPdf = ctype === 'application/pdf'
+            || visorNombreDescarga.toLowerCase().endsWith('.pdf')
+            || url.toLowerCase().includes('informe')
+            || url.toLowerCase().includes('.pdf');
+
+        if (ctype.startsWith('image/')) {
+            const img = document.createElement('img');
+            img.className = 'vl-visor-pwa__img';
+            img.alt = titulo;
+            img.src = visorBlobUrl;
+            vlPaginasEl().appendChild(img);
+            vlSetEstado('');
+
+            return;
+        }
+
+        if (!esPdf) {
+            vlSetEstado('Este documento no se puede previsualizar. Use el botón de descarga.');
+
+            return;
+        }
+
+        await vlRenderPdf(new Uint8Array(buffer), signal);
+        if (!signal.aborted) {
+            vlSetEstado('');
+        }
     } catch (e) {
         if (e && e.name === 'AbortError') {
             return;
         }
-        vlSetEstado('No se pudo mostrar el documento. Use Descargar o cierre e intente de nuevo.');
-        iframe.src = url;
-        root.querySelector('.vl-visor-pwa__descargar').disabled = true;
+        vlSetEstado('No se pudo mostrar el informe. Use el botón de descarga o cierre e intente de nuevo.');
     }
 }
 
@@ -274,14 +409,18 @@ export function vlAbrirUrl(url) {
 
 export function instalarVisorPwa() {
     document.addEventListener('click', (event) => {
-        if (event.defaultPrevented || event.button !== 0) {
+        if (event.button !== 0) {
             return;
         }
         if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) {
             return;
         }
-        const a = event.target.closest?.('a[href][target="_blank"]');
+        const a = event.target.closest?.('a[href]');
         if (!a || a.hasAttribute('download')) {
+            return;
+        }
+        const target = (a.getAttribute('target') || '').toLowerCase();
+        if (target !== '_blank') {
             return;
         }
         const href = a.href;
@@ -292,6 +431,7 @@ export function instalarVisorPwa() {
             return;
         }
         event.preventDefault();
+        event.stopImmediatePropagation();
         vlAbrirUrl(href);
     }, true);
 
