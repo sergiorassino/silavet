@@ -113,6 +113,7 @@ Las URLs visibles **no deben** incluir:
 | Caso | Patrón |
 |------|--------|
 | PDF/informe en portal clientes | `OpaqueRouteToken` cifrado con `APP_KEY` |
+| Detalle de determinaciones (autogestión) | `OpaqueRouteToken` (`cliente.paciente-determinaciones`) |
 | Enlaces internos ABM (staff) | `{id}` tras `auth` + permisos |
 | Archivo de descarga | Nombre sin IDs internos |
 

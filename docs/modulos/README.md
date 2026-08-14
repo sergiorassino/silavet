@@ -18,6 +18,7 @@ en esta carpeta (si existe) y respetar las reglas de negocio ahí listadas.
 | Tesorería (variantes por tenant) | [tesoreria.md](tesoreria.md) |
 | Resumen cliente entre fechas (PDF) | [resumen-cliente-entre-fechas.md](resumen-cliente-entre-fechas.md) |
 | Determinaciones por cliente (listado + Excel) | [determinaciones-por-cliente.md](determinaciones-por-cliente.md) |
+| Detalle de determinaciones (autogestión cliente) | [autogestion-detalle-determinaciones.md](autogestion-detalle-determinaciones.md) |
 
 ## Plantilla
 

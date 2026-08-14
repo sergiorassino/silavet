@@ -18,6 +18,13 @@ let visorPintando = false;
 let visorRepintarPendiente = false;
 let visorResizeTimer = null;
 let visorScrollY = 0;
+let visorZoom = 1;
+let visorPanX = 0;
+let visorPanY = 0;
+let visorPinch = null;
+let visorArrastre = null;
+let visorUltimoTap = 0;
+let visorAnchoPintado = 0;
 
 function vlEsPwaStandalone() {
     if (window.matchMedia('(display-mode: standalone)').matches) {
@@ -200,6 +207,7 @@ function vlAsegurarVisor() {
 
     document.body.appendChild(root);
     visorEl = root;
+    vlInstalarZoomPdf(root.querySelector('.vl-visor-pwa__cuerpo'));
 
     return visorEl;
 }
@@ -218,26 +226,193 @@ function vlSetEstado(texto) {
     el.textContent = texto;
 }
 
-function vlAjustarVisorViewport() {
-    if (!visorEl) {
-        return;
-    }
-    const vv = window.visualViewport;
-    visorEl.style.position = 'fixed';
-    visorEl.style.right = 'auto';
-    visorEl.style.bottom = 'auto';
-    if (!vv) {
-        visorEl.style.top = '0px';
-        visorEl.style.left = '0px';
-        visorEl.style.width = '100%';
-        visorEl.style.height = '100%';
+function vlCuerpoEl() {
+    return visorEl?.querySelector('.vl-visor-pwa__cuerpo') ?? null;
+}
 
+function vlResetZoomPdf() {
+    visorZoom = 1;
+    visorPanX = 0;
+    visorPanY = 0;
+    visorPinch = null;
+    visorArrastre = null;
+    vlAplicarZoomPdf();
+}
+
+function vlAplicarZoomPdf() {
+    const paginas = vlPaginasEl();
+    const cuerpo = vlCuerpoEl();
+    if (!paginas) {
         return;
     }
-    visorEl.style.top = `${Math.round(vv.offsetTop)}px`;
-    visorEl.style.left = `${Math.round(vv.offsetLeft)}px`;
-    visorEl.style.width = `${Math.round(vv.width)}px`;
-    visorEl.style.height = `${Math.round(vv.height)}px`;
+    paginas.style.transformOrigin = '0 0';
+    paginas.style.transform = visorZoom === 1 && visorPanX === 0 && visorPanY === 0
+        ? ''
+        : `translate(${visorPanX}px, ${visorPanY}px) scale(${visorZoom})`;
+    if (cuerpo) {
+        cuerpo.style.touchAction = visorZoom > 1.02 ? 'none' : 'pan-y';
+    }
+}
+
+function vlLimitarPanPdf() {
+    const cuerpo = vlCuerpoEl();
+    const paginas = vlPaginasEl();
+    if (!cuerpo || !paginas) {
+        return;
+    }
+    const cw = cuerpo.clientWidth;
+    const ch = cuerpo.clientHeight;
+    const pw = paginas.offsetWidth * visorZoom;
+    const ph = paginas.offsetHeight * visorZoom;
+    const minX = Math.min(0, cw - pw);
+    const minY = Math.min(0, ch - ph);
+    visorPanX = Math.min(0, Math.max(minX, visorPanX));
+    visorPanY = Math.min(0, Math.max(minY, visorPanY));
+}
+
+function vlScrollNativoAPan() {
+    const cuerpo = vlCuerpoEl();
+    if (!cuerpo) {
+        return;
+    }
+    visorPanX -= cuerpo.scrollLeft;
+    visorPanY -= cuerpo.scrollTop;
+    cuerpo.scrollLeft = 0;
+    cuerpo.scrollTop = 0;
+}
+
+function vlPanAScrollNativo() {
+    const cuerpo = vlCuerpoEl();
+    if (!cuerpo || visorZoom > 1.02) {
+        return;
+    }
+    const y = Math.max(0, -visorPanY);
+    visorPanX = 0;
+    visorPanY = 0;
+    visorZoom = 1;
+    vlAplicarZoomPdf();
+    cuerpo.scrollTop = y;
+}
+
+function vlPuntoEnCuerpo(t1, t2) {
+    const cuerpo = vlCuerpoEl();
+    const rect = cuerpo.getBoundingClientRect();
+    const x = ((t2 ? (t1.clientX + t2.clientX) / 2 : t1.clientX) - rect.left);
+    const y = ((t2 ? (t1.clientY + t2.clientY) / 2 : t1.clientY) - rect.top);
+
+    return { x, y };
+}
+
+function vlZoomHacia(nuevo, punto) {
+    const scale = Math.min(4, Math.max(1, nuevo));
+    const cx = (punto.x - visorPanX) / visorZoom;
+    const cy = (punto.y - visorPanY) / visorZoom;
+    visorZoom = scale;
+    visorPanX = punto.x - cx * visorZoom;
+    visorPanY = punto.y - cy * visorZoom;
+    vlLimitarPanPdf();
+    vlAplicarZoomPdf();
+}
+
+function vlInstalarZoomPdf(cuerpo) {
+    cuerpo.addEventListener('touchstart', (event) => {
+        if (!visorAbierto) {
+            return;
+        }
+        if (event.touches.length === 2) {
+            event.preventDefault();
+            vlScrollNativoAPan();
+            const [a, b] = event.touches;
+            const punto = vlPuntoEnCuerpo(a, b);
+            visorPinch = {
+                dist: Math.hypot(a.clientX - b.clientX, a.clientY - b.clientY),
+                zoom: visorZoom,
+                cx: (punto.x - visorPanX) / visorZoom,
+                cy: (punto.y - visorPanY) / visorZoom,
+            };
+            visorArrastre = null;
+
+            return;
+        }
+        if (event.touches.length === 1 && visorZoom > 1.02) {
+            visorArrastre = {
+                x: event.touches[0].clientX,
+                y: event.touches[0].clientY,
+                panX: visorPanX,
+                panY: visorPanY,
+            };
+        }
+    }, { passive: false });
+
+    cuerpo.addEventListener('touchmove', (event) => {
+        if (!visorAbierto) {
+            return;
+        }
+        if (event.touches.length === 2 && visorPinch) {
+            event.preventDefault();
+            const [a, b] = event.touches;
+            const dist = Math.hypot(a.clientX - b.clientX, a.clientY - b.clientY);
+            if (visorPinch.dist < 8) {
+                return;
+            }
+            const factor = dist / visorPinch.dist;
+            const punto = vlPuntoEnCuerpo(a, b);
+            visorZoom = Math.min(4, Math.max(1, visorPinch.zoom * factor));
+            visorPanX = punto.x - visorPinch.cx * visorZoom;
+            visorPanY = punto.y - visorPinch.cy * visorZoom;
+            vlLimitarPanPdf();
+            vlAplicarZoomPdf();
+
+            return;
+        }
+        if (event.touches.length === 1 && visorArrastre && visorZoom > 1.02) {
+            event.preventDefault();
+            const t = event.touches[0];
+            visorPanX = visorArrastre.panX + (t.clientX - visorArrastre.x);
+            visorPanY = visorArrastre.panY + (t.clientY - visorArrastre.y);
+            vlLimitarPanPdf();
+            vlAplicarZoomPdf();
+        }
+    }, { passive: false });
+
+    cuerpo.addEventListener('touchend', (event) => {
+        if (!visorAbierto) {
+            return;
+        }
+        if (event.touches.length < 2) {
+            if (visorPinch) {
+                visorUltimoTap = 0;
+            }
+            visorPinch = null;
+        }
+        if (event.touches.length === 0) {
+            visorArrastre = null;
+            if (visorZoom <= 1.02) {
+                vlPanAScrollNativo();
+            }
+            const t = event.changedTouches[0];
+            if (t && event.touches.length === 0) {
+                const ahora = Date.now();
+                if (ahora - visorUltimoTap < 280) {
+                    event.preventDefault();
+                    const punto = vlPuntoEnCuerpo(t, null);
+                    if (visorZoom > 1.05) {
+                        visorZoom = 1;
+                        visorPanX = 0;
+                        visorPanY = 0;
+                        vlAplicarZoomPdf();
+                        vlPanAScrollNativo();
+                    } else {
+                        vlScrollNativoAPan();
+                        vlZoomHacia(2.4, punto);
+                    }
+                    visorUltimoTap = 0;
+                } else {
+                    visorUltimoTap = ahora;
+                }
+            }
+        }
+    }, { passive: false });
 }
 
 function vlBloquearFondo() {
@@ -250,7 +425,6 @@ function vlBloquearFondo() {
         shell.setAttribute('inert', '');
         shell.setAttribute('aria-hidden', 'true');
     }
-    vlAjustarVisorViewport();
 }
 
 function vlDesbloquearFondo() {
@@ -293,6 +467,7 @@ function vlOcultarVisor() {
     visorEl.classList.remove('is-open');
     visorAbierto = false;
     vlSetEstado('');
+    vlResetZoomPdf();
     vlDesbloquearFondo();
 }
 
@@ -331,9 +506,11 @@ async function vlPintarPaginas(signal) {
     const paginas = vlPaginasEl();
 
     try {
+        vlResetZoomPdf();
         vlVaciarPaginas();
         const dpr = Math.min(window.devicePixelRatio || 1, 2);
         const cssWidth = vlAnchoPaginas();
+        visorAnchoPintado = cssWidth;
 
         for (let n = 1; n <= visorPdfDoc.numPages; n += 1) {
             if (signal?.aborted || !visorAbierto) {
@@ -365,11 +542,11 @@ async function vlPintarPaginas(signal) {
 }
 
 function vlProgramarRepintado() {
-    if (!visorAbierto) {
+    if (!visorAbierto || !visorPdfDoc) {
         return;
     }
-    vlAjustarVisorViewport();
-    if (!visorPdfDoc) {
+    const w = window.innerWidth;
+    if (visorAnchoPintado > 0 && Math.abs(w - visorAnchoPintado) < 80) {
         return;
     }
     clearTimeout(visorResizeTimer);
@@ -530,10 +707,7 @@ export function instalarVisorPwa() {
         vlCerrarVisorPwa(true);
     });
 
-    window.addEventListener('resize', vlProgramarRepintado);
     window.addEventListener('orientationchange', vlProgramarRepintado);
-    window.visualViewport?.addEventListener('resize', vlProgramarRepintado);
-    window.visualViewport?.addEventListener('scroll', vlAjustarVisorViewport);
 
     document.addEventListener('touchmove', (event) => {
         if (!visorAbierto) {

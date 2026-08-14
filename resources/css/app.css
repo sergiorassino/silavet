@@ -2813,6 +2813,7 @@ html.vl-visor-pwa-abierto body {
     overscroll-behavior: none;
     height: 100% !important;
     max-height: 100% !important;
+    touch-action: manipulation;
 }
 
 html.vl-visor-pwa-abierto body {
@@ -2914,7 +2915,7 @@ html.vl-visor-pwa-abierto #vl-shell {
     overflow: auto;
     overscroll-behavior: contain;
     -webkit-overflow-scrolling: touch;
-    touch-action: pan-y pinch-zoom;
+    touch-action: pan-y;
     background: #e7e5e4;
 }
 
@@ -2927,6 +2928,8 @@ html.vl-visor-pwa-abierto #vl-shell {
     gap: 0;
     padding: 0;
     padding-bottom: env(safe-area-inset-bottom, 0px);
+    transform-origin: 0 0;
+    will-change: transform;
 }
 
 .vl-visor-pwa__canvas,

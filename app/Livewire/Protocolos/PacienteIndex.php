@@ -220,6 +220,15 @@ class PacienteIndex extends Component
         ]);
     }
 
+    public function urlDeterminacionesCliente(int $idPacientes): string
+    {
+        abort_unless(labCtx()->esCliente(), 403);
+
+        return route('cliente.pacientes.determinaciones', array_merge([
+            'ref' => OpaqueRouteToken::forPacienteDeterminacionesCliente($idPacientes),
+        ], $this->filtrosListadoParaUrl()));
+    }
+
     public function filtroEstadoEfectivo(): string
     {
         $filtro = trim($this->filtroEstado);

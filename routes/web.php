@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Cliente\DetalleDeterminacionesPdfController;
 use App\Http\Controllers\Cliente\ListaPreciosPdfController;
 use App\Http\Controllers\Clientes\CuentaCorrienteClientesExcelController;
 use App\Http\Controllers\Clientes\CuentaCorrienteClientesPdfController;
@@ -34,6 +35,7 @@ use App\Livewire\Abm\Usuarios\UsuarioForm;
 use App\Livewire\Abm\Usuarios\UsuarioIndex;
 use App\Livewire\Cliente\ClienteHome;
 use App\Livewire\Cliente\ListaPrecios;
+use App\Livewire\Cliente\PacienteDeterminacionesDetalle;
 use App\Livewire\Clientes\CuentaCorrienteDetalle;
 use App\Livewire\Clientes\CuentaCorrienteIndex;
 use App\Livewire\Clientes\CuentaCorrienteMovimientosDetalle;
@@ -118,6 +120,13 @@ Route::middleware(['auth', 'lab.context'])->group(function () {
             ->middleware('no-store')
             ->where('ref', '[A-Za-z0-9_-]+')
             ->name('cliente.pacientes.informe');
+        Route::get('/pacientes/determinaciones/{ref}', PacienteDeterminacionesDetalle::class)
+            ->where('ref', '[A-Za-z0-9_-]+')
+            ->name('cliente.pacientes.determinaciones');
+        Route::get('/pacientes/determinaciones/{ref}/pdf', DetalleDeterminacionesPdfController::class)
+            ->middleware(['throttle:20,1', 'no-store'])
+            ->where('ref', '[A-Za-z0-9_-]+')
+            ->name('cliente.pacientes.determinaciones.pdf');
         Route::get('/lista-precios', ListaPrecios::class)->name('cliente.lista-precios');
         Route::get('/lista-precios/pdf', ListaPreciosPdfController::class)
             ->middleware(['throttle:20,1', 'no-store'])
