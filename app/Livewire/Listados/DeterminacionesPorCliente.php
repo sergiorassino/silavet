@@ -36,9 +36,6 @@ class DeterminacionesPorCliente extends Component
         if ($ctx->esCliente() && $ctx->idClientes) {
             $this->idClientes = $ctx->idClientes;
         }
-
-        $this->fechaDesde = now()->startOfMonth()->toDateString();
-        $this->fechaHasta = now()->toDateString();
     }
 
     public function hydrate(): void
@@ -94,8 +91,8 @@ class DeterminacionesPorCliente extends Component
         $ctx = labCtx();
         $this->idClientes = ($ctx->esCliente() && $ctx->idClientes) ? $ctx->idClientes : null;
         $this->busqueda = '';
-        $this->fechaDesde = now()->startOfMonth()->toDateString();
-        $this->fechaHasta = now()->toDateString();
+        $this->fechaDesde = '';
+        $this->fechaHasta = '';
         $this->expandidos = [];
         $this->resetPage();
     }

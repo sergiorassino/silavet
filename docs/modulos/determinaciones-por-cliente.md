@@ -25,7 +25,7 @@ Ninguna. Igual en todos los tenants.
 | Tabla | Rol |
 |-------|-----|
 | `determinaciones` | Fuente de cada fila; `precio` es el importe cobrado (neto − descuento) |
-| `pacientes` | Protocolo: `fechhoy`, `nombreProtocolo`, `nombre` (animal), `idClientes`, `tipoRegistro = 1` |
+| `pacientes` | Protocolo: `fechhoy`, `nombreProtocolo`, `nombre` (animal), `idClientes`. Se incluyen `tipoRegistro` 0/NULL (legacy) y 1; se excluyen 2 y 3 (tesorería) |
 | `clientes` | Nombre del grupo |
 | `tipodeterminaciones` | Nombre de la determinación |
 
@@ -34,13 +34,13 @@ El cliente del grupo es **`pacientes.idClientes`**, no `determinaciones.idClient
 ## Flujo principal
 
 1. Menú de Laboratorio → **Listados Estadísticos** → **Determinaciones por Cliente** (última opción del grupo).
-2. Filtros: cliente, búsqueda rápida (cliente / determinación / protocolo / paciente), desde/hasta (por defecto mes en curso).
+2. Filtros: cliente, búsqueda rápida (cliente / determinación / protocolo / paciente), desde/hasta **opcionales**. Sin fechas se listan **todos** los registros históricos.
 3. Se listan **grupos de cliente** (50 por página) con cantidad y suma. Clic en el encabezado expande el detalle.
 4. **Exportar Excel** descarga todos los grupos del filtro (no solo la página), con encabezado de grupo, columnas, subtotal **Suma** y **Total Acumulado**.
 
 ## Fuente de verdad
 
-- Filas: `determinaciones` ligadas a protocolos (`pacientes.tipoRegistro = 1`).
+- Filas: `determinaciones` ligadas a protocolos analíticos (`tipoRegistro` distinto de ingreso/egreso). En labvetciudad el histórico suele ser `tipoRegistro = 0`; no exigir `= 1`.
 - Precio de cada línea: `determinaciones.precio`.
 - Fecha: `pacientes.fechhoy`.
 - No usar `renglones` ni `pacientes.precio` (total del protocolo).
@@ -56,6 +56,7 @@ El cliente del grupo es **`pacientes.idClientes`**, no `determinaciones.idClient
 
 ## Qué no hacer / reglas de negocio
 
+- No filtrar `pacientes.tipoRegistro = 1`: deja afuera el histórico legacy (`0`). Solo excluir tesorería (2 y 3).
 - No agrupar por ítems de informe (`itemsinforme` / `renglones`): este listado es de **tipos pedidos**.
 - No paginar las filas de detalle a costa de partir un cliente en dos páginas: la paginación es por **grupos de cliente**.
 - No poner el módulo fuera del grupo Listados Estadísticos ni cambiar el permiso 10 sin actualizar este doc.
@@ -63,7 +64,8 @@ El cliente del grupo es **`pacientes.idClientes`**, no `determinaciones.idClient
 
 ## Checklist al modificar
 
-- [ ] Filtro de fechas inclusive sobre `pacientes.fechhoy`
+- [ ] Filtro de fechas inclusive sobre `pacientes.fechhoy`; vacío = todo el historial (no recortar al mes en curso)
+- [ ] Protocolos legacy (`tipoRegistro` 0/NULL) incluidos; no exigir `tipoRegistro = 1`
 - [ ] Alcance por `labCtx()` si el usuario es cliente
 - [ ] Rate-limit / throttle en descarga Excel
 - [ ] Icono de menú único (`determinaciones-por-cliente`) en el catálogo

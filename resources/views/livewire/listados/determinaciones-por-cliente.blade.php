@@ -49,6 +49,7 @@
                        wire:model.live="fechaDesde"
                        id="vl-dpc-desde"
                        class="form-input tabular-nums">
+                <p class="mt-1 text-[11px] text-neutral-500">Vacío = desde el inicio.</p>
             </div>
 
             <div>
@@ -57,6 +58,7 @@
                        wire:model.live="fechaHasta"
                        id="vl-dpc-hasta"
                        class="form-input tabular-nums">
+                <p class="mt-1 text-[11px] text-neutral-500">Vacío = hasta hoy.</p>
             </div>
         </div>
 
