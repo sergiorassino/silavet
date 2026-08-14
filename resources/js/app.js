@@ -2,8 +2,11 @@ import './bootstrap';
 import Swal from 'sweetalert2';
 import './cantidad-determinaciones-comparac';
 import { instalarHemogramaAuto } from './hemograma-auto';
+import { instalarVisorPwa, vlAbrirUrl } from './visor-pwa';
 
 window.Swal = Swal;
+window.vlAbrirUrl = vlAbrirUrl;
+instalarVisorPwa();
 
 function vlNormalizarHtmlEditor(html) {
     const limpio = String(html || '')
@@ -122,10 +125,7 @@ document.addEventListener('livewire:init', () => {
     });
 
     Livewire.on('vl-abrir-url', ({ url }) => {
-        if (!url || typeof url !== 'string') {
-            return;
-        }
-        window.open(url, '_blank', 'noopener,noreferrer');
+        vlAbrirUrl(url);
     });
 
     Livewire.on('vl-abrir-whatsapp', ({ url }) => {

@@ -110,9 +110,6 @@ class Movimiento extends Model
             return '';
         }
 
-        $nombre = trim((string) ($this->paciente?->nombre ?? ''));
-        $id = (int) $this->idPacientes;
-
-        return $nombre !== '' ? "{$id} - {$nombre}" : (string) $id;
+        return trim((string) ($this->paciente?->nombre ?? ''));
     }
 }
