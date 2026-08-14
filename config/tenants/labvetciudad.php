@@ -19,7 +19,7 @@ return [
     'facturacion_afip' => [
         'habilitado' => true,
         'modo' => 'movimiento_caja',
-        'simular' => true,
+        'simular' => false,
     ],
 
     'autoanalizadores' => [
