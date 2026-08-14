@@ -209,6 +209,13 @@
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.75"
                   d="M7.5 10.5h4.5M7.5 14.25h4.5M16.5 12.75v6m0 0l-2.25-2.25M16.5 18.75l2.25-2.25"/>
             @break
+        @case('determinaciones-por-cliente')
+            {{-- Grupos de clientes (bloques) + detalle de determinaciones --}}
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.75"
+                  d="M3 6.75A1.5 1.5 0 014.5 5.25h6A1.5 1.5 0 0112 6.75v3A1.5 1.5 0 0110.5 11.25h-6A1.5 1.5 0 013 9.75v-3zM3 15.75A1.5 1.5 0 014.5 14.25h6a1.5 1.5 0 011.5 1.5v2.25A1.5 1.5 0 0110.5 19.5h-6A1.5 1.5 0 013 18v-2.25z"/>
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.75"
+                  d="M15.75 7.5h4.5M15.75 12h4.5M15.75 16.5h4.5"/>
+            @break
         @case('gestion-procedimientos')
             {{-- Documento de instrucciones (distinto a clipboard de determinaciones) --}}
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.75"

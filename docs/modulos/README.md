@@ -17,6 +17,7 @@ en esta carpeta (si existe) y respetar las reglas de negocio ahí listadas.
 | Stock de reactivos e insumos | [stock-reactivos.md](stock-reactivos.md) |
 | Tesorería (variantes por tenant) | [tesoreria.md](tesoreria.md) |
 | Resumen cliente entre fechas (PDF) | [resumen-cliente-entre-fechas.md](resumen-cliente-entre-fechas.md) |
+| Determinaciones por cliente (listado + Excel) | [determinaciones-por-cliente.md](determinaciones-por-cliente.md) |
 
 ## Plantilla
 

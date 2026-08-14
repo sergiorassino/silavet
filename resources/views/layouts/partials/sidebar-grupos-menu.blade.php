@@ -249,6 +249,12 @@
             <x-vl-sidebar-icon name="excel-pacientes" class="h-4 w-4 shrink-0 opacity-80" />
             <span class="truncate">Excel de Pacientes</span>
         </a>
+        <a href="{{ route('listados.determinaciones-por-cliente') }}"
+           class="vl-sidebar-link {{ request()->routeIs('listados.determinaciones-por-cliente*') ? 'is-active' : '' }}"
+           title="Determinaciones por Cliente (v1.0)">
+            <x-vl-sidebar-icon name="determinaciones-por-cliente" class="h-4 w-4 shrink-0 opacity-80" />
+            <span class="truncate">Determinaciones por Cliente</span>
+        </a>
     @endif
 </x-vl-sidebar-grupo>
 
