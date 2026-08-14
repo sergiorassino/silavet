@@ -200,7 +200,7 @@ Rate limits típicos: save ~30/min; delete caja ~10/min por usuario.
 
 ### AFIP (relacionado, no es el núcleo)
 
-- Config: `tenant.facturacion_afip` (`modo`: `paciente` | `movimiento` | `movimiento_caja`).
+- Config: `tenant.facturacion_afip` (`modo`: `paciente` | `movimiento` | `movimiento_caja`). labvetciudad: `simular => false` (en el servidor llama a WSAA/WSFE; hace falta certificado en `afipSE/cert/{idUsuarios}/`). En local sigue simulando vía `simular_local`. El resto de tenants mantiene CAE simulado.
 - **`modo = movimiento`** (ej. alqu): icono en `MovimientoIndex` sobre **ingresos** en `pacientes`; emite contra ese `idPacientes` (receptor = cliente del ingreso).
 - **`modo = movimiento_caja`** (labvetciudad): icono en `MovimientosCajaIndex` sobre **ingresos** en tabla `movimientos`; comprobantes en `compafip.idMovimientos`. Al emitir factura/comanda el usuario elige receptor: **cliente**, **paciente** o **consumidor final**; en pantalla se muestra el DNI (y CUIT del cliente si existe) y se puede cargar el DNI faltante (`clientes.dni` / `pacientes.dni`) antes de emitir. Nota de crédito y comanda igual que la variante NeoLab. Emisor = usuario logueado (certificados en gestión de usuarios).
 - **`modo = paciente`**: icono en listado de protocolos.

@@ -139,7 +139,7 @@ return [
         'produccion' => true,
         /** Si true, no llama a AFIP (CAE simulado). Default: true hasta homologación/producción real. */
         'simular' => true,
-        /** En local, simula salvo que el tenant declare `simular => false` explícito. */
+        /** En local, simula aunque el tenant declare `simular => false`. */
         'simular_local' => true,
         'cbte_tipo' => 11,
         'nota_credito_tipo' => 12,
