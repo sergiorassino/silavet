@@ -14,6 +14,9 @@ let visorNombreDescarga = 'documento.pdf';
 let visorAbierto = false;
 let visorPdfDoc = null;
 let visorPdfJs = null;
+let visorPintando = false;
+let visorRepintarPendiente = false;
+let visorResizeTimer = null;
 
 function vlEsPwaStandalone() {
     if (window.matchMedia('(display-mode: standalone)').matches) {
@@ -222,6 +225,7 @@ function vlOcultarVisor() {
         visorAbort.abort();
         visorAbort = null;
     }
+    clearTimeout(visorResizeTimer);
     vlVaciarPaginas();
     vlDestruirPdf();
     vlLimpiarBlob();
@@ -249,9 +253,66 @@ export function vlCerrarVisorPwa(desdeAtras) {
 
 function vlAnchoPaginas() {
     const cuerpo = visorEl?.querySelector('.vl-visor-pwa__cuerpo');
-    const w = (cuerpo?.clientWidth || window.innerWidth || 320) - 16;
+    const w = cuerpo?.clientWidth || window.visualViewport?.width || window.innerWidth || 320;
 
-    return Math.max(240, w);
+    return Math.max(280, Math.floor(w));
+}
+
+async function vlPintarPaginas(signal) {
+    if (!visorPdfDoc || !visorAbierto) {
+        return;
+    }
+    if (visorPintando) {
+        visorRepintarPendiente = true;
+
+        return;
+    }
+
+    visorPintando = true;
+    const paginas = vlPaginasEl();
+
+    try {
+        vlVaciarPaginas();
+        const dpr = Math.min(window.devicePixelRatio || 1, 2);
+        const cssWidth = vlAnchoPaginas();
+
+        for (let n = 1; n <= visorPdfDoc.numPages; n += 1) {
+            if (signal?.aborted || !visorAbierto) {
+                return;
+            }
+            const page = await visorPdfDoc.getPage(n);
+            const unscaled = page.getViewport({ scale: 1 });
+            const scale = (cssWidth / unscaled.width) * dpr;
+            const viewport = page.getViewport({ scale });
+            const canvas = document.createElement('canvas');
+            canvas.className = 'vl-visor-pwa__canvas';
+            canvas.width = Math.floor(viewport.width);
+            canvas.height = Math.floor(viewport.height);
+            canvas.style.width = '100%';
+            canvas.style.height = 'auto';
+            paginas.appendChild(canvas);
+            await page.render({
+                canvasContext: canvas.getContext('2d', { alpha: false }),
+                viewport,
+            }).promise;
+        }
+    } finally {
+        visorPintando = false;
+        if (visorRepintarPendiente && visorAbierto && !signal?.aborted) {
+            visorRepintarPendiente = false;
+            await vlPintarPaginas(signal);
+        }
+    }
+}
+
+function vlProgramarRepintado() {
+    if (!visorAbierto || !visorPdfDoc) {
+        return;
+    }
+    clearTimeout(visorResizeTimer);
+    visorResizeTimer = window.setTimeout(() => {
+        vlPintarPaginas(visorAbort?.signal);
+    }, 180);
 }
 
 async function vlRenderPdf(bytes, signal) {
@@ -268,35 +329,7 @@ async function vlRenderPdf(bytes, signal) {
         return;
     }
     visorPdfDoc = pdf;
-
-    const paginas = vlPaginasEl();
-    const dpr = window.devicePixelRatio || 1;
-    const maxCssWidth = vlAnchoPaginas();
-
-    for (let n = 1; n <= pdf.numPages; n += 1) {
-        if (signal.aborted) {
-            return;
-        }
-        const page = await pdf.getPage(n);
-        const unscaled = page.getViewport({ scale: 1 });
-        const cssWidth = Math.min(maxCssWidth, unscaled.width);
-        const scale = (cssWidth / unscaled.width) * dpr;
-        const viewport = page.getViewport({ scale });
-        const canvas = document.createElement('canvas');
-        canvas.className = 'vl-visor-pwa__canvas';
-        canvas.width = Math.floor(viewport.width);
-        canvas.height = Math.floor(viewport.height);
-        canvas.style.width = `${Math.floor(viewport.width / dpr)}px`;
-        canvas.style.height = `${Math.floor(viewport.height / dpr)}px`;
-        if (signal.aborted) {
-            return;
-        }
-        paginas.appendChild(canvas);
-        await page.render({
-            canvasContext: canvas.getContext('2d', { alpha: false }),
-            viewport,
-        }).promise;
-    }
+    await vlPintarPaginas(signal);
 }
 
 async function vlAbrirVisorPwa(url) {
@@ -318,6 +351,9 @@ async function vlAbrirVisorPwa(url) {
     vlLimpiarBlob();
     vlVaciarPaginas();
     vlMostrarVisor(titulo);
+    await new Promise((resolve) => {
+        requestAnimationFrame(() => requestAnimationFrame(resolve));
+    });
     vlSetEstado('Cargando…');
     root.querySelector('.vl-visor-pwa__descargar').disabled = true;
 
@@ -430,4 +466,8 @@ export function instalarVisorPwa() {
         visorHistoryPushed = false;
         vlCerrarVisorPwa(true);
     });
+
+    window.addEventListener('resize', vlProgramarRepintado);
+    window.addEventListener('orientationchange', vlProgramarRepintado);
+    window.visualViewport?.addEventListener('resize', vlProgramarRepintado);
 }
