@@ -17,6 +17,7 @@ let visorPdfJs = null;
 let visorPintando = false;
 let visorRepintarPendiente = false;
 let visorResizeTimer = null;
+let visorScrollY = 0;
 
 function vlEsPwaStandalone() {
     if (window.matchMedia('(display-mode: standalone)').matches) {
@@ -172,9 +173,20 @@ function vlAsegurarVisor() {
     root.querySelector('.vl-visor-pwa__cerrar').addEventListener('click', () => {
         vlCerrarVisorPwa(false);
     });
-    root.querySelector('.vl-visor-pwa__descargar').addEventListener('click', () => {
+    root.querySelector('.vl-visor-pwa__descargar').addEventListener('click', async () => {
         if (!visorBlobUrl) {
             return;
+        }
+        try {
+            const blob = await fetch(visorBlobUrl).then((r) => r.blob());
+            const file = new File([blob], visorNombreDescarga, { type: 'application/pdf' });
+            if (navigator.canShare && navigator.canShare({ files: [file] })) {
+                await navigator.share({ files: [file], title: visorNombreDescarga });
+
+                return;
+            }
+        } catch {
+            // Canceló compartir o no hay soporte: descargar.
         }
         const a = document.createElement('a');
         a.href = visorBlobUrl;
@@ -206,14 +218,61 @@ function vlSetEstado(texto) {
     el.textContent = texto;
 }
 
+function vlAjustarVisorViewport() {
+    if (!visorEl) {
+        return;
+    }
+    const vv = window.visualViewport;
+    visorEl.style.position = 'fixed';
+    visorEl.style.right = 'auto';
+    visorEl.style.bottom = 'auto';
+    if (!vv) {
+        visorEl.style.top = '0px';
+        visorEl.style.left = '0px';
+        visorEl.style.width = '100%';
+        visorEl.style.height = '100%';
+
+        return;
+    }
+    visorEl.style.top = `${Math.round(vv.offsetTop)}px`;
+    visorEl.style.left = `${Math.round(vv.offsetLeft)}px`;
+    visorEl.style.width = `${Math.round(vv.width)}px`;
+    visorEl.style.height = `${Math.round(vv.height)}px`;
+}
+
+function vlBloquearFondo() {
+    visorScrollY = window.scrollY || window.pageYOffset || 0;
+    document.documentElement.classList.add('vl-visor-pwa-abierto');
+    document.body.classList.add('vl-visor-pwa-abierto');
+    document.body.style.top = `-${visorScrollY}px`;
+    const shell = document.getElementById('vl-shell');
+    if (shell) {
+        shell.setAttribute('inert', '');
+        shell.setAttribute('aria-hidden', 'true');
+    }
+    vlAjustarVisorViewport();
+}
+
+function vlDesbloquearFondo() {
+    document.documentElement.classList.remove('vl-visor-pwa-abierto');
+    document.body.classList.remove('vl-visor-pwa-abierto');
+    document.body.style.top = '';
+    const shell = document.getElementById('vl-shell');
+    if (shell) {
+        shell.removeAttribute('inert');
+        shell.removeAttribute('aria-hidden');
+    }
+    window.scrollTo(0, visorScrollY);
+}
+
 function vlMostrarVisor(titulo) {
     const root = vlAsegurarVisor();
     root.querySelector('.vl-visor-pwa__titulo').textContent = titulo;
     root.removeAttribute('hidden');
     root.setAttribute('aria-hidden', 'false');
     root.classList.add('is-open');
-    document.body.classList.add('vl-visor-pwa-abierto');
     visorAbierto = true;
+    vlBloquearFondo();
     root.querySelector('.vl-visor-pwa__cerrar')?.focus();
 }
 
@@ -232,9 +291,9 @@ function vlOcultarVisor() {
     visorEl.setAttribute('hidden', '');
     visorEl.setAttribute('aria-hidden', 'true');
     visorEl.classList.remove('is-open');
-    document.body.classList.remove('vl-visor-pwa-abierto');
     visorAbierto = false;
     vlSetEstado('');
+    vlDesbloquearFondo();
 }
 
 export function vlCerrarVisorPwa(desdeAtras) {
@@ -306,7 +365,11 @@ async function vlPintarPaginas(signal) {
 }
 
 function vlProgramarRepintado() {
-    if (!visorAbierto || !visorPdfDoc) {
+    if (!visorAbierto) {
+        return;
+    }
+    vlAjustarVisorViewport();
+    if (!visorPdfDoc) {
         return;
     }
     clearTimeout(visorResizeTimer);
@@ -470,4 +533,16 @@ export function instalarVisorPwa() {
     window.addEventListener('resize', vlProgramarRepintado);
     window.addEventListener('orientationchange', vlProgramarRepintado);
     window.visualViewport?.addEventListener('resize', vlProgramarRepintado);
+    window.visualViewport?.addEventListener('scroll', vlAjustarVisorViewport);
+
+    document.addEventListener('touchmove', (event) => {
+        if (!visorAbierto) {
+            return;
+        }
+        const cuerpo = visorEl?.querySelector('.vl-visor-pwa__cuerpo');
+        if (cuerpo && cuerpo.contains(event.target)) {
+            return;
+        }
+        event.preventDefault();
+    }, { passive: false });
 }
