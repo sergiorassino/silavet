@@ -104,6 +104,7 @@
                 <thead>
                     <tr>
                         <th class="vl-pacientes-th vl-pacientes-th--icon" title="Informe PDF">INFOR.</th>
+                        <th class="vl-pacientes-th vl-pacientes-th--icon" title="Determinaciones solicitadas">DETERM.</th>
                         <th class="vl-pacientes-th vl-pacientes-th--num">#</th>
                         <th class="vl-pacientes-th">Fechhoy</th>
                         <th class="vl-pacientes-th">Protocolo</th>
@@ -129,6 +130,7 @@
                         @endphp
                         @if ($paciente->esPagoGlobal())
                             <tr class="vl-pacientes-row {{ $paciente->filaClaseCss() }}" wire:key="pac-cli-{{ $paciente->idPacientes }}">
+                                <td class="vl-pacientes-td vl-pacientes-td--icon"></td>
                                 <td class="vl-pacientes-td vl-pacientes-td--icon"></td>
                                 <td class="vl-pacientes-td vl-pacientes-td--num">
                                     {{ ($pacientes->currentPage() - 1) * $pacientes->perPage() + $loop->iteration }}
@@ -175,6 +177,17 @@
                                         </span>
                                     @endif
                                 </td>
+                                <td class="vl-pacientes-td vl-pacientes-td--icon">
+                                    <a href="{{ $this->urlDeterminacionesCliente((int) $paciente->idPacientes) }}"
+                                       title="Determinaciones solicitadas"
+                                       aria-label="Ver determinaciones solicitadas"
+                                       class="vl-grid-icon-btn text-neutral-600 hover:bg-neutral-100">
+                                        <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.75"
+                                                  d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                                        </svg>
+                                    </a>
+                                </td>
                                 <td class="vl-pacientes-td vl-pacientes-td--num">
                                     {{ ($pacientes->currentPage() - 1) * $pacientes->perPage() + $loop->iteration }}
                                 </td>
@@ -212,7 +225,7 @@
                         @endif
                     @empty
                         <tr>
-                            <td colspan="17" class="vl-pacientes-td text-center text-neutral-500 py-10">
+                            <td colspan="18" class="vl-pacientes-td text-center text-neutral-500 py-10">
                                 @if ($vista === 'hoy')
                                     @php
                                         $fechaEfectiva = $this->fechaVistaEfectiva();

@@ -122,7 +122,7 @@ Detalle: [`docs/modulos/stock-reactivos.md`](stock-reactivos.md).
 7. Descuento calculado es **sugerencia**: el usuario puede editar el importe; al blur solo se recalcula `precio = neto − descuento`.
 8. Modo volumen (alqu): tipos con `perfil = 0` → descuento 0; umbrales miran el mes **anterior** a `fechhoy`.
 9. Diálogos: `vl-swal-*` / helpers `vlSwal*`, no `wire:confirm` / `alert`.
-10. Esta pantalla es **staff**; no exponerla en portal cliente ni poner IDs sensibles en URLs de portal (aquí el `{id}` de protocolo es staff interno).
+10. Esta pantalla es **staff**; no exponerla en portal cliente ni poner IDs sensibles en URLs de portal (aquí el `{id}` de protocolo es staff interno). El veterinario ve el mismo detalle en solo lectura desde autogestión (`cliente.pacientes.determinaciones`; ver [`autogestion-detalle-determinaciones.md`](autogestion-detalle-determinaciones.md)).
 
 ## Checklist al modificar
 

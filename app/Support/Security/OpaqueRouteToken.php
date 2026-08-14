@@ -24,6 +24,9 @@ final class OpaqueRouteToken
 
     public const PURPOSE_COMP_AFIP_MOVIMIENTO = 'facturacion.compafip-movimiento';
 
+    /** Detalle de determinaciones en autogestión (Menú de Clientes). */
+    public const PURPOSE_DET_DETERMINACIONES_CLIENTE = 'cliente.paciente-determinaciones';
+
     /** Informe público (WhatsApp / links sin login). */
     public const PURPOSE_INFORME_PUBLICO = 'protocolos.informe-publico';
 
@@ -192,6 +195,41 @@ final class OpaqueRouteToken
     public static function decodeCompAfipMovimiento(string $ref): ?array
     {
         $data = self::decodePayload($ref, self::PURPOSE_COMP_AFIP_MOVIMIENTO);
+        if ($data === null) {
+            return null;
+        }
+
+        $id = (int) ($data['id'] ?? 0);
+        $u = (int) ($data['u'] ?? 0);
+        $t = (int) ($data['t'] ?? 0);
+
+        if ($id <= 0 || $u <= 0 || $t <= 0) {
+            return null;
+        }
+
+        if ((time() - $t) > self::TTL_SEGUNDOS) {
+            return null;
+        }
+
+        return ['id' => $id, 'u' => $u];
+    }
+
+    public static function forPacienteDeterminacionesCliente(int $idPacientes, ?int $idUsuario = null): string
+    {
+        return self::encodePayload(self::PURPOSE_DET_DETERMINACIONES_CLIENTE, [
+            'id' => $idPacientes,
+            'u' => $idUsuario ?? (int) (auth()->id() ?? 0),
+            't' => time(),
+            'n' => bin2hex(random_bytes(4)),
+        ]);
+    }
+
+    /**
+     * @return array{id: int, u: int}|null
+     */
+    public static function decodePacienteDeterminacionesCliente(string $ref): ?array
+    {
+        $data = self::decodePayload($ref, self::PURPOSE_DET_DETERMINACIONES_CLIENTE);
         if ($data === null) {
             return null;
         }

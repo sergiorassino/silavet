@@ -65,4 +65,18 @@ final class PacienteListadoFiltros
 
         return route('protocolos.index', $params);
     }
+
+    /**
+     * @param  array{vista?: string, filtroEstado?: string, page?: int}  $filtros
+     */
+    public static function urlIndexCliente(array $filtros = [], ?int $focoIdPaciente = null): string
+    {
+        $params = $filtros !== [] ? $filtros : self::desdeRequest();
+
+        if ($focoIdPaciente !== null && $focoIdPaciente > 0) {
+            $params['foco'] = $focoIdPaciente;
+        }
+
+        return route('cliente.pacientes', $params);
+    }
 }
