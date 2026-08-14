@@ -2806,24 +2806,43 @@
     }
 }
 
-/* Visor in-app: pantalla completa en celular; el PDF usa todo el ancho. */
-body.vl-visor-pwa-abierto {
-    overflow: hidden;
+/* Visor PDF a pantalla completa: oculta la app detrás para que no se vea la grilla. */
+html.vl-visor-pwa-abierto,
+html.vl-visor-pwa-abierto body {
+    overflow: hidden !important;
     overscroll-behavior: none;
-    touch-action: manipulation;
+    height: 100% !important;
+    max-height: 100% !important;
+}
+
+html.vl-visor-pwa-abierto body {
+    position: fixed !important;
+    left: 0;
+    right: 0;
+    width: 100%;
+    background: #111827 !important;
+}
+
+html.vl-visor-pwa-abierto #vl-shell {
+    visibility: hidden !important;
+    pointer-events: none !important;
 }
 
 .vl-visor-pwa {
     display: none;
     position: fixed;
-    inset: 0;
-    z-index: 5000;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 2147483000;
     flex-direction: column;
     width: 100%;
     max-width: 100%;
     height: 100%;
-    height: 100dvh;
+    margin: 0;
     background: #111827;
+    isolation: isolate;
 }
 
 .vl-visor-pwa.is-open {
@@ -2893,7 +2912,9 @@ body.vl-visor-pwa-abierto {
     min-height: 0;
     width: 100%;
     overflow: auto;
+    overscroll-behavior: contain;
     -webkit-overflow-scrolling: touch;
+    touch-action: pan-y pinch-zoom;
     background: #e7e5e4;
 }
 
