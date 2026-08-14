@@ -1,5 +1,3 @@
-import pdfWorkerSrc from 'pdfjs-dist/build/pdf.worker.min.mjs?url';
-
 /**
  * Visor in-app para PWA instalada en celular.
  *
@@ -120,35 +118,18 @@ async function cargarPdfJs() {
         return visorPdfJs;
     }
 
-    const pdfjs = await import('pdfjs-dist');
-    pdfjs.GlobalWorkerOptions.workerSrc = vlUrlAssetVite(pdfWorkerSrc);
-    visorPdfJs = pdfjs;
+    const mod = await import('./visor-pdfjs.js');
+    visorPdfJs = mod.obtenerPdfJs();
 
-    return pdfjs;
+    return visorPdfJs;
 }
 
-/**
- * El worker de PDF.js debe cargarse desde la misma carpeta /build que el JS.
- * En instalación con subcarpeta, una ruta "/build/..." apuntaría al dominio raíz.
- */
-function vlUrlAssetVite(src) {
-    if (!src || typeof src !== 'string') {
-        return src;
-    }
-    if (/^(https?:|blob:|data:)/i.test(src)) {
-        return src;
-    }
-    if (src.startsWith('/')) {
-        const scripts = document.querySelectorAll('script[src]');
-        for (const script of scripts) {
-            const match = String(script.src || '').match(/^(.*\/build\/)assets\//);
-            if (match) {
-                return match[1] + src.replace(/^\/+/, '').replace(/^build\//, '');
-            }
-        }
-    }
-
-    return src;
+function vlEsPdfBinario(bytes) {
+    return bytes.length >= 5
+        && bytes[0] === 0x25
+        && bytes[1] === 0x50
+        && bytes[2] === 0x44
+        && bytes[3] === 0x46;
 }
 
 function vlAsegurarVisor() {
@@ -342,7 +323,7 @@ async function vlAbrirVisorPwa(url) {
 
     try {
         const res = await fetch(url, {
-            credentials: 'same-origin',
+            credentials: 'include',
             redirect: 'follow',
             signal,
         });
@@ -357,14 +338,10 @@ async function vlAbrirVisorPwa(url) {
         }
 
         const ctype = (res.headers.get('Content-Type') || '').split(';')[0].trim().toLowerCase();
-        const blob = new Blob([buffer], { type: ctype || 'application/octet-stream' });
+        const bytes = new Uint8Array(buffer.slice(0));
+        const blob = new Blob([buffer], { type: ctype || 'application/pdf' });
         visorBlobUrl = URL.createObjectURL(blob);
         root.querySelector('.vl-visor-pwa__descargar').disabled = false;
-
-        const esPdf = ctype === 'application/pdf'
-            || visorNombreDescarga.toLowerCase().endsWith('.pdf')
-            || url.toLowerCase().includes('informe')
-            || url.toLowerCase().includes('.pdf');
 
         if (ctype.startsWith('image/')) {
             const img = document.createElement('img');
@@ -377,13 +354,13 @@ async function vlAbrirVisorPwa(url) {
             return;
         }
 
-        if (!esPdf) {
-            vlSetEstado('Este documento no se puede previsualizar. Use el botón de descarga.');
+        if (!vlEsPdfBinario(bytes)) {
+            vlSetEstado('No se recibió el PDF (puede haber caducado la sesión). Cierre, vuelva a ingresar e intente de nuevo.');
 
             return;
         }
 
-        await vlRenderPdf(new Uint8Array(buffer), signal);
+        await vlRenderPdf(bytes, signal);
         if (!signal.aborted) {
             vlSetEstado('');
         }
@@ -391,6 +368,7 @@ async function vlAbrirVisorPwa(url) {
         if (e && e.name === 'AbortError') {
             return;
         }
+        console.error('[vl-visor-pwa]', e);
         vlSetEstado('No se pudo mostrar el informe. Use el botón de descarga o cierre e intente de nuevo.');
     }
 }
