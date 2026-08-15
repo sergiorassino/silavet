@@ -102,5 +102,5 @@ Doc: [modulos/carga-resultados.md](modulos/carga-resultados.md).
 1. Crear `config/tenants/{slug}.php` con solo diferencias.
 2. Configurar `.env`: `TENANT_SLUG`, `DB_DATABASE`, `APP_URL`.
 3. Cargar esquema desde `estructura_bd.sql` o BD legacy existente.
-4. Ejecutar migraciones aditivas (`lb:migrate-legacy`) — manualmente, no desde agente.
+4. Alinear esquema con NeoLab si el dump está atrasado: `php artisan lb:schema-sync {slug}` (genera SQL aditivo; ejecutar a mano). Luego migraciones SILAVET (`lb:migrate-legacy`) — manualmente, no desde agente. Completan columnas que el dump legacy no traiga (p. ej. `entorno.nombreListaPrecio`).
 5. Sincronizar catálogo de permisos si aplica.

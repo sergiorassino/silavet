@@ -19,16 +19,21 @@ return new class extends Migration
 
         if (! Schema::hasColumn('determinaciones', 'fechaEnvioDeriv')) {
             Schema::table('determinaciones', function (Blueprint $table) {
-                $table->date('fechaEnvioDeriv')->nullable()->after('idDerivaciones');
+                $col = $table->date('fechaEnvioDeriv')->nullable();
+                if (Schema::hasColumn('determinaciones', 'idDerivaciones')) {
+                    $col->after('idDerivaciones');
+                }
             });
         }
 
         if (! Schema::hasColumn('determinaciones', 'fechaDevolucDeterm')) {
             Schema::table('determinaciones', function (Blueprint $table) {
-                $after = Schema::hasColumn('determinaciones', 'fechaEnvioDeriv')
-                    ? 'fechaEnvioDeriv'
-                    : 'idDerivaciones';
-                $table->date('fechaDevolucDeterm')->nullable()->after($after);
+                $col = $table->date('fechaDevolucDeterm')->nullable();
+                if (Schema::hasColumn('determinaciones', 'fechaEnvioDeriv')) {
+                    $col->after('fechaEnvioDeriv');
+                } elseif (Schema::hasColumn('determinaciones', 'idDerivaciones')) {
+                    $col->after('idDerivaciones');
+                }
             });
         }
     }

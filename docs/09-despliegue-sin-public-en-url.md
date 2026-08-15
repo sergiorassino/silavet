@@ -26,6 +26,7 @@ Adaptado desde Sistemas Escolares. Mismas reglas técnicas; reemplazar referenci
 6. **Assets:** igual que Sistemas Escolares: `public/build/` **va en el repo** (no está en `.gitignore`). **Siempre** que haya cambios en CSS/JS (`resources/css/**`, `resources/js/**`): correr `npm run build` en la misma tarea, commit de `public/build/` y push. Sin rebuild, producción sigue sirviendo CSS/JS viejo. En el servidor, tras `git pull`, **borrar** `public/hot` si existe (solo sirve para Vite en desarrollo).
 7. **Apache:** `mod_rewrite` activo y `AllowOverride All`.
 8. **HTTPS:** coherente con `SESSION_SECURE_COOKIE=true`.
+9. **BD atrasada (primer alta de un lab viejo):** en local, con `lb_neolab` y la BD del cliente cargadas, `php artisan lb:schema-sync {slug}` genera SQL aditivo. Ejecutar ese SQL **a mano** sobre la BD del cliente (local y/o producción). Después `lb:migrate-legacy --force`. En el hosting **no** suele estar NeoLab; llevar el `.sql` generado.
 
 ### Actualización (igual que colegios)
 

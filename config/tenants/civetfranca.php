@@ -4,11 +4,21 @@ return [
     'nombre' => 'CIVET Franca',
 
     'protocolos' => [
+        'estados_flujo' => 3,
         'implementacion' => 'dual_corto_largo',
     ],
 
     'autoanalizadores' => [
         'aparatos' => [
+            'edan_h30' => [
+                'activo' => true,
+                'etiqueta' => 'Edan H 30',
+                'overrides' => [
+                    'WBC' => ['multiplicador' => 1000, 'formato' => 'entero_miles'],
+                    'RBC' => ['multiplicador' => 1000000, 'formato' => 'entero_miles'],
+                    'PLT' => ['multiplicador' => 1000],
+                ],
+            ],
             'geo_mc' => [
                 'activo' => true,
                 'etiqueta' => 'Geo MC',
@@ -19,23 +29,14 @@ return [
                     'PLT' => ['multiplicador' => 1000],
                 ],
             ],
-            'edan_h30' => [
-                'activo' => true,
-                'etiqueta' => 'Edan H30',
-                'overrides' => [
-                    'WBC' => ['multiplicador' => 1000, 'formato' => 'entero_miles'],
-                    'RBC' => ['multiplicador' => 1000000, 'formato' => 'entero_miles'],
-                    'PLT' => ['multiplicador' => 1000],
-                ],
-            ],
             'incaa' => [
                 'activo' => true,
-                'etiqueta' => 'Incaa',
+                'etiqueta' => 'Incca',
                 'overrides' => [],
             ],
             'incam' => [
                 'activo' => true,
-                'etiqueta' => 'Incam',
+                'etiqueta' => 'Incca v2',
                 'overrides' => [],
             ],
         ],

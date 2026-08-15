@@ -30,7 +30,7 @@ Entrada: listado de protocolos → icono determinaciones →
 | Fechas de derivación | Columnas aditivas `fechaEnvioDeriv` / `fechaDevolucDeterm` | Si existen: columnas en grilla; si no, no se muestran |
 | Columna `neto` | Migración aditiva en `determinaciones` / `pacientes` | Si falta: se interpreta `precio` legacy como lista en memoria |
 
-Tenants con `catalogo` hoy: **alqu**, **neolab**, **laboratoriosiv**, **labvetciudad**.  
+Tenants con `catalogo` hoy: **alqu**, **neolab**, **laboratoriosiv**, **labvetciudad**, **civetfranca**.  
 `mostrar_columna_perfil` afecta el **ABM** de tipodeterminaciones, **no** esta grilla.
 
 ## Actores y permisos

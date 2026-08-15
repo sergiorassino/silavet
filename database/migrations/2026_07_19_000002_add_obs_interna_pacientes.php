@@ -17,7 +17,10 @@ return new class extends Migration
     {
         if (Schema::hasTable('pacientes') && ! Schema::hasColumn('pacientes', 'obsInterna')) {
             Schema::table('pacientes', function (Blueprint $table) {
-                $table->text('obsInterna')->nullable()->after('observaciones');
+                $col = $table->text('obsInterna')->nullable();
+                if (Schema::hasColumn('pacientes', 'observaciones')) {
+                    $col->after('observaciones');
+                }
             });
         }
     }

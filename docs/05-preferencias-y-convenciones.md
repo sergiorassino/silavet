@@ -223,6 +223,11 @@ SQL: `database/sql/pacientes_dni.sql`
 ## 15. Comandos Artisan de tenant
 
 - `php artisan lb:switch {slug}` — cambia `TENANT_SLUG` y `DB_DATABASE` en `.env`.
+- `php artisan lb:schema-sync {destino}` — compara `lb_neolab` (modelo) con la BD de un laboratorio atrasado y escribe SQL **aditivo** (tablas/columnas/índices/FK faltantes; no borra ni modifica tipos).
+  - Ejemplo: `php artisan lb:schema-sync civetfranca`
+  - `--from=lb_neolab` (default), `--output=ruta.sql`, `--no-copy-catalog`
+  - `--apply` ejecuta el SQL (solo un humano; los agentes no deben usarlo).
+  - Después del SQL: `php artisan lb:switch {slug}` y `php artisan lb:migrate-legacy --force` (columnas SILAVET que el modelo aún no tenga).
 - `php artisan lb:migrate-legacy` — aplica migraciones aditivas sobre BD legacy existente.
   - `php artisan lb:migrate-legacy --dry-run` — vista previa sin ejecutar.
   - `php artisan lb:migrate-legacy --force` — sin confirmación interactiva.
