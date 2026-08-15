@@ -143,21 +143,85 @@
 
                     <div class="grid gap-4 sm:grid-cols-2">
                         <div>
-                            <label class="form-label mb-1" for="key">Archivo / clave (key)</label>
-                            <input wire:model="key" id="key" type="text" maxlength="100" class="form-input py-1.5 text-sm">
-                            @error('key') <p class="form-error">{{ $message }}</p> @enderror
+                            <label class="form-label mb-1" for="keyUpload">Clave privada (key)</label>
+                            @if ($keyActual !== '')
+                                <div class="mb-2 rounded border {{ $keyEnDisco ? 'border-neutral-200 bg-neutral-50' : 'border-amber-200 bg-amber-50' }} px-3 py-2 text-xs">
+                                    <div class="flex items-start justify-between gap-2">
+                                        <div class="min-w-0">
+                                            <p class="font-medium text-neutral-800">Archivo actual: {{ $keyActual }}</p>
+                                            @if ($keyEnDisco)
+                                                <p class="mt-0.5 text-neutral-500">En disco: afipSE/cert/{{ $idUsuarios }}/</p>
+                                            @else
+                                                <p class="mt-0.5 text-amber-800">No se encontró en afipSE/cert/{{ $idUsuarios }}/. Volvé a subirlo o borralo.</p>
+                                            @endif
+                                        </div>
+                                        <button type="button"
+                                                class="btn-secondary shrink-0 py-1 text-xs text-red-700"
+                                                wire:loading.attr="disabled"
+                                                wire:target="eliminarCertificado('key')"
+                                                x-on:click="window.vlSwalConfirmar('¿Borrar la clave privada «{{ addslashes($keyActual) }}»? Se eliminará el archivo del servidor.', 'Borrar clave AFIP', { confirmButtonText: 'Sí, borrar', icon: 'warning' }).then(ok => ok && $wire.eliminarCertificado('key'))">
+                                            Borrar
+                                        </button>
+                                    </div>
+                                </div>
+                            @else
+                                <p class="mb-2 text-xs text-neutral-500">Todavía no hay una clave cargada para este usuario.</p>
+                            @endif
+                            <input wire:model="keyUpload" id="keyUpload" type="file" accept=".key,.pem,application/x-pem-file"
+                                   class="form-input py-1.5 text-sm file:mr-2 file:rounded file:border-0 file:bg-primary-50 file:px-2 file:py-1 file:text-xs file:font-medium file:text-primary-700">
+                            @if ($keyUpload)
+                                <div class="mt-1 flex items-center justify-between gap-2 text-xs text-primary-800">
+                                    <span class="truncate">Seleccionado: {{ $keyUpload->getClientOriginalName() }}</span>
+                                    <button type="button" class="shrink-0 font-medium text-red-700 hover:underline" wire:click="quitarSeleccionCertificado('key')">Quitar</button>
+                                </div>
+                            @endif
+                            <p class="mt-1 text-xs text-neutral-500">Archivo .key o .pem. Máx. {{ $maxKbCert }} KB. Se guarda en la carpeta del usuario (idUsuarios).</p>
+                            <div wire:loading wire:target="keyUpload" class="mt-1 text-xs text-primary-600">Subiendo clave…</div>
+                            @error('keyUpload') <p class="form-error">{{ $message }}</p> @enderror
                         </div>
                         <div>
-                            <label class="form-label mb-1" for="crt">Certificado (crt)</label>
-                            <input wire:model="crt" id="crt" type="text" maxlength="100" class="form-input py-1.5 text-sm">
-                            @error('crt') <p class="form-error">{{ $message }}</p> @enderror
+                            <label class="form-label mb-1" for="crtUpload">Certificado (crt)</label>
+                            @if ($crtActual !== '')
+                                <div class="mb-2 rounded border {{ $crtEnDisco ? 'border-neutral-200 bg-neutral-50' : 'border-amber-200 bg-amber-50' }} px-3 py-2 text-xs">
+                                    <div class="flex items-start justify-between gap-2">
+                                        <div class="min-w-0">
+                                            <p class="font-medium text-neutral-800">Archivo actual: {{ $crtActual }}</p>
+                                            @if ($crtEnDisco)
+                                                <p class="mt-0.5 text-neutral-500">En disco: afipSE/cert/{{ $idUsuarios }}/</p>
+                                            @else
+                                                <p class="mt-0.5 text-amber-800">No se encontró en afipSE/cert/{{ $idUsuarios }}/. Volvé a subirlo o borralo.</p>
+                                            @endif
+                                        </div>
+                                        <button type="button"
+                                                class="btn-secondary shrink-0 py-1 text-xs text-red-700"
+                                                wire:loading.attr="disabled"
+                                                wire:target="eliminarCertificado('crt')"
+                                                x-on:click="window.vlSwalConfirmar('¿Borrar el certificado «{{ addslashes($crtActual) }}»? Se eliminará el archivo del servidor.', 'Borrar certificado AFIP', { confirmButtonText: 'Sí, borrar', icon: 'warning' }).then(ok => ok && $wire.eliminarCertificado('crt'))">
+                                            Borrar
+                                        </button>
+                                    </div>
+                                </div>
+                            @else
+                                <p class="mb-2 text-xs text-neutral-500">Todavía no hay un certificado cargado para este usuario.</p>
+                            @endif
+                            <input wire:model="crtUpload" id="crtUpload" type="file" accept=".crt,.cer,.pem,application/x-x509-ca-cert,application/pkix-cert"
+                                   class="form-input py-1.5 text-sm file:mr-2 file:rounded file:border-0 file:bg-primary-50 file:px-2 file:py-1 file:text-xs file:font-medium file:text-primary-700">
+                            @if ($crtUpload)
+                                <div class="mt-1 flex items-center justify-between gap-2 text-xs text-primary-800">
+                                    <span class="truncate">Seleccionado: {{ $crtUpload->getClientOriginalName() }}</span>
+                                    <button type="button" class="shrink-0 font-medium text-red-700 hover:underline" wire:click="quitarSeleccionCertificado('crt')">Quitar</button>
+                                </div>
+                            @endif
+                            <p class="mt-1 text-xs text-neutral-500">Archivo .crt, .cer o .pem. Máx. {{ $maxKbCert }} KB. Se guarda en la carpeta del usuario (idUsuarios).</p>
+                            <div wire:loading wire:target="crtUpload" class="mt-1 text-xs text-primary-600">Subiendo certificado…</div>
+                            @error('crtUpload') <p class="form-error">{{ $message }}</p> @enderror
                         </div>
                     </div>
                 </div>
             @endif
 
             <div class="flex flex-wrap gap-2 pt-1">
-                <button type="submit" class="btn-primary py-1.5 text-sm" wire:loading.attr="disabled">Guardar</button>
+                <button type="submit" class="btn-primary py-1.5 text-sm" wire:loading.attr="disabled" wire:target="save">Guardar</button>
                 <a href="{{ route('abm.usuarios.index') }}" class="btn-secondary py-1.5 text-sm">Cancelar</a>
             </div>
         </div>

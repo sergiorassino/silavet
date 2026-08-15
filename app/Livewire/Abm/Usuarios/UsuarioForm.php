@@ -5,15 +5,20 @@ namespace App\Livewire\Abm\Usuarios;
 use App\Models\Cliente;
 use App\Models\Rol;
 use App\Models\Usuario;
+use App\Support\Afip\AfipCertificadosStorage;
 use App\Support\CuitInput;
 use App\Support\PermisosIaCatalog;
 use App\Support\UsuarioMenuPortal;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Validation\Rule;
 use Livewire\Component;
+use Livewire\WithFileUploads;
 
 class UsuarioForm extends Component
 {
+    use WithFileUploads;
+
     public ?int $idUsuarios = null;
 
     public string $apenom = '';
@@ -52,9 +57,15 @@ class UsuarioForm extends Component
 
     public string $CondicionIVAReceptorId = '';
 
-    public string $key = '';
+    public string $keyActual = '';
 
-    public string $crt = '';
+    public string $crtActual = '';
+
+    /** @var UploadedFile|null */
+    public $keyUpload = null;
+
+    /** @var UploadedFile|null */
+    public $crtUpload = null;
 
     public function mount(?int $id = null): void
     {
@@ -138,8 +149,22 @@ class UsuarioForm extends Component
             'Concepto' => ['nullable', 'integer', 'min:0', 'max:99'],
             'DocTipo' => ['nullable', 'integer', 'min:0', 'max:99'],
             'CondicionIVAReceptorId' => ['nullable', 'integer', 'min:0', 'max:99'],
-            'key' => ['nullable', 'string', 'max:100'],
-            'crt' => ['nullable', 'string', 'max:100'],
+            'keyUpload' => [
+                'nullable',
+                'file',
+                'max:'.AfipCertificadosStorage::MAX_KB,
+                function (string $attribute, mixed $value, \Closure $fail): void {
+                    $this->validarExtensionCertificado($value, AfipCertificadosStorage::EXT_KEY, $fail, 'La clave privada debe ser un archivo .key o .pem.');
+                },
+            ],
+            'crtUpload' => [
+                'nullable',
+                'file',
+                'max:'.AfipCertificadosStorage::MAX_KB,
+                function (string $attribute, mixed $value, \Closure $fail): void {
+                    $this->validarExtensionCertificado($value, AfipCertificadosStorage::EXT_CRT, $fail, 'El certificado debe ser un archivo .crt, .cer o .pem.');
+                },
+            ],
         ];
     }
 
@@ -159,6 +184,10 @@ class UsuarioForm extends Component
             'razonSocial.required' => 'La razón social es obligatoria cuando el permiso AFIP está habilitado.',
             'PtoVta.required' => 'El punto de venta es obligatorio cuando el permiso AFIP está habilitado.',
             'inicioActiv.date' => 'La fecha de inicio de actividades no es válida.',
+            'keyUpload.file' => 'La clave privada no es un archivo válido.',
+            'keyUpload.max' => 'La clave privada no puede superar '.AfipCertificadosStorage::MAX_KB.' KB.',
+            'crtUpload.file' => 'El certificado no es un archivo válido.',
+            'crtUpload.max' => 'El certificado no puede superar '.AfipCertificadosStorage::MAX_KB.' KB.',
         ];
     }
 
@@ -191,14 +220,74 @@ class UsuarioForm extends Component
             $usuario->update($payload);
             $mensaje = 'Usuario actualizado correctamente.';
         } else {
-            Usuario::query()->create($payload);
+            $usuario = Usuario::query()->create($payload);
+            $this->idUsuarios = (int) $usuario->idUsuarios;
             $mensaje = 'Usuario creado correctamente.';
         }
+
+        $this->persistirCertificados($usuario);
 
         RateLimiter::hit($key, 60);
         $this->dispatch('vl-swal-exito', mensaje: $mensaje);
 
         $this->redirectRoute('abm.usuarios.index', navigate: false);
+    }
+
+    public function eliminarCertificado(string $tipo): void
+    {
+        abort_unless(tienePermiso(PermisosIaCatalog::USUARIOS), 403);
+
+        if (! in_array($tipo, [AfipCertificadosStorage::TIPO_KEY, AfipCertificadosStorage::TIPO_CRT], true)) {
+            return;
+        }
+
+        $limiter = 'usuario-cert-del:'.auth()->id();
+        abort_if(RateLimiter::tooManyAttempts($limiter, 10), 429);
+        RateLimiter::hit($limiter, 60);
+
+        if (! $this->idUsuarios) {
+            $this->quitarSeleccionCertificado($tipo);
+
+            return;
+        }
+
+        $usuario = Usuario::query()->findOrFail($this->idUsuarios);
+        $campo = $tipo === AfipCertificadosStorage::TIPO_KEY ? 'key' : 'crt';
+        $nombre = $this->valorAfipTexto($usuario->{$campo});
+
+        AfipCertificadosStorage::eliminar((int) $this->idUsuarios, $nombre);
+        $usuario->update([$campo => '0']);
+        AfipCertificadosStorage::invalidarTickets((int) $this->idUsuarios);
+
+        if ($tipo === AfipCertificadosStorage::TIPO_KEY) {
+            $this->keyActual = '';
+            $this->keyUpload = null;
+            $this->resetErrorBag('keyUpload');
+        } else {
+            $this->crtActual = '';
+            $this->crtUpload = null;
+            $this->resetErrorBag('crtUpload');
+        }
+
+        $etiqueta = $tipo === AfipCertificadosStorage::TIPO_KEY ? 'clave privada' : 'certificado';
+        $this->dispatch('vl-swal-exito', mensaje: 'Se borró la '.$etiqueta.' AFIP de este usuario.');
+    }
+
+    public function quitarSeleccionCertificado(string $tipo): void
+    {
+        abort_unless(tienePermiso(PermisosIaCatalog::USUARIOS), 403);
+
+        if ($tipo === AfipCertificadosStorage::TIPO_KEY) {
+            $this->keyUpload = null;
+            $this->resetErrorBag('keyUpload');
+
+            return;
+        }
+
+        if ($tipo === AfipCertificadosStorage::TIPO_CRT) {
+            $this->crtUpload = null;
+            $this->resetErrorBag('crtUpload');
+        }
     }
 
     private function normalizarVaciosNumericos(): void
@@ -222,8 +311,19 @@ class UsuarioForm extends Component
         $titulo = $this->idUsuarios ? 'Editar usuario' : 'Nuevo usuario';
         $roles = Rol::query()->orderBy('rol')->get(['id', 'rol']);
         $clientes = Cliente::query()->orderBy('nombre')->get(['idClientes', 'nombre']);
+        $id = (int) ($this->idUsuarios ?? 0);
+        $keyEnDisco = $id > 0 && $this->keyActual !== '' && AfipCertificadosStorage::existe($id, $this->keyActual);
+        $crtEnDisco = $id > 0 && $this->crtActual !== '' && AfipCertificadosStorage::existe($id, $this->crtActual);
+        $maxKbCert = AfipCertificadosStorage::MAX_KB;
 
-        return view('livewire.abm.usuarios.usuario-form', compact('titulo', 'roles', 'clientes'))
+        return view('livewire.abm.usuarios.usuario-form', compact(
+            'titulo',
+            'roles',
+            'clientes',
+            'keyEnDisco',
+            'crtEnDisco',
+            'maxKbCert',
+        ))
             ->layout('layouts.staff', UsuarioMenuPortal::staffLayoutParams(labCtx()->idRoles));
     }
 
@@ -244,8 +344,8 @@ class UsuarioForm extends Component
         $this->Concepto = (string) ((int) ($usuario->Concepto ?? 0));
         $this->DocTipo = (string) ((int) ($usuario->DocTipo ?? 0));
         $this->CondicionIVAReceptorId = (string) ((int) ($usuario->CondicionIVAReceptorId ?? 0));
-        $this->key = $this->valorAfipTexto($usuario->key);
-        $this->crt = $this->valorAfipTexto($usuario->crt);
+        $this->keyActual = $this->valorAfipTexto($usuario->key);
+        $this->crtActual = $this->valorAfipTexto($usuario->crt);
     }
 
     /** @param  array<string, mixed>  $data */
@@ -257,10 +357,8 @@ class UsuarioForm extends Component
         $cond = trim((string) ($data['condIva'] ?? ''));
         $iibb = trim((string) ($data['ingresosBrutos'] ?? ''));
         $inicio = trim((string) ($data['inicioActiv'] ?? ''));
-        $key = trim((string) ($data['key'] ?? ''));
-        $crt = trim((string) ($data['crt'] ?? ''));
 
-        return [
+        $payload = [
             'cuit' => $cuit !== '' ? $cuit : '0',
             'razonSocial' => $razon !== '' ? $razon : '0',
             'domicComerc' => $domic !== '' ? $domic : '0',
@@ -273,9 +371,70 @@ class UsuarioForm extends Component
             'Concepto' => (int) ($data['Concepto'] ?? 0),
             'DocTipo' => (int) ($data['DocTipo'] ?? 0),
             'CondicionIVAReceptorId' => (int) ($data['CondicionIVAReceptorId'] ?? 0),
-            'key' => $key !== '' ? $key : '0',
-            'crt' => $crt !== '' ? $crt : '0',
         ];
+
+        if ($this->idUsuarios === null) {
+            $payload['key'] = '0';
+            $payload['crt'] = '0';
+        }
+
+        return $payload;
+    }
+
+    private function persistirCertificados(Usuario $usuario): void
+    {
+        $id = (int) $usuario->idUsuarios;
+        $cambios = [];
+
+        if ($this->keyUpload instanceof UploadedFile) {
+            $cambios['key'] = AfipCertificadosStorage::guardar(
+                $id,
+                $this->keyUpload,
+                AfipCertificadosStorage::TIPO_KEY,
+                'keyUpload',
+            );
+        }
+
+        if ($this->crtUpload instanceof UploadedFile) {
+            $cambios['crt'] = AfipCertificadosStorage::guardar(
+                $id,
+                $this->crtUpload,
+                AfipCertificadosStorage::TIPO_CRT,
+                'crtUpload',
+            );
+        }
+
+        if ($cambios === []) {
+            return;
+        }
+
+        $usuario->update($cambios);
+
+        if (isset($cambios['key'])) {
+            AfipCertificadosStorage::eliminarObsoleto($id, $this->keyActual, $cambios['key']);
+            $this->keyActual = $cambios['key'];
+            $this->keyUpload = null;
+        }
+        if (isset($cambios['crt'])) {
+            AfipCertificadosStorage::eliminarObsoleto($id, $this->crtActual, $cambios['crt']);
+            $this->crtActual = $cambios['crt'];
+            $this->crtUpload = null;
+        }
+
+        AfipCertificadosStorage::invalidarTickets($id);
+    }
+
+    /** @param  list<string>  $extensiones */
+    private function validarExtensionCertificado(mixed $value, array $extensiones, \Closure $fail, string $mensaje): void
+    {
+        if (! $value instanceof UploadedFile) {
+            return;
+        }
+
+        $ext = strtolower($value->getClientOriginalExtension() ?: '');
+        if (! AfipCertificadosStorage::extensionPermitida($ext, $extensiones)) {
+            $fail($mensaje);
+        }
     }
 
     private function valorAfipTexto(mixed $value): string

@@ -31,17 +31,18 @@ final class AfipTokenAcceso
             $service = 'wsfe';
         }
 
-        $base = base_path('afipSE/cert/'.trim((string) $config['cert_usuario_id']));
-        $cert = $base.'/'.trim((string) $config['cert_crt']);
-        $privateKey = $base.'/'.trim((string) $config['cert_key']);
+        $id = (int) $config['cert_usuario_id'];
+        $base = AfipCertificadosStorage::directorio($id);
+        $cert = AfipCertificadosStorage::rutaAbsoluta($id, (string) ($config['cert_crt'] ?? ''));
+        $privateKey = AfipCertificadosStorage::rutaAbsoluta($id, (string) ($config['cert_key'] ?? ''));
         $tra = $service === 'wsfe'
-            ? $base.'/TRA.xml'
-            : $base.'/TRA_'.$service.'.xml';
+            ? $base.DIRECTORY_SEPARATOR.'TRA.xml'
+            : $base.DIRECTORY_SEPARATOR.'TRA_'.$service.'.xml';
         $ta = self::archivoTa($base, $service);
 
         foreach ([$cert, $privateKey] as $archivo) {
-            if (! is_file($archivo)) {
-                throw new RuntimeException('No se encontró el certificado AFIP: '.$archivo);
+            if ($archivo === null || ! is_file($archivo)) {
+                throw new RuntimeException('No se encontró el certificado AFIP: '.($archivo ?? '(nombre inválido)'));
             }
         }
 
