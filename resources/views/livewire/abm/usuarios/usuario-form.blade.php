@@ -217,6 +217,27 @@
                             @error('crtUpload') <p class="form-error">{{ $message }}</p> @enderror
                         </div>
                     </div>
+
+                    <div>
+                        <p class="form-label mb-1">Vencimiento del certificado</p>
+                        @if ($crtVencimientoTexto !== '')
+                            <p class="text-sm {{ $crtVencido ? 'font-medium text-red-700' : 'text-neutral-800' }}">
+                                {{ $crtVencimientoTexto }}
+                                @if ($crtVencido)
+                                    <span>(vencido)</span>
+                                @endif
+                                @if ($crtVencimientoPreview !== '')
+                                    <span class="font-normal text-neutral-500">— se guardará al pulsar Guardar</span>
+                                @elseif ($crtVencimientoDesdeArchivo && $crtVencimiento === '')
+                                    <span class="font-normal text-neutral-500">— leída del archivo; se guardará al pulsar Guardar</span>
+                                @endif
+                            </p>
+                        @elseif ($crtActual !== '')
+                            <p class="text-xs text-neutral-500">Sin fecha guardada. Volvé a subir el certificado para registrarla.</p>
+                        @else
+                            <p class="text-xs text-neutral-500">Se completa al cargar el archivo .crt / .cer / .pem.</p>
+                        @endif
+                    </div>
                 </div>
             @endif
 

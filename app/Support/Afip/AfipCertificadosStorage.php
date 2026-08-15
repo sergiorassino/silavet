@@ -4,6 +4,7 @@ namespace App\Support\Afip;
 
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\File;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Validation\ValidationException;
 use Livewire\Features\SupportFileUploads\TemporaryUploadedFile;
 use RuntimeException;
@@ -167,6 +168,64 @@ final class AfipCertificadosStorage
         self::eliminar($idUsuarios, $anterior);
     }
 
+    public static function tieneColumnaVencimiento(): bool
+    {
+        return Schema::hasTable('usuarios') && Schema::hasColumn('usuarios', 'crtVencimiento');
+    }
+
+    /**
+     * Fecha de vencimiento (Y-m-d) leída del X.509. Null si no es un certificado válido.
+     */
+    public static function vencimientoDesdeUpload(UploadedFile|TemporaryUploadedFile $archivo): ?string
+    {
+        $ruta = $archivo->getRealPath();
+        if ($ruta === false || ! is_file($ruta)) {
+            return null;
+        }
+
+        return self::vencimientoDesdeRuta($ruta);
+    }
+
+    public static function vencimientoDesdeRuta(string $ruta): ?string
+    {
+        $contenido = @file_get_contents($ruta);
+        if ($contenido === false || $contenido === '') {
+            return null;
+        }
+
+        return self::vencimientoDesdeContenido($contenido);
+    }
+
+    public static function vencimientoDesdeContenido(string $contenido): ?string
+    {
+        $pem = self::contenidoAPem($contenido);
+        if ($pem === null) {
+            return null;
+        }
+
+        $info = @openssl_x509_parse($pem);
+        if (! is_array($info)) {
+            return null;
+        }
+
+        $ts = (int) ($info['validTo_time_t'] ?? 0);
+        if ($ts > 0) {
+            return gmdate('Y-m-d', $ts);
+        }
+
+        $asn1 = (string) ($info['validTo'] ?? '');
+        if ($asn1 === '') {
+            return null;
+        }
+
+        $dt = \DateTimeImmutable::createFromFormat('ymdHis\Z', $asn1, new \DateTimeZone('UTC'));
+        if ($dt === false) {
+            return null;
+        }
+
+        return $dt->format('Y-m-d');
+    }
+
     /**
      * Invalida tickets WSAA al reemplazar certificados (fuerza un nuevo loginCms).
      */
@@ -186,6 +245,22 @@ final class AfipCertificadosStorage
                 File::delete($archivo->getPathname());
             }
         }
+    }
+
+    private static function contenidoAPem(string $contenido): ?string
+    {
+        $trim = trim($contenido);
+        if ($trim === '') {
+            return null;
+        }
+
+        if (str_contains($trim, 'BEGIN CERTIFICATE')) {
+            return $trim;
+        }
+
+        $encoded = chunk_split(base64_encode($contenido), 64, "\n");
+
+        return "-----BEGIN CERTIFICATE-----\n".$encoded."-----END CERTIFICATE-----\n";
     }
 
     private static function nombreDesdeUpload(UploadedFile|TemporaryUploadedFile $archivo, string $tipo): string

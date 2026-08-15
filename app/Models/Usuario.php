@@ -33,7 +33,12 @@ class Usuario extends Authenticatable
         'CondicionIVAReceptorId',
         'key',
         'crt',
+        'crtVencimiento',
         'permisos_ia',
+    ];
+
+    protected $casts = [
+        'crtVencimiento' => 'date',
     ];
 
     protected $hidden = [
