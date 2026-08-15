@@ -43,7 +43,8 @@ flags de config (merge `config/tenant.php` ← `config/tenants/{slug}.php`).
 | Tenant | `hemograma_auto` | Autoanalizadores |
 |--------|:----------------:|:----------------:|
 | **labvetciudad** | sí (mapa idItems abajo) | sí (Mindray BC-20, Incaa, Metrolab CM 250) |
-| alqu, neolab, lvm, lam, laboratoriosiv, civetfranca, … | no (default) | según su `config/tenants/{slug}.php` |
+| **civetfranca** | no (default) | sí (Edan H 30, Geo MC, Incca, Incca v2) |
+| alqu, neolab, lvm, lam, laboratoriosiv, … | no (default) | según su `config/tenants/{slug}.php` |
 | default (`config/tenant.php`) | `activo` = `false`, roles → `null` | `aparatos` vacío |
 
 **Activar hemograma en otro lab:** en `config/tenants/{slug}.php` poner
@@ -292,6 +293,7 @@ conteo manual).
 | JS hemograma | `resources/js/hemograma-auto.js` |
 | Defaults | `config/tenant.php` → `hemograma_auto` / `autoanalizadores` |
 | Override labvetciudad | `config/tenants/labvetciudad.php` |
+| Override civetfranca | `config/tenants/civetfranca.php` (Edan H 30, Geo MC, Incca, Incca v2) |
 | Ruta | `routes/web.php` → `protocolos.resultados` |
 | Tests config | `tests/Unit/HemogramaAutoConfigTest.php` |
 

@@ -78,6 +78,7 @@ La tabla `entorno` almacena la configuración institucional en **un registro**
 |----------------------|----------------------------------------------------------|
 | `formulas`           | Fórmulas de cálculo (texto legacy)                       |
 | `nombreListaPrecio`  | Nombre de la lista de precios activa                     |
+| `listaPreciosPdf`    | Ruta del PDF de lista de precios (autogestión cliente)   |
 | `logo`, `fondo`      | Archivos de identidad visual para informes               |
 | `headerInforme`, `footerInforme` | Imágenes opcionales de encabezado/pie del informe (misma carpeta que el logo); si faltan, se usa membrete + firmas |
 | `direLabo`, `teleLabo`, `emailLabo` | Datos de contacto del laboratorio     |

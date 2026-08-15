@@ -19,13 +19,19 @@ return new class extends Migration
     {
         if (Schema::hasTable('pacientes') && ! Schema::hasColumn('pacientes', 'neto')) {
             Schema::table('pacientes', function (Blueprint $table) {
-                $table->decimal('neto', 20, 2)->default(0)->after('estado');
+                $col = $table->decimal('neto', 20, 2)->default(0);
+                if (Schema::hasColumn('pacientes', 'estado')) {
+                    $col->after('estado');
+                }
             });
         }
 
         if (Schema::hasTable('determinaciones') && ! Schema::hasColumn('determinaciones', 'neto')) {
             Schema::table('determinaciones', function (Blueprint $table) {
-                $table->decimal('neto', 20, 2)->default(0)->after('idTipodeterminaciones');
+                $col = $table->decimal('neto', 20, 2)->default(0);
+                if (Schema::hasColumn('determinaciones', 'idTipodeterminaciones')) {
+                    $col->after('idTipodeterminaciones');
+                }
             });
         }
     }

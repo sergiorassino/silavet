@@ -19,6 +19,9 @@ return new class extends Migration
 
         Schema::table('entorno', function (Blueprint $table) {
             $columnas = [
+                'formulas' => fn () => $table->text('formulas')->nullable(),
+                'nombreListaPrecio' => fn () => $table->string('nombreListaPrecio', 200)->nullable(),
+                'carpeta' => fn () => $table->string('carpeta', 30)->nullable(),
                 'logo' => fn () => $table->string('logo', 255)->nullable(),
                 'fondo' => fn () => $table->string('fondo', 255)->nullable(),
                 'direLabo' => fn () => $table->string('direLabo', 255)->nullable(),

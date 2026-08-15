@@ -84,6 +84,19 @@ Si Vite dice *Port 5174 is already in use*, ejecutá de nuevo `npm run dev:all`:
 
 ## Migraciones en BD legacy
 
+Laboratorio con dump atrasado (faltan tablas o columnas de NeoLab):
+
+```bash
+php artisan lb:schema-sync civetfranca
+# Revisar database/sql/schema_sync_lb_civetfranca.sql y ejecutarlo sobre esa BD
+php artisan lb:switch civetfranca
+php artisan lb:migrate-legacy --force
+```
+
+`lb:schema-sync` **no modifica** la BD salvo `--apply` (uso humano). Solo compara `lb_neolab` con el destino y escribe SQL aditivo.
+
+Laboratorio ya alineado con NeoLab:
+
 ```bash
 php artisan lb:switch neolab
 php artisan lb:migrate-legacy --dry-run
