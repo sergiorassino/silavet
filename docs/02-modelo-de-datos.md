@@ -107,7 +107,7 @@ Equivalente funcional de la tabla `ento` en Sistemas Escolares.
 | `idRoles`      | Rol → menú y permisos                                       |
 | `idClientes`   | Si el usuario es cliente veterinario, FK a `clientes`       |
 | `permisoAfip`  | Flag legacy para operaciones de facturación                 |
-| `cuit`, `PtoVta`, `key`, `crt` | Datos AFIP del emisor                  |
+| `cuit`, `PtoVta`, `key`, `crt` | Datos AFIP del emisor. `key`/`crt` = nombre de archivo en `afipSE/cert/{idUsuarios}/` (upload desde ABM usuarios) |
 
 Detalle de auth y permisos: [03-autenticacion-y-permisos.md](03-autenticacion-y-permisos.md).
 

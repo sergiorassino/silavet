@@ -3,6 +3,7 @@
 namespace App\Support\Facturacion;
 
 use App\Models\Usuario;
+use App\Support\Afip\AfipCertificadosStorage;
 use Illuminate\Support\Facades\Schema;
 
 /**
@@ -156,11 +157,10 @@ final class FacturacionAfipConfig
             return true;
         }
 
-        $base = base_path('afipSE/cert/'.(int) $emisor->idUsuarios);
-        $key = $base.'/'.trim((string) ($emisor->key ?? ''));
-        $crt = $base.'/'.trim((string) ($emisor->crt ?? ''));
+        $id = (int) $emisor->idUsuarios;
 
-        return is_file($key) && is_file($crt);
+        return AfipCertificadosStorage::existe($id, (string) ($emisor->key ?? ''))
+            && AfipCertificadosStorage::existe($id, (string) ($emisor->crt ?? ''));
     }
 
     public static function formatoImpresion(): string
