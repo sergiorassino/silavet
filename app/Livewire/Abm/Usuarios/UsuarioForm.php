@@ -12,6 +12,7 @@ use App\Support\UsuarioMenuPortal;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\ValidationException;
 use Livewire\Component;
 use Livewire\WithFileUploads;
 
@@ -60,6 +61,12 @@ class UsuarioForm extends Component
     public string $keyActual = '';
 
     public string $crtActual = '';
+
+    /** Fecha persistida (Y-m-d) de usuarios.crtVencimiento. */
+    public string $crtVencimiento = '';
+
+    /** Fecha leída del archivo recién seleccionado, aún no guardada. */
+    public string $crtVencimientoPreview = '';
 
     /** @var UploadedFile|null */
     public $keyUpload = null;
@@ -215,6 +222,8 @@ class UsuarioForm extends Component
 
         $payload = array_merge($payload, $this->payloadAfip($data));
 
+        $this->validarCrtUploadAntesDeGuardar();
+
         if ($this->idUsuarios) {
             $usuario = Usuario::query()->findOrFail($this->idUsuarios);
             $usuario->update($payload);
@@ -256,7 +265,11 @@ class UsuarioForm extends Component
         $nombre = $this->valorAfipTexto($usuario->{$campo});
 
         AfipCertificadosStorage::eliminar((int) $this->idUsuarios, $nombre);
-        $usuario->update([$campo => '0']);
+        $payloadCert = [$campo => '0'];
+        if ($tipo === AfipCertificadosStorage::TIPO_CRT && AfipCertificadosStorage::tieneColumnaVencimiento()) {
+            $payloadCert['crtVencimiento'] = null;
+        }
+        $usuario->update($payloadCert);
         AfipCertificadosStorage::invalidarTickets((int) $this->idUsuarios);
 
         if ($tipo === AfipCertificadosStorage::TIPO_KEY) {
@@ -265,6 +278,8 @@ class UsuarioForm extends Component
             $this->resetErrorBag('keyUpload');
         } else {
             $this->crtActual = '';
+            $this->crtVencimiento = '';
+            $this->crtVencimientoPreview = '';
             $this->crtUpload = null;
             $this->resetErrorBag('crtUpload');
         }
@@ -286,8 +301,33 @@ class UsuarioForm extends Component
 
         if ($tipo === AfipCertificadosStorage::TIPO_CRT) {
             $this->crtUpload = null;
+            $this->crtVencimientoPreview = '';
             $this->resetErrorBag('crtUpload');
         }
+    }
+
+    public function updatedCrtUpload(): void
+    {
+        if (! $this->crtUpload instanceof UploadedFile) {
+            $this->crtVencimientoPreview = '';
+
+            return;
+        }
+
+        $fecha = AfipCertificadosStorage::vencimientoDesdeUpload($this->crtUpload);
+        if ($fecha === null) {
+            $this->crtUpload = null;
+            $this->crtVencimientoPreview = '';
+            $this->addError(
+                'crtUpload',
+                'No se pudo leer la fecha de vencimiento. Verifique que el archivo sea un certificado X.509 válido (.crt, .cer o .pem).'
+            );
+
+            return;
+        }
+
+        $this->crtVencimientoPreview = $fecha;
+        $this->resetErrorBag('crtUpload');
     }
 
     private function normalizarVaciosNumericos(): void
@@ -315,6 +355,7 @@ class UsuarioForm extends Component
         $keyEnDisco = $id > 0 && $this->keyActual !== '' && AfipCertificadosStorage::existe($id, $this->keyActual);
         $crtEnDisco = $id > 0 && $this->crtActual !== '' && AfipCertificadosStorage::existe($id, $this->crtActual);
         $maxKbCert = AfipCertificadosStorage::MAX_KB;
+        [$crtVencimientoTexto, $crtVencido, $crtVencimientoDesdeArchivo] = $this->datosVencimientoParaVista($id, $crtEnDisco);
 
         return view('livewire.abm.usuarios.usuario-form', compact(
             'titulo',
@@ -323,6 +364,9 @@ class UsuarioForm extends Component
             'keyEnDisco',
             'crtEnDisco',
             'maxKbCert',
+            'crtVencimientoTexto',
+            'crtVencido',
+            'crtVencimientoDesdeArchivo',
         ))
             ->layout('layouts.staff', UsuarioMenuPortal::staffLayoutParams(labCtx()->idRoles));
     }
@@ -346,6 +390,8 @@ class UsuarioForm extends Component
         $this->CondicionIVAReceptorId = (string) ((int) ($usuario->CondicionIVAReceptorId ?? 0));
         $this->keyActual = $this->valorAfipTexto($usuario->key);
         $this->crtActual = $this->valorAfipTexto($usuario->crt);
+        $this->crtVencimiento = $this->fechaVencimientoDesdeUsuario($usuario);
+        $this->crtVencimientoPreview = '';
     }
 
     /** @param  array<string, mixed>  $data */
@@ -396,15 +442,19 @@ class UsuarioForm extends Component
         }
 
         if ($this->crtUpload instanceof UploadedFile) {
+            $vencimiento = $this->validarCrtUploadAntesDeGuardar();
             $cambios['crt'] = AfipCertificadosStorage::guardar(
                 $id,
                 $this->crtUpload,
                 AfipCertificadosStorage::TIPO_CRT,
                 'crtUpload',
             );
+            $cambios['crtVencimiento'] = $vencimiento;
         }
 
         if ($cambios === []) {
+            $this->completarCrtVencimientoSiFalta($usuario);
+
             return;
         }
 
@@ -418,10 +468,128 @@ class UsuarioForm extends Component
         if (isset($cambios['crt'])) {
             AfipCertificadosStorage::eliminarObsoleto($id, $this->crtActual, $cambios['crt']);
             $this->crtActual = $cambios['crt'];
+            $this->crtVencimiento = (string) ($cambios['crtVencimiento'] ?? '');
+            $this->crtVencimientoPreview = '';
             $this->crtUpload = null;
+        } else {
+            $this->completarCrtVencimientoSiFalta($usuario);
         }
 
         AfipCertificadosStorage::invalidarTickets($id);
+    }
+
+    private function validarCrtUploadAntesDeGuardar(): string
+    {
+        if (! $this->crtUpload instanceof UploadedFile) {
+            return '';
+        }
+
+        $this->assertColumnaCrtVencimientoSiHaceFalta(true);
+
+        $fecha = AfipCertificadosStorage::vencimientoDesdeUpload($this->crtUpload);
+        if ($fecha === null) {
+            $mensaje = 'No se pudo leer la fecha de vencimiento del certificado. '
+                .'Verifique que el archivo sea un certificado X.509 válido (.crt, .cer o .pem).';
+            $this->dispatch('vl-swal-error', mensaje: $mensaje);
+            throw ValidationException::withMessages(['crtUpload' => $mensaje]);
+        }
+
+        $this->crtVencimientoPreview = $fecha;
+
+        return $fecha;
+    }
+
+    private function completarCrtVencimientoSiFalta(Usuario $usuario): void
+    {
+        if ($this->crtVencimiento !== '' || $this->crtActual === '') {
+            return;
+        }
+
+        if (! AfipCertificadosStorage::tieneColumnaVencimiento()) {
+            return;
+        }
+
+        $id = (int) $usuario->idUsuarios;
+        if (! AfipCertificadosStorage::existe($id, $this->crtActual)) {
+            return;
+        }
+
+        $ruta = AfipCertificadosStorage::rutaAbsoluta($id, $this->crtActual);
+        if ($ruta === null) {
+            return;
+        }
+
+        $fecha = AfipCertificadosStorage::vencimientoDesdeRuta($ruta);
+        if ($fecha === null) {
+            return;
+        }
+
+        $usuario->update(['crtVencimiento' => $fecha]);
+        $this->crtVencimiento = $fecha;
+    }
+
+    /**
+     * Si hay que persistir o borrar la fecha y falta la columna, error visible (no éxito silencioso).
+     */
+    private function assertColumnaCrtVencimientoSiHaceFalta(bool $obligatorio): void
+    {
+        if (! $obligatorio || AfipCertificadosStorage::tieneColumnaVencimiento()) {
+            return;
+        }
+
+        $mensaje = 'No se puede guardar la fecha de vencimiento del certificado: falta la columna usuarios.crtVencimiento en este laboratorio. '
+            .'Ejecute la migración (php artisan lb:migrate-legacy --force) o el SQL de database/sql/usuarios_crt_vencimiento.sql.';
+        $this->dispatch('vl-swal-error', mensaje: $mensaje);
+        throw ValidationException::withMessages(['crtUpload' => $mensaje]);
+    }
+
+    /**
+     * @return array{0: string, 1: bool, 2: bool}
+     */
+    private function datosVencimientoParaVista(int $id, bool $crtEnDisco): array
+    {
+        $fecha = $this->crtVencimientoPreview !== '' ? $this->crtVencimientoPreview : $this->crtVencimiento;
+        $desdeArchivo = false;
+
+        if ($fecha === '' && $crtEnDisco) {
+            $ruta = AfipCertificadosStorage::rutaAbsoluta($id, $this->crtActual);
+            if ($ruta !== null) {
+                $leida = AfipCertificadosStorage::vencimientoDesdeRuta($ruta);
+                if ($leida !== null) {
+                    $fecha = $leida;
+                    $desdeArchivo = true;
+                }
+            }
+        }
+
+        if ($fecha === '') {
+            return ['', false, false];
+        }
+
+        $ts = strtotime($fecha.' 00:00:00');
+        $texto = $ts !== false ? date('d/m/Y', $ts) : $fecha;
+        $vencido = $fecha < date('Y-m-d');
+
+        return [$texto, $vencido, $desdeArchivo];
+    }
+
+    private function fechaVencimientoDesdeUsuario(Usuario $usuario): string
+    {
+        if (! AfipCertificadosStorage::tieneColumnaVencimiento()) {
+            return '';
+        }
+
+        $valor = $usuario->crtVencimiento;
+        if ($valor instanceof \DateTimeInterface) {
+            return $valor->format('Y-m-d');
+        }
+
+        $texto = trim((string) ($valor ?? ''));
+        if ($texto === '' || $texto === '0000-00-00') {
+            return '';
+        }
+
+        return substr($texto, 0, 10);
     }
 
     /** @param  list<string>  $extensiones */

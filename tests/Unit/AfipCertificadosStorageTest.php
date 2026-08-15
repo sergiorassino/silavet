@@ -103,4 +103,66 @@ class AfipCertificadosStorageTest extends TestCase
         $this->assertFileExists($dir.DIRECTORY_SEPARATOR.'TA.xml');
         $this->assertFalse(AfipCertificadosStorage::eliminar(self::ID_PRUEBA, '../homo.key'));
     }
+
+    public function test_vencimiento_desde_pem_y_der(): void
+    {
+        if (! extension_loaded('openssl')) {
+            $this->markTestSkipped('Requiere extensión openssl.');
+        }
+
+        $pem = $this->certificadoAutofirmadoPem(400);
+        $info = openssl_x509_parse($pem);
+        $this->assertIsArray($info);
+        $esperado = gmdate('Y-m-d', (int) $info['validTo_time_t']);
+
+        $this->assertSame($esperado, AfipCertificadosStorage::vencimientoDesdeContenido($pem));
+
+        $der = $this->pemADer($pem);
+        $this->assertSame($esperado, AfipCertificadosStorage::vencimientoDesdeContenido($der));
+
+        $dir = AfipCertificadosStorage::directorio(self::ID_PRUEBA);
+        File::ensureDirectoryExists($dir);
+        $ruta = $dir.DIRECTORY_SEPARATOR.'prueba.crt';
+        File::put($ruta, $pem);
+        $this->assertSame($esperado, AfipCertificadosStorage::vencimientoDesdeRuta($ruta));
+    }
+
+    public function test_vencimiento_contenido_invalido_devuelve_null(): void
+    {
+        $this->assertNull(AfipCertificadosStorage::vencimientoDesdeContenido(''));
+        $this->assertNull(AfipCertificadosStorage::vencimientoDesdeContenido('no es un certificado'));
+        $this->assertNull(AfipCertificadosStorage::vencimientoDesdeRuta(__FILE__));
+    }
+
+    private function certificadoAutofirmadoPem(int $diasValidez): string
+    {
+        $dn = [
+            'countryName' => 'AR',
+            'organizationName' => 'SILAVET Test',
+            'commonName' => 'test-afip.local',
+        ];
+        $privkey = openssl_pkey_new([
+            'private_key_bits' => 2048,
+            'private_key_type' => OPENSSL_KEYTYPE_RSA,
+        ]);
+        $this->assertNotFalse($privkey);
+        $csr = openssl_csr_new($dn, $privkey, ['digest_alg' => 'sha256']);
+        $this->assertNotFalse($csr);
+        $x509 = openssl_csr_sign($csr, null, $privkey, $diasValidez, ['digest_alg' => 'sha256']);
+        $this->assertNotFalse($x509);
+        $pem = '';
+        $this->assertTrue(openssl_x509_export($x509, $pem));
+
+        return $pem;
+    }
+
+    private function pemADer(string $pem): string
+    {
+        $cuerpo = preg_replace('/-----BEGIN CERTIFICATE-----|-----END CERTIFICATE-----|\s+/', '', $pem) ?? '';
+        $der = base64_decode($cuerpo, true);
+        $this->assertNotFalse($der);
+        $this->assertNotSame('', $der);
+
+        return $der;
+    }
 }
