@@ -16,7 +16,7 @@ return [
 
     'tipodeterminaciones' => [
         'mostrar_columna_perfil' => true,
-	'derivacion' => 'catalogo',
+        'derivacion' => 'catalogo',
     ],
 
     'precios' => [
