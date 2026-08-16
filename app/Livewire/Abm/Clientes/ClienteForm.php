@@ -7,6 +7,7 @@ use App\Support\CuitInput;
 use App\Support\DniInput;
 use App\Support\EmailList;
 use App\Support\Precios\DescuentoDeterminacionConfig;
+use App\Support\Precios\ListaPreciosConfig;
 use App\Support\PermisosIaCatalog;
 use App\Support\UsuarioMenuPortal;
 use Illuminate\Support\Facades\RateLimiter;
@@ -36,6 +37,8 @@ class ClienteForm extends Component
 
     public string $descuento = '';
 
+    public int $listaPreciosCliente = ListaPreciosConfig::DEFAULT;
+
     public function mount(?int $id = null): void
     {
         abort_unless(tienePermiso(PermisosIaCatalog::CLIENTES), 403);
@@ -58,6 +61,11 @@ class ClienteForm extends Component
             $this->descuento = $cliente->descuento !== null
                 ? rtrim(rtrim(number_format((float) $cliente->descuento, 2, '.', ''), '0'), '.')
                 : '';
+            $this->listaPreciosCliente = ListaPreciosConfig::normalizar(
+                $cliente->getAttribute(ListaPreciosConfig::COLUMNA_CLIENTE)
+            );
+        } else {
+            $this->listaPreciosCliente = ListaPreciosConfig::DEFAULT;
         }
     }
 
@@ -97,6 +105,9 @@ class ClienteForm extends Component
             'descuento' => DescuentoDeterminacionConfig::usaPorcentajeCliente()
                 ? ['nullable', 'numeric', 'min:0', 'max:100']
                 : ['nullable'],
+            'listaPreciosCliente' => ListaPreciosConfig::mostrarSelectorCliente()
+                ? ['required', 'integer', 'in:1,2,3']
+                : ['nullable'],
         ];
     }
 
@@ -114,6 +125,8 @@ class ClienteForm extends Component
             'descuento.numeric' => 'El descuento debe ser un número.',
             'descuento.min' => 'El descuento no puede ser negativo.',
             'descuento.max' => 'El descuento no puede superar 100%.',
+            'listaPreciosCliente.required' => 'Seleccione la lista de precios del cliente.',
+            'listaPreciosCliente.in' => 'La lista de precios debe ser 1, 2 o 3.',
         ];
     }
 
@@ -167,6 +180,18 @@ class ClienteForm extends Component
             $data['descuento'] = null;
         } else {
             $data['descuento'] = $descuento === '' ? null : (float) $descuento;
+        }
+
+        if (ListaPreciosConfig::mostrarSelectorCliente()) {
+            $nroLista = ListaPreciosConfig::normalizar($data['listaPreciosCliente'] ?? ListaPreciosConfig::DEFAULT);
+            if (! ListaPreciosConfig::tieneColumnaCliente()) {
+                $mensaje = ListaPreciosConfig::mensajeColumnaClienteFaltante();
+                $this->dispatch('vl-swal-error', mensaje: $mensaje);
+                throw ValidationException::withMessages(['listaPreciosCliente' => $mensaje]);
+            }
+            $data['listaPreciosCliente'] = $nroLista;
+        } else {
+            unset($data['listaPreciosCliente']);
         }
 
         if ($this->idClientes) {

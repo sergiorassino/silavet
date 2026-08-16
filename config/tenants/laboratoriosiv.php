@@ -12,6 +12,10 @@ return [
         'derivacion' => 'catalogo',
     ],
 
+    'precios' => [
+        'lista' => 'paciente',
+    ],
+
     'autoanalizadores' => [
         'aparatos' => [
             'biosystem_a15' => [

@@ -22,6 +22,7 @@ class Cliente extends Model
         'cuit',
         'dni',
         'descuento',
+        'listaPreciosCliente',
     ];
 
     protected function casts(): array

@@ -2,7 +2,7 @@
 -- Generado por: php artisan lb:schema-sync
 -- Modelo : lb_neolab
 -- Destino: lb_civetfranca
--- Fecha  : 2026-08-15 12:39:59
+-- Fecha  : 2026-08-16 08:24:28
 --
 -- ADITIVO: no elimina tablas/columnas ni modifica tipos existentes.
 -- Ejecutar sobre la BD destino (USE `lb_civetfranca`).

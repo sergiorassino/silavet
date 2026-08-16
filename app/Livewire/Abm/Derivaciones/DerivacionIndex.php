@@ -77,10 +77,14 @@ class DerivacionIndex extends Component
         }
 
         if (TipodeterminacionesGridConfig::derivacionEsCatalogo()
-            && Schema::hasTable('tipodeterminaciones')
-            && Schema::hasColumn('tipodeterminaciones', 'destino')
-            && DB::table('tipodeterminaciones')->where('destino', $id)->exists()) {
-            return true;
+            && Schema::hasTable('tipodeterminaciones')) {
+            $columna = TipodeterminacionesGridConfig::columnaFkCentro(
+                Schema::hasColumn('tipodeterminaciones', 'derivacion')
+            );
+            if (Schema::hasColumn('tipodeterminaciones', $columna)
+                && DB::table('tipodeterminaciones')->where($columna, $id)->exists()) {
+                return true;
+            }
         }
 
         return false;

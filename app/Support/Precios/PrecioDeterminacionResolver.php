@@ -2,6 +2,7 @@
 
 namespace App\Support\Precios;
 
+use App\Models\Paciente;
 use App\Models\Tipodeterminacion;
 
 class PrecioDeterminacionResolver
@@ -14,7 +15,33 @@ class PrecioDeterminacionResolver
      */
     public static function resolverPrecioLista1(Tipodeterminacion $tipo): float
     {
-        return round((float) $tipo->precio, 2);
+        return self::resolverPrecioLista($tipo, ListaPreciosConfig::DEFAULT);
+    }
+
+    /**
+     * Precio de la lista 1/2/3 del catálogo.
+     * Si falta precio2/precio3 en el registro, usa lista 1.
+     */
+    public static function resolverPrecioLista(Tipodeterminacion $tipo, int $nroLista = ListaPreciosConfig::DEFAULT): float
+    {
+        $nro = ListaPreciosConfig::normalizar($nroLista);
+        $attrs = $tipo->getAttributes();
+
+        if ($nro === 2 && array_key_exists('precio2', $attrs)) {
+            return round((float) $attrs['precio2'], 2);
+        }
+
+        if ($nro === 3 && array_key_exists('precio3', $attrs)) {
+            return round((float) $attrs['precio3'], 2);
+        }
+
+        return round((float) ($attrs['precio'] ?? $tipo->precio ?? 0), 2);
+    }
+
+    /** Precio de lista según el alcance del tenant (`cliente` / `paciente`). */
+    public static function resolverPrecioListaParaPaciente(Tipodeterminacion $tipo, Paciente $paciente): float
+    {
+        return self::resolverPrecioLista($tipo, ListaPreciosConfig::nroParaPaciente($paciente));
     }
 
     /** Calcula el descuento en pesos a partir del porcentaje del cliente sobre el neto (lista). */

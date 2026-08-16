@@ -46,6 +46,7 @@ class Paciente extends Model
         'nombreProtocolo',
         'nombre',
         'propietario',
+        'listaPreciosPaciente',
         'dni',
         'cuit',
         'email',

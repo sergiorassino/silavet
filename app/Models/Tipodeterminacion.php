@@ -23,6 +23,7 @@ class Tipodeterminacion extends Model
         'filasCant',
         'destino',
         'perfil',
+        'derivacion',
     ];
 
     protected function casts(): array
@@ -36,6 +37,7 @@ class Tipodeterminacion extends Model
             'filasCant' => 'integer',
             'destino' => 'integer',
             'perfil' => 'integer',
+            'derivacion' => 'integer',
         ];
     }
 

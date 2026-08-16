@@ -9,6 +9,7 @@ use App\Models\Tipodeterminacion;
 use App\Support\PermisosIaCatalog;
 use App\Support\PrecioInput;
 use App\Support\Precios\DescuentoDeterminacionResolver;
+use App\Support\Precios\ListaPreciosConfig;
 use App\Support\Precios\PrecioDeterminacionResolver;
 use App\Support\Requerimientos\RequerimientoHtml;
 use App\Support\UsuarioMenuPortal;
@@ -210,7 +211,7 @@ class EstimacionCostos extends Component
     /** @return array{idTipodeterminaciones: int, nombre: string, neto: string, descuento: string, precio: string} */
     private function filaDesdeTipo(Tipodeterminacion $tipo): array
     {
-        $neto = PrecioDeterminacionResolver::resolverPrecioLista1($tipo);
+        $neto = PrecioDeterminacionResolver::resolverPrecioLista($tipo, $this->nroListaCliente());
         $descuento = DescuentoDeterminacionResolver::calcularDescuento(
             $neto,
             (int) $this->idClientes,
@@ -225,6 +226,15 @@ class EstimacionCostos extends Component
             'descuento' => PrecioInput::format($descuento),
             'precio' => PrecioInput::format($precio),
         ];
+    }
+
+    private function nroListaCliente(): int
+    {
+        $cliente = $this->idClientes
+            ? Cliente::query()->find($this->idClientes)
+            : null;
+
+        return ListaPreciosConfig::nroParaCliente($cliente);
     }
 
     private function yaSeleccionada(int $idTipo): bool

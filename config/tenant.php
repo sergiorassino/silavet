@@ -39,7 +39,9 @@ return [
     /*
     | Gestión de determinaciones (grid admin).
     | - mostrar_columna_perfil: tenant alqu = true; resto = false (default).
-    | - derivacion: si_no (Sí/No en destino) | catalogo (select derivaciones).
+    | - derivacion: si_no (Sí/No en columna destino) | catalogo (select centros).
+    |   En catálogo el FK va en tipodeterminaciones.derivacion (legacy ScriptCase),
+    |   no en destino (código 0–3 de otra semántica).
     |   alqu, neolab, laboratoriosiv, labvetciudad y civetfranca usan catalogo; resto usa si_no.
     */
     'tipodeterminaciones' => [
@@ -52,9 +54,17 @@ return [
     | - cliente_porcentaje: % fijo en clientes.descuento, aplica a todas las determinaciones.
     | - perfiles_volumen_mes_anterior: según perfiles pedidos el mes anterior (tipodeterminaciones.perfil),
     |   descuento escalonado solo en perfiles del mes actual; no usa clientes.descuento.
+    |
+    | Alcance de las 3 listas (tipodeterminaciones.precio / precio2 / precio3):
+    | - cliente (default): cada cliente veterinario elige lista (clientes.listaPreciosCliente).
+    |   Alta y columna con default 1 (= tipodeterminaciones.precio).
+    | - paciente: cada protocolo elige lista (pacientes.listaPreciosPaciente). laboratoriosiv.
+    | La clave legacy fija_1 se interpreta como cliente.
+    | Ver docs/12-listas-de-precios-por-tenant.md.
     */
     'precios' => [
         'descuento' => 'cliente_porcentaje',
+        'lista' => 'cliente',
     ],
 
     /*

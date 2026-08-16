@@ -16,6 +16,7 @@ use App\Support\CuitInput;
 use App\Support\DniInput;
 use App\Support\PermisosIaCatalog;
 use App\Support\ProtocoloNumero;
+use App\Support\Precios\ListaPreciosConfig;
 use App\Support\Protocolos\PacienteAdjuntoStorage;
 use App\Support\Protocolos\PacienteListadoFiltros;
 use App\Support\Resultados\RenglonImagenesStorage;
@@ -68,6 +69,8 @@ class PacienteForm extends Component
 
     public string $observaciones = '';
 
+    public int $listaPreciosPaciente = ListaPreciosConfig::DEFAULT;
+
     /** @var array{vista?: string, filtroEstado?: string, page?: int} */
     public array $listadoFiltros = [];
 
@@ -103,9 +106,13 @@ class PacienteForm extends Component
             $this->sexo = (string) $paciente->sexo;
             $this->edad = (string) $paciente->edad;
             $this->observaciones = (string) ($paciente->observaciones ?? '');
+            $this->listaPreciosPaciente = ListaPreciosConfig::normalizar(
+                $paciente->getAttribute(ListaPreciosConfig::COLUMNA_PACIENTE)
+            );
         } else {
             $this->fechhoy = now()->format('Y-m-d');
             $this->tipoProtocolo = (string) config('tenant.protocolos.dual_corto_largo.tipo_default', 'L');
+            $this->listaPreciosPaciente = ListaPreciosConfig::DEFAULT;
             $this->actualizarPreviewProtocolo();
 
             if ($ctx->esCliente() && $ctx->idClientes) {
@@ -192,6 +199,17 @@ class PacienteForm extends Component
             'sexo' => ['nullable', 'string', 'max:100', Rule::in(SexoCatalog::opciones()->all())],
             'edad' => ['nullable', 'string', 'max:50'],
             'observaciones' => ['nullable', 'string'],
+            'listaPreciosPaciente' => ListaPreciosConfig::mostrarSelectorPaciente()
+                ? ['required', 'integer', 'in:1,2,3']
+                : ['nullable'],
+        ];
+    }
+
+    public function messages(): array
+    {
+        return [
+            'listaPreciosPaciente.required' => 'Seleccione la lista de precios del protocolo.',
+            'listaPreciosPaciente.in' => 'La lista de precios debe ser 1, 2 o 3.',
         ];
     }
 
@@ -251,6 +269,16 @@ class PacienteForm extends Component
             throw ValidationException::withMessages(['cuit' => $mensaje]);
         }
 
+        $nroLista = ListaPreciosConfig::DEFAULT;
+        if (ListaPreciosConfig::mostrarSelectorPaciente()) {
+            $nroLista = ListaPreciosConfig::normalizar($data['listaPreciosPaciente'] ?? ListaPreciosConfig::DEFAULT);
+            if (! ListaPreciosConfig::tieneColumnaPaciente()) {
+                $mensaje = ListaPreciosConfig::mensajeColumnaPacienteFaltante();
+                $this->dispatch('vl-swal-error', mensaje: $mensaje);
+                throw ValidationException::withMessages(['listaPreciosPaciente' => $mensaje]);
+            }
+        }
+
         $payload = [
             'idClientes' => (int) $data['idClientes'],
             'idUsuarios' => $idUsuarios,
@@ -271,6 +299,9 @@ class PacienteForm extends Component
         }
         if (self::tieneColumnaCuit()) {
             $payload['cuit'] = $cuit;
+        }
+        if (ListaPreciosConfig::mostrarSelectorPaciente() && ListaPreciosConfig::tieneColumnaPaciente()) {
+            $payload['listaPreciosPaciente'] = $nroLista;
         }
 
         try {
@@ -580,6 +611,9 @@ class PacienteForm extends Component
             'dejaNombreProtocoloVacio' => $dejaNombreProtocoloVacio,
             'nombreProtocoloEditable' => $nombreProtocoloEditable,
             'puedeEliminar' => $puedeEliminar,
+            'mostrarListaPrecios' => ListaPreciosConfig::mostrarSelectorPaciente(),
+            'tieneColumnaListaPrecios' => ListaPreciosConfig::tieneColumnaPaciente(),
+            'opcionesListaPrecios' => ListaPreciosConfig::opciones(),
             'urlVolver' => PacienteListadoFiltros::urlIndex($this->listadoFiltros, $this->idPacientes),
         ])->layout('layouts.staff', UsuarioMenuPortal::staffLayoutParams(labCtx()->idRoles));
     }

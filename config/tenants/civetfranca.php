@@ -3,6 +3,10 @@
 return [
     'nombre' => 'CIVET Franca',
 
+    'tipodeterminaciones' => [
+        'derivacion' => 'catalogo',
+    ],
+
     'protocolos' => [
         'estados_flujo' => 3,
         'implementacion' => 'dual_corto_largo',

@@ -113,6 +113,9 @@
                         <th class="vl-pacientes-th">Protocolo</th>
                         <th class="vl-pacientes-th">Nombre</th>
                         <th class="vl-pacientes-th">Tutor</th>
+                        @if ($mostrarListaPrecios)
+                            <th class="vl-pacientes-th" title="Lista de precios">L/P</th>
+                        @endif
                         <th class="vl-pacientes-th">Especie</th>
                         <th class="vl-pacientes-th">Raza</th>
                         <th class="vl-pacientes-th">Sexo</th>
@@ -168,6 +171,9 @@
                                     <span class="vl-pacientes-pago-global-badge">Pago global</span>
                                 </td>
                                 <td class="vl-pacientes-td">—</td>
+                                @if ($mostrarListaPrecios)
+                                    <td class="vl-pacientes-td">—</td>
+                                @endif
                                 <td class="vl-pacientes-td">—</td>
                                 <td class="vl-pacientes-td">—</td>
                                 <td class="vl-pacientes-td">—</td>
@@ -264,6 +270,11 @@
                                 <td class="vl-pacientes-td font-semibold whitespace-nowrap">{{ $paciente->nombreProtocolo ?: '—' }}</td>
                                 <td class="vl-pacientes-td">{{ $paciente->nombre ?: '—' }}</td>
                                 <td class="vl-pacientes-td">{{ $paciente->propietario ?: '—' }}</td>
+                                @if ($mostrarListaPrecios)
+                                    <td class="vl-pacientes-td whitespace-nowrap" title="Lista de precios">
+                                        {{ \App\Support\Precios\ListaPreciosConfig::etiquetaParaPaciente($paciente) }}
+                                    </td>
+                                @endif
                                 <td class="vl-pacientes-td">{{ $paciente->especie?->nombre ?: '—' }}</td>
                                 <td class="vl-pacientes-td">{{ $paciente->raza?->nombre ?: '—' }}</td>
                                 <td class="vl-pacientes-td">{{ $paciente->sexo ?: '—' }}</td>
@@ -443,7 +454,7 @@
                         @endif
                     @empty
                         <tr>
-                            <td colspan="{{ ($mostrarCadete ? 24 : 23) + ($mostrarColumnaAfip ? 1 : 0) }}" class="vl-pacientes-td text-center text-neutral-500 py-10">
+                            <td colspan="{{ ($mostrarCadete ? 24 : 23) + ($mostrarColumnaAfip ? 1 : 0) + ($mostrarListaPrecios ? 1 : 0) }}" class="vl-pacientes-td text-center text-neutral-500 py-10">
                                 @if ($vista === 'hoy')
                                     @php
                                         $fechaEfectiva = $this->fechaVistaEfectiva();
