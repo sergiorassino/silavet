@@ -14,6 +14,7 @@ use App\Support\Envio\InformeEnvioServicio;
 use App\Support\Facturacion\FacturacionAfipConfig;
 use App\Support\Facturacion\FacturacionAfipIndicadores;
 use App\Support\Precios\DescuentoDeterminacionResolver;
+use App\Support\Precios\ListaPreciosConfig;
 use App\Support\PermisosIaCatalog;
 use App\Support\Protocolos\DiagnosticoIaPromptBuilder;
 use App\Support\Protocolos\PacienteAdjuntoStorage;
@@ -1286,6 +1287,7 @@ class PacienteIndex extends Component
             'mostrarCadete' => $mostrarCadete,
             'mostrarColumnaAfip' => $mostrarColumnaAfip,
             'mostrarPagoGlobal' => $mostrarPagoGlobal,
+            'mostrarListaPrecios' => ListaPreciosConfig::mostrarColumnaListadoPacientes(),
             'afipEmitidos' => $afipEmitidos,
         ])->layout('layouts.staff', UsuarioMenuPortal::layoutParamsDesdeContexto());
     }

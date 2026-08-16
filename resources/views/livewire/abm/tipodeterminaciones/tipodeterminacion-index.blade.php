@@ -21,6 +21,13 @@
         </div>
     @endunless
 
+    @if ($derivacionEsCatalogo && ! $tieneColumnaDerivacion)
+        <div class="mb-4 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
+            El centro de derivación predeterminado se guarda en la columna <strong>derivacion</strong>,
+            que no existe en esta base. Ejecute el script SQL de migración antes de usarla.
+        </div>
+    @endif
+
     <div class="vl-card overflow-hidden">
         <div class="vl-toolbar border-b border-accent-200 px-5 py-3">
             <input wire:model.live.debounce.300ms="busqueda"
@@ -34,8 +41,28 @@
                 <thead class="bg-accent-50/80">
                     <tr>
                         <th class="vl-determinaciones-th vl-determinaciones-col--acciones" title="Acciones"></th>
-                        <th class="vl-determinaciones-th vl-determinaciones-col--orden">Orden</th>
-                        <th class="vl-determinaciones-th vl-determinaciones-col--nombre">Nombre de la determinación</th>
+                        <th class="vl-determinaciones-th vl-determinaciones-col--orden" aria-sort="{{ $ordenarPor === 'orden' ? ($direccionOrden === 'asc' ? 'ascending' : 'descending') : 'none' }}">
+                            <button type="button"
+                                    wire:click="ordenar('orden')"
+                                    class="inline-flex items-center justify-center gap-1 border-0 bg-transparent p-0 hover:text-primary-700"
+                                    title="Ordenar por orden">
+                                Orden
+                                @if ($ordenarPor === 'orden')
+                                    <span class="text-xs tabular-nums" aria-hidden="true">{{ $direccionOrden === 'asc' ? '▲' : '▼' }}</span>
+                                @endif
+                            </button>
+                        </th>
+                        <th class="vl-determinaciones-th vl-determinaciones-col--nombre" aria-sort="{{ $ordenarPor === 'nombre' ? ($direccionOrden === 'asc' ? 'ascending' : 'descending') : 'none' }}">
+                            <button type="button"
+                                    wire:click="ordenar('nombre')"
+                                    class="inline-flex items-center gap-1 border-0 bg-transparent p-0 hover:text-primary-700"
+                                    title="Ordenar por nombre">
+                                Nombre de la determinación
+                                @if ($ordenarPor === 'nombre')
+                                    <span class="text-xs tabular-nums" aria-hidden="true">{{ $direccionOrden === 'asc' ? '▲' : '▼' }}</span>
+                                @endif
+                            </button>
+                        </th>
                         <th class="vl-determinaciones-th vl-determinaciones-col--precio">Precio</th>
                         @if ($tienePrecioExtra)
                             <th class="vl-determinaciones-th vl-determinaciones-col--precio">Precio 2</th>

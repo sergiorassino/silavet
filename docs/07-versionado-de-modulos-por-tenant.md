@@ -58,7 +58,9 @@ Usos típicos: URLs de LIS externos, flags de informe, textos legales, límites.
 
 - Logo, colores, pie de informe, SMTP → `entorno`.
 - Permisos por usuario → `usuarios.permisos_ia`.
-- Precios de lista → `tipodeterminaciones.precio`; descuento por cliente → `clientes.descuento`.
+- Precios de lista → `tipodeterminaciones.precio` (lista 1); `precio2` / `precio3`;
+  alcance por tenant (`cliente` / `paciente`) → [12-listas-de-precios-por-tenant.md](12-listas-de-precios-por-tenant.md).
+  Descuento por cliente → `clientes.descuento`.
 - `estimacioncostos` → solo compatibilidad con el sistema viejo (no usar en módulos nuevos).
 
 ### 3.3 Variantes de implementación (registry pattern)
@@ -82,6 +84,10 @@ variantes: [10-numero-de-protocolo.md](10-numero-de-protocolo.md).
 **Ejemplo implementado:** tesorería (`tesoreria_movimientos` vs
 `tesoreria_pacientes`). Detalle flags: [11-tesoreria-por-tenant.md](11-tesoreria-por-tenant.md).
 Especificación del módulo: [modulos/tesoreria.md](modulos/tesoreria.md).
+
+**Ejemplo implementado:** listas de precios (`cliente` default / `paciente`).
+Detalle: [12-listas-de-precios-por-tenant.md](12-listas-de-precios-por-tenant.md).
+Módulo: [modulos/listas-de-precios.md](modulos/listas-de-precios.md).
 
 **Ejemplo implementado:** automatización Serie Roja / Serie Blanca en carga de
 resultados (`tenant.hemograma_auto`). Flag + mapa rol → `idItems` por laboratorio.

@@ -32,7 +32,28 @@
             @endif
         </div>
 
+        @if ($mostrarListaPrecios && ! $tieneColumnaListaPrecios)
+            <div class="mb-3 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
+                La lista de precios se guarda en la columna <strong>listaPreciosPaciente</strong>,
+                que no existe en esta base. Ejecute el script SQL de migración antes de usarla.
+            </div>
+        @endif
+
         <div class="vl-form-grid">
+            @if ($mostrarListaPrecios)
+                <div class="vl-form-field">
+                    <label class="form-label" for="listaPreciosPaciente">Lista de precios *</label>
+                    <select wire:model="listaPreciosPaciente"
+                            id="listaPreciosPaciente"
+                            class="form-input">
+                        @foreach ($opcionesListaPrecios as $nro => $etiqueta)
+                            <option value="{{ $nro }}">{{ $etiqueta }}</option>
+                        @endforeach
+                    </select>
+                    @error('listaPreciosPaciente') <p class="form-error">{{ $message }}</p> @enderror
+                </div>
+            @endif
+
             <div class="vl-form-field vl-form-span-2">
                 <label class="form-label" for="vl-cliente-input">Cliente *</label>
                 @if ($clienteBloqueado)

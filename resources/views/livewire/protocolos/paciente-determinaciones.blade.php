@@ -184,6 +184,10 @@
                 <span class="vl-prot-det-header-label">Protocolo:</span>
                 <span class="vl-prot-det-header-value">{{ $paciente->nombreProtocolo ?: '—' }}</span>
             </div>
+            <div class="vl-prot-det-header-item">
+                <span class="vl-prot-det-header-label">Lista de precios:</span>
+                <span class="vl-prot-det-header-value">{{ $etiquetaListaPrecios }}</span>
+            </div>
         </div>
     </div>
 

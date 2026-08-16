@@ -65,6 +65,10 @@ renglones ──► itemsinforme / grupos / tipodeterminacion
 clientes ─1:N─► estimacioncostos (legacy; solo compatibilidad con sistema viejo)
 ```
 
+Listas de precio 1/2/3: catálogo en `tipodeterminaciones.precio` / `precio2` / `precio3`.
+Alcance por tenant: `pacientes.listaPreciosPaciente` o `clientes.listaPreciosCliente`
+(default 1). Ver [12-listas-de-precios-por-tenant.md](12-listas-de-precios-por-tenant.md).
+
 ---
 
 ## 3. Tabla `entorno` — Configuración del Laboratorio

@@ -1,5 +1,6 @@
 @php
     use App\Support\Precios\DescuentoDeterminacionConfig;
+    use App\Support\Precios\ListaPreciosConfig;
 @endphp
 
 <div class="vl-page">
@@ -11,6 +12,13 @@
             </x-vl-hero-heading>
         </div>
     </div>
+
+    @if (ListaPreciosConfig::mostrarSelectorCliente() && ! ListaPreciosConfig::tieneColumnaCliente())
+        <div class="mb-4 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
+            La lista de precios se guarda en la columna <strong>listaPreciosCliente</strong>,
+            que no existe en esta base. Ejecute el script SQL de migración antes de usarla.
+        </div>
+    @endif
 
     <form wire:submit.prevent="save" class="vl-card mx-auto w-full max-w-3xl p-4 sm:p-6">
         <div class="grid gap-4">
@@ -70,6 +78,21 @@
                     @error('whatsapp') <p class="form-error">{{ $message }}</p> @enderror
                 </div>
             </div>
+
+            @if (ListaPreciosConfig::mostrarSelectorCliente())
+                <div>
+                    <label class="form-label mb-1" for="listaPreciosCliente">Lista de precios *</label>
+                    <select wire:model="listaPreciosCliente"
+                            id="listaPreciosCliente"
+                            class="form-input max-w-[12rem] py-1.5 text-sm">
+                        @foreach (ListaPreciosConfig::opciones() as $nro => $etiqueta)
+                            <option value="{{ $nro }}">{{ $etiqueta }}</option>
+                        @endforeach
+                    </select>
+                    <p class="mt-0.5 text-xs text-neutral-500">Por defecto Lista 1 (precio estándar del catálogo).</p>
+                    @error('listaPreciosCliente') <p class="form-error">{{ $message }}</p> @enderror
+                </div>
+            @endif
 
             @if (DescuentoDeterminacionConfig::usaPorcentajeCliente())
                 <div>

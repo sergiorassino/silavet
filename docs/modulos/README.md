@@ -12,6 +12,8 @@ en esta carpeta (si existe) y respetar las reglas de negocio ahí listadas.
 | Módulo | Archivo |
 |--------|---------|
 | Carga de determinaciones al paciente (protocolo) | [carga-determinaciones-paciente.md](carga-determinaciones-paciente.md) |
+| Gestión de determinaciones (ABM tipos / precios / centro) | [gestion-determinaciones.md](gestion-determinaciones.md) |
+| Listas de precios (alcance lista 1/2/3 por tenant) | [listas-de-precios.md](listas-de-precios.md) |
 | Carga de resultados (informe + hemograma auto) | [carga-resultados.md](carga-resultados.md) |
 | Valores de referencia (rangovalores) | [valores-referencia.md](valores-referencia.md) |
 | Stock de reactivos e insumos | [stock-reactivos.md](stock-reactivos.md) |

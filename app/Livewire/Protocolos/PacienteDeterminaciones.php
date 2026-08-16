@@ -9,6 +9,7 @@ use App\Models\Tipodeterminacion;
 use App\Support\PermisosIaCatalog;
 use App\Support\PrecioInput;
 use App\Support\Precios\DescuentoDeterminacionResolver;
+use App\Support\Precios\ListaPreciosConfig;
 use App\Support\Precios\PrecioDeterminacionResolver;
 use App\Support\Protocolos\PacienteListadoFiltros;
 use App\Support\Resultados\RenglonesMaterializer;
@@ -89,6 +90,7 @@ class PacienteDeterminaciones extends Component
         }
 
         $this->aplicarPrecioYDescuentoDesdeTipo((int) $value, $this->filaNueva);
+        $this->aplicarCentroPredeterminadoDesdeTipo((int) $value, $this->filaNueva);
         // El morph de Livewire saca el foco del <select>; lo devolvemos para poder confirmar con Enter.
         $this->dispatch('vl-prot-det-focus-tipo');
     }
@@ -157,6 +159,8 @@ class PacienteDeterminaciones extends Component
         abort_if(RateLimiter::tooManyAttempts($key, 40), 429);
         RateLimiter::hit($key, 60);
 
+        $tipoAnterior = (int) ($this->filaNueva['idTipodeterminaciones'] ?? 0);
+
         if ($idTipodeterminaciones !== null && $idTipodeterminaciones !== '') {
             $this->filaNueva['idTipodeterminaciones'] = (string) $idTipodeterminaciones;
         }
@@ -167,6 +171,10 @@ class PacienteDeterminaciones extends Component
             $this->aplicarPrecioYDescuentoDesdeTipo($idTipoElegido, $this->filaNueva);
         } else {
             $this->recalcularPrecioConDescuento($this->filaNueva);
+        }
+
+        if ($idTipoElegido > 0 && $idTipoElegido !== $tipoAnterior) {
+            $this->aplicarCentroPredeterminadoDesdeTipo($idTipoElegido, $this->filaNueva);
         }
 
         $validated = validator($this->filaNueva, $this->reglasFila(), $this->mensajesValidacion())->validate();
@@ -394,6 +402,7 @@ class PacienteDeterminaciones extends Component
             'centrosDerivacion' => $this->centrosDerivacion(),
             'totalProtocolo' => PrecioInput::format($this->totalPrecioConDescuento()),
             'tieneFechasDerivacion' => $this->tieneColumnasFechasDerivacion(),
+            'etiquetaListaPrecios' => ListaPreciosConfig::etiquetaParaPaciente($paciente),
             'urlVolver' => PacienteListadoFiltros::urlIndex($this->listadoFiltros, $this->idPacientes),
         ])->layout('layouts.staff', UsuarioMenuPortal::staffLayoutParams(labCtx()->idRoles));
     }
@@ -467,7 +476,7 @@ class PacienteDeterminaciones extends Component
         }
 
         $paciente = $this->paciente();
-        $neto = PrecioDeterminacionResolver::resolverPrecioLista1($tipo);
+        $neto = PrecioDeterminacionResolver::resolverPrecioListaParaPaciente($tipo, $paciente);
         $descuento = DescuentoDeterminacionResolver::calcularDescuento(
             $neto,
             (int) $paciente->idClientes,
@@ -479,12 +488,43 @@ class PacienteDeterminaciones extends Component
         $fila['neto'] = PrecioInput::format($neto);
         $fila['descuento'] = PrecioInput::format($descuento);
         $fila['precio'] = PrecioInput::format($precio);
-        // Al cargar el tipo no se preselecciona destino ni fecha de envío:
-        // catálogo → "Seleccione"; si_no → "No"; fecha vacía hasta que el usuario elija.
-        $fila['idDerivaciones'] = '0';
-        if ($this->tieneColumnasFechasDerivacion()) {
-            $fila['fechaEnvioDeriv'] = '';
+    }
+
+    /**
+     * Preselecciona el centro del ABM (tipodeterminaciones.derivacion) en modo catálogo.
+     * El select sigue editable: 0 / centro inválido → “Seleccione”.
+     *
+     * @param  array<string, mixed>  $fila
+     */
+    private function aplicarCentroPredeterminadoDesdeTipo(int $idTipo, array &$fila): void
+    {
+        $fila['idDerivaciones'] = $this->centroPredeterminadoParaFormulario($idTipo);
+        $this->aplicarFechaEnvioAlCambiarDerivacion($fila);
+    }
+
+    private function centroPredeterminadoParaFormulario(int $idTipo): string
+    {
+        if (! TipodeterminacionesGridConfig::derivacionEsCatalogo()
+            || ! Schema::hasColumn('tipodeterminaciones', 'derivacion')) {
+            return '0';
         }
+
+        $tipo = Tipodeterminacion::query()->find($idTipo);
+        if ($tipo === null) {
+            return '0';
+        }
+
+        $idCentro = (int) ($tipo->derivacion ?? 0);
+        if ($idCentro <= 0) {
+            return '0';
+        }
+
+        if (! Schema::hasTable('derivaciones')
+            || ! Derivacion::query()->whereKey($idCentro)->exists()) {
+            return '0';
+        }
+
+        return $this->derivacionParaFormulario($idCentro);
     }
 
     /** @param array<string, mixed> $fila */

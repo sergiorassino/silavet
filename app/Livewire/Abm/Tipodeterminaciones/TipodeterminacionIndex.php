@@ -15,7 +15,14 @@ use Livewire\Component;
 
 class TipodeterminacionIndex extends Component
 {
+    /** @var list<string> */
+    private const COLUMNAS_ORDEN = ['orden', 'nombre'];
+
     public string $busqueda = '';
+
+    public string $ordenarPor = 'nombre';
+
+    public string $direccionOrden = 'asc';
 
     /** @var array<int, array<string, mixed>> */
     public array $filas = [];
@@ -31,6 +38,22 @@ class TipodeterminacionIndex extends Component
         //
     }
 
+    public function ordenar(string $columna): void
+    {
+        if (! in_array($columna, self::COLUMNAS_ORDEN, true)) {
+            return;
+        }
+
+        if ($this->ordenarPor === $columna) {
+            $this->direccionOrden = $this->direccionOrden === 'asc' ? 'desc' : 'asc';
+
+            return;
+        }
+
+        $this->ordenarPor = $columna;
+        $this->direccionOrden = 'asc';
+    }
+
     public function guardarFila(int $id): void
     {
         abort_unless(tienePermiso(PermisosIaCatalog::DETERMINACIONES), 403);
@@ -38,6 +61,10 @@ class TipodeterminacionIndex extends Component
         $key = 'tipodet-save:'.auth()->id();
         abort_if(RateLimiter::tooManyAttempts($key, 30), 429);
         RateLimiter::hit($key, 60);
+
+        if (! $this->asegurarColumnaCatalogo()) {
+            return;
+        }
 
         $fila = $this->filas[$id] ?? null;
         if ($fila === null) {
@@ -59,7 +86,7 @@ class TipodeterminacionIndex extends Component
             'orden' => (int) $validated['orden'],
             'nombre' => trim($validated['nombre']),
             'precio' => PrecioInput::parse($validated['precio']),
-            'destino' => $this->destinoParaGuardar($validated['destino']),
+            $this->columnaFkCentro() => $this->destinoParaGuardar($validated['destino']),
         ];
 
         if (TipodeterminacionesGridConfig::mostrarColumnaPerfil()) {
@@ -135,6 +162,10 @@ class TipodeterminacionIndex extends Component
             'perfil' => 0,
         ];
 
+        if ($this->tieneColumnaDerivacion()) {
+            $data['derivacion'] = 0;
+        }
+
         if ($this->tieneColumnaPrecioExtra()) {
             $data['precio2'] = 0;
             $data['precio3'] = 0;
@@ -160,10 +191,7 @@ class TipodeterminacionIndex extends Component
                 return str_contains(mb_strtolower((string) $fila['nombre']), $term)
                     || str_contains((string) $fila['orden'], $term);
             })
-            ->sortBy([
-                fn (array $fila) => (int) $fila['orden'],
-                fn (array $fila) => mb_strtolower((string) $fila['nombre']),
-            ])
+            ->sort(fn (array $a, array $b) => $this->compararFilas($a, $b))
             ->keys()
             ->map(fn ($id) => (int) $id)
             ->values()
@@ -172,6 +200,7 @@ class TipodeterminacionIndex extends Component
         return view('livewire.abm.tipodeterminaciones.tipodeterminacion-index', [
             'idsVisibles' => $idsVisibles,
             'tienePrecioExtra' => $tienePrecioExtra,
+            'tieneColumnaDerivacion' => $this->tieneColumnaDerivacion(),
             'mostrarColumnaPerfil' => TipodeterminacionesGridConfig::mostrarColumnaPerfil(),
             'derivacionEsCatalogo' => TipodeterminacionesGridConfig::derivacionEsCatalogo(),
             'centrosDerivacion' => $this->centrosDerivacion(),
@@ -228,8 +257,8 @@ class TipodeterminacionIndex extends Component
     private function sincronizarFilasDesdeBd(): void
     {
         $this->filas = Tipodeterminacion::query()
-            ->orderBy('orden')
             ->orderBy('nombre')
+            ->orderBy('orden')
             ->get()
             ->mapWithKeys(fn (Tipodeterminacion $registro) => [
                 (int) $registro->idTipodeterminaciones => $this->filaDesdeModelo($registro),
@@ -244,7 +273,7 @@ class TipodeterminacionIndex extends Component
             'orden' => (string) $registro->orden,
             'nombre' => (string) $registro->nombre,
             'precio' => PrecioInput::format($registro->precio),
-            'destino' => $this->destinoParaFormulario((int) $registro->destino),
+            'destino' => $this->destinoParaFormulario($this->valorCentroDesdeModelo($registro)),
         ];
 
         if (TipodeterminacionesGridConfig::mostrarColumnaPerfil()) {
@@ -259,6 +288,31 @@ class TipodeterminacionIndex extends Component
         return $fila;
     }
 
+    private function compararFilas(array $a, array $b): int
+    {
+        if ($this->ordenarPor === 'orden') {
+            $cmp = (int) $a['orden'] <=> (int) $b['orden'];
+            if ($cmp === 0) {
+                $cmp = $this->compararNombre($a, $b);
+            }
+        } else {
+            $cmp = $this->compararNombre($a, $b);
+            if ($cmp === 0) {
+                $cmp = (int) $a['orden'] <=> (int) $b['orden'];
+            }
+        }
+
+        return $this->direccionOrden === 'desc' ? -$cmp : $cmp;
+    }
+
+    private function compararNombre(array $a, array $b): int
+    {
+        return strnatcasecmp(
+            trim((string) $a['nombre']),
+            trim((string) $b['nombre'])
+        );
+    }
+
     private function destinoParaFormulario(int $destino): string
     {
         if (TipodeterminacionesGridConfig::derivacionEsCatalogo()) {
@@ -268,10 +322,43 @@ class TipodeterminacionIndex extends Component
         return $destino > 0 ? '1' : '0';
     }
 
+    private function asegurarColumnaCatalogo(): bool
+    {
+        if (! TipodeterminacionesGridConfig::derivacionEsCatalogo()
+            || $this->tieneColumnaDerivacion()) {
+            return true;
+        }
+
+        $this->dispatch(
+            'vl-swal-error',
+            mensaje: 'No se puede guardar el centro de derivación: falta la columna derivacion en tipodeterminaciones. Ejecute el script SQL de migración.',
+            titulo: 'Columna faltante'
+        );
+
+        return false;
+    }
+
+    private function valorCentroDesdeModelo(Tipodeterminacion $registro): int
+    {
+        $columna = $this->columnaFkCentro();
+
+        return (int) ($registro->{$columna} ?? 0);
+    }
+
+    private function columnaFkCentro(): string
+    {
+        return TipodeterminacionesGridConfig::columnaFkCentro($this->tieneColumnaDerivacion());
+    }
+
     private function tieneColumnaPrecioExtra(): bool
     {
         return Schema::hasColumn('tipodeterminaciones', 'precio2')
             && Schema::hasColumn('tipodeterminaciones', 'precio3');
+    }
+
+    private function tieneColumnaDerivacion(): bool
+    {
+        return Schema::hasColumn('tipodeterminaciones', 'derivacion');
     }
 
     /** @return \Illuminate\Support\Collection<int, Derivacion> */

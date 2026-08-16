@@ -1,6 +1,7 @@
 @php
     use App\Support\CuitInput;
     use App\Support\Precios\DescuentoDeterminacionConfig;
+    use App\Support\Precios\ListaPreciosConfig;
 @endphp
 
 <div class="vl-page">
@@ -34,6 +35,9 @@
                         <th class="table-header">DNI</th>
                         <th class="table-header">CUIT</th>
                         <th class="table-header text-right">Dto. %</th>
+                        @if (ListaPreciosConfig::mostrarColumnaListadoClientes())
+                            <th class="table-header" title="Lista de precios">L/P</th>
+                        @endif
                         <th class="table-header text-center">Acciones</th>
                     </tr>
                 </thead>
@@ -68,6 +72,11 @@
                                     —
                                 @endif
                             </td>
+                            @if (ListaPreciosConfig::mostrarColumnaListadoClientes())
+                                <td class="table-cell whitespace-nowrap">
+                                    {{ ListaPreciosConfig::etiquetaParaCliente($cliente) }}
+                                </td>
+                            @endif
                             <td class="table-cell">
                                 <div class="flex items-center justify-center gap-0.5">
                                     <a href="{{ route('abm.clientes.edit', $cliente->idClientes) }}"
@@ -93,7 +102,7 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="7" class="table-cell text-center text-neutral-500 py-8">
+                            <td colspan="{{ 8 + (ListaPreciosConfig::mostrarColumnaListadoClientes() ? 1 : 0) }}" class="table-cell text-center text-neutral-500 py-8">
                                 No hay clientes registrados.
                             </td>
                         </tr>
