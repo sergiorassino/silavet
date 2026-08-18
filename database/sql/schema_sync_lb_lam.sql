@@ -1,11 +1,11 @@
 -- SILAVET — sincronización aditiva de esquema
 -- Generado por: php artisan lb:schema-sync
 -- Modelo : lb_neolab
--- Destino: lb_civetfranca
--- Fecha  : 2026-08-17 07:51:05
+-- Destino: lb_lam
+-- Fecha  : 2026-08-18 17:53:49
 --
 -- ADITIVO: no elimina tablas/columnas ni modifica tipos existentes.
--- Ejecutar sobre la BD destino (USE `lb_civetfranca`).
+-- Ejecutar sobre la BD destino (USE `lb_lam`).
 -- Después: php artisan lb:switch <slug> && php artisan lb:migrate-legacy --force
 
 SET FOREIGN_KEY_CHECKS = 0;
@@ -42,88 +42,18 @@ CREATE TABLE IF NOT EXISTS `compafip` (
   KEY `compafip_idMovimientos_index` (`idMovimientos`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_spanish_ci;
 
-CREATE TABLE IF NOT EXISTS `cuentas` (
-  `id` int(11) NOT NULL AUTO_INCREMENT,
-  `nombreCuenta` varchar(80) DEFAULT NULL,
-  PRIMARY KEY (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
-CREATE TABLE IF NOT EXISTS `cuentasdetalle` (
-  `id` int(11) NOT NULL AUTO_INCREMENT,
-  `idCuentas` int(11) DEFAULT NULL,
-  `nombreCuentasDetalle` varchar(80) DEFAULT NULL,
+CREATE TABLE IF NOT EXISTS `permisos_ia` (
+  `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+  `orden` int(10) unsigned NOT NULL,
+  `tema` varchar(80) NOT NULL,
+  `descripcion` varchar(255) NOT NULL,
   PRIMARY KEY (`id`),
-  KEY `fk_cuentasdetalle_cuentas` (`idCuentas`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
-CREATE TABLE IF NOT EXISTS `derivaciones` (
-  `idDerivaciones` int(11) NOT NULL AUTO_INCREMENT,
-  `derivacion` varchar(50) NOT NULL DEFAULT '',
-  PRIMARY KEY (`idDerivaciones`) USING BTREE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
-CREATE TABLE IF NOT EXISTS `imagenesxrenglon` (
-  `id` int(11) NOT NULL AUTO_INCREMENT,
-  `idRenglones` int(11) DEFAULT NULL,
-  `nombreImagen` varchar(50) DEFAULT NULL,
-  `observacion` text DEFAULT NULL,
-  PRIMARY KEY (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_spanish_ci;
-
-CREATE TABLE IF NOT EXISTS `notificaciones` (
-  `id` int(11) NOT NULL AUTO_INCREMENT,
-  `fechaCreacion` datetime DEFAULT NULL,
-  `idClientes` int(11) NOT NULL,
-  `idPacientes` int(11) NOT NULL,
-  `notificacion` varchar(255) NOT NULL DEFAULT '',
-  `leido` int(1) DEFAULT 0,
-  PRIMARY KEY (`id`),
-  KEY `fechaCreacion` (`fechaCreacion`),
-  KEY `idClientes` (`idClientes`),
-  KEY `idPacientes` (`idPacientes`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
-CREATE TABLE IF NOT EXISTS `requerimientos` (
-  `id` int(11) NOT NULL AUTO_INCREMENT,
-  `titulo` varchar(30) NOT NULL DEFAULT '',
-  `requerimiento` text NOT NULL,
-  PRIMARY KEY (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
-CREATE TABLE IF NOT EXISTS `reqxtipodet` (
-  `id` int(11) NOT NULL AUTO_INCREMENT,
-  `idRequerimientos` int(11) NOT NULL,
-  `idTipodeterminaciones` int(11) NOT NULL,
-  PRIMARY KEY (`id`),
-  KEY `idRequerimientos` (`idRequerimientos`),
-  KEY `idTipodeterminaciones` (`idTipodeterminaciones`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
-CREATE TABLE IF NOT EXISTS `roles` (
-  `id` int(11) NOT NULL AUTO_INCREMENT,
-  `rol` varchar(50) NOT NULL,
-  PRIMARY KEY (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_general_ci;
+  UNIQUE KEY `permisos_ia_orden_unique` (`orden`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_spanish_ci;
 
 -- ---------------------------------------------------------------------------
 -- Columnas faltantes
 -- ---------------------------------------------------------------------------
-
-SET @silavet_sql := (
-    SELECT IF(
-        NOT EXISTS (
-            SELECT 1 FROM INFORMATION_SCHEMA.COLUMNS
-            WHERE TABLE_SCHEMA = DATABASE()
-              AND TABLE_NAME = 'clientes'
-              AND COLUMN_NAME = 'whatsapp'
-        ),
-        'ALTER TABLE `clientes` ADD COLUMN `whatsapp` varchar(20) NOT NULL DEFAULT \'\' AFTER `email`',
-        'SELECT 1'
-    )
-);
-PREPARE silavet_stmt FROM @silavet_sql;
-EXECUTE silavet_stmt;
-DEALLOCATE PREPARE silavet_stmt;
 
 SET @silavet_sql := (
     SELECT IF(
@@ -211,38 +141,6 @@ SET @silavet_sql := (
             SELECT 1 FROM INFORMATION_SCHEMA.COLUMNS
             WHERE TABLE_SCHEMA = DATABASE()
               AND TABLE_NAME = 'determinaciones'
-              AND COLUMN_NAME = 'descuento'
-        ),
-        'ALTER TABLE `determinaciones` ADD COLUMN `descuento` decimal(20,2) NOT NULL DEFAULT 0.00 AFTER `precio`',
-        'SELECT 1'
-    )
-);
-PREPARE silavet_stmt FROM @silavet_sql;
-EXECUTE silavet_stmt;
-DEALLOCATE PREPARE silavet_stmt;
-
-SET @silavet_sql := (
-    SELECT IF(
-        NOT EXISTS (
-            SELECT 1 FROM INFORMATION_SCHEMA.COLUMNS
-            WHERE TABLE_SCHEMA = DATABASE()
-              AND TABLE_NAME = 'determinaciones'
-              AND COLUMN_NAME = 'idDerivaciones'
-        ),
-        'ALTER TABLE `determinaciones` ADD COLUMN `idDerivaciones` int(11) NOT NULL DEFAULT 0 AFTER `descuento`',
-        'SELECT 1'
-    )
-);
-PREPARE silavet_stmt FROM @silavet_sql;
-EXECUTE silavet_stmt;
-DEALLOCATE PREPARE silavet_stmt;
-
-SET @silavet_sql := (
-    SELECT IF(
-        NOT EXISTS (
-            SELECT 1 FROM INFORMATION_SCHEMA.COLUMNS
-            WHERE TABLE_SCHEMA = DATABASE()
-              AND TABLE_NAME = 'determinaciones'
               AND COLUMN_NAME = 'fechaEnvioDeriv'
         ),
         'ALTER TABLE `determinaciones` ADD COLUMN `fechaEnvioDeriv` date DEFAULT NULL AFTER `idDerivaciones`',
@@ -275,41 +173,9 @@ SET @silavet_sql := (
             SELECT 1 FROM INFORMATION_SCHEMA.COLUMNS
             WHERE TABLE_SCHEMA = DATABASE()
               AND TABLE_NAME = 'entorno'
-              AND COLUMN_NAME = 'nombreListaPrecio'
-        ),
-        'ALTER TABLE `entorno` ADD COLUMN `nombreListaPrecio` varchar(200) DEFAULT NULL AFTER `formulas`',
-        'SELECT 1'
-    )
-);
-PREPARE silavet_stmt FROM @silavet_sql;
-EXECUTE silavet_stmt;
-DEALLOCATE PREPARE silavet_stmt;
-
-SET @silavet_sql := (
-    SELECT IF(
-        NOT EXISTS (
-            SELECT 1 FROM INFORMATION_SCHEMA.COLUMNS
-            WHERE TABLE_SCHEMA = DATABASE()
-              AND TABLE_NAME = 'entorno'
               AND COLUMN_NAME = 'listaPreciosPdf'
         ),
         'ALTER TABLE `entorno` ADD COLUMN `listaPreciosPdf` varchar(255) DEFAULT NULL AFTER `nombreListaPrecio`',
-        'SELECT 1'
-    )
-);
-PREPARE silavet_stmt FROM @silavet_sql;
-EXECUTE silavet_stmt;
-DEALLOCATE PREPARE silavet_stmt;
-
-SET @silavet_sql := (
-    SELECT IF(
-        NOT EXISTS (
-            SELECT 1 FROM INFORMATION_SCHEMA.COLUMNS
-            WHERE TABLE_SCHEMA = DATABASE()
-              AND TABLE_NAME = 'entorno'
-              AND COLUMN_NAME = 'carpeta'
-        ),
-        'ALTER TABLE `entorno` ADD COLUMN `carpeta` varchar(30) DEFAULT NULL AFTER `listaPreciosPdf`',
         'SELECT 1'
     )
 );
@@ -659,38 +525,6 @@ SET @silavet_sql := (
             SELECT 1 FROM INFORMATION_SCHEMA.COLUMNS
             WHERE TABLE_SCHEMA = DATABASE()
               AND TABLE_NAME = 'pacientes'
-              AND COLUMN_NAME = 'idCuentasdetalle'
-        ),
-        'ALTER TABLE `pacientes` ADD COLUMN `idCuentasdetalle` int(11) NOT NULL DEFAULT 0 AFTER `idRazas`',
-        'SELECT 1'
-    )
-);
-PREPARE silavet_stmt FROM @silavet_sql;
-EXECUTE silavet_stmt;
-DEALLOCATE PREPARE silavet_stmt;
-
-SET @silavet_sql := (
-    SELECT IF(
-        NOT EXISTS (
-            SELECT 1 FROM INFORMATION_SCHEMA.COLUMNS
-            WHERE TABLE_SCHEMA = DATABASE()
-              AND TABLE_NAME = 'pacientes'
-              AND COLUMN_NAME = 'tipoRegistro'
-        ),
-        'ALTER TABLE `pacientes` ADD COLUMN `tipoRegistro` int(1) NOT NULL DEFAULT 0 AFTER `idCuentasdetalle`',
-        'SELECT 1'
-    )
-);
-PREPARE silavet_stmt FROM @silavet_sql;
-EXECUTE silavet_stmt;
-DEALLOCATE PREPARE silavet_stmt;
-
-SET @silavet_sql := (
-    SELECT IF(
-        NOT EXISTS (
-            SELECT 1 FROM INFORMATION_SCHEMA.COLUMNS
-            WHERE TABLE_SCHEMA = DATABASE()
-              AND TABLE_NAME = 'pacientes'
               AND COLUMN_NAME = 'listaPreciosPaciente'
         ),
         'ALTER TABLE `pacientes` ADD COLUMN `listaPreciosPaciente` tinyint(3) unsigned NOT NULL DEFAULT 1 AFTER `propietario`',
@@ -739,73 +573,9 @@ SET @silavet_sql := (
             SELECT 1 FROM INFORMATION_SCHEMA.COLUMNS
             WHERE TABLE_SCHEMA = DATABASE()
               AND TABLE_NAME = 'pacientes'
-              AND COLUMN_NAME = 'email'
-        ),
-        'ALTER TABLE `pacientes` ADD COLUMN `email` varchar(150) NOT NULL DEFAULT \'\' AFTER `cuit`',
-        'SELECT 1'
-    )
-);
-PREPARE silavet_stmt FROM @silavet_sql;
-EXECUTE silavet_stmt;
-DEALLOCATE PREPARE silavet_stmt;
-
-SET @silavet_sql := (
-    SELECT IF(
-        NOT EXISTS (
-            SELECT 1 FROM INFORMATION_SCHEMA.COLUMNS
-            WHERE TABLE_SCHEMA = DATABASE()
-              AND TABLE_NAME = 'pacientes'
-              AND COLUMN_NAME = 'whatsapp'
-        ),
-        'ALTER TABLE `pacientes` ADD COLUMN `whatsapp` varchar(20) NOT NULL DEFAULT \'\' AFTER `email`',
-        'SELECT 1'
-    )
-);
-PREPARE silavet_stmt FROM @silavet_sql;
-EXECUTE silavet_stmt;
-DEALLOCATE PREPARE silavet_stmt;
-
-SET @silavet_sql := (
-    SELECT IF(
-        NOT EXISTS (
-            SELECT 1 FROM INFORMATION_SCHEMA.COLUMNS
-            WHERE TABLE_SCHEMA = DATABASE()
-              AND TABLE_NAME = 'pacientes'
               AND COLUMN_NAME = 'neto'
         ),
         'ALTER TABLE `pacientes` ADD COLUMN `neto` decimal(20,2) NOT NULL DEFAULT 0.00 AFTER `estado`',
-        'SELECT 1'
-    )
-);
-PREPARE silavet_stmt FROM @silavet_sql;
-EXECUTE silavet_stmt;
-DEALLOCATE PREPARE silavet_stmt;
-
-SET @silavet_sql := (
-    SELECT IF(
-        NOT EXISTS (
-            SELECT 1 FROM INFORMATION_SCHEMA.COLUMNS
-            WHERE TABLE_SCHEMA = DATABASE()
-              AND TABLE_NAME = 'pacientes'
-              AND COLUMN_NAME = 'descuento'
-        ),
-        'ALTER TABLE `pacientes` ADD COLUMN `descuento` decimal(20,2) NOT NULL DEFAULT 0.00 AFTER `pagado`',
-        'SELECT 1'
-    )
-);
-PREPARE silavet_stmt FROM @silavet_sql;
-EXECUTE silavet_stmt;
-DEALLOCATE PREPARE silavet_stmt;
-
-SET @silavet_sql := (
-    SELECT IF(
-        NOT EXISTS (
-            SELECT 1 FROM INFORMATION_SCHEMA.COLUMNS
-            WHERE TABLE_SCHEMA = DATABASE()
-              AND TABLE_NAME = 'pacientes'
-              AND COLUMN_NAME = 'saldo'
-        ),
-        'ALTER TABLE `pacientes` ADD COLUMN `saldo` decimal(20,2) NOT NULL DEFAULT 0.00 AFTER `descuento`',
         'SELECT 1'
     )
 );
@@ -834,10 +604,10 @@ SET @silavet_sql := (
         NOT EXISTS (
             SELECT 1 FROM INFORMATION_SCHEMA.COLUMNS
             WHERE TABLE_SCHEMA = DATABASE()
-              AND TABLE_NAME = 'pacientes'
-              AND COLUMN_NAME = 'fechaEnvioDeriv'
+              AND TABLE_NAME = 'tipodeterminaciones'
+              AND COLUMN_NAME = 'precio2'
         ),
-        'ALTER TABLE `pacientes` ADD COLUMN `fechaEnvioDeriv` date DEFAULT \'0000-00-00\' AFTER `obsInterna`',
+        'ALTER TABLE `tipodeterminaciones` ADD COLUMN `precio2` decimal(20,2) NOT NULL DEFAULT 0.00 AFTER `precio`',
         'SELECT 1'
     )
 );
@@ -851,25 +621,9 @@ SET @silavet_sql := (
             SELECT 1 FROM INFORMATION_SCHEMA.COLUMNS
             WHERE TABLE_SCHEMA = DATABASE()
               AND TABLE_NAME = 'tipodeterminaciones'
-              AND COLUMN_NAME = 'perfil'
+              AND COLUMN_NAME = 'precio3'
         ),
-        'ALTER TABLE `tipodeterminaciones` ADD COLUMN `perfil` int(1) NOT NULL DEFAULT 0 AFTER `destino`',
-        'SELECT 1'
-    )
-);
-PREPARE silavet_stmt FROM @silavet_sql;
-EXECUTE silavet_stmt;
-DEALLOCATE PREPARE silavet_stmt;
-
-SET @silavet_sql := (
-    SELECT IF(
-        NOT EXISTS (
-            SELECT 1 FROM INFORMATION_SCHEMA.COLUMNS
-            WHERE TABLE_SCHEMA = DATABASE()
-              AND TABLE_NAME = 'tipodeterminaciones'
-              AND COLUMN_NAME = 'derivacion'
-        ),
-        'ALTER TABLE `tipodeterminaciones` ADD COLUMN `derivacion` int(1) NOT NULL DEFAULT 0 AFTER `perfil`',
+        'ALTER TABLE `tipodeterminaciones` ADD COLUMN `precio3` decimal(20,2) NOT NULL DEFAULT 0.00 AFTER `precio2`',
         'SELECT 1'
     )
 );
@@ -883,9 +637,9 @@ SET @silavet_sql := (
             SELECT 1 FROM INFORMATION_SCHEMA.COLUMNS
             WHERE TABLE_SCHEMA = DATABASE()
               AND TABLE_NAME = 'usuarios'
-              AND COLUMN_NAME = 'idRoles'
+              AND COLUMN_NAME = 'permisos_ia'
         ),
-        'ALTER TABLE `usuarios` ADD COLUMN `idRoles` int(11) DEFAULT NULL AFTER `idClientes`',
+        'ALTER TABLE `usuarios` ADD COLUMN `permisos_ia` text DEFAULT NULL AFTER `password`',
         'SELECT 1'
     )
 );
@@ -1150,97 +904,21 @@ EXECUTE silavet_stmt;
 DEALLOCATE PREPARE silavet_stmt;
 
 -- ---------------------------------------------------------------------------
--- Índices faltantes
--- ---------------------------------------------------------------------------
-
-SET @silavet_sql := (
-    SELECT IF(
-        NOT EXISTS (
-            SELECT 1 FROM INFORMATION_SCHEMA.STATISTICS
-            WHERE TABLE_SCHEMA = DATABASE()
-              AND TABLE_NAME = 'determinaciones'
-              AND INDEX_NAME = 'idDerivaciones'
-        ),
-        'ALTER TABLE `determinaciones` ADD KEY `idDerivaciones` (`idDerivaciones`)',
-        'SELECT 1'
-    )
-);
-PREPARE silavet_stmt FROM @silavet_sql;
-EXECUTE silavet_stmt;
-DEALLOCATE PREPARE silavet_stmt;
-
-SET @silavet_sql := (
-    SELECT IF(
-        NOT EXISTS (
-            SELECT 1 FROM INFORMATION_SCHEMA.STATISTICS
-            WHERE TABLE_SCHEMA = DATABASE()
-              AND TABLE_NAME = 'pacientes'
-              AND INDEX_NAME = 'idCuentasdetalle'
-        ),
-        'ALTER TABLE `pacientes` ADD KEY `idCuentasdetalle` (`idCuentasdetalle`)',
-        'SELECT 1'
-    )
-);
-PREPARE silavet_stmt FROM @silavet_sql;
-EXECUTE silavet_stmt;
-DEALLOCATE PREPARE silavet_stmt;
-
-SET @silavet_sql := (
-    SELECT IF(
-        NOT EXISTS (
-            SELECT 1 FROM INFORMATION_SCHEMA.STATISTICS
-            WHERE TABLE_SCHEMA = DATABASE()
-              AND TABLE_NAME = 'pacientes'
-              AND INDEX_NAME = 'tipoRegistro'
-        ),
-        'ALTER TABLE `pacientes` ADD KEY `tipoRegistro` (`tipoRegistro`)',
-        'SELECT 1'
-    )
-);
-PREPARE silavet_stmt FROM @silavet_sql;
-EXECUTE silavet_stmt;
-DEALLOCATE PREPARE silavet_stmt;
-
-SET @silavet_sql := (
-    SELECT IF(
-        NOT EXISTS (
-            SELECT 1 FROM INFORMATION_SCHEMA.STATISTICS
-            WHERE TABLE_SCHEMA = DATABASE()
-              AND TABLE_NAME = 'pacientes'
-              AND INDEX_NAME = 'fechaEnvioDeriv'
-        ),
-        'ALTER TABLE `pacientes` ADD KEY `fechaEnvioDeriv` (`fechaEnvioDeriv`)',
-        'SELECT 1'
-    )
-);
-PREPARE silavet_stmt FROM @silavet_sql;
-EXECUTE silavet_stmt;
-DEALLOCATE PREPARE silavet_stmt;
-
-SET @silavet_sql := (
-    SELECT IF(
-        NOT EXISTS (
-            SELECT 1 FROM INFORMATION_SCHEMA.STATISTICS
-            WHERE TABLE_SCHEMA = DATABASE()
-              AND TABLE_NAME = 'usuarios'
-              AND INDEX_NAME = 'idRoles'
-        ),
-        'ALTER TABLE `usuarios` ADD KEY `idRoles` (`idRoles`)',
-        'SELECT 1'
-    )
-);
-PREPARE silavet_stmt FROM @silavet_sql;
-EXECUTE silavet_stmt;
-DEALLOCATE PREPARE silavet_stmt;
-
--- ---------------------------------------------------------------------------
 -- Catálogos (solo tablas creadas vacías)
 -- ---------------------------------------------------------------------------
 
-INSERT IGNORE INTO `roles` (`id`, `rol`) VALUES
-(1, 'Sin Rol'),
-(2, 'Pleno'),
-(3, 'Administrativo');
+INSERT IGNORE INTO `permisos_ia` (`orden`, `tema`, `descripcion`) VALUES
+(0, 'Clientes', 'ABM clientes veterinarios'),
+(1, 'Especies', 'ABM especies y razas'),
+(2, 'Determinaciones', 'ABM tipos de determinación'),
+(3, 'Protocolos', 'Recepción y gestión de protocolos'),
+(4, 'Resultados', 'Carga de resultados'),
+(5, 'Informes', 'Emisión y envío de informes'),
+(6, 'Facturación', 'Comprobantes y cobranza'),
+(7, 'Reactivos', 'Stock de reactivos'),
+(8, 'Parámetros', 'Configuración del laboratorio'),
+(9, 'Usuarios', 'ABM usuarios y roles'),
+(10, 'Listados estadísticos', 'Estimación de costos y listados estadísticos');
 
 -- ---------------------------------------------------------------------------
 -- Diferencias de tipo (NO se modifican; revisar a mano si hace falta)
@@ -1248,86 +926,8 @@ INSERT IGNORE INTO `roles` (`id`, `rol`) VALUES
 -- clientes.email
 --   modelo : `email` varchar(500) NOT NULL DEFAULT ''
 --   destino: `email` varchar(150) NOT NULL DEFAULT ''
--- entorno.logo
---   modelo : `logo` varchar(60) DEFAULT NULL
---   destino: `logo` varchar(255) DEFAULT NULL
--- entorno.fondo
---   modelo : `fondo` varchar(60) DEFAULT NULL
---   destino: `fondo` varchar(255) DEFAULT NULL
--- entorno.direLabo
---   modelo : `direLabo` varchar(100) DEFAULT NULL
---   destino: `direLabo` varchar(255) DEFAULT NULL
--- entorno.teleLabo
---   modelo : `teleLabo` varchar(100) DEFAULT NULL
---   destino: `teleLabo` varchar(80) DEFAULT NULL
--- entorno.emailLabo
---   modelo : `emailLabo` varchar(100) DEFAULT NULL
---   destino: `emailLabo` varchar(120) DEFAULT NULL
--- entorno.texto1footerIzq
---   modelo : `texto1footerIzq` varchar(60) DEFAULT NULL
---   destino: `texto1footerIzq` varchar(255) DEFAULT NULL
--- entorno.texto2footerIzq
---   modelo : `texto2footerIzq` varchar(60) DEFAULT NULL
---   destino: `texto2footerIzq` varchar(255) DEFAULT NULL
--- entorno.texto1footerCentro
---   modelo : `texto1footerCentro` varchar(60) DEFAULT NULL
---   destino: `texto1footerCentro` varchar(255) DEFAULT NULL
--- entorno.texto2footerCentro
---   modelo : `texto2footerCentro` varchar(60) DEFAULT NULL
---   destino: `texto2footerCentro` varchar(255) DEFAULT NULL
--- entorno.texto1footerDer
---   modelo : `texto1footerDer` varchar(60) DEFAULT NULL
---   destino: `texto1footerDer` varchar(255) DEFAULT NULL
--- entorno.texto2footerDer
---   modelo : `texto2footerDer` varchar(60) DEFAULT NULL
---   destino: `texto2footerDer` varchar(255) DEFAULT NULL
--- entorno.firmaIzq
---   modelo : `firmaIzq` varchar(60) DEFAULT NULL
---   destino: `firmaIzq` varchar(255) DEFAULT NULL
--- entorno.firmaCentro
---   modelo : `firmaCentro` varchar(60) DEFAULT NULL
---   destino: `firmaCentro` varchar(255) DEFAULT NULL
--- entorno.firmaDer
---   modelo : `firmaDer` varchar(60) DEFAULT NULL
---   destino: `firmaDer` varchar(255) DEFAULT NULL
--- entorno.ctaEnvioMail
---   modelo : `ctaEnvioMail` varchar(100) DEFAULT NULL
---   destino: `ctaEnvioMail` varchar(120) DEFAULT NULL
--- entorno.passEnvioMail
---   modelo : `passEnvioMail` varchar(20) DEFAULT NULL
---   destino: `passEnvioMail` varchar(255) DEFAULT NULL
--- entorno.fromMail
---   modelo : `fromMail` varchar(50) DEFAULT NULL
---   destino: `fromMail` varchar(120) DEFAULT NULL
--- entorno.nombrePieMail
---   modelo : `nombrePieMail` varchar(100) DEFAULT NULL
---   destino: `nombrePieMail` varchar(120) DEFAULT NULL
--- entorno.direccionPieMail
---   modelo : `direccionPieMail` varchar(100) DEFAULT NULL
---   destino: `direccionPieMail` varchar(255) DEFAULT NULL
--- entorno.telefonoPieMail
---   modelo : `telefonoPieMail` varchar(100) DEFAULT NULL
---   destino: `telefonoPieMail` varchar(80) DEFAULT NULL
--- entorno.emailPieMail
---   modelo : `emailPieMail` varchar(100) DEFAULT NULL
---   destino: `emailPieMail` varchar(120) DEFAULT NULL
--- pacientes.idEspecies
---   modelo : `idEspecies` int(11) NOT NULL DEFAULT 0
---   destino: `idEspecies` int(11) NOT NULL
--- pacientes.idRazas
---   modelo : `idRazas` int(11) NOT NULL DEFAULT 0
---   destino: `idRazas` int(11) NOT NULL
--- pacientes.fechhoy
---   modelo : `fechhoy` datetime NOT NULL
---   destino: `fechhoy` date NOT NULL
--- pacientes.urlExcel
---   modelo : `urlExcel` varchar(500) NOT NULL DEFAULT '0'
---   destino: `urlExcel` varchar(50) NOT NULL DEFAULT '0'
 -- reactivoxdeterminacion.cantidad
 --   modelo : `cantidad` decimal(10,4) NOT NULL DEFAULT 0.0000
 --   destino: `cantidad` int(11) NOT NULL
--- renglones.duplic
---   modelo : `duplic` int(1) DEFAULT NULL
---   destino: `duplic` int(1) DEFAULT 1
 
 SET FOREIGN_KEY_CHECKS = 1;
