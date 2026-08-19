@@ -10,7 +10,9 @@ use Throwable;
  * Encabezado institucional reutilizable en PDFs TCPDF.
  *
  * Si el laboratorio tiene `entorno.headerInforme` (membrete), se dibuja esa
- * imagen a ancho útil. Si no, logo + nombre + contacto.
+ * imagen cabiendo en el ancho útil × 35 mm **sin deformar** (en hojas
+ * apaisadas queda centrada, al mismo tamaño que en A4 vertical). Si no,
+ * logo + nombre + contacto.
  */
 final class TcpdfHeaderInstitucional
 {
@@ -20,7 +22,7 @@ final class TcpdfHeaderInstitucional
 
     private const MARGEN_LOGO_IZQ = 4.0;
 
-    /** Alto máximo del membrete gráfico (mm), proporción al ancho útil. */
+    /** Alto máximo del membrete gráfico (mm). El ancho se reduce si hace falta para no deformar. */
     private const MEMBRETE_MAX_ALTO = 35.0;
 
     /**
@@ -133,10 +135,15 @@ final class TcpdfHeaderInstitucional
         float $anchoUtil,
         string $ruta,
     ): float {
-        $alto = self::altoImagenEscalada($ruta, $anchoUtil, self::MEMBRETE_MAX_ALTO);
+        [$ancho, $alto] = TcpdfLogoInstitucional::dimensionesProporcionales(
+            $ruta,
+            $anchoUtil,
+            self::MEMBRETE_MAX_ALTO,
+        );
+        $x = $margen + max(0.0, ($anchoUtil - $ancho) / 2);
 
         try {
-            $pdf->Image($ruta, $margen, $yInicio, $anchoUtil, $alto, '', '', '', false, 150, '', false, false, 0);
+            $pdf->Image($ruta, $x, $yInicio, $ancho, $alto, '', '', '', false, 150, '', false, false, 0);
         } catch (Throwable) {
             TcpdfFuenteArial::aplicar($pdf, '', 8);
             $pdf->SetXY($margen, $yInicio);
@@ -146,17 +153,5 @@ final class TcpdfHeaderInstitucional
         }
 
         return $yInicio + $alto + 3.0;
-    }
-
-    private static function altoImagenEscalada(string $ruta, float $anchoMm, float $maxAltoMm): float
-    {
-        $info = @getimagesize($ruta);
-        if (! is_array($info) || (int) ($info[0] ?? 0) <= 0) {
-            return $maxAltoMm;
-        }
-
-        $proporcional = $anchoMm * ((float) $info[1] / (float) $info[0]);
-
-        return min($maxAltoMm, max(8.0, $proporcional));
     }
 }

@@ -2955,3 +2955,230 @@ html.vl-visor-pwa-abierto #vl-shell {
     color: #1c1917;
     background: #e7e5e4;
 }
+
+/* Clientes resumen mensual (blank pacientesIVA) */
+.vl-crm-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    height: 2.25rem;
+    padding: 0 0.75rem;
+    border-radius: 0.25rem;
+    font-size: 0.8125rem;
+    font-weight: 700;
+    color: #fff;
+    text-decoration: none;
+    line-height: 1;
+}
+.vl-crm-btn--pdf {
+    background: #dc2626;
+}
+.vl-crm-btn--pdf:hover {
+    background: #b91c1c;
+}
+.vl-crm-btn--excel {
+    background: #16a34a;
+}
+.vl-crm-btn--excel:hover {
+    background: #15803d;
+}
+
+table.vl-crm-grid {
+    width: 100%;
+    table-layout: fixed;
+    border-collapse: collapse;
+    font-size: 10px;
+    line-height: 1.2;
+    color: #333;
+}
+table.vl-crm-grid col.vl-crm-col-fecha { width: 6%; }
+table.vl-crm-grid col.vl-crm-col-cliente { width: 18%; }
+table.vl-crm-grid col.vl-crm-col-protocolo { width: 7%; }
+table.vl-crm-grid col.vl-crm-col-paciente { width: 14%; }
+table.vl-crm-grid col.vl-crm-col-num { width: 7%; }
+table.vl-crm-grid col.vl-crm-col-medio { width: 8%; }
+table.vl-crm-grid col.vl-crm-col-det { width: 19%; }
+table.vl-crm-grid thead th {
+    background: #e8edf3;
+    text-align: left;
+    padding: 3px 4px;
+    border-bottom: 1px solid #c5cdd8;
+    font-size: 9px;
+    font-weight: 700;
+    white-space: nowrap;
+    vertical-align: bottom;
+}
+table.vl-crm-grid thead th.th-det {
+    text-align: center;
+}
+table.vl-crm-grid thead th.vl-crm-col-sin {
+    background: #b8dff5;
+}
+table.vl-crm-grid td.num,
+table.vl-crm-grid th.num {
+    text-align: right;
+    white-space: nowrap;
+}
+table.vl-crm-grid tbody tr.vl-crm-grupo td {
+    background: #dce3ec;
+    font-weight: 700;
+    font-size: 10px;
+    padding: 3px 6px;
+    border-top: 2px solid #b8c4d4;
+    border-bottom: 1px solid #b8c4d4;
+}
+table.vl-crm-grid tbody tr.vl-crm-subtotal td {
+    font-weight: 700;
+    border-bottom: 2px solid #c5cdd8;
+    background: #f3f4f6;
+    padding: 3px 4px;
+}
+table.vl-crm-grid tbody tr.vl-crm-subtotal td.vl-crm-col-sin {
+    background: #a8d8f0;
+}
+table.vl-crm-grid tbody tr.vl-crm-fila td {
+    padding: 2px 4px;
+    border-bottom: 1px solid #e5e7eb;
+    vertical-align: top;
+}
+table.vl-crm-grid tbody tr.vl-crm-fila:nth-child(even) td:not(.vl-crm-col-sin) {
+    background: #fafbfc;
+}
+table.vl-crm-grid tbody tr.vl-crm-fila td.vl-crm-col-sin {
+    background: #d4ebf7;
+}
+table.vl-crm-grid tbody tr.vl-crm-fila:nth-child(even) td.vl-crm-col-sin {
+    background: #c5e5f5;
+}
+table.vl-crm-grid tbody tr.vl-crm-fila:hover td:not(.vl-crm-col-sin):not(.c-det) {
+    background: #f0f4ff;
+}
+table.vl-crm-grid tbody tr.vl-crm-fila:hover td.vl-crm-col-sin {
+    background: #a8d8f0;
+}
+table.vl-crm-grid td.c-fecha,
+table.vl-crm-grid td.c-protocolo {
+    white-space: nowrap;
+}
+table.vl-crm-grid td.c-cliente,
+table.vl-crm-grid td.c-paciente {
+    word-break: break-word;
+}
+table.vl-crm-grid td.c-medio {
+    font-size: 9px;
+}
+table.vl-crm-grid td.c-det {
+    background: #f8fafc;
+    padding: 1px 2px;
+    vertical-align: top;
+    text-align: center;
+}
+table.vl-crm-grid td.vl-crm-total-label {
+    text-align: right;
+    font-weight: 700;
+    white-space: nowrap;
+}
+table.vl-crm-grid tfoot td {
+    padding: 3px 4px;
+    border-top: 2px solid #c5cdd8;
+    font-weight: 700;
+    font-size: 10px;
+    background: #eef2ff;
+}
+table.vl-crm-grid tfoot td.vl-crm-col-sin {
+    background: #b8dff5;
+}
+table.vl-crm-grid tfoot tr.vl-crm-pagina td {
+    background: #f8fafc;
+    font-weight: 600;
+}
+table.vl-crm-grid tfoot tr.vl-crm-pagina td.vl-crm-col-sin {
+    background: #d4ebf7;
+}
+table.vl-crm-grid td.vl-crm-vacio {
+    padding: 12px;
+    text-align: center;
+    color: #888;
+    font-size: 10px;
+}
+table.vl-crm-mini {
+    width: 100%;
+    margin: 0 auto;
+    border-collapse: collapse;
+    font-size: 9px;
+    line-height: 1.2;
+    background: #eef6fc;
+    border-radius: 2px;
+}
+table.vl-crm-mini td {
+    padding: 1px 3px;
+    border-bottom: 1px solid #dceaf5;
+    background: #eef6fc;
+    vertical-align: top;
+}
+table.vl-crm-mini td.c-det-nom {
+    text-align: left;
+    word-break: break-word;
+}
+table.vl-crm-mini tr:last-child td {
+    border-bottom: none;
+}
+table.vl-crm-mini td.num {
+    text-align: right;
+    white-space: nowrap;
+    width: 48px;
+}
+.vl-crm-sin-det {
+    display: block;
+    color: #888;
+    font-size: 9px;
+    font-style: italic;
+    text-align: center;
+    background: #eef6fc;
+    padding: 2px 4px;
+    border-radius: 2px;
+}
+.vl-crm-descuento {
+    margin: 10px 14px 14px;
+    padding: 10px 14px;
+    background: #16a34a;
+    color: #fff;
+    border-radius: 4px;
+    border: 2px solid #15803d;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 12px 24px;
+}
+.vl-crm-descuento-titulo {
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 0.4px;
+    white-space: nowrap;
+}
+.vl-crm-descuento-items {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px 20px;
+    flex: 1;
+}
+.vl-crm-descuento-item {
+    background: #15803d;
+    border-radius: 3px;
+    padding: 6px 12px;
+    min-width: 120px;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+.vl-crm-descuento-lbl {
+    font-size: 9px;
+    opacity: 0.9;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+}
+.vl-crm-descuento-val {
+    font-size: 14px;
+    font-weight: 700;
+    text-align: right;
+}
