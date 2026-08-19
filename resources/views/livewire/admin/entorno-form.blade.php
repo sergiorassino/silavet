@@ -56,7 +56,7 @@
                             </div>
                         @endif
                         <input wire:model="logoUpload" id="logoUpload" type="file" accept="image/*" class="form-input py-1.5 text-sm file:mr-2 file:rounded file:border-0 file:bg-primary-50 file:px-2 file:py-1 file:text-xs file:font-medium file:text-primary-700">
-                        <p class="mt-1 text-xs text-neutral-500">PNG, JPG o WebP. Máx. 2 MB.</p>
+                        <p class="mt-1 text-xs text-neutral-500">PNG, JPG o WebP. Máx. 2 MB. Se guarda el nombre original del archivo (compatible con NeoLab).</p>
                         <div wire:loading wire:target="logoUpload" class="mt-1 text-xs text-primary-600">Subiendo logo…</div>
                         @error('logoUpload') <p class="form-error">{{ $message }}</p> @enderror
                     </div>
@@ -232,7 +232,7 @@
                         @error('firmaDerUpload') <p class="form-error">{{ $message }}</p> @enderror
                     </div>
                 </div>
-                <p class="mt-2 text-xs text-neutral-500">Imágenes PNG o JPG con fondo transparente. Máx. 1 MB cada una.</p>
+                <p class="mt-2 text-xs text-neutral-500">Imágenes PNG o JPG con fondo transparente. Máx. 1 MB cada una. Se guarda el nombre original del archivo (compatible con NeoLab).</p>
             </section>
 
             {{-- Mail --}}

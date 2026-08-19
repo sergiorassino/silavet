@@ -78,8 +78,15 @@ Checklist:
 
 ## Logo institucional
 
-Se guarda en `public/entorno/logos/{TENANT_SLUG}/` (campo `entorno.logo`). En la
-misma carpeta van el encabezado y el pie opcionales del informe
+El archivo se guarda en `public/entorno/logos/{TENANT_SLUG}/`. En **`entorno.logo`**,
+**`firmaIzq`**, **`firmaCentro`** y **`firmaDer`** se persiste el **nombre original**
+del archivo subido (`MiLogo.jpg`), igual que NeoLab. SILAVET resuelve ese nombre
+a `public/entorno/logos/{TENANT_SLUG}/` o `public/entorno/firmas/{TENANT_SLUG}/`.
+
+Opcional: `ENTORNO_LOGO_LEGACY_DIR` (carpeta `_lib/file/img` de ScriptCase) para
+espejar logo y firmas al subir desde SILAVET.
+
+En la misma carpeta van el encabezado y el pie opcionales del informe
 (`entorno.headerInforme` → `header-informe.*`, `entorno.footerInforme` →
 `footer-informe.*`). La subida temporal de Livewire usa `storage/app/livewire-tmp`.
 

@@ -97,7 +97,7 @@ Doc: [modulos/carga-resultados.md](modulos/carga-resultados.md).
 
 ## 4. Identidad por tenant
 
-- Logos en `storage/app/public/entorno/logos/{TENANT_SLUG}/` (previsto).
+- Logos en `public/entorno/logos/{TENANT_SLUG}/` y firmas en `public/entorno/firmas/{TENANT_SLUG}/`. En BD (`entorno.logo`, `firmaIzq`, `firmaCentro`, `firmaDer`) solo el nombre original del archivo.
 - Fallback estático en `public/img/`.
 - `TENANT_SLUG` debe coincidir entre `.env`, storage y config.
 

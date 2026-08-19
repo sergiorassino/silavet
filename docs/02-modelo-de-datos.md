@@ -83,12 +83,12 @@ La tabla `entorno` almacena la configuración institucional en **un registro**
 | `formulas`           | Fórmulas de cálculo (texto legacy)                       |
 | `nombreListaPrecio`  | Nombre de la lista de precios activa                     |
 | `listaPreciosPdf`    | Ruta del PDF de lista de precios (autogestión cliente)   |
-| `logo`, `fondo`      | Archivos de identidad visual para informes               |
+| `logo`, `fondo`      | Identidad visual. **`logo` guarda el nombre original del archivo** (`MiLogo.jpg`), no la ruta; el archivo en SILAVET está en `public/entorno/logos/{TENANT_SLUG}/`. Así convive con NeoLab. |
 | `headerInforme`, `footerInforme` | Imágenes opcionales de encabezado/pie del informe (misma carpeta que el logo); si faltan, se usa membrete + firmas |
 | `direLabo`, `teleLabo`, `emailLabo` | Datos de contacto del laboratorio     |
 | `colorInforme`       | Color de acento en informes PDF/HTML                     |
 | `colorFondoSistema`  | Color base de la UI (`#RRGGBB`); fondo, hero y sidebar conservan degradé |
-| `texto*footer*`, `firma*` | Pie de informe y firmas profesionales (fallback si no hay `footerInforme`) |
+| `texto*footer*`, `firmaIzq` / `firmaCentro` / `firmaDer` | Pie de informe y firmas. Las tres firmas guardan **solo el nombre original** del archivo, en `public/entorno/firmas/{TENANT_SLUG}/`. |
 | `*Mail`              | Configuración SMTP para envío de informes                |
 
 Equivalente funcional de la tabla `ento` en Sistemas Escolares.

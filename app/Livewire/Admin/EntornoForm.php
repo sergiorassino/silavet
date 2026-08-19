@@ -253,11 +253,65 @@ class EntornoForm extends Component
         }
 
         $normalizada = EntornoArchivos::normalizarRutaLegacy($original);
+
+        if (EntornoArchivos::esCampoNombreArchivoNeoLab($campo)) {
+            $paraBd = EntornoArchivos::nombreParaBd($normalizada);
+            if ($paraBd !== null && $paraBd !== $original) {
+                $entorno->update([$campo => $paraBd]);
+            }
+
+            return $paraBd;
+        }
+
         if ($normalizada !== null && $normalizada !== $original) {
             $entorno->update([$campo => $normalizada]);
         }
 
         return $normalizada;
+    }
+
+    /**
+     * Persiste logo/firmas con el nombre original del archivo (contrato NeoLab).
+     *
+     * @param  array<string, mixed>  $payload
+     */
+    private function persistirCampoArchivoNeoLab(
+        array &$payload,
+        Entorno $entorno,
+        string $campo,
+        mixed $upload,
+        string $propActual,
+        string $directorio,
+    ): bool {
+        if ($upload !== null) {
+            $rutaPublica = EntornoArchivos::guardarImagenConNombreOriginal(
+                $upload,
+                $directorio,
+                $this->{$propActual}
+            );
+            $nombre = EntornoArchivos::nombreParaBd($rutaPublica);
+            if ($nombre === null) {
+                $this->dispatch(
+                    'vl-swal-error',
+                    mensaje: 'No se pudo determinar el nombre del archivo para '.$campo.'.'
+                );
+
+                return false;
+            }
+
+            $payload[$campo] = $nombre;
+            EntornoArchivos::espejarHaciaLegacy($rutaPublica, $nombre);
+            $this->{$propActual} = $nombre;
+
+            return true;
+        }
+
+        $paraBd = EntornoArchivos::nombreParaBd((string) ($entorno->{$campo} ?? ''));
+        if ($paraBd !== null && $paraBd !== trim((string) ($entorno->{$campo} ?? ''))) {
+            $payload[$campo] = $paraBd;
+        }
+
+        return true;
     }
 
     private function normalizarColor(string $color, string $fallback = '#0EA5E9'): string
@@ -455,15 +509,17 @@ class EntornoForm extends Component
             $this->listaPreciosUpload = null;
         }
 
-        if ($this->logoUpload !== null) {
-            $payload['logo'] = EntornoArchivos::guardarImagen(
-                $this->logoUpload,
-                EntornoArchivos::directorioLogo(),
-                'logo'
-            );
-            $this->logoActual = $payload['logo'];
-            $this->logoUpload = null;
+        if (! $this->persistirCampoArchivoNeoLab(
+            $payload,
+            $entorno,
+            'logo',
+            $this->logoUpload,
+            'logoActual',
+            EntornoArchivos::directorioLogo()
+        )) {
+            return;
         }
+        $this->logoUpload = null;
 
         if ($this->tieneCamposHeaderFooter && $this->headerInformeUpload !== null) {
             $payload['headerInforme'] = EntornoArchivos::guardarImagen(
@@ -485,34 +541,22 @@ class EntornoForm extends Component
             $this->footerInformeUpload = null;
         }
 
-        if ($this->firmaIzqUpload !== null) {
-            $payload['firmaIzq'] = EntornoArchivos::guardarImagen(
-                $this->firmaIzqUpload,
-                EntornoArchivos::directorioFirmas(),
-                'firma-izq'
-            );
-            $this->firmaIzqActual = $payload['firmaIzq'];
-            $this->firmaIzqUpload = null;
-        }
-
-        if ($this->firmaCentroUpload !== null) {
-            $payload['firmaCentro'] = EntornoArchivos::guardarImagen(
-                $this->firmaCentroUpload,
-                EntornoArchivos::directorioFirmas(),
-                'firma-centro'
-            );
-            $this->firmaCentroActual = $payload['firmaCentro'];
-            $this->firmaCentroUpload = null;
-        }
-
-        if ($this->firmaDerUpload !== null) {
-            $payload['firmaDer'] = EntornoArchivos::guardarImagen(
-                $this->firmaDerUpload,
-                EntornoArchivos::directorioFirmas(),
-                'firma-der'
-            );
-            $this->firmaDerActual = $payload['firmaDer'];
-            $this->firmaDerUpload = null;
+        foreach ([
+            ['firmaIzq', 'firmaIzqUpload', 'firmaIzqActual'],
+            ['firmaCentro', 'firmaCentroUpload', 'firmaCentroActual'],
+            ['firmaDer', 'firmaDerUpload', 'firmaDerActual'],
+        ] as [$campo, $propUpload, $propActual]) {
+            if (! $this->persistirCampoArchivoNeoLab(
+                $payload,
+                $entorno,
+                $campo,
+                $this->{$propUpload},
+                $propActual,
+                EntornoArchivos::directorioFirmas()
+            )) {
+                return;
+            }
+            $this->{$propUpload} = null;
         }
 
         $entorno->update($payload);
