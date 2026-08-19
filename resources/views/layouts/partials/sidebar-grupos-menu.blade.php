@@ -255,6 +255,12 @@
             <x-vl-sidebar-icon name="determinaciones-por-cliente" class="h-4 w-4 shrink-0 opacity-80" />
             <span class="truncate">Determinaciones por Cliente</span>
         </a>
+        <a href="{{ route('listados.clientes-resumen-mensual') }}"
+           class="vl-sidebar-link {{ request()->routeIs('listados.clientes-resumen-mensual*') ? 'is-active' : '' }}"
+           title="Clientes Resumen Mensual (v1.0)">
+            <x-vl-sidebar-icon name="clientes-resumen-mensual" class="h-4 w-4 shrink-0 opacity-80" />
+            <span class="truncate">Clientes Resumen Mensual</span>
+        </a>
     @endif
 </x-vl-sidebar-grupo>
 

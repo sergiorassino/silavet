@@ -2,7 +2,7 @@
 -- Generado por: php artisan lb:schema-sync
 -- Modelo : lb_neolab
 -- Destino: lb_epizoolab
--- Fecha  : 2026-08-15 15:18:50
+-- Fecha  : 2026-08-19 18:13:35
 --
 -- ADITIVO: no elimina tablas/columnas ni modifica tipos existentes.
 -- Ejecutar sobre la BD destino (USE `lb_epizoolab`).
@@ -35,9 +35,11 @@ CREATE TABLE IF NOT EXISTS `compafip` (
   `CAE` varchar(30) NOT NULL DEFAULT '0',
   `CAEFchVto` date DEFAULT NULL,
   `idCompAfipAsoc` int(10) unsigned DEFAULT NULL,
+  `idMovimientos` int(10) unsigned DEFAULT NULL,
   PRIMARY KEY (`id`),
   KEY `idCuotasPagos` (`idPacientes`) USING BTREE,
-  KEY `compafip_idCompAfipAsoc_index` (`idCompAfipAsoc`)
+  KEY `compafip_idCompAfipAsoc_index` (`idCompAfipAsoc`),
+  KEY `compafip_idMovimientos_index` (`idMovimientos`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_spanish_ci;
 
 CREATE TABLE IF NOT EXISTS `imagenesxrenglon` (
@@ -99,6 +101,22 @@ SET @silavet_sql := (
               AND COLUMN_NAME = 'dni'
         ),
         'ALTER TABLE `clientes` ADD COLUMN `dni` varchar(8) NOT NULL DEFAULT \'\' AFTER `cuit`',
+        'SELECT 1'
+    )
+);
+PREPARE silavet_stmt FROM @silavet_sql;
+EXECUTE silavet_stmt;
+DEALLOCATE PREPARE silavet_stmt;
+
+SET @silavet_sql := (
+    SELECT IF(
+        NOT EXISTS (
+            SELECT 1 FROM INFORMATION_SCHEMA.COLUMNS
+            WHERE TABLE_SCHEMA = DATABASE()
+              AND TABLE_NAME = 'clientes'
+              AND COLUMN_NAME = 'listaPreciosCliente'
+        ),
+        'ALTER TABLE `clientes` ADD COLUMN `listaPreciosCliente` tinyint(3) unsigned NOT NULL DEFAULT 1 AFTER `descuento`',
         'SELECT 1'
     )
 );
@@ -799,6 +817,54 @@ SET @silavet_sql := (
         NOT EXISTS (
             SELECT 1 FROM INFORMATION_SCHEMA.COLUMNS
             WHERE TABLE_SCHEMA = DATABASE()
+              AND TABLE_NAME = 'entorno'
+              AND COLUMN_NAME = 'headerInforme'
+        ),
+        'ALTER TABLE `entorno` ADD COLUMN `headerInforme` varchar(255) DEFAULT NULL AFTER `afipFormatoImpresion`',
+        'SELECT 1'
+    )
+);
+PREPARE silavet_stmt FROM @silavet_sql;
+EXECUTE silavet_stmt;
+DEALLOCATE PREPARE silavet_stmt;
+
+SET @silavet_sql := (
+    SELECT IF(
+        NOT EXISTS (
+            SELECT 1 FROM INFORMATION_SCHEMA.COLUMNS
+            WHERE TABLE_SCHEMA = DATABASE()
+              AND TABLE_NAME = 'entorno'
+              AND COLUMN_NAME = 'footerInforme'
+        ),
+        'ALTER TABLE `entorno` ADD COLUMN `footerInforme` varchar(255) DEFAULT NULL AFTER `headerInforme`',
+        'SELECT 1'
+    )
+);
+PREPARE silavet_stmt FROM @silavet_sql;
+EXECUTE silavet_stmt;
+DEALLOCATE PREPARE silavet_stmt;
+
+SET @silavet_sql := (
+    SELECT IF(
+        NOT EXISTS (
+            SELECT 1 FROM INFORMATION_SCHEMA.COLUMNS
+            WHERE TABLE_SCHEMA = DATABASE()
+              AND TABLE_NAME = 'entorno'
+              AND COLUMN_NAME = 'colorFondoSistema'
+        ),
+        'ALTER TABLE `entorno` ADD COLUMN `colorFondoSistema` varchar(20) DEFAULT NULL AFTER `footerInforme`',
+        'SELECT 1'
+    )
+);
+PREPARE silavet_stmt FROM @silavet_sql;
+EXECUTE silavet_stmt;
+DEALLOCATE PREPARE silavet_stmt;
+
+SET @silavet_sql := (
+    SELECT IF(
+        NOT EXISTS (
+            SELECT 1 FROM INFORMATION_SCHEMA.COLUMNS
+            WHERE TABLE_SCHEMA = DATABASE()
               AND TABLE_NAME = 'pacientes'
               AND COLUMN_NAME = 'idCuentasdetalle'
         ),
@@ -816,9 +882,25 @@ SET @silavet_sql := (
             SELECT 1 FROM INFORMATION_SCHEMA.COLUMNS
             WHERE TABLE_SCHEMA = DATABASE()
               AND TABLE_NAME = 'pacientes'
+              AND COLUMN_NAME = 'listaPreciosPaciente'
+        ),
+        'ALTER TABLE `pacientes` ADD COLUMN `listaPreciosPaciente` tinyint(3) unsigned NOT NULL DEFAULT 1 AFTER `propietario`',
+        'SELECT 1'
+    )
+);
+PREPARE silavet_stmt FROM @silavet_sql;
+EXECUTE silavet_stmt;
+DEALLOCATE PREPARE silavet_stmt;
+
+SET @silavet_sql := (
+    SELECT IF(
+        NOT EXISTS (
+            SELECT 1 FROM INFORMATION_SCHEMA.COLUMNS
+            WHERE TABLE_SCHEMA = DATABASE()
+              AND TABLE_NAME = 'pacientes'
               AND COLUMN_NAME = 'dni'
         ),
-        'ALTER TABLE `pacientes` ADD COLUMN `dni` varchar(8) NOT NULL DEFAULT \'\' AFTER `propietario`',
+        'ALTER TABLE `pacientes` ADD COLUMN `dni` varchar(8) NOT NULL DEFAULT \'\' AFTER `listaPreciosPaciente`',
         'SELECT 1'
     )
 );
@@ -834,7 +916,7 @@ SET @silavet_sql := (
               AND TABLE_NAME = 'pacientes'
               AND COLUMN_NAME = 'cuit'
         ),
-        'ALTER TABLE `pacientes` ADD COLUMN `cuit` varchar(11) NOT NULL DEFAULT \'\' AFTER `dni`',
+        'ALTER TABLE `pacientes` ADD COLUMN `cuit` varchar(13) NOT NULL DEFAULT \'\' AFTER `dni`',
         'SELECT 1'
     )
 );
@@ -1178,6 +1260,22 @@ PREPARE silavet_stmt FROM @silavet_sql;
 EXECUTE silavet_stmt;
 DEALLOCATE PREPARE silavet_stmt;
 
+SET @silavet_sql := (
+    SELECT IF(
+        NOT EXISTS (
+            SELECT 1 FROM INFORMATION_SCHEMA.COLUMNS
+            WHERE TABLE_SCHEMA = DATABASE()
+              AND TABLE_NAME = 'usuarios'
+              AND COLUMN_NAME = 'crtVencimiento'
+        ),
+        'ALTER TABLE `usuarios` ADD COLUMN `crtVencimiento` date DEFAULT NULL AFTER `crt`',
+        'SELECT 1'
+    )
+);
+PREPARE silavet_stmt FROM @silavet_sql;
+EXECUTE silavet_stmt;
+DEALLOCATE PREPARE silavet_stmt;
+
 -- ---------------------------------------------------------------------------
 -- Índices faltantes
 -- ---------------------------------------------------------------------------
@@ -1234,9 +1332,15 @@ INSERT IGNORE INTO `permisos_ia` (`orden`, `tema`, `descripcion`) VALUES
 -- ---------------------------------------------------------------------------
 -- Diferencias de tipo (NO se modifican; revisar a mano si hace falta)
 -- ---------------------------------------------------------------------------
+-- clientes.email
+--   modelo : `email` varchar(500) NOT NULL DEFAULT ''
+--   destino: `email` varchar(150) NOT NULL DEFAULT ''
 -- clientes.whatsapp
 --   modelo : `whatsapp` varchar(20) NOT NULL DEFAULT ''
 --   destino: `whatsapp` varchar(20) DEFAULT NULL
+-- clientes.cuit
+--   modelo : `cuit` varchar(13) NOT NULL DEFAULT ''
+--   destino: `cuit` varchar(11) NOT NULL DEFAULT ''
 -- clientes.descuento
 --   modelo : `descuento` decimal(6,2) DEFAULT NULL
 --   destino: `descuento` float(6,2) DEFAULT NULL
@@ -1255,6 +1359,9 @@ INSERT IGNORE INTO `permisos_ia` (`orden`, `tema`, `descripcion`) VALUES
 -- pacientes.fechhoy
 --   modelo : `fechhoy` datetime NOT NULL
 --   destino: `fechhoy` date NOT NULL
+-- reactivoxdeterminacion.cantidad
+--   modelo : `cantidad` decimal(10,4) NOT NULL DEFAULT 0.0000
+--   destino: `cantidad` int(11) NOT NULL
 -- renglones.idAnalizador
 --   modelo : `idAnalizador` varchar(20) DEFAULT NULL
 --   destino: `idAnalizador` varchar(40) DEFAULT NULL

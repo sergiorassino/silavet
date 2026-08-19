@@ -216,6 +216,13 @@
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.75"
                   d="M15.75 7.5h4.5M15.75 12h4.5M15.75 16.5h4.5"/>
             @break
+        @case('clientes-resumen-mensual')
+            {{-- Calendario mensual + importes (distinto a estadistico-pacientes y cuenta-corriente) --}}
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.75"
+                  d="M6.75 3v2.25M17.25 3v2.25M3.75 7.5h16.5A1.5 1.5 0 0121.75 9v10.5a1.5 1.5 0 01-1.5 1.5H3.75a1.5 1.5 0 01-1.5-1.5V9A1.5 1.5 0 013.75 7.5z"/>
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.75"
+                  d="M8 13h8M8 16.5h5"/>
+            @break
         @case('gestion-procedimientos')
             {{-- Documento de instrucciones (distinto a clipboard de determinaciones) --}}
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.75"

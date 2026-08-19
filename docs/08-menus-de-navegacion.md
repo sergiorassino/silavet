@@ -149,6 +149,7 @@ Fuente de verdad: `resources/views/components/vl-sidebar-icon.blade.php`.
 | `cantidad-determinaciones-comparac` | Cantidad Determinaciones (comparac.) |
 | `excel-pacientes` | Excel de Pacientes (Listados Estadísticos) |
 | `determinaciones-por-cliente` | Determinaciones por Cliente (Listados Estadísticos) |
+| `clientes-resumen-mensual` | Clientes Resumen Mensual (Listados Estadísticos) |
 | `lista-precios` | Lista de Precios (Menú de Clientes) |
 | `gestion-procedimientos` | Gestión de Procedimientos |
 | `muestras-por-determinacion` | Muestras por Determinación |

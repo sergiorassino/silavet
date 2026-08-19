@@ -76,6 +76,8 @@ use App\Support\Tesoreria\TesoreriaConfig;
 use App\Http\Controllers\Listados\CantidadDeterminacionesComparacChartPdfController;
 use App\Http\Controllers\Listados\CantidadDeterminacionesComparacExcelController;
 use App\Http\Controllers\Listados\CantidadDeterminacionesComparacPdfController;
+use App\Http\Controllers\Listados\ClientesResumenMensualExcelController;
+use App\Http\Controllers\Listados\ClientesResumenMensualPdfController;
 use App\Http\Controllers\Listados\DeterminacionesPorClienteExcelController;
 use App\Http\Controllers\Listados\ExcelPacientesExcelController;
 use App\Http\Controllers\Listados\HistorialDeterminacionesExcelController;
@@ -83,6 +85,7 @@ use App\Http\Controllers\Listados\HistorialDeterminacionesPdfController;
 use App\Http\Controllers\Listados\ListadoEstadisticoPacientesExcelController;
 use App\Http\Controllers\Listados\ListadoEstadisticoPacientesPdfController;
 use App\Livewire\Listados\CantidadDeterminacionesComparac;
+use App\Livewire\Listados\ClientesResumenMensual;
 use App\Livewire\Listados\DeterminacionesPorCliente;
 use App\Livewire\Listados\EstimacionCostos;
 use App\Livewire\Listados\ExcelPacientes;
@@ -366,6 +369,14 @@ Route::middleware(['auth', 'lab.context'])->group(function () {
         Route::get('/determinaciones-por-cliente/excel', DeterminacionesPorClienteExcelController::class)
             ->middleware('throttle:10,1')
             ->name('listados.determinaciones-por-cliente.excel');
+        Route::get('/clientes-resumen-mensual', ClientesResumenMensual::class)
+            ->name('listados.clientes-resumen-mensual');
+        Route::get('/clientes-resumen-mensual/pdf', ClientesResumenMensualPdfController::class)
+            ->middleware('throttle:15,1')
+            ->name('listados.clientes-resumen-mensual.pdf');
+        Route::get('/clientes-resumen-mensual/excel', ClientesResumenMensualExcelController::class)
+            ->middleware('throttle:10,1')
+            ->name('listados.clientes-resumen-mensual.excel');
     });
 
     Route::prefix('protocolos')->middleware(['menu.portal:staff', 'permiso:4'])->group(function () {
