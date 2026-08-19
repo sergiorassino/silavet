@@ -8,6 +8,9 @@ return [
 
     'institucional' => [
         'logo_fallback' => 'img/logo-main.png',
+        // Carpeta de imágenes de NeoLab (ScriptCase), p. ej. /ruta/_lib/file/img
+        // Vacío = no espejar. Convivencia: entorno.logo guarda solo el nombre de archivo.
+        'logo_legacy_dir' => env('ENTORNO_LOGO_LEGACY_DIR', ''),
     ],
 
     'login' => [
