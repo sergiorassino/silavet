@@ -345,15 +345,15 @@ class EntornoForm extends Component
             'telefonoPieMail' => ['nullable', 'string', 'max:80'],
             'emailPieMail' => ['nullable', 'string', 'max:120'],
             'listaPreciosUpload' => ['nullable', 'file', 'mimes:pdf', 'max:10240'],
-            'logoUpload' => ['nullable', 'image', 'max:2048'],
-            'firmaIzqUpload' => ['nullable', 'image', 'max:1024'],
-            'firmaCentroUpload' => ['nullable', 'image', 'max:1024'],
-            'firmaDerUpload' => ['nullable', 'image', 'max:1024'],
+            'logoUpload' => EntornoArchivos::reglasArchivoImagen(2048),
+            'firmaIzqUpload' => EntornoArchivos::reglasArchivoImagen(1024),
+            'firmaCentroUpload' => EntornoArchivos::reglasArchivoImagen(1024),
+            'firmaDerUpload' => EntornoArchivos::reglasArchivoImagen(1024),
         ];
 
         if ($this->tieneCamposHeaderFooter) {
-            $rules['headerInformeUpload'] = ['nullable', 'image', 'max:4096'];
-            $rules['footerInformeUpload'] = ['nullable', 'image', 'max:4096'];
+            $rules['headerInformeUpload'] = EntornoArchivos::reglasArchivoImagen(4096);
+            $rules['footerInformeUpload'] = EntornoArchivos::reglasArchivoImagen(4096);
         }
 
         if ($this->tieneCamposEtiquetas) {
@@ -397,15 +397,15 @@ class EntornoForm extends Component
             'emailLabo.email' => 'El email del laboratorio no es válido.',
             'listaPreciosUpload.mimes' => 'La lista de precios debe ser un archivo PDF.',
             'listaPreciosUpload.max' => 'La lista de precios no puede superar 10 MB.',
-            'logoUpload.image' => 'El logo debe ser una imagen.',
+            'logoUpload.mimes' => 'El logo debe ser JPEG, JPG, PNG, GIF o WebP.',
             'logoUpload.max' => 'El logo no puede superar 2 MB.',
-            'headerInformeUpload.image' => 'El encabezado del informe debe ser una imagen.',
+            'headerInformeUpload.mimes' => 'El encabezado del informe debe ser JPEG, JPG, PNG, GIF o WebP.',
             'headerInformeUpload.max' => 'El encabezado del informe no puede superar 4 MB.',
-            'footerInformeUpload.image' => 'El pie del informe debe ser una imagen.',
+            'footerInformeUpload.mimes' => 'El pie del informe debe ser JPEG, JPG, PNG, GIF o WebP.',
             'footerInformeUpload.max' => 'El pie del informe no puede superar 4 MB.',
-            'firmaIzqUpload.image' => 'La firma izquierda debe ser una imagen.',
-            'firmaCentroUpload.image' => 'La firma central debe ser una imagen.',
-            'firmaDerUpload.image' => 'La firma derecha debe ser una imagen.',
+            'firmaIzqUpload.mimes' => 'La firma izquierda debe ser JPEG, JPG, PNG, GIF o WebP.',
+            'firmaCentroUpload.mimes' => 'La firma central debe ser JPEG, JPG, PNG, GIF o WebP.',
+            'firmaDerUpload.mimes' => 'La firma derecha debe ser JPEG, JPG, PNG, GIF o WebP.',
             'firmaIzqUpload.max' => 'Cada firma no puede superar 1 MB.',
             'firmaCentroUpload.max' => 'Cada firma no puede superar 1 MB.',
             'firmaDerUpload.max' => 'Cada firma no puede superar 1 MB.',
@@ -648,6 +648,7 @@ class EntornoForm extends Component
             'firmaIzqUrl' => EntornoArchivos::urlPublica($this->firmaIzqActual),
             'firmaCentroUrl' => EntornoArchivos::urlPublica($this->firmaCentroActual),
             'firmaDerUrl' => EntornoArchivos::urlPublica($this->firmaDerActual),
+            'acceptImagen' => EntornoArchivos::acceptInputImagen(),
         ])->layout('layouts.staff', UsuarioMenuPortal::staffLayoutParams(labCtx()->idRoles));
     }
 

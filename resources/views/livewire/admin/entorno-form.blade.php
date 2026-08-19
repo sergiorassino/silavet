@@ -55,8 +55,8 @@
                                 <p class="mt-1 text-xs text-neutral-600">Logo cargado. Solo subí otro archivo si querés reemplazarlo.</p>
                             </div>
                         @endif
-                        <input wire:model="logoUpload" id="logoUpload" type="file" accept="image/*" class="form-input py-1.5 text-sm file:mr-2 file:rounded file:border-0 file:bg-primary-50 file:px-2 file:py-1 file:text-xs file:font-medium file:text-primary-700">
-                        <p class="mt-1 text-xs text-neutral-500">PNG, JPG o WebP. Máx. 2 MB. Se guarda el nombre original del archivo (compatible con NeoLab).</p>
+                        <input wire:model="logoUpload" id="logoUpload" type="file" accept="{{ $acceptImagen }}" class="form-input py-1.5 text-sm file:mr-2 file:rounded file:border-0 file:bg-primary-50 file:px-2 file:py-1 file:text-xs file:font-medium file:text-primary-700">
+                        <p class="mt-1 text-xs text-neutral-500">JPEG, JPG, PNG, GIF o WebP. Máx. 2 MB. Se guarda el nombre original del archivo (compatible con NeoLab).</p>
                         <div wire:loading wire:target="logoUpload" class="mt-1 text-xs text-primary-600">Subiendo logo…</div>
                         @error('logoUpload') <p class="form-error">{{ $message }}</p> @enderror
                     </div>
@@ -117,8 +117,8 @@
                             @else
                                 <p class="mb-2 text-xs text-neutral-500">Sin imagen: se imprime el membrete con logo y datos del laboratorio.</p>
                             @endif
-                            <input wire:model="headerInformeUpload" id="headerInformeUpload" type="file" accept="image/*" class="form-input py-1.5 text-sm file:mr-2 file:rounded file:border-0 file:bg-primary-50 file:px-2 file:py-1 file:text-xs file:font-medium file:text-primary-700">
-                            <p class="mt-1 text-xs text-neutral-500">PNG, JPG o WebP. Máx. 4 MB. Misma carpeta que el logo.</p>
+                            <input wire:model="headerInformeUpload" id="headerInformeUpload" type="file" accept="{{ $acceptImagen }}" class="form-input py-1.5 text-sm file:mr-2 file:rounded file:border-0 file:bg-primary-50 file:px-2 file:py-1 file:text-xs file:font-medium file:text-primary-700">
+                            <p class="mt-1 text-xs text-neutral-500">JPEG, JPG, PNG, GIF o WebP. Máx. 4 MB. Misma carpeta que el logo.</p>
                             <div wire:loading wire:target="headerInformeUpload" class="mt-1 text-xs text-primary-600">Subiendo encabezado…</div>
                             @error('headerInformeUpload') <p class="form-error">{{ $message }}</p> @enderror
                         </div>
@@ -141,8 +141,8 @@
                             @else
                                 <p class="mb-2 text-xs text-neutral-500">Sin imagen: se imprime el pie con firmas escaneadas y datos de los firmantes.</p>
                             @endif
-                            <input wire:model="footerInformeUpload" id="footerInformeUpload" type="file" accept="image/*" class="form-input py-1.5 text-sm file:mr-2 file:rounded file:border-0 file:bg-primary-50 file:px-2 file:py-1 file:text-xs file:font-medium file:text-primary-700">
-                            <p class="mt-1 text-xs text-neutral-500">PNG, JPG o WebP. Máx. 4 MB. Misma carpeta que el logo.</p>
+                            <input wire:model="footerInformeUpload" id="footerInformeUpload" type="file" accept="{{ $acceptImagen }}" class="form-input py-1.5 text-sm file:mr-2 file:rounded file:border-0 file:bg-primary-50 file:px-2 file:py-1 file:text-xs file:font-medium file:text-primary-700">
+                            <p class="mt-1 text-xs text-neutral-500">JPEG, JPG, PNG, GIF o WebP. Máx. 4 MB. Misma carpeta que el logo.</p>
                             <div wire:loading wire:target="footerInformeUpload" class="mt-1 text-xs text-primary-600">Subiendo pie…</div>
                             @error('footerInformeUpload') <p class="form-error">{{ $message }}</p> @enderror
                         </div>
@@ -205,7 +205,7 @@
                                 <img src="{{ $firmaIzqUrl }}" alt="Firma izquierda" class="max-h-16 max-w-full object-contain">
                             </div>
                         @endif
-                        <input wire:model="firmaIzqUpload" id="firmaIzqUpload" type="file" accept="image/*" class="form-input py-1.5 text-sm file:mr-2 file:rounded file:border-0 file:bg-primary-50 file:px-2 file:py-1 file:text-xs file:font-medium file:text-primary-700">
+                        <input wire:model="firmaIzqUpload" id="firmaIzqUpload" type="file" accept="{{ $acceptImagen }}" class="form-input py-1.5 text-sm file:mr-2 file:rounded file:border-0 file:bg-primary-50 file:px-2 file:py-1 file:text-xs file:font-medium file:text-primary-700">
                         <div wire:loading wire:target="firmaIzqUpload" class="mt-1 text-xs text-primary-600">Subiendo…</div>
                         @error('firmaIzqUpload') <p class="form-error">{{ $message }}</p> @enderror
                     </div>
@@ -216,7 +216,7 @@
                                 <img src="{{ $firmaCentroUrl }}" alt="Firma central" class="max-h-16 max-w-full object-contain">
                             </div>
                         @endif
-                        <input wire:model="firmaCentroUpload" id="firmaCentroUpload" type="file" accept="image/*" class="form-input py-1.5 text-sm file:mr-2 file:rounded file:border-0 file:bg-primary-50 file:px-2 file:py-1 file:text-xs file:font-medium file:text-primary-700">
+                        <input wire:model="firmaCentroUpload" id="firmaCentroUpload" type="file" accept="{{ $acceptImagen }}" class="form-input py-1.5 text-sm file:mr-2 file:rounded file:border-0 file:bg-primary-50 file:px-2 file:py-1 file:text-xs file:font-medium file:text-primary-700">
                         <div wire:loading wire:target="firmaCentroUpload" class="mt-1 text-xs text-primary-600">Subiendo…</div>
                         @error('firmaCentroUpload') <p class="form-error">{{ $message }}</p> @enderror
                     </div>
@@ -227,12 +227,12 @@
                                 <img src="{{ $firmaDerUrl }}" alt="Firma derecha" class="max-h-16 max-w-full object-contain">
                             </div>
                         @endif
-                        <input wire:model="firmaDerUpload" id="firmaDerUpload" type="file" accept="image/*" class="form-input py-1.5 text-sm file:mr-2 file:rounded file:border-0 file:bg-primary-50 file:px-2 file:py-1 file:text-xs file:font-medium file:text-primary-700">
+                        <input wire:model="firmaDerUpload" id="firmaDerUpload" type="file" accept="{{ $acceptImagen }}" class="form-input py-1.5 text-sm file:mr-2 file:rounded file:border-0 file:bg-primary-50 file:px-2 file:py-1 file:text-xs file:font-medium file:text-primary-700">
                         <div wire:loading wire:target="firmaDerUpload" class="mt-1 text-xs text-primary-600">Subiendo…</div>
                         @error('firmaDerUpload') <p class="form-error">{{ $message }}</p> @enderror
                     </div>
                 </div>
-                <p class="mt-2 text-xs text-neutral-500">Imágenes PNG o JPG con fondo transparente. Máx. 1 MB cada una. Se guarda el nombre original del archivo (compatible con NeoLab).</p>
+                <p class="mt-2 text-xs text-neutral-500">JPEG, JPG, PNG, GIF o WebP. Máx. 1 MB cada una. Se guarda el nombre original del archivo (compatible con NeoLab). El fondo transparente solo aplica a PNG.</p>
             </section>
 
             {{-- Mail --}}

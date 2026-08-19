@@ -34,6 +34,15 @@ class EntornoArchivosTest extends TestCase
         $this->assertSame('mi firma.png', EntornoArchivos::nombreArchivoOriginalSeguro($archivo));
     }
 
+    public function test_nombre_original_conserva_extension_jpeg(): void
+    {
+        $archivo = \Illuminate\Http\UploadedFile::fake()->image('marca.jpeg');
+
+        $this->assertSame('marca.jpeg', EntornoArchivos::nombreArchivoOriginalSeguro($archivo));
+        $this->assertTrue(EntornoArchivos::esExtensionImagen('jpeg'));
+        $this->assertStringContainsString('.jpeg', EntornoArchivos::acceptInputImagen());
+    }
+
     public function test_candidatos_de_nombre_corto_priorizan_carpeta_del_tenant(): void
     {
         config(['tenant.slug' => 'neolab']);

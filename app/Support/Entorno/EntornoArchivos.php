@@ -25,6 +25,32 @@ final class EntornoArchivos
     /** @var list<string> */
     public const CAMPOS_NOMBRE_ARCHIVO_NEOLAB = ['logo', 'firmaIzq', 'firmaCentro', 'firmaDer'];
 
+    /** @var list<string> */
+    public const EXTENSIONES_IMAGEN = ['jpeg', 'jpg', 'png', 'gif', 'webp'];
+
+    public static function acceptInputImagen(): string
+    {
+        return '.jpeg,.jpg,.png,.gif,.webp,image/jpeg,image/pjpeg,image/jpg,image/png,image/gif,image/webp';
+    }
+
+    /**
+     * @return list<string>
+     */
+    public static function reglasArchivoImagen(int $maxKb): array
+    {
+        return [
+            'nullable',
+            'file',
+            'mimes:'.implode(',', self::EXTENSIONES_IMAGEN),
+            'max:'.$maxKb,
+        ];
+    }
+
+    public static function esExtensionImagen(string $ext): bool
+    {
+        return in_array(strtolower($ext), self::EXTENSIONES_IMAGEN, true);
+    }
+
     /**
      * Valor a persistir en logo/firmas de NeoLab: solo el nombre de archivo, sin ruta.
      */
@@ -58,7 +84,7 @@ final class EntornoArchivos
     public static function nombreArchivoOriginalSeguro(UploadedFile $archivo): string
     {
         $ext = strtolower($archivo->getClientOriginalExtension() ?: '');
-        if (! in_array($ext, ['png', 'jpg', 'jpeg', 'gif', 'webp'], true)) {
+        if (! self::esExtensionImagen($ext)) {
             $ext = 'jpg';
         }
 
@@ -93,7 +119,7 @@ final class EntornoArchivos
     public static function guardarImagen(UploadedFile $archivo, string $directorio, string $nombreBase): string
     {
         $extension = strtolower($archivo->getClientOriginalExtension() ?: 'png');
-        if (! in_array($extension, ['png', 'jpg', 'jpeg', 'gif', 'webp'], true)) {
+        if (! self::esExtensionImagen($extension)) {
             $extension = 'png';
         }
 
