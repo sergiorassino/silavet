@@ -215,7 +215,111 @@ final class EntornoArchivos
 
         @chmod($destino, 0644);
 
+        // PNG con perfil iCCP inválido hace fallar TCPDF (GD/libpng).
+        self::sanearArchivoImagenEnDisco($destino);
+
         return $directorio.'/'.$nombreArchivo;
+    }
+
+    /**
+     * Prepara una imagen absoluta para usarla en TCPDF (sanea PNG problemáticos).
+     */
+    public static function prepararRutaParaTcpdf(?string $rutaAbsoluta): ?string
+    {
+        if ($rutaAbsoluta === null || $rutaAbsoluta === '' || ! is_file($rutaAbsoluta)) {
+            return null;
+        }
+
+        self::sanearArchivoImagenEnDisco($rutaAbsoluta);
+
+        return is_file($rutaAbsoluta) ? $rutaAbsoluta : null;
+    }
+
+    /**
+     * Quita perfiles ICC inválidos de PNG (warning iCCP → TCPDF ERROR).
+     * Idempotente: si no hay iCCP, no reescribe el archivo.
+     */
+    public static function sanearArchivoImagenEnDisco(string $rutaAbsoluta): void
+    {
+        if (! is_file($rutaAbsoluta) || ! is_readable($rutaAbsoluta)) {
+            return;
+        }
+
+        $ext = strtolower(pathinfo($rutaAbsoluta, PATHINFO_EXTENSION));
+        if ($ext !== 'png') {
+            return;
+        }
+
+        $bin = @file_get_contents($rutaAbsoluta);
+        if ($bin === false || $bin === '') {
+            return;
+        }
+
+        $limpio = self::pngSinChunkIccp($bin);
+        if ($limpio === null || $limpio === $bin) {
+            return;
+        }
+
+        $tmp = $rutaAbsoluta.'.vl-san.tmp';
+        if (@file_put_contents($tmp, $limpio) === false) {
+            return;
+        }
+
+        if (! @rename($tmp, $rutaAbsoluta)) {
+            @unlink($tmp);
+
+            return;
+        }
+
+        @chmod($rutaAbsoluta, 0644);
+    }
+
+    /**
+     * Reconstruye un PNG omitiendo el chunk iCCP (perfil de color incorrecto).
+     */
+    public static function pngSinChunkIccp(string $bin): ?string
+    {
+        $sig = "\x89PNG\r\n\x1a\n";
+        if (! str_starts_with($bin, $sig)) {
+            return null;
+        }
+
+        if (! str_contains($bin, 'iCCP')) {
+            return $bin;
+        }
+
+        $out = $sig;
+        $offset = 8;
+        $len = strlen($bin);
+        $vioIend = false;
+
+        while ($offset + 12 <= $len) {
+            $lengthData = unpack('N', substr($bin, $offset, 4));
+            if ($lengthData === false) {
+                return null;
+            }
+
+            $length = (int) $lengthData[1];
+            if ($length < 0 || $offset + 12 + $length > $len) {
+                return null;
+            }
+
+            $type = substr($bin, $offset + 4, 4);
+            $chunkTotal = 12 + $length;
+
+            if ($type !== 'iCCP') {
+                $out .= substr($bin, $offset, $chunkTotal);
+            }
+
+            $offset += $chunkTotal;
+
+            if ($type === 'IEND') {
+                $vioIend = true;
+                break;
+            }
+        }
+
+        return $vioIend ? $out : null;
     }
 
     /**

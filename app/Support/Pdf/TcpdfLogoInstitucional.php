@@ -2,6 +2,8 @@
 
 namespace App\Support\Pdf;
 
+use App\Support\Entorno\EntornoArchivos;
+use App\Support\Entorno\LabInstitucional;
 use TCPDF;
 
 /**
@@ -26,10 +28,10 @@ final class TcpdfLogoInstitucional
     public static function resolverArchivo(?string $logoFile = null): ?string
     {
         if (is_string($logoFile) && $logoFile !== '' && is_file($logoFile)) {
-            return $logoFile;
+            return EntornoArchivos::prepararRutaParaTcpdf($logoFile);
         }
 
-        $desdeEntorno = \App\Support\Entorno\LabInstitucional::logoFile();
+        $desdeEntorno = LabInstitucional::logoFile();
         if ($desdeEntorno !== null) {
             return $desdeEntorno;
         }

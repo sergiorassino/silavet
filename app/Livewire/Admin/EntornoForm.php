@@ -587,27 +587,84 @@ class EntornoForm extends Component
         $this->dispatch('vl-swal-exito', mensaje: 'Parámetros del sistema actualizados correctamente.');
     }
 
+    public function quitarLogo(): void
+    {
+        $this->quitarArchivoEntorno(
+            'logo',
+            'logoActual',
+            'Logo quitado.',
+            'logoUpload'
+        );
+    }
+
     public function quitarHeaderInforme(): void
     {
-        $this->quitarImagenInforme('headerInforme', 'headerInformeActual', 'Encabezado del informe quitado. Se usará el membrete con logo y datos.');
+        $this->quitarArchivoEntorno(
+            'headerInforme',
+            'headerInformeActual',
+            'Encabezado del informe quitado. Se usará el membrete con logo y datos.',
+            'headerInformeUpload'
+        );
     }
 
     public function quitarFooterInforme(): void
     {
-        $this->quitarImagenInforme('footerInforme', 'footerInformeActual', 'Pie del informe quitado. Se usarán firmas y textos del pie.');
+        $this->quitarArchivoEntorno(
+            'footerInforme',
+            'footerInformeActual',
+            'Pie del informe quitado. Se usarán firmas y textos del pie.',
+            'footerInformeUpload'
+        );
     }
 
-    private function quitarImagenInforme(string $campo, string $propActual, string $mensajeOk): void
+    public function quitarFirmaIzq(): void
     {
+        $this->quitarArchivoEntorno(
+            'firmaIzq',
+            'firmaIzqActual',
+            'Firma izquierda quitada.',
+            'firmaIzqUpload'
+        );
+    }
+
+    public function quitarFirmaCentro(): void
+    {
+        $this->quitarArchivoEntorno(
+            'firmaCentro',
+            'firmaCentroActual',
+            'Firma central quitada.',
+            'firmaCentroUpload'
+        );
+    }
+
+    public function quitarFirmaDer(): void
+    {
+        $this->quitarArchivoEntorno(
+            'firmaDer',
+            'firmaDerActual',
+            'Firma derecha quitada.',
+            'firmaDerUpload'
+        );
+    }
+
+    private function quitarArchivoEntorno(
+        string $campo,
+        string $propActual,
+        string $mensajeOk,
+        ?string $propUpload = null,
+    ): void {
         abort_unless(tienePermiso(PermisosIaCatalog::PARAMETROS), 403);
 
         $key = 'entorno-parametros-quitar-img:'.auth()->id();
-        abort_if(RateLimiter::tooManyAttempts($key, 20), 429);
+        abort_if(RateLimiter::tooManyAttempts($key, 10), 429);
 
         if (! Schema::hasColumn('entorno', $campo)) {
+            $sqlHint = in_array($campo, ['headerInforme', 'footerInforme'], true)
+                ? 'database/sql/entorno_header_footer_informe.sql'
+                : 'database/sql/entorno_ensure_columnas_silavet.sql';
             $this->dispatch(
                 'vl-swal-error',
-                mensaje: 'Falta la columna '.$campo.' en entorno. Ejecutá el SQL de database/sql/entorno_header_footer_informe.sql.'
+                mensaje: 'Falta la columna '.$campo.' en entorno. Ejecutá el SQL de '.$sqlHint.'.'
             );
 
             return;
@@ -620,11 +677,12 @@ class EntornoForm extends Component
         $entorno->update([$campo => null]);
         $this->{$propActual} = null;
 
+        if ($propUpload !== null) {
+            $this->{$propUpload} = null;
+        }
+
         if ($ruta !== null) {
-            $absoluta = EntornoArchivos::rutaAbsoluta($ruta);
-            if ($absoluta !== null && is_file($absoluta)) {
-                @unlink($absoluta);
-            }
+            EntornoArchivos::eliminarArchivoSiExiste($ruta);
         }
 
         RateLimiter::hit($key, 60);

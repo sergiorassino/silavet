@@ -46,7 +46,9 @@ final class LabInstitucional
                         trim((string) ($entorno->logo ?? '')) ?: null
                     );
                     $logoUrl = EntornoArchivos::urlPublica($rutaLogo, cacheBust: true);
-                    $logoFile = EntornoArchivos::rutaAbsoluta($rutaLogo);
+                    $logoFile = EntornoArchivos::prepararRutaParaTcpdf(
+                        EntornoArchivos::rutaAbsoluta($rutaLogo)
+                    );
                     $headerFile = self::rutaHeaderInforme($entorno);
 
                     $color = trim((string) ($entorno->colorInforme ?? ''));
@@ -59,7 +61,7 @@ final class LabInstitucional
             if ($logoFile === null) {
                 $fallback = trim((string) config('tenant.institucional.logo_fallback', ''));
                 if ($fallback !== '' && is_file(public_path($fallback))) {
-                    $logoFile = public_path($fallback);
+                    $logoFile = EntornoArchivos::prepararRutaParaTcpdf(public_path($fallback));
                     $logoUrl = asset($fallback);
                 }
             }
@@ -116,13 +118,15 @@ final class LabInstitucional
             return null;
         }
 
-        $ruta = EntornoArchivos::rutaAbsoluta(
-            EntornoArchivos::normalizarRutaLegacy(
-                trim((string) ($entorno->headerInforme ?? '')) ?: null
+        $ruta = EntornoArchivos::prepararRutaParaTcpdf(
+            EntornoArchivos::rutaAbsoluta(
+                EntornoArchivos::normalizarRutaLegacy(
+                    trim((string) ($entorno->headerInforme ?? '')) ?: null
+                )
             )
         );
 
-        return ($ruta !== null && is_file($ruta)) ? $ruta : null;
+        return $ruta;
     }
 
     private static function iniciales(string $nombre): string

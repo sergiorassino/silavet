@@ -53,7 +53,16 @@
                             <div class="mb-2 rounded border border-neutral-200 bg-neutral-50 p-2">
                                 <img src="{{ $logoUrl }}" alt="Logo actual" class="max-h-20 max-w-full object-contain">
                                 <p class="mt-1 text-xs text-neutral-600">Logo cargado. Solo subí otro archivo si querés reemplazarlo.</p>
+                                <button type="button"
+                                        class="mt-2 text-xs font-medium text-red-700 hover:underline"
+                                        wire:loading.attr="disabled"
+                                        wire:target="quitarLogo"
+                                        x-on:click="window.vlSwalConfirmar('¿Eliminar el logo institucional? Se borrará también del servidor.', 'Eliminar logo', { confirmButtonText: 'Sí, eliminar', icon: 'warning' }).then(ok => ok && $wire.quitarLogo())">
+                                    Eliminar logo
+                                </button>
                             </div>
+                        @else
+                            <p class="mb-2 text-xs text-neutral-500">Sin logo cargado.</p>
                         @endif
                         <input wire:model="logoUpload" id="logoUpload" type="file" accept="{{ $acceptImagen }}" class="form-input py-1.5 text-sm file:mr-2 file:rounded file:border-0 file:bg-primary-50 file:px-2 file:py-1 file:text-xs file:font-medium file:text-primary-700">
                         <p class="mt-1 text-xs text-neutral-500">JPEG, JPG, PNG, GIF o WebP. Máx. 2 MB. Se guarda el nombre original del archivo (compatible con NeoLab).</p>
@@ -110,8 +119,12 @@
                                 <div class="mb-2 rounded border border-neutral-200 bg-neutral-50 p-2">
                                     <img src="{{ $headerInformeUrl }}" alt="Encabezado actual" class="max-h-24 max-w-full object-contain">
                                     <p class="mt-1 text-xs text-neutral-600">Encabezado cargado. Reemplaza logo y datos de contacto en el PDF.</p>
-                                    <button type="button" wire:click="quitarHeaderInforme" class="mt-2 text-xs font-medium text-red-700 hover:underline">
-                                        Quitar encabezado (volver al membrete)
+                                    <button type="button"
+                                            class="mt-2 text-xs font-medium text-red-700 hover:underline"
+                                            wire:loading.attr="disabled"
+                                            wire:target="quitarHeaderInforme"
+                                            x-on:click="window.vlSwalConfirmar('¿Eliminar el encabezado del informe? Se borrará del servidor y se volverá al membrete con logo y datos.', 'Eliminar encabezado', { confirmButtonText: 'Sí, eliminar', icon: 'warning' }).then(ok => ok && $wire.quitarHeaderInforme())">
+                                        Eliminar encabezado
                                     </button>
                                 </div>
                             @else
@@ -134,8 +147,12 @@
                                 <div class="mb-2 rounded border border-neutral-200 bg-neutral-50 p-2">
                                     <img src="{{ $footerInformeUrl }}" alt="Pie actual" class="max-h-24 max-w-full object-contain">
                                     <p class="mt-1 text-xs text-neutral-600">Pie cargado. Reemplaza firmas y textos del pie en el PDF.</p>
-                                    <button type="button" wire:click="quitarFooterInforme" class="mt-2 text-xs font-medium text-red-700 hover:underline">
-                                        Quitar pie (volver a firmas)
+                                    <button type="button"
+                                            class="mt-2 text-xs font-medium text-red-700 hover:underline"
+                                            wire:loading.attr="disabled"
+                                            wire:target="quitarFooterInforme"
+                                            x-on:click="window.vlSwalConfirmar('¿Eliminar el pie del informe? Se borrará del servidor y se volverá a firmas y textos del pie.', 'Eliminar pie', { confirmButtonText: 'Sí, eliminar', icon: 'warning' }).then(ok => ok && $wire.quitarFooterInforme())">
+                                        Eliminar pie
                                     </button>
                                 </div>
                             @else
@@ -203,7 +220,16 @@
                         @if ($firmaIzqUrl)
                             <div class="mb-2 rounded border border-neutral-200 bg-neutral-50 p-2">
                                 <img src="{{ $firmaIzqUrl }}" alt="Firma izquierda" class="max-h-16 max-w-full object-contain">
+                                <button type="button"
+                                        class="mt-2 text-xs font-medium text-red-700 hover:underline"
+                                        wire:loading.attr="disabled"
+                                        wire:target="quitarFirmaIzq"
+                                        x-on:click="window.vlSwalConfirmar('¿Eliminar la firma izquierda? Se borrará también del servidor.', 'Eliminar firma', { confirmButtonText: 'Sí, eliminar', icon: 'warning' }).then(ok => ok && $wire.quitarFirmaIzq())">
+                                    Eliminar firma
+                                </button>
                             </div>
+                        @else
+                            <p class="mb-2 text-xs text-neutral-500">Sin firma cargada.</p>
                         @endif
                         <input wire:model="firmaIzqUpload" id="firmaIzqUpload" type="file" accept="{{ $acceptImagen }}" class="form-input py-1.5 text-sm file:mr-2 file:rounded file:border-0 file:bg-primary-50 file:px-2 file:py-1 file:text-xs file:font-medium file:text-primary-700">
                         <div wire:loading wire:target="firmaIzqUpload" class="mt-1 text-xs text-primary-600">Subiendo…</div>
@@ -214,7 +240,16 @@
                         @if ($firmaCentroUrl)
                             <div class="mb-2 rounded border border-neutral-200 bg-neutral-50 p-2">
                                 <img src="{{ $firmaCentroUrl }}" alt="Firma central" class="max-h-16 max-w-full object-contain">
+                                <button type="button"
+                                        class="mt-2 text-xs font-medium text-red-700 hover:underline"
+                                        wire:loading.attr="disabled"
+                                        wire:target="quitarFirmaCentro"
+                                        x-on:click="window.vlSwalConfirmar('¿Eliminar la firma central? Se borrará también del servidor.', 'Eliminar firma', { confirmButtonText: 'Sí, eliminar', icon: 'warning' }).then(ok => ok && $wire.quitarFirmaCentro())">
+                                    Eliminar firma
+                                </button>
                             </div>
+                        @else
+                            <p class="mb-2 text-xs text-neutral-500">Sin firma cargada.</p>
                         @endif
                         <input wire:model="firmaCentroUpload" id="firmaCentroUpload" type="file" accept="{{ $acceptImagen }}" class="form-input py-1.5 text-sm file:mr-2 file:rounded file:border-0 file:bg-primary-50 file:px-2 file:py-1 file:text-xs file:font-medium file:text-primary-700">
                         <div wire:loading wire:target="firmaCentroUpload" class="mt-1 text-xs text-primary-600">Subiendo…</div>
@@ -225,7 +260,16 @@
                         @if ($firmaDerUrl)
                             <div class="mb-2 rounded border border-neutral-200 bg-neutral-50 p-2">
                                 <img src="{{ $firmaDerUrl }}" alt="Firma derecha" class="max-h-16 max-w-full object-contain">
+                                <button type="button"
+                                        class="mt-2 text-xs font-medium text-red-700 hover:underline"
+                                        wire:loading.attr="disabled"
+                                        wire:target="quitarFirmaDer"
+                                        x-on:click="window.vlSwalConfirmar('¿Eliminar la firma derecha? Se borrará también del servidor.', 'Eliminar firma', { confirmButtonText: 'Sí, eliminar', icon: 'warning' }).then(ok => ok && $wire.quitarFirmaDer())">
+                                    Eliminar firma
+                                </button>
                             </div>
+                        @else
+                            <p class="mb-2 text-xs text-neutral-500">Sin firma cargada.</p>
                         @endif
                         <input wire:model="firmaDerUpload" id="firmaDerUpload" type="file" accept="{{ $acceptImagen }}" class="form-input py-1.5 text-sm file:mr-2 file:rounded file:border-0 file:bg-primary-50 file:px-2 file:py-1 file:text-xs file:font-medium file:text-primary-700">
                         <div wire:loading wire:target="firmaDerUpload" class="mt-1 text-xs text-primary-600">Subiendo…</div>

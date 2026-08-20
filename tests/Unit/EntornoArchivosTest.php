@@ -65,4 +65,64 @@ class EntornoArchivosTest extends TestCase
             'entorno/lista-precios/neolab/logo.jpg',
         ], EntornoArchivos::candidatosRelativos('entorno/logos/neolab/logo.jpg'));
     }
+
+    public function test_png_sin_chunk_iccp_elimina_el_perfil(): void
+    {
+        $png = $this->pngMinimoConIccp();
+
+        $this->assertStringContainsString('iCCP', $png);
+
+        $limpio = EntornoArchivos::pngSinChunkIccp($png);
+
+        $this->assertNotNull($limpio);
+        $this->assertStringNotContainsString('iCCP', $limpio);
+        $this->assertStringStartsWith("\x89PNG\r\n\x1a\n", $limpio);
+        $this->assertStringContainsString('IEND', $limpio);
+    }
+
+    public function test_sanear_png_en_disco_reescribe_sin_iccp(): void
+    {
+        $dir = sys_get_temp_dir().DIRECTORY_SEPARATOR.'vl_png_'.uniqid('', true);
+        mkdir($dir);
+        $ruta = $dir.DIRECTORY_SEPARATOR.'logo.png';
+        file_put_contents($ruta, $this->pngMinimoConIccp());
+
+        EntornoArchivos::sanearArchivoImagenEnDisco($ruta);
+
+        $bin = (string) file_get_contents($ruta);
+        $this->assertStringNotContainsString('iCCP', $bin);
+        $this->assertSame($ruta, EntornoArchivos::prepararRutaParaTcpdf($ruta));
+
+        @unlink($ruta);
+        @rmdir($dir);
+    }
+
+    /**
+     * PNG 1×1 con chunk iCCP sintético (el contenido del perfil no importa).
+     */
+    private function pngMinimoConIccp(): string
+    {
+        $sig = "\x89PNG\r\n\x1a\n";
+
+        $ihdrData = pack('NN', 1, 1)."\x08\x02\x00\x00\x00";
+        $ihdr = $this->pngChunk('IHDR', $ihdrData);
+
+        // Perfil falso: nombre + flag + "datos"
+        $iccpData = "fake\x00\x00"."profile-bytes";
+        $iccp = $this->pngChunk('iCCP', $iccpData);
+
+        // IDAT de un PNG 1×1 RGB válido generado por GD si está disponible.
+        $idat = $this->pngChunk('IDAT', "\x08\xd7\x63\xf8\xcf\xc0\x00\x00\x03\x01\x01\x00\x18\xdd\x8d\xb4");
+        $iend = $this->pngChunk('IEND', '');
+
+        return $sig.$ihdr.$iccp.$idat.$iend;
+    }
+
+    private function pngChunk(string $type, string $data): string
+    {
+        $len = pack('N', strlen($data));
+        $crc = pack('N', crc32($type.$data));
+
+        return $len.$type.$data.$crc;
+    }
 }

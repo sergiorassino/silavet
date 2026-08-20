@@ -310,7 +310,9 @@ final class InformePacienteConsulta
         $firma = static function (?string $ruta): ?string {
             $normalizada = EntornoArchivos::normalizarRutaLegacy(trim((string) $ruta) ?: null);
 
-            return EntornoArchivos::rutaAbsoluta($normalizada);
+            return EntornoArchivos::prepararRutaParaTcpdf(
+                EntornoArchivos::rutaAbsoluta($normalizada)
+            );
         };
 
         return [
@@ -337,7 +339,9 @@ final class InformePacienteConsulta
             trim((string) ($entorno->{$campo} ?? '')) ?: null
         );
 
-        return EntornoArchivos::rutaAbsoluta($normalizada);
+        return EntornoArchivos::prepararRutaParaTcpdf(
+            EntornoArchivos::rutaAbsoluta($normalizada)
+        );
     }
 
     private static function rutaAdjuntoPdf(Paciente $paciente): ?string
