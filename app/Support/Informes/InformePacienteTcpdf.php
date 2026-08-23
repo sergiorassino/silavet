@@ -51,7 +51,7 @@ final class InformePacienteTcpdf extends Fpdi
     private const RESERVA_FOOTER = 42.0;
 
     /** Ancho de imagen de firma en el pie (mm). */
-    private const ANCHO_FIRMA = 40.0;
+    private const ANCHO_FIRMA = 32.0;
 
     /** Holgura entre la firma y el texto del sello (mm). */
     private const GAP_FIRMA_SELLO = 1.0;
@@ -637,7 +637,7 @@ final class InformePacienteTcpdf extends Fpdi
                 );
                 $yImg = method_exists($this, 'getImageRBY')
                     ? (float) $this->getImageRBY()
-                    : $yInicio + 14.0;
+                    : $yInicio + 11.2;
                 $yTexto = max($yTexto, $yImg + self::GAP_FIRMA_SELLO);
             } catch (Throwable) {
                 // Firma ilegible: continuar con textos.
