@@ -91,56 +91,41 @@
                                                   d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
                                         </svg>
                                     </button>
-                                    <button type="button"
-                                            title="Guardar fila"
-                                            aria-label="Guardar fila"
-                                            wire:click="guardarFila({{ $id }})"
-                                            class="vl-grid-icon-btn text-primary-700 hover:bg-primary-50">
-                                        <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.75"
-                                                  d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
-                                        </svg>
-                                    </button>
-                                    <button type="button"
-                                            title="Descartar cambios"
-                                            aria-label="Descartar cambios"
-                                            wire:click="descartarFila({{ $id }})"
-                                            class="vl-grid-icon-btn text-neutral-600 hover:bg-neutral-100">
-                                        <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.75"
-                                                  d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6"/>
-                                        </svg>
-                                    </button>
                                 </div>
                             </td>
                             <td class="vl-determinaciones-td vl-determinaciones-col--orden">
                                 <input type="text"
-                                       wire:model="filas.{{ $id }}.orden"
+                                       wire:model.blur="filas.{{ $id }}.orden"
+                                       wire:blur="guardarFila({{ $id }})"
                                        class="vl-determinaciones-input vl-determinaciones-input--orden"
                                        inputmode="numeric">
                             </td>
                             <td class="vl-determinaciones-td vl-determinaciones-col--nombre">
                                 <input type="text"
-                                       wire:model="filas.{{ $id }}.nombre"
+                                       wire:model.blur="filas.{{ $id }}.nombre"
+                                       wire:blur="guardarFila({{ $id }})"
                                        class="vl-determinaciones-input vl-determinaciones-input--nombre"
                                        maxlength="50">
                             </td>
                             <td class="vl-determinaciones-td vl-determinaciones-col--precio">
                                 <input type="text"
-                                       wire:model="filas.{{ $id }}.precio"
+                                       wire:model.blur="filas.{{ $id }}.precio"
+                                       wire:blur="guardarFila({{ $id }})"
                                        class="vl-determinaciones-input vl-determinaciones-input--precio"
                                        inputmode="decimal">
                             </td>
                             @if ($tienePrecioExtra)
                                 <td class="vl-determinaciones-td vl-determinaciones-col--precio">
                                     <input type="text"
-                                           wire:model="filas.{{ $id }}.precio2"
+                                           wire:model.blur="filas.{{ $id }}.precio2"
+                                           wire:blur="guardarFila({{ $id }})"
                                            class="vl-determinaciones-input vl-determinaciones-input--precio"
                                            inputmode="decimal">
                                 </td>
                                 <td class="vl-determinaciones-td vl-determinaciones-col--precio">
                                     <input type="text"
-                                           wire:model="filas.{{ $id }}.precio3"
+                                           wire:model.blur="filas.{{ $id }}.precio3"
+                                           wire:blur="guardarFila({{ $id }})"
                                            class="vl-determinaciones-input vl-determinaciones-input--precio"
                                            inputmode="decimal">
                                 </td>
@@ -148,6 +133,7 @@
                             @if ($mostrarColumnaPerfil)
                                 <td class="vl-determinaciones-td vl-determinaciones-col--bool">
                                     <select wire:model="filas.{{ $id }}.perfil"
+                                            wire:change="guardarFila({{ $id }})"
                                             class="vl-determinaciones-select">
                                         <option value="0">No</option>
                                         <option value="1">Sí</option>
@@ -157,6 +143,7 @@
                             <td class="vl-determinaciones-td vl-determinaciones-col--derivacion">
                                 @if ($derivacionEsCatalogo)
                                     <select wire:model="filas.{{ $id }}.destino"
+                                            wire:change="guardarFila({{ $id }})"
                                             class="vl-determinaciones-select vl-determinaciones-select--catalogo">
                                         <option value="0">No</option>
                                         @foreach ($centrosDerivacion as $centro)
@@ -165,6 +152,7 @@
                                     </select>
                                 @else
                                     <select wire:model="filas.{{ $id }}.destino"
+                                            wire:change="guardarFila({{ $id }})"
                                             class="vl-determinaciones-select">
                                         <option value="0">No</option>
                                         <option value="1">Sí</option>

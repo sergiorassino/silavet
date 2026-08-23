@@ -46,7 +46,8 @@ Si falta `tipodeterminaciones.derivacion`: aviso visible y no se persiste el cen
 1. Carga todas las filas a memoria (`filas`); filtro local por orden/nombre.
 2. Orden de la grilla: por defecto alfabético por nombre (`asc`). Clic en cabeceras
    **Orden** y **Nombre de la determinación** alterna `asc`/`desc` de esa columna.
-3. Edición inline; guardar/descartar por fila; alta con valores en 0.
+3. Edición inline con guardado automático al salir del campo (blur) o al
+   cambiar un select; solo acción de fila: eliminar. Alta con valores en 0.
 4. Eliminar bloqueado si hay filas en `determinaciones` con ese tipo.
 
 ## Fuente de verdad
@@ -86,3 +87,4 @@ se preselecciona `derivacion` (modo catálogo); el select de esa pantalla sigue 
 - [ ] ¿Guard `Schema::hasColumn('tipodeterminaciones', 'derivacion')` con error visible si falta?
 - [ ] ¿Permiso 2?
 - [ ] ¿Default alfabético por nombre, y cabeceras Orden/Nombre reordenan?
+- [ ] ¿Inputs guardan al blur y selects al change, sin botones guardar/descartar?

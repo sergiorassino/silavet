@@ -58,10 +58,6 @@ class TipodeterminacionIndex extends Component
     {
         abort_unless(tienePermiso(PermisosIaCatalog::DETERMINACIONES), 403);
 
-        $key = 'tipodet-save:'.auth()->id();
-        abort_if(RateLimiter::tooManyAttempts($key, 30), 429);
-        RateLimiter::hit($key, 60);
-
         if (! $this->asegurarColumnaCatalogo()) {
             return;
         }
@@ -73,12 +69,20 @@ class TipodeterminacionIndex extends Component
             return;
         }
 
-        $validated = validator($fila, $this->reglasFila(), [
+        $validator = validator($fila, $this->reglasFila(), [
             'orden.required' => 'El orden es obligatorio.',
             'nombre.required' => 'El nombre es obligatorio.',
             'nombre.max' => 'El nombre no puede superar 50 caracteres.',
             'destino.exists' => 'El centro de derivación seleccionado no es válido.',
-        ])->validate();
+        ]);
+
+        if ($validator->fails()) {
+            $this->dispatch('vl-swal-error', mensaje: $validator->errors()->first());
+
+            return;
+        }
+
+        $validated = $validator->validated();
 
         $registro = Tipodeterminacion::query()->findOrFail($id);
 
@@ -98,18 +102,18 @@ class TipodeterminacionIndex extends Component
             $data['precio3'] = PrecioInput::parse((string) ($validated['precio3'] ?? '0'));
         }
 
+        if (! $this->filaCambioRespectoRegistro($registro, $data)) {
+            $this->filas[$id] = $this->filaDesdeModelo($registro);
+
+            return;
+        }
+
+        $key = 'tipodet-save:'.auth()->id();
+        abort_if(RateLimiter::tooManyAttempts($key, 30), 429);
+        RateLimiter::hit($key, 60);
+
         $registro->update($data);
         $this->filas[$id] = $this->filaDesdeModelo($registro->fresh());
-
-        $this->dispatch('vl-swal-exito', mensaje: 'Determinación guardada correctamente.');
-    }
-
-    public function descartarFila(int $id): void
-    {
-        abort_unless(tienePermiso(PermisosIaCatalog::DETERMINACIONES), 403);
-
-        $registro = Tipodeterminacion::query()->findOrFail($id);
-        $this->filas[$id] = $this->filaDesdeModelo($registro);
     }
 
     public function eliminar(int $id): void
@@ -174,7 +178,7 @@ class TipodeterminacionIndex extends Component
         $nuevo = Tipodeterminacion::query()->create($data);
         $this->filas[$nuevo->idTipodeterminaciones] = $this->filaDesdeModelo($nuevo);
 
-        $this->dispatch('vl-swal-exito', mensaje: 'Fila nueva agregada. Edite los datos y guarde.');
+        $this->dispatch('vl-swal-exito', mensaje: 'Fila nueva agregada. Los cambios se guardan al salir de cada campo.');
     }
 
     public function render()
@@ -252,6 +256,28 @@ class TipodeterminacionIndex extends Component
         }
 
         return (int) $valor > 0 ? 1 : 0;
+    }
+
+    /** @param  array<string, mixed>  $data */
+    private function filaCambioRespectoRegistro(Tipodeterminacion $registro, array $data): bool
+    {
+        foreach ($data as $columna => $valor) {
+            $actual = $registro->{$columna};
+
+            if (in_array($columna, ['precio', 'precio2', 'precio3'], true)) {
+                if (round((float) $actual, 4) !== round((float) $valor, 4)) {
+                    return true;
+                }
+
+                continue;
+            }
+
+            if ((string) $actual !== (string) $valor) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     private function sincronizarFilasDesdeBd(): void
