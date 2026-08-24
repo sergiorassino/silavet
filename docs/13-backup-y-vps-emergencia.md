@@ -34,7 +34,7 @@ No se sube `vendor/`, logs, cache, `livewire-tmp` ni el árbol git. El sync **no
 usa `--delete`: un archivo borrado en disco no se borra en S3.
 
 Dump horario (misma rutina): `l{LAB_ORDEN}_{PROYECTO}_YYYY_MM_DD_HH_MM_SS.sql.gz`
-en `s3://sistesco/{S3_PREFIX_DUMPS}/` (hoy suele ser `backupDedicdo/backupHora`).
+en `s3://sistesco/{S3_PREFIX_DUMPS}/` (`backupDedicado/backupHora`).
 Ejemplo: `l1_alqu_2026_07_24_21_30_02.sql.gz`. El `l1_` es el número de
 orden del lab (para ver de un vistazo si backupuearon todos). La BD se lee del
 `.env` de Laravel (`DB_*`), no de `MYSQL_*` (eso es el MySQL **local** del VPS
@@ -126,7 +126,7 @@ Ajustar, además de rutas y bucket:
 HABILITAR_RESPALDO=1
 LAB_ORDEN=1
 PROYECTO=alqu
-S3_PREFIX_DUMPS=backupDedicdo/backupHora
+S3_PREFIX_DUMPS=backupDedicado/backupHora
 S3_DUMP_FILTER=l1_alqu
 S3_PREFIX_ARCHIVOS=backupDedicado/archivos
 APP_DIR=…   # carpeta con artisan y .env
@@ -141,7 +141,7 @@ Probar (en el hosting del lab, no en el VPS de reserva):
 ```bash
 bash /ruta/al/lab/scripts/emergencia/respaldar.sh --dry-run
 bash /ruta/al/lab/scripts/emergencia/respaldar.sh
-aws s3 ls s3://sistesco/backupDedicdo/backupHora/ | grep l1_alqu | tail
+aws s3 ls s3://sistesco/backupDedicado/backupHora/ | grep l1_alqu | tail
 ```
 
 Cron **único** (adaptar ruta y log). Minuto 5 de cada hora está bien:
@@ -289,7 +289,7 @@ composer -V
 command -v aws || echo "falta AWS CLI — igual que en producción, o docs/13 §2.1"
 aws sts get-caller-identity
 aws s3 ls s3://sistesco/backupDedicado/archivos/alqu/
-aws s3 ls s3://sistesco/backupDedicdo/backupHora/ | grep l1_alqu | tail
+aws s3 ls s3://sistesco/backupDedicado/backupHora/ | grep l1_alqu | tail
 ```
 
 Si `composer` queda en `$HOME/bin`, ese directorio tiene que estar en PATH
@@ -337,7 +337,7 @@ GIT_BRANCH=main
 PHP_BIN=/usr/local/php83/bin/php
 ENV_EMERGENCIA_FILE=/home/admin/public_html/silavet/alqu/scripts/emergencia/env.emergencia
 S3_BUCKET=sistesco
-S3_PREFIX_DUMPS=backupDedicdo/backupHora
+S3_PREFIX_DUMPS=backupDedicado/backupHora
 S3_PREFIX_ARCHIVOS=backupDedicado/archivos
 S3_DUMP_FILTER=l1_alqu
 AWS_REGION=sa-east-1

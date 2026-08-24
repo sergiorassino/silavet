@@ -344,7 +344,7 @@ clave_dump_mas_reciente() {
     local listado linea clave err
     err="$(mktemp)"
     if ! listado="$(aws s3 ls "$(s3_uri_dumps)/" --recursive "${extra[@]}" 2>"$err")"; then
-        die "Falló aws s3 ls en $(s3_uri_dumps)/ — $(tr '\n' ' ' <"$err"). Probá: aws s3 ls s3://${S3_BUCKET}/  y ajustá S3_PREFIX_DUMPS (backupDedicdo vs backupDedicado)."
+        die "Falló aws s3 ls en $(s3_uri_dumps)/ — $(tr '\n' ' ' <"$err"). Probá: aws s3 ls s3://${S3_BUCKET}/  y ajustá S3_PREFIX_DUMPS (debe ser backupDedicado/backupHora)."
     fi
     rm -f "$err"
 
