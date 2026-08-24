@@ -14,7 +14,8 @@ resultados; al baja los elimina. Recalcula totales del protocolo (`pacientes.pre
 No emite PDF ni es portal de clientes. No carga resultados reales: al materializar,
 `renglones.valor` queda en `"PENDIENTE"` (excepto `tipoItem` 2 valor fijo y 3 título,
 que quedan vacíos; y `tipoItem` 8 texto largo, que copia `itemsinforme.textos`),
-`valor2` vacío, y `renglones.mostrar` copia `itemsinforme.mostrar` (0/1).
+`valor2` vacío, y `renglones.mostrar` copia `itemsinforme.mostrar` (0/1; visibilidad
+del informe PDF, no de la carga de resultados).
 
 Entrada: listado de protocolos → icono determinaciones →
 `route('protocolos.determinaciones', $idPacientes)`.

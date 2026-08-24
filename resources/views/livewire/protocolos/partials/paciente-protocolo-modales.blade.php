@@ -150,7 +150,8 @@
                             · {{ $edInfNombrePaciente }}
                         </p>
                         <p class="mt-0.5 text-[11px] text-neutral-500">
-                            Visibilidad de los renglones en el informe (Sí = mostrar, No = ocultar).
+                            Visibilidad de los renglones en el informe PDF (Sí = mostrar, No = ocultar).
+                            No afecta la carga de resultados.
                         </p>
                     </div>
 

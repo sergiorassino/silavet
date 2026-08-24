@@ -68,6 +68,15 @@
                         <th class="vl-ii-col--ref" title="Referencia bovinos">Ref. bovinos</th>
                         <th class="vl-ii-col--fmt" title="Formato del valor">Formato</th>
                         <th class="vl-ii-col--auto" title="Dispara automatización">Aut</th>
+                        <th class="vl-ii-col--mostrar vl-ii-th-multiline" lang="es"
+                            title="Mostrar en informe PDF (Sí = visible, No = oculto). En la carga de resultados siempre se ve."
+                            <span class="block">Mos-</span>
+                            <span class="block">trar</span>
+                            <span class="block">en</span>
+                            <span class="block">In-</span>
+                            <span class="block">for-</span>
+                            <span class="block">me</span>
+                        </th>
                         <th class="vl-ii-col--an" title="Código analizador">Anal</th>
                     </tr>
                 </thead>
@@ -164,6 +173,13 @@
                                 title="Clic para editar automatización">
                                 <span class="vl-grid-readonly">
                                     {{ $fila['actualiza'] !== '' ? ($opcionesSiNo[(int) $fila['actualiza']] ?? '—') : '' }}
+                                </span>
+                            </td>
+                            <td class="vl-ii-col--mostrar vl-ii-col-editable"
+                                wire:click="abrirEdicionCampo({{ $id }}, 'mostrar')"
+                                title="Clic para editar mostrar en informe">
+                                <span class="vl-grid-readonly">
+                                    {{ $fila['mostrar'] !== '' ? ($opcionesSiNo[(int) $fila['mostrar']] ?? '—') : '' }}
                                 </span>
                             </td>
                             <td class="vl-ii-col--an vl-ii-col-editable"

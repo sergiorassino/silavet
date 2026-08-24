@@ -8,8 +8,11 @@ use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Schema;
 
 /**
- * Carga agrupada de renglones visibles para el formulario de resultados.
+ * Carga agrupada de renglones para el formulario de resultados.
  * Una sola consulta (join), ordenada por grupo y tipodeterminación.
+ *
+ * No filtra por `renglones.mostrar`: ese flag solo oculta el renglón en el
+ * informe PDF. En carga se listan todos (salvo tipoItem 2, valor fijo).
  */
 class ResultadosCargaConsulta
 {
@@ -28,7 +31,6 @@ class ResultadosCargaConsulta
             ->join('grupos as g', 'r.idGrupos', '=', 'g.idGrupos')
             ->leftJoin('tipodeterminaciones as t', 'r.idTipodeterminacion', '=', 't.idTipodeterminaciones')
             ->where('r.idPacientes', $paciente->idPacientes)
-            ->where('r.mostrar', 1)
             ->select([
                 'r.idRenglones',
                 'r.idGrupos',

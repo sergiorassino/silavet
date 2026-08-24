@@ -107,7 +107,7 @@ fijas al scroll vertical y horizontal de la página.
 | Tabla | Rol |
 |-------|-----|
 | `renglones` | Fuente de verdad de valores cargados (`valor`, `valor2`, `idItems`, `tipoItem`, `mostrar`) |
-| `itemsinforme` | Catálogo de campos (`idItems`, `actualiza`, `estiloNum`, `nombreItem`, `textos`) |
+| `itemsinforme` | Catálogo de campos (`idItems`, `actualiza`, `estiloNum`, `nombreItem`, `textos`, `mostrar`) |
 | `entorno.formulas` | Script JS legacy inyectado en el navegador como `window.formulas` |
 | `pacientes` | Especie (`idEspecies`), sexo (texto), estado del protocolo |
 | `rangovalores` | Min/max por `idItems` + `idEspecies` + `idSexos` (**solo** hemograma auto) |
@@ -123,6 +123,10 @@ fijas al scroll vertical y horizontal de la página.
 | 8 | Textarea (Serie Roja/Blanca, textos largos) | No |
 | 9 | % editable (`id`) + absoluto oculto (`id_2`) + display (`id_T`) | Sí (`formatearYCalcular`) |
 | 3 / 5 / 10 | Título / línea / imágenes | Sin valor de resultado numérico |
+
+`renglones.mostrar` / `itemsinforme.mostrar` **no** ocultan campos en esta pantalla
+(Sí/No = solo visibilidad del informe PDF). Tipo 2 (valor fijo) sigue sin listarse
+en carga, igual que el sistema anterior.
 
 IDs DOM: el operador edita `#idItems`; el diferencial absoluto vive en `#idItems_2`
 (y se refleja en `#idItems_T` disabled). `formulas()` escribe `_2` y `_T`.
@@ -339,6 +343,9 @@ conteo manual).
   de UI `"—"`.
 - Tras tocar `resources/js/**`: `npm run build` e incluir `public/build/` en el
   despliegue.
+- **No** filtrar la carga por `renglones.mostrar`. Ese flag solo oculta el
+  renglón en el informe PDF (`InformePacienteConsulta`). Auxiliares como
+  Plaquetas (conteo manual) deben poder cargarse aunque no se impriman.
 
 ## Checklist al modificar
 
@@ -353,3 +360,5 @@ conteo manual).
 8. Tras JS/CSS: `npm run build` + `public/build/` en la lista de producción.
 9. Actualizar **este** documento si cambian roles, frases, disparos o el contrato
    del runner.
+10. ¿Ítems con `mostrar = 0` (p. ej. conteo manual de plaquetas) aparecen en
+    carga y **no** en el PDF?
