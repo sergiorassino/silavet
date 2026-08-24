@@ -34,12 +34,13 @@ while [[ $# -gt 0 ]]; do
 done
 
 cargar_config
+prepend_php_path
 require_vars PROYECTO APP_DIR GIT_URL GIT_BRANCH WEB_USER
 
 php_ok
 require_cmd git
-require_cmd composer
 require_cmd mysql
+command -v composer >/dev/null 2>&1 || die "No está instalado: composer. Instalalo con el PHP de DirectAdmin (docs/13 §3.1)."
 if [[ -n "${AWS_BIN:-}" ]]; then
     require_aws
 elif ! type -P aws >/dev/null 2>&1; then
@@ -101,6 +102,6 @@ Preparación lista. Completá a mano si aún no lo hiciste:
 Este VPS NO debe tener cron de sync horario.
 Cuando caiga el servidor original:
 
-  sudo bash $APP_DIR/scripts/emergencia/restaurar.sh
+  bash $APP_DIR/scripts/emergencia/restaurar.sh
 
 EOF

@@ -56,7 +56,7 @@ cargar_config() {
         candidato="$_EMERGENCIA_DIR/config.env"
     fi
 
-    [[ -n "$candidato" && -f "$candidato" ]] || die "No hay configuración. Copiá config.example.env a /etc/silavet/config.env y completá los valores."
+    [[ -n "$candidato" && -f "$candidato" ]] || die "No hay configuración. Copiá config.example.env a scripts/emergencia/config.env (o /etc/silavet/config.env) y completá los valores."
 
     # shellcheck disable=SC1090
     set -a
@@ -67,8 +67,31 @@ cargar_config() {
     log "Config: $CONFIG_CARGADO"
 }
 
+# DirectAdmin: el PHP de PATH no es el de los sitios. Composer y `php` deben
+# ser el binario de PHP_BIN.
+prepend_php_path() {
+    local php_bin="${PHP_BIN:-php}"
+    local php_dir resolved
+    resolved="$(command -v "$php_bin" 2>/dev/null || true)"
+    [[ -n "$resolved" ]] || return 0
+    php_dir="$(dirname "$resolved")"
+    case ":$PATH:" in
+        *":${php_dir}:"*) ;;
+        *) export PATH="${php_dir}:$PATH" ;;
+    esac
+    log "PATH PHP: $resolved"
+}
+
 ruta_overlay() {
-    echo "${ENV_EMERGENCIA_FILE:-/etc/silavet/env.emergencia}"
+    if [[ -n "${ENV_EMERGENCIA_FILE:-}" ]]; then
+        echo "$ENV_EMERGENCIA_FILE"
+        return
+    fi
+    if [[ -f /etc/silavet/env.emergencia ]]; then
+        echo /etc/silavet/env.emergencia
+        return
+    fi
+    echo "$_EMERGENCIA_DIR/env.emergencia"
 }
 
 s3_uri_archivos() {
@@ -288,16 +311,26 @@ git_actualizar() {
     )
 }
 
+# DirectAdmin: el `php` de PATH suele ser el de AlmaLinux. Composer tiene que
+# usar el mismo binario que Laravel (PHP_BIN).
+composer_con_php() {
+    local php_bin="${PHP_BIN:-php}"
+    local php_dir
+    php_dir="$(dirname "$(command -v "$php_bin")")"
+    export PATH="${php_dir}:$PATH"
+    command -v composer >/dev/null 2>&1 || die "No está instalado: composer. En DirectAdmin: curl -sS https://getcomposer.org/installer | $php_bin -- --install-dir=\$HOME/bin --filename=composer"
+    composer "$@"
+}
+
 composer_instalar() {
     local dir="$1"
-    require_cmd composer
     if [[ "$DRY_RUN" == "1" ]]; then
         log "[dry-run] composer install --no-dev en $dir"
         return 0
     fi
     (
         cd "$dir"
-        composer install --no-dev --optimize-autoloader --no-interaction
+        composer_con_php install --no-dev --optimize-autoloader --no-interaction
     )
 }
 
@@ -332,17 +365,30 @@ confirmar() {
     [[ "$resp" == "y" || "$resp" == "Y" || "$resp" == "si" || "$resp" == "sí" ]] || die "Cancelado."
 }
 
+# No usar `php -m | grep`: en DirectAdmin los warnings de .so faltantes
+# contienen el nombre del módulo y el grep miente. extension_loaded es la prueba.
+php_ext_cargada() {
+    local php_bin="$1"
+    local ext="$2"
+    "$php_bin" -r "exit(extension_loaded('$ext') ? 0 : 1);" 2>/dev/null
+}
+
 php_ok() {
     local php_bin="${PHP_BIN:-php}"
     require_cmd "$php_bin"
-    "$php_bin" -r 'exit(PHP_VERSION_ID >= 80200 ? 0 : 1);' \
-        || die "Se necesita PHP 8.2 o superior ($php_bin)."
+    "$php_bin" -r 'exit(PHP_VERSION_ID >= 80200 ? 0 : 1);' 2>/dev/null \
+        || die "Se necesita PHP 8.2 o superior ($php_bin). En DirectAdmin: PHP_BIN=/usr/local/php83/bin/php (o php82) en config.env."
 
-    local ext
+    local ext ini
+    ini="$("$php_bin" -r 'echo php_ini_loaded_file() ?: "(ninguno)";' 2>/dev/null || true)"
+    log "PHP: $php_bin  ini: $ini"
+
     for ext in pdo_mysql mbstring xml curl zip tokenizer fileinfo ctype json; do
-        "$php_bin" -m | grep -qi "^${ext}$" || die "Falta la extensión PHP: $ext"
+        if ! php_ext_cargada "$php_bin" "$ext"; then
+            die "Falta la extensión PHP: $ext (binario $php_bin, ini $ini). En DirectAdmin NO se habilita con extension=$ext en php.ini (eso genera el warning de .so). Sacá esas líneas del ini CLI y/o rebuild PHP: ver docs/13 §3.1. Diagnóstico: bash $_EMERGENCIA_DIR/diagnostico.sh"
+        fi
     done
-    if ! "$php_bin" -m | grep -qi '^gd$'; then
+    if ! php_ext_cargada "$php_bin" gd; then
         log "AVISO: no está la extensión gd (algunos informes/imágenes pueden fallar)."
     fi
 }
@@ -353,7 +399,7 @@ verificar_preparacion() {
 
     php_ok
     require_cmd git
-    require_cmd composer
+    command -v composer >/dev/null 2>&1 || die "No está instalado: composer."
     require_cmd mysql
     require_aws
 

@@ -38,6 +38,7 @@ while [[ $# -gt 0 ]]; do
 done
 
 cargar_config
+prepend_php_path
 require_vars PROYECTO APP_DIR S3_BUCKET S3_PREFIX_ARCHIVOS S3_PREFIX_DUMPS S3_DUMP_FILTER
 require_vars MYSQL_HOST MYSQL_USER MYSQL_DATABASE GIT_BRANCH
 require_aws
