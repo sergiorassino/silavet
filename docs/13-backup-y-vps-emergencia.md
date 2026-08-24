@@ -40,7 +40,66 @@ Orden en el cron de producción: **primero el dump MySQL, después**
 
 ## 2. Producción — un cron más, después del dump
 
-Requisitos: AWS CLI v2, `flock`, el mismo usuario que ya sube los dumps.
+Requisitos: AWS CLI, `flock`, el mismo usuario/IAM que ya sube los dumps.
+
+### 2.1 Hosting compartido (`aws: command not found`)
+
+En Hostinger y similares **no** viene AWS CLI. Instalarlo en el home, sin root:
+
+```bash
+cd ~
+curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o awscliv2.zip
+unzip -q awscliv2.zip
+./aws/install -i "$HOME/.local/aws-cli" -b "$HOME/.local/bin"
+"$HOME/.local/bin/aws" --version
+```
+
+Si `unzip` o el instalador fallan, alternativa:
+
+```bash
+pip3 install --user awscli
+# suele quedar en ~/.local/bin/aws
+~/.local/bin/aws --version
+```
+
+Credenciales (las mismas del backup de bases):
+
+```bash
+mkdir -p ~/.aws
+nano ~/.aws/credentials
+nano ~/.aws/config
+```
+
+```ini
+# ~/.aws/credentials
+[default]
+aws_access_key_id=...
+aws_secret_access_key=...
+
+# ~/.aws/config
+[default]
+region=sa-east-1
+```
+
+Usá la región real del bucket `sistesco`. Probar:
+
+```bash
+export PATH="$HOME/.local/bin:$PATH"
+aws sts get-caller-identity
+aws s3 ls s3://sistesco/
+```
+
+En `scripts/emergencia/config.env` (del laboratorio):
+
+```bash
+AWS_BIN=/home/u577894275/.local/bin/aws
+```
+
+(ajustá el usuario; `echo $HOME` + `/.local/bin/aws`).
+
+Si no sabés cómo se suben hoy los dumps, buscá el cron o el script de backup: ahí están la key y la región.
+
+---
 
 ```bash
 sudo mkdir -p /etc/silavet

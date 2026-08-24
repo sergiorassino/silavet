@@ -40,8 +40,10 @@ php_ok
 require_cmd git
 require_cmd composer
 require_cmd mysql
-if ! command -v aws >/dev/null 2>&1; then
-    log "AVISO: aws no está instalado. Hace falta para restaurar.sh."
+if [[ -n "${AWS_BIN:-}" ]]; then
+    require_aws
+elif ! type -P aws >/dev/null 2>&1; then
+    log "AVISO: aws no está instalado. Hace falta para restaurar.sh (ver docs/13 §2.1)."
 fi
 
 if [[ -d "$APP_DIR/.git" ]]; then
