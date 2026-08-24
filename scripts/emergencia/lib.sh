@@ -16,6 +16,21 @@ die() {
     exit 1
 }
 
+# Hosting compartido: AWS CLI suele no estar en PATH. Usar AWS_BIN en config.env.
+aws() {
+    local bin="${AWS_BIN:-aws}"
+    command "$bin" "$@"
+}
+
+require_aws() {
+    local bin="${AWS_BIN:-aws}"
+    if [[ "$bin" == */* || "$bin" == ./* ]]; then
+        [[ -x "$bin" ]] || die "AWS_BIN no es ejecutable: $bin"
+        return 0
+    fi
+    type -P aws >/dev/null 2>&1 || die "No está instalado: aws. En Hostinger/shared instalalo en tu home y poné AWS_BIN en config.env (docs/13-backup-y-vps-emergencia.md §2.1)."
+}
+
 require_cmd() {
     local cmd="$1"
     command -v "$cmd" >/dev/null 2>&1 || die "No está instalado: $cmd"
@@ -64,17 +79,16 @@ s3_uri_dumps() {
     echo "s3://${S3_BUCKET}/${S3_PREFIX_DUMPS%/}"
 }
 
-# Lista de carpetas relativas al proyecto que no están en git (o no de forma fiable).
-rutas_archivos_laboratorio() {
-    cat <<'EOF'
-public/REPOSITORIO
-public/entorno
-public/adjuntos
-afipSE/cert
-storage/fonts
-storage/app/AUTOANALIZADORES
-EOF
-}
+# Carpetas relativas al proyecto que no están en git (o no de forma fiable).
+# Array (no process substitution): en Hostinger no existe /dev/fd.
+RUTAS_ARCHIVOS_LABORATORIO=(
+    public/REPOSITORIO
+    public/entorno
+    public/adjuntos
+    afipSE/cert
+    storage/fonts
+    storage/app/AUTOANALIZADORES
+)
 
 es_laravel_dir() {
     local dir="$1"
@@ -132,7 +146,7 @@ sync_archivos() {
     local dry=()
     [[ "$DRY_RUN" == "1" ]] && dry=(--dryrun)
 
-    require_cmd aws
+    require_aws
     require_vars PROYECTO APP_DIR S3_BUCKET S3_PREFIX_ARCHIVOS
     es_laravel_dir "$APP_DIR" || die "APP_DIR no parece un proyecto Laravel: $APP_DIR"
 
@@ -142,7 +156,7 @@ sync_archivos() {
     fi
 
     local rel
-    while IFS= read -r rel; do
+    for rel in "${RUTAS_ARCHIVOS_LABORATORIO[@]}"; do
         [[ -z "$rel" ]] && continue
         if [[ "$sentido" == "subir" ]]; then
             [[ -e "$APP_DIR/$rel" ]] || { log "Omitido (no existe): $rel"; continue; }
@@ -160,7 +174,7 @@ sync_archivos() {
             --exclude "*.tmp" \
             --exclude ".DS_Store" \
             --exclude "Thumbs.db"
-    done < <(rutas_archivos_laboratorio)
+    done
 
     if [[ "$sentido" == "subir" ]]; then
         if [[ -f "$APP_DIR/.env" ]]; then
@@ -177,7 +191,7 @@ sync_archivos() {
 
 # El dump más reciente del proyecto (por fecha de modificación en S3).
 clave_dump_mas_reciente() {
-    require_cmd aws
+    require_aws
     require_vars S3_BUCKET S3_PREFIX_DUMPS S3_DUMP_FILTER
 
     local extra=()
@@ -341,7 +355,7 @@ verificar_preparacion() {
     require_cmd git
     require_cmd composer
     require_cmd mysql
-    require_cmd aws
+    require_aws
 
     es_laravel_dir "$APP_DIR" || die "APP_DIR no es un proyecto Laravel: $APP_DIR"
     [[ -d "$APP_DIR/.git" ]] || die "No hay .git en $APP_DIR."

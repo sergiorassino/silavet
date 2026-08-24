@@ -34,7 +34,7 @@ done
 
 cargar_config
 require_vars PROYECTO APP_DIR S3_BUCKET S3_PREFIX_ARCHIVOS
-require_cmd aws
+require_aws
 require_cmd flock
 es_laravel_dir "$APP_DIR" || die "APP_DIR no parece Laravel: $APP_DIR"
 

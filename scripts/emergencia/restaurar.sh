@@ -40,7 +40,7 @@ done
 cargar_config
 require_vars PROYECTO APP_DIR S3_BUCKET S3_PREFIX_ARCHIVOS S3_PREFIX_DUMPS S3_DUMP_FILTER
 require_vars MYSQL_HOST MYSQL_USER MYSQL_DATABASE GIT_BRANCH
-require_cmd aws
+require_aws
 require_cmd mysql
 require_cmd flock
 php_ok
