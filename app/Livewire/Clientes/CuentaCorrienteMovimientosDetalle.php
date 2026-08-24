@@ -60,6 +60,10 @@ class CuentaCorrienteMovimientosDetalle extends Component
         $resumen = CuentaCorrienteMovimientosConsulta::resumenMovimientos($filas);
         $saldoHoy = CuentaCorrienteMovimientosConsulta::saldoClienteHoy($this->idClientes);
         $saldoAnterior = CuentaCorrienteMovimientosConsulta::saldoAnteriorAFecha($this->idClientes, $this->fechaDesde);
+        $totalALaFecha = CuentaCorrienteMovimientosConsulta::totalALaFecha(
+            $saldoAnterior,
+            (float) $resumen['total_monto'],
+        );
 
         return view('livewire.clientes.cuenta-corriente-movimientos-detalle', [
             'cliente' => $cliente,
@@ -67,6 +71,7 @@ class CuentaCorrienteMovimientosDetalle extends Component
             'resumen' => $resumen,
             'saldoHoy' => $saldoHoy,
             'saldoAnterior' => $saldoAnterior,
+            'totalALaFecha' => $totalALaFecha,
         ])->layout('layouts.staff', UsuarioMenuPortal::staffLayoutParams(labCtx()->idRoles));
     }
 }

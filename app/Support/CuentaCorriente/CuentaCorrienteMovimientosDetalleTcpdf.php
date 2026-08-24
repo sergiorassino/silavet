@@ -148,8 +148,16 @@ final class CuentaCorrienteMovimientosDetalleTcpdf extends TCPDF
         $this->Ln(2);
         TcpdfFuenteArial::aplicar($this, 'B', 7);
         $anchoEtiqueta = array_sum(array_slice($w, 0, 4));
+        $totalPeriodo = (float) ($this->datos['total_monto'] ?? 0);
         $this->Cell($anchoEtiqueta, 4, 'Total período:', 0, 0, 'R');
-        $this->Cell($w[4], 4, CuentaCorrienteMovimientosConsulta::formatearMoneda((float) ($this->datos['total_monto'] ?? 0)), 0, 1, 'R');
+        $this->Cell($w[4], 4, CuentaCorrienteMovimientosConsulta::formatearMoneda($totalPeriodo), 0, 1, 'R');
+
+        $totalALaFecha = CuentaCorrienteMovimientosConsulta::totalALaFecha(
+            $saldoAnterior !== null ? (float) $saldoAnterior : null,
+            $totalPeriodo,
+        );
+        $this->Cell($anchoEtiqueta, 4, 'TOTAL A LA FECHA:', 0, 0, 'R');
+        $this->Cell($w[4], 4, CuentaCorrienteMovimientosConsulta::formatearMoneda($totalALaFecha), 0, 1, 'R');
     }
 
     /**

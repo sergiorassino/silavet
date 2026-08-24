@@ -107,6 +107,15 @@
                             </td>
                             <td class="vl-pacientes-td"></td>
                         </tr>
+                        <tr>
+                            <td colspan="4" class="vl-pacientes-td text-right font-semibold">
+                                TOTAL A LA FECHA:
+                            </td>
+                            <td class="vl-pacientes-td vl-pacientes-td--num font-semibold whitespace-nowrap tabular-nums">
+                                {{ \App\Support\CuentaCorriente\CuentaCorrienteMovimientosConsulta::formatearMoneda($totalALaFecha) }}
+                            </td>
+                            <td class="vl-pacientes-td"></td>
+                        </tr>
                     </tfoot>
                 @endif
             </table>

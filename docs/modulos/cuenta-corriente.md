@@ -60,6 +60,9 @@ Config `id_cuenta_cc` (solo variante `tesoreria_pacientes`):
 **Detalle por cliente:** solo movimientos de la cuenta CC (`idCuentas =
 id_cuenta_cc`), orden `fechhora` DESC; filtrable por Desde/Hasta. El saldo del
 encabezado, el saldo anterior y el total del período usan el mismo filtro.
+Pie de tabla (también en PDF y Excel): **Total período** (suma de montos del
+rango) y **TOTAL A LA FECHA** (saldo anterior + total del período; si no hay
+fecha Desde, el saldo anterior se toma como 0).
 Columnas: #, Nombre, Id Cuentas, Fechhora, Monto, Obs (sin Concepto).
 
 **Resalte de filas:** filas con `monto < 0` (egresos del cliente) se destacan

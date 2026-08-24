@@ -162,6 +162,15 @@ final class CuentaCorrienteMovimientosConsulta
         ];
     }
 
+    /**
+     * Saldo acumulado a la fecha de corte del período: saldo anterior + total del período.
+     * Si no hay fecha desde, el saldo anterior se toma como 0.
+     */
+    public static function totalALaFecha(?float $saldoAnterior, float $totalPeriodo): float
+    {
+        return round(($saldoAnterior ?? 0.0) + $totalPeriodo, 2);
+    }
+
     public static function etiquetaPeriodo(?string $fechaDesde, ?string $fechaHasta): string
     {
         $desde = trim((string) $fechaDesde);
