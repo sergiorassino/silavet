@@ -127,6 +127,16 @@ final class CuentaCorrienteMovimientosExporter
             round($totalMonto, 2),
             '',
         ]);
+        $fila++;
+
+        $this->escribirFila($hoja, $fila, [
+            '',
+            '',
+            '',
+            'TOTAL A LA FECHA:',
+            CuentaCorrienteMovimientosConsulta::totalALaFecha($saldoAnterior, $totalMonto),
+            '',
+        ]);
         $this->estilizarEncabezado($hoja, count(self::ENCABEZADOS_DETALLE));
 
         return [
