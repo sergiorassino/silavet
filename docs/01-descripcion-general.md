@@ -55,6 +55,7 @@ Tres **menús de navegación** (sidebar). Nomenclatura oficial:
 |--------------------|-----------------------------------------------------------------|
 | `schema_lb_neolab.sql` | Estructura completa de todas las tablas de la BD legacy        |
 | `public/img/`      | Logos y paleta del laboratorio (a definir en Etapa 1)           |
+| `scripts/emergencia/` | Respaldo S3 de archivos y restauración del VPS de emergencia ([13](13-backup-y-vps-emergencia.md)) |
 
 ---
 

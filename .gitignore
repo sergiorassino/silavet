@@ -26,3 +26,7 @@ yarn-error.log
 /afipSE/cert/**
 !/afipSE/cert/.gitkeep
 
+# Config local de backup / VPS de emergencia (secretos)
+/scripts/emergencia/config.env
+/scripts/emergencia/env.emergencia
+

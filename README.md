@@ -45,6 +45,7 @@ SILAVET/                    # = carpeta de despliegue (artisan aquí)
 | 07 | `07-versionado-de-modulos-por-tenant.md` | Personalización por laboratorio        |
 | 08 | `08-menus-de-navegacion.md`          | Terminología de portales y sidebars        |
 | 09 | `09-despliegue-sin-public-en-url.md` | Apache, subcarpeta, Livewire en producción |
+| 13 | `13-backup-y-vps-emergencia.md`     | S3 archivos + VPS de emergencia a demanda |
 
 ## Flujo de ramas Git
 

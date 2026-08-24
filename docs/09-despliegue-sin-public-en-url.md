@@ -127,3 +127,9 @@ SESSION_DOMAIN=
 `SESSION_DOMAIN` debe quedar **vacío** (`SESSION_DOMAIN=`). No usar `null` (puede quedar como texto `"null"` en la cookie).
 
 Tras desplegar: `php artisan config:clear` y `php artisan view:clear`.
+
+## Backup de archivos y VPS de emergencia
+
+Espejo incremental en S3 de lo que no está en git, y restauración **a demanda**
+en un VPS ya preparado (sin cron horario en el de reserva):
+[13-backup-y-vps-emergencia.md](13-backup-y-vps-emergencia.md).

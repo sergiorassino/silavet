@@ -5,7 +5,7 @@ Options -Indexes
     # Hostinger (subcarpeta): descomentar y poner el path de la carpeta del lab.
     # RewriteBase /silavet/
 
-    RewriteRule ^(app|bootstrap|config|database|resources|routes|vendor)(/|$) - [F,L]
+    RewriteRule ^(app|bootstrap|config|database|resources|routes|vendor|scripts)(/|$) - [F,L]
     RewriteRule ^(\.env|artisan|composer\.(json|lock)|package(-lock)?\.json|vite\.config\.js|webpack\.mix\.js)$ - [F,L]
 
     # URLs que ya apuntan a public/ (enlaces antiguos): no reescribir de nuevo
