@@ -83,7 +83,7 @@ final class InformePacienteConsulta
             ->join('grupos as g', 'r.idGrupos', '=', 'g.idGrupos')
             ->leftJoin('tipodeterminaciones as t', 'r.idTipodeterminacion', '=', 't.idTipodeterminaciones')
             ->where('r.idPacientes', $paciente->idPacientes)
-            ->where('r.mostrar', 1)
+            ->where('r.mostrar', 1) // visibilidad del PDF; la carga no usa este filtro
             ->select([
                 'r.idRenglones',
                 'r.idGrupos',

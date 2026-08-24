@@ -62,7 +62,7 @@ class ItemsinformeIndex extends Component
             return;
         }
 
-        $registro = Itemsinforme::query()->create([
+        $alta = [
             'idGrupos' => null,
             'nombreItem' => '',
             'tipoItem' => null,
@@ -81,7 +81,13 @@ class ItemsinformeIndex extends Component
             'refComun' => null,
             'actualiza' => null,
             'idAnalizador' => null,
-        ]);
+        ];
+
+        if (ItemsinformeCatalog::tieneColumnaMostrar()) {
+            $alta['mostrar'] = 1;
+        }
+
+        $registro = Itemsinforme::query()->create($alta);
 
         $id = (int) $registro->idItems;
         $this->idItemNuevo = $id;
@@ -95,6 +101,15 @@ class ItemsinformeIndex extends Component
 
         $config = ItemsinformeCatalog::camposEditables()[$campo] ?? null;
         if ($config === null || ! isset($this->filas[$id])) {
+            return;
+        }
+
+        if ($campo === 'mostrar' && ! ItemsinformeCatalog::tieneColumnaMostrar()) {
+            $this->dispatch(
+                'vl-swal-error',
+                mensaje: 'La columna itemsinforme.mostrar no existe en esta base. No se puede editar.'
+            );
+
             return;
         }
 
@@ -130,7 +145,16 @@ class ItemsinformeIndex extends Component
         abort_if(RateLimiter::tooManyAttempts($key, 30), 429);
         RateLimiter::hit($key, 60);
 
-        if ($this->valorCampo === '' && in_array($this->campoEditando, ['id_grupos', 'tipo_item', 'estilo_num', 'actualiza'], true)) {
+        if ($this->campoEditando === 'mostrar' && ! ItemsinformeCatalog::tieneColumnaMostrar()) {
+            $this->dispatch(
+                'vl-swal-error',
+                mensaje: 'La columna itemsinforme.mostrar no existe en esta base. No se puede guardar.'
+            );
+
+            return;
+        }
+
+        if ($this->valorCampo === '' && in_array($this->campoEditando, ['id_grupos', 'tipo_item', 'estilo_num', 'actualiza', 'mostrar'], true)) {
             $valor = null;
         } else {
             $validated = $this->validate(
@@ -253,6 +277,7 @@ class ItemsinformeIndex extends Component
             'ref_caninos', 'ref_felinos', 'ref_equinos', 'ref_porcinos', 'ref_bovinos' => ['nullable', 'string', 'max:80'],
             'estilo_num' => ['nullable', 'integer', 'in:'.implode(',', array_keys(ItemsinformeCatalog::formatosValor()))],
             'actualiza' => ['nullable', 'integer', 'in:0,1'],
+            'mostrar' => ['nullable', 'integer', 'in:0,1'],
             'id_analizador' => ['nullable', 'string', 'max:20'],
             default => throw ValidationException::withMessages([
                 'valorCampo' => 'Campo no editable.',
@@ -275,7 +300,7 @@ class ItemsinformeIndex extends Component
 
     private function normalizarValorCampo(string $campo, mixed $valor): mixed
     {
-        if (in_array($campo, ['id_grupos', 'tipo_item', 'estilo_num', 'actualiza'], true)) {
+        if (in_array($campo, ['id_grupos', 'tipo_item', 'estilo_num', 'actualiza', 'mostrar'], true)) {
             if ($valor === null || $valor === '') {
                 return null;
             }
@@ -344,6 +369,9 @@ class ItemsinformeIndex extends Component
             'ref_bovinos' => (string) ($registro->refBovinos ?? ''),
             'estilo_num' => $registro->estiloNum !== null ? (string) $registro->estiloNum : '',
             'actualiza' => $registro->actualiza !== null ? ((int) $registro->actualiza > 0 ? '1' : '0') : '',
+            'mostrar' => ItemsinformeCatalog::tieneColumnaMostrar() && $registro->mostrar !== null
+                ? ((int) $registro->mostrar > 0 ? '1' : '0')
+                : '',
             'id_analizador' => (string) ($registro->idAnalizador ?? ''),
         ];
     }

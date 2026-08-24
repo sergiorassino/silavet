@@ -21,6 +21,7 @@ use Illuminate\Support\Facades\Schema;
  *
  * `valor2` siempre vacío.
  * `mostrar` copia `itemsinforme.mostrar` (0/1; default 1 si viene null).
+ * Ese flag solo controla el informe PDF, no la pantalla de carga.
  */
 class RenglonesMaterializer
 {

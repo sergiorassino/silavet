@@ -3,6 +3,7 @@
 namespace App\Support\Itemsinforme;
 
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 
 class ItemsinformeCatalog
 {
@@ -96,7 +97,13 @@ class ItemsinformeCatalog
 
     public static function columnasVisibles(): int
     {
-        return 16;
+        return 17;
+    }
+
+    public static function tieneColumnaMostrar(): bool
+    {
+        return Schema::hasTable('itemsinforme')
+            && Schema::hasColumn('itemsinforme', 'mostrar');
     }
 
     /**
@@ -181,6 +188,12 @@ class ItemsinformeCatalog
                 'label' => 'Dispara automatización',
                 'tipo' => 'select_sino',
                 'columna' => 'actualiza',
+            ],
+            'mostrar' => [
+                'label' => 'Mostrar en informe',
+                'tipo' => 'select_sino',
+                'columna' => 'mostrar',
+                'hint' => 'Sí = visible en el informe PDF. No = oculto solo en el PDF; en la carga de resultados siempre se ve.',
             ],
             'id_analizador' => [
                 'label' => 'Código analizador',
