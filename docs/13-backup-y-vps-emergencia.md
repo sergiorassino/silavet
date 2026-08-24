@@ -33,14 +33,26 @@ Prefijo: `s3://sistesco/backupDedicado/archivos/{PROYECTO}/`
 No se sube `vendor/`, logs, cache, `livewire-tmp` ni el árbol git. El sync **no**
 usa `--delete`: un archivo borrado en disco no se borra en S3.
 
-Orden en el cron de producción: **primero el dump MySQL, después**
-`respaldar-archivos.sh`.
+Dump horario (misma rutina): `l{LAB_ORDEN}_{PROYECTO}_YYYY_MM_DD_HH_MM_SS.sql.gz`
+en `s3://sistesco/{S3_PREFIX_DUMPS}/` (hoy suele ser `backupDedicdo/backupHora`).
+Ejemplo: `l1_alqu_2026_07_24_21_30_02.sql.gz`. El `l1_` es el número de
+orden del lab (para ver de un vistazo si backupuearon todos). La BD se lee del
+`.env` de Laravel (`DB_*`), no de `MYSQL_*` (eso es el MySQL **local** del VPS
+de emergencia).
+
+Los dumps de la rutina anterior se llamaban `l1_alqu_…`. El filtro nuevo
+`l1_alqu` **no** coincide con esos nombres. Hasta el primer dump nuevo, en el
+VPS de emergencia usá un filtro que matchee ambos (p. ej. `_alqu_`) o el
+nombre viejo.
 
 ---
 
-## 2. Producción — un cron más, después del dump
+## 2. Producción — una sola rutina (`respaldar.sh`)
 
-Requisitos: AWS CLI, `flock`, el mismo usuario/IAM que ya sube los dumps.
+Reemplaza el cron viejo de dumps **y** el de archivos. Un job, un `flock`.
+
+Requisitos: AWS CLI, `flock`, `mysqldump`, `gzip`, el mismo usuario/IAM que ya
+subía los dumps. `HABILITAR_RESPALDO=1` en `config.env` **solo** en este hosting.
 
 ### 2.1 Hosting compartido (`aws: command not found`)
 
@@ -108,26 +120,43 @@ sudo chmod 600 /etc/silavet/config.env
 sudo nano /etc/silavet/config.env
 ```
 
-Ajustar `PROYECTO`, `APP_DIR`, `S3_PREFIX_DUMPS` (hoy el dump horario vive en
-`backupDedicdo/backupHora` — respetar el nombre real del prefijo),
-`S3_DUMP_FILTER` (subcadena única de **este** laboratorio en el nombre del
-`.sql.gz`) y `S3_PREFIX_ARCHIVOS`.
-
-Probar:
+Ajustar, además de rutas y bucket:
 
 ```bash
-sudo bash /var/www/silavet/scripts/emergencia/respaldar-archivos.sh --dry-run
-sudo bash /var/www/silavet/scripts/emergencia/respaldar-archivos.sh
+HABILITAR_RESPALDO=1
+LAB_ORDEN=1
+PROYECTO=alqu
+S3_PREFIX_DUMPS=backupDedicdo/backupHora
+S3_DUMP_FILTER=l1_alqu
+S3_PREFIX_ARCHIVOS=backupDedicado/archivos
+APP_DIR=…   # carpeta con artisan y .env
+AWS_BIN=…   # si aws no está en PATH
 ```
 
-Cron (minuto 5, cuando el dump de las :00 ya terminó; adaptar la ruta):
+`S3_DUMP_FILTER` tiene que ser el mismo en el VPS de emergencia. Si lo dejás
+vacío, se arma `l{LAB_ORDEN}_{PROYECTO}`.
+
+Probar (en el hosting del lab, no en el VPS de reserva):
+
+```bash
+bash /ruta/al/lab/scripts/emergencia/respaldar.sh --dry-run
+bash /ruta/al/lab/scripts/emergencia/respaldar.sh
+aws s3 ls s3://sistesco/backupDedicdo/backupHora/ | grep l1_alqu | tail
+```
+
+Cron **único** (adaptar ruta y log). Minuto 5 de cada hora está bien:
 
 ```cron
-5 * * * * /bin/bash /var/www/silavet/scripts/emergencia/respaldar-archivos.sh >> /var/log/silavet-archivos.log 2>&1
+5 * * * * /bin/bash /ruta/al/lab/scripts/emergencia/respaldar.sh >> $HOME/silavet-respaldo.log 2>&1
 ```
 
-Hasta que esto corra **una vez**, el VPS de emergencia no tiene archivos que
-bajar.
+**El mismo día:** borrar el cron/script viejo que subía `l1_labo_*.sql.gz`. Si
+deja los dos, vas a tener dos dumps por hora. `respaldar-archivos.sh` ahora
+llama a `respaldar.sh` (por si el cron de archivos ya estaba cargado).
+
+Hasta que esto corra **una vez**, el VPS de emergencia no tiene archivos ni un
+dump nuevo de Laravel que bajar (los dumps viejos siguen sirviendo si el
+filtro coincide).
 
 ---
 
@@ -260,7 +289,7 @@ composer -V
 command -v aws || echo "falta AWS CLI — igual que en producción, o docs/13 §2.1"
 aws sts get-caller-identity
 aws s3 ls s3://sistesco/backupDedicado/archivos/alqu/
-aws s3 ls s3://sistesco/backupDedicdo/backupHora/ | grep -i labvetciudad | tail
+aws s3 ls s3://sistesco/backupDedicdo/backupHora/ | grep l1_alqu | tail
 ```
 
 Si `composer` queda en `$HOME/bin`, ese directorio tiene que estar en PATH
@@ -310,8 +339,8 @@ ENV_EMERGENCIA_FILE=/home/admin/public_html/silavet/alqu/scripts/emergencia/env.
 S3_BUCKET=sistesco
 S3_PREFIX_DUMPS=backupDedicdo/backupHora
 S3_PREFIX_ARCHIVOS=backupDedicado/archivos
-S3_DUMP_FILTER=labvetciudad
-AWS_REGION=
+S3_DUMP_FILTER=l1_alqu
+AWS_REGION=sa-east-1
 AWS_BIN=
 MYSQL_HOST=127.0.0.1
 MYSQL_PORT=3306
@@ -431,7 +460,8 @@ real sobre el VPS de reserva y entrar por su URL.
 
 | Script | Servidor | Frecuencia |
 |--------|----------|------------|
-| `scripts/emergencia/respaldar-archivos.sh` | Producción | Horario (después del dump) |
+| `scripts/emergencia/respaldar.sh` | Producción | Horario (dump + archivos) |
+| `scripts/emergencia/respaldar-archivos.sh` | Producción | Alias de `respaldar.sh` |
 | `scripts/emergencia/diagnostico.sh` | Emergencia | Cuando algo falla |
 | `scripts/emergencia/preparar-vps.sh` | Emergencia | Una vez |
 | `scripts/emergencia/restaurar.sh` | Emergencia | Solo ante caída (o ensayo) |
@@ -454,6 +484,8 @@ Override de ruta: variable `SILAVET_EMERGENCIA_CONF`.
   `php scripts/emergencia/preparar-vps.sh` (es bash).
 - Correr `preparar-vps.sh` como **root** (los archivos quedarían fuera del
   usuario `admin` y PHP-FPM no escribe `storage/`).
+- `HABILITAR_RESPALDO=1` o cron de `respaldar.sh` en el VPS de emergencia.
+- Dejar el cron viejo de dumps **y** `respaldar.sh` a la vez.
 
 ---
 
@@ -461,6 +493,7 @@ Override de ruta: variable `SILAVET_EMERGENCIA_CONF`.
 
 - `scripts/emergencia/lib.sh`
 - `scripts/emergencia/diagnostico.sh`
+- `scripts/emergencia/respaldar.sh`
 - `scripts/emergencia/respaldar-archivos.sh`
 - `scripts/emergencia/preparar-vps.sh`
 - `scripts/emergencia/restaurar.sh`

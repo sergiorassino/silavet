@@ -63,6 +63,25 @@ cargar_config() {
     source "$candidato"
     set +a
 
+    # set -a exporta AWS_REGION= vacío y el CLI arma https://s3..amazonaws.com
+    if [[ -z "${AWS_REGION:-}" ]]; then
+        unset AWS_REGION
+    fi
+    if [[ -z "${AWS_DEFAULT_REGION:-}" ]]; then
+        unset AWS_DEFAULT_REGION
+    fi
+    if [[ -z "${AWS_BIN:-}" ]]; then
+        unset AWS_BIN
+    fi
+    if [[ -z "${MYSQLDUMP_BIN:-}" ]]; then
+        unset MYSQLDUMP_BIN
+    fi
+
+    if [[ -z "${S3_DUMP_FILTER:-}" && -n "${LAB_ORDEN:-}" && -n "${PROYECTO:-}" ]]; then
+        S3_DUMP_FILTER="l${LAB_ORDEN}_${PROYECTO}"
+        log "S3_DUMP_FILTER por defecto: $S3_DUMP_FILTER"
+    fi
+
     CONFIG_CARGADO="$candidato"
     log "Config: $CONFIG_CARGADO"
 }
@@ -100,6 +119,106 @@ s3_uri_archivos() {
 
 s3_uri_dumps() {
     echo "s3://${S3_BUCKET}/${S3_PREFIX_DUMPS%/}"
+}
+
+# Nombre: l1_alqu_2026_07_24_21_30_02.sql.gz
+nombre_dump_hora() {
+    require_vars LAB_ORDEN PROYECTO
+    [[ "$LAB_ORDEN" =~ ^[0-9]+$ ]] || die "LAB_ORDEN debe ser un número (1 → l1_, 2 → l2_, …)."
+    echo "l${LAB_ORDEN}_${PROYECTO}_$(date +%Y_%m_%d_%H_%M_%S).sql.gz"
+}
+
+filtro_dump_por_defecto() {
+    require_vars LAB_ORDEN PROYECTO
+    echo "l${LAB_ORDEN}_${PROYECTO}"
+}
+
+# Lee una clave de .env Laravel (última aparición). No hace source (valores con espacios/$).
+env_valor() {
+    local archivo="$1" clave="$2" obligatorio="${3:-1}"
+    local linea valor
+    [[ -f "$archivo" ]] || die "No existe $archivo"
+    linea="$(grep -E "^${clave}=" "$archivo" | tail -n 1 || true)"
+    if [[ -z "$linea" ]]; then
+        [[ "$obligatorio" == "1" ]] && die "Falta ${clave} en $archivo"
+        echo ""
+        return 0
+    fi
+    valor="${linea#*=}"
+    if [[ "$valor" == \"*\" ]]; then
+        valor="${valor#\"}"
+        valor="${valor%\"}"
+    elif [[ "$valor" == \'*\' ]]; then
+        valor="${valor#\'}"
+        valor="${valor%\'}"
+    fi
+    printf '%s' "$valor"
+}
+
+mysqldump_binario() {
+    local bin="${MYSQLDUMP_BIN:-mysqldump}"
+    command -v "$bin" >/dev/null 2>&1 || die "No está instalado: $bin (MYSQLDUMP_BIN en config.env)."
+    echo "$bin"
+}
+
+# Dump de la BD del .env de producción → S3 (mismo prefijo que la rutina anterior).
+respaldar_mysql_hora() {
+    require_aws
+    require_vars PROYECTO APP_DIR S3_BUCKET S3_PREFIX_DUMPS LAB_ORDEN
+    [[ "${HABILITAR_RESPALDO:-}" == "1" ]] || die "HABILITAR_RESPALDO=1 solo en el hosting de producción. No corras el respaldo en el VPS de emergencia."
+    es_laravel_dir "$APP_DIR" || die "APP_DIR no parece Laravel: $APP_DIR"
+
+    local envf="$APP_DIR/.env"
+    local host port user password database
+    host="$(env_valor "$envf" DB_HOST)"
+    port="$(env_valor "$envf" DB_PORT 0)"
+    port="${port:-3306}"
+    user="$(env_valor "$envf" DB_USERNAME)"
+    password="$(env_valor "$envf" DB_PASSWORD 0)"
+    database="$(env_valor "$envf" DB_DATABASE)"
+    [[ -n "$database" ]] || die "DB_DATABASE vacío en $envf"
+
+    local nombre uri extra dump_bin cnf tmp
+    nombre="$(nombre_dump_hora)"
+    uri="$(s3_uri_dumps)/${nombre}"
+    extra=()
+    [[ -n "${AWS_REGION:-}" ]] && extra+=(--region "$AWS_REGION")
+    dump_bin="$(mysqldump_binario)"
+
+    log "Dump MySQL ${database}@${host} → ${uri}"
+
+    if [[ "$DRY_RUN" == "1" ]]; then
+        log "[dry-run] $dump_bin | gzip → aws s3 cp $uri"
+        return 0
+    fi
+
+    cnf="$(mktemp)"
+    tmp="$(mktemp /tmp/silavet-dump.XXXXXX)"
+    chmod 600 "$cnf" "$tmp"
+    cleanup_dump() {
+        rm -f "$cnf" "$tmp"
+    }
+    trap cleanup_dump EXIT
+
+    printf '[client]\nhost=%s\nport=%s\nuser=%s\npassword=%s\n' \
+        "$host" "$port" "$user" "$password" >"$cnf"
+
+    local flags=(--defaults-extra-file="$cnf" --single-transaction --quick)
+    if "$dump_bin" --help 2>/dev/null | grep -q -- '--no-tablespaces'; then
+        flags+=(--no-tablespaces)
+    fi
+    if "$dump_bin" --help 2>/dev/null | grep -q -- '--column-statistics'; then
+        flags+=(--column-statistics=0)
+    fi
+
+    "$dump_bin" "${flags[@]}" "$database" | gzip -c >"$tmp"
+    [[ -s "$tmp" ]] || die "El dump quedó vacío."
+
+    aws s3 cp "$tmp" "$uri" "${extra[@]}"
+    log "Dump subido: $nombre"
+
+    trap - EXIT
+    cleanup_dump
 }
 
 # Carpetas relativas al proyecto que no están en git (o no de forma fiable).
@@ -222,9 +341,12 @@ clave_dump_mas_reciente() {
         extra+=(--region "$AWS_REGION")
     fi
 
-    local listado linea clave
-    listado="$(aws s3 ls "$(s3_uri_dumps)/" --recursive "${extra[@]}")" \
-        || die "Falló aws s3 ls en $(s3_uri_dumps)/ (credenciales, región o prefijo)."
+    local listado linea clave err
+    err="$(mktemp)"
+    if ! listado="$(aws s3 ls "$(s3_uri_dumps)/" --recursive "${extra[@]}" 2>"$err")"; then
+        die "Falló aws s3 ls en $(s3_uri_dumps)/ — $(tr '\n' ' ' <"$err"). Probá: aws s3 ls s3://${S3_BUCKET}/  y ajustá S3_PREFIX_DUMPS (backupDedicdo vs backupDedicado)."
+    fi
+    rm -f "$err"
 
     linea="$(
         echo "$listado" \
