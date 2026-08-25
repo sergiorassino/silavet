@@ -46,6 +46,7 @@ done
 
 cargar_config
 aplicar_env_laboratorio
+aplicar_env_hosting_produccion
 require_vars PROYECTO APP_DIR S3_BUCKET
 require_aws
 require_cmd flock

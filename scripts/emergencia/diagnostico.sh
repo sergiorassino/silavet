@@ -80,7 +80,16 @@ fi
 cargar_config
 if [[ -f "$APP_DIR/.env" ]]; then
     # shellcheck disable=SC2034
-    aplicar_env_laboratorio "$APP_DIR/.env" 2>/dev/null || true
+    if aplicar_env_laboratorio "$APP_DIR/.env" 2>/dev/null; then
+        :
+    fi
+    # AWS_BIN de Hostinger solo si este .env es de producción (no en el VPS).
+    hab="$(env_valor "$APP_DIR/.env" HABILITAR_RESPALDO 0)"
+    if [[ "$hab" == "1" ]]; then
+        aplicar_env_hosting_produccion "$APP_DIR/.env" 2>/dev/null || true
+    else
+        inferir_aws_bin
+    fi
 fi
 prepend_php_path
 echo "    APP_DIR=$APP_DIR"
