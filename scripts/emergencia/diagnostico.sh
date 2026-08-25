@@ -66,17 +66,13 @@ for cmd in php composer git aws mysql flock gzip; do
 done
 echo
 
-echo "--- config.env ---"
+echo "--- config.env (por laboratorio) ---"
 if [[ -n "${SILAVET_EMERGENCIA_CONF:-}" && -f "${SILAVET_EMERGENCIA_CONF}" ]]; then
     ok "SILAVET_EMERGENCIA_CONF=$SILAVET_EMERGENCIA_CONF"
-elif [[ -f /etc/silavet/config.env ]]; then
-    ok "/etc/silavet/config.env"
-elif [[ -f "${HOME:-}/.silavet/config.env" ]]; then
-    ok "$HOME/.silavet/config.env"
 elif [[ -f "$SCRIPT_DIR/config.env" ]]; then
-    ok "$SCRIPT_DIR/config.env (legado por lab)"
+    ok "$SCRIPT_DIR/config.env"
 else
-    fail "no hay config del servidor (~/.silavet/config.env o /etc/silavet/config.env)"
+    fail "falta $SCRIPT_DIR/config.env — copiá config.example.env → config.env"
     echo "=== fin (sin config) ==="
     exit 0
 fi
