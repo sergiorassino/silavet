@@ -52,20 +52,16 @@ require_vars() {
     done
 }
 
-# Carga /etc/silavet/config.env o scripts/emergencia/config.env (o SILAVET_EMERGENCIA_CONF).
+# Carga scripts/emergencia/config.env de ESTE laboratorio (o SILAVET_EMERGENCIA_CONF).
 cargar_config() {
     local candidato=""
     if [[ -n "${SILAVET_EMERGENCIA_CONF:-}" ]]; then
         candidato="$SILAVET_EMERGENCIA_CONF"
-    elif [[ -f /etc/silavet/config.env ]]; then
-        candidato="/etc/silavet/config.env"
-    elif [[ -f "${HOME:-}/.silavet/config.env" ]]; then
-        candidato="${HOME}/.silavet/config.env"
     elif [[ -f "$_EMERGENCIA_DIR/config.env" ]]; then
         candidato="$_EMERGENCIA_DIR/config.env"
     fi
 
-    [[ -n "$candidato" && -f "$candidato" ]] || die "No hay configuración del servidor. Copiá config.example.env a ~/.silavet/config.env o /etc/silavet/config.env (no es por laboratorio)."
+    [[ -n "$candidato" && -f "$candidato" ]] || die "No hay scripts/emergencia/config.env en este laboratorio. Copiá config.example.env → config.env y completá (docs/13)."
 
     # shellcheck disable=SC1090
     set -a
@@ -173,10 +169,6 @@ ruta_overlay() {
         echo "$ENV_EMERGENCIA_FILE"
         return
     fi
-    if [[ -f /etc/silavet/env.emergencia ]]; then
-        echo /etc/silavet/env.emergencia
-        return
-    fi
     echo "$_EMERGENCIA_DIR/env.emergencia"
 }
 
@@ -233,7 +225,7 @@ mysqldump_binario() {
 respaldar_mysql_hora() {
     require_aws
     require_vars PROYECTO APP_DIR S3_BUCKET S3_PREFIX_DUMPS LAB_ORDEN
-    [[ "${HABILITAR_RESPALDO:-}" == "1" ]] || die "HABILITAR_RESPALDO=1 solo en el hosting de producción. No corras el respaldo en el VPS de emergencia."
+    [[ "${HABILITAR_RESPALDO:-}" == "1" ]] || die "HABILITAR_RESPALDO=1 en scripts/emergencia/config.env (solo producción). No corras el respaldo en el VPS de emergencia."
     es_laravel_dir "$APP_DIR" || die "APP_DIR no parece Laravel: $APP_DIR"
 
     local envf="$APP_DIR/.env"
