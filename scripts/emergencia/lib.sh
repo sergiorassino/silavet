@@ -7,6 +7,13 @@ set -euo pipefail
 _EMERGENCIA_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 DRY_RUN="${DRY_RUN:-0}"
 
+# Nombres de dump y logs en hora argentina (el hosting suele estar en UTC).
+# Override: SILAVET_TZ en config.env.
+aplicar_zona_horaria() {
+    export TZ="${SILAVET_TZ:-America/Argentina/Buenos_Aires}"
+}
+aplicar_zona_horaria
+
 log() {
     echo "[$(date '+%Y-%m-%d %H:%M:%S')] $*"
 }
@@ -64,6 +71,8 @@ cargar_config() {
     set -a
     source "$candidato"
     set +a
+
+    aplicar_zona_horaria
 
     # set -a exporta AWS_REGION= vacío y el CLI arma https://s3..amazonaws.com
     if [[ -z "${AWS_REGION:-}" ]]; then
@@ -179,10 +188,11 @@ s3_uri_dumps() {
     echo "s3://${S3_BUCKET}/${S3_PREFIX_DUMPS%/}"
 }
 
-# Nombre: l1_alqu_2026_07_24_21_30_02.sql.gz
+# Nombre: l1_alqu_2026_07_24_21_30_02.sql.gz (hora Argentina, ver aplicar_zona_horaria).
 nombre_dump_hora() {
     require_vars LAB_ORDEN PROYECTO
     [[ "$LAB_ORDEN" =~ ^[0-9]+$ ]] || die "LAB_ORDEN debe ser un número (1 → l1_, 2 → l2_, …)."
+    aplicar_zona_horaria
     echo "l${LAB_ORDEN}_${PROYECTO}_$(date +%Y_%m_%d_%H_%M_%S).sql.gz"
 }
 

@@ -35,10 +35,13 @@ usa `--delete`: un archivo borrado en disco no se borra en S3.
 
 Dump horario (misma rutina): `l{LAB_ORDEN}_{TENANT_SLUG}_YYYY_MM_DD_HH_MM_SS.sql.gz`
 en `s3://sistesco/{S3_PREFIX_DUMPS}/` (`backupDedicado/backupHora`).
-Ejemplo: `l1_alqu_2026_07_24_21_30_02.sql.gz`. `LAB_ORDEN` y el resto de la
-emergencia van en el **`.env` del laboratorio** (no en `config.env`).
-La BD que se dumpuea es `DB_*` de producción. `EMERGENCIA_DB_*` es el MySQL
-**local del VPS de reserva** (se usa al restaurar).
+Ejemplo: `l1_alqu_2026_07_24_21_30_02.sql.gz`. La marca de tiempo del nombre
+es **hora argentina** (`America/Argentina/Buenos_Aires`), no la del reloj del
+servidor (suele ser UTC). Override opcional: `SILAVET_TZ` en el config del
+servidor. `LAB_ORDEN` y el resto de la emergencia van en el **`.env` del
+laboratorio** (no en `config.env`). La BD que se dumpuea es `DB_*` de
+producción. `EMERGENCIA_DB_*` es el MySQL **local del VPS de reserva** (se usa
+al restaurar).
 
 ---
 

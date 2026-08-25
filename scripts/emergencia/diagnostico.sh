@@ -15,7 +15,7 @@ fail() { echo "  FAIL $*"; }
 info() { echo "  INFO $*"; }
 
 echo "=== SILAVET emergencia — diagnóstico ==="
-echo "fecha: $(date -Iseconds 2>/dev/null || date)"
+echo "fecha (TZ=$TZ): $(date -Iseconds 2>/dev/null || date)"
 echo "host:  $(hostname)  user: $(whoami)"
 echo "pwd:   $(pwd)"
 echo

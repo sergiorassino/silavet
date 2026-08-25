@@ -5,5 +5,5 @@
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-echo "[$(date '+%Y-%m-%d %H:%M:%S')] AVISO: usá respaldar.sh. Este script ahora hace dump + archivos. Desactivá el cron viejo de dumps." >&2
+echo "[$(TZ="${SILAVET_TZ:-America/Argentina/Buenos_Aires}" date '+%Y-%m-%d %H:%M:%S')] AVISO: usá respaldar.sh. Este script ahora hace dump + archivos. Desactivá el cron viejo de dumps." >&2
 exec /bin/bash "$SCRIPT_DIR/respaldar.sh" "$@"
