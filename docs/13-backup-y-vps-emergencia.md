@@ -45,9 +45,10 @@ al restaurar).
 
 ---
 
-## 2. Producción — una sola rutina (`respaldar.sh`)
+## 2. Producción — una rutina por laboratorio (`respaldar.sh`)
 
-Reemplaza el cron viejo de dumps **y** el de archivos. Un job, un `flock`.
+Reemplaza el cron viejo de dumps **y** el de archivos. Un job por lab, un
+`flock` por lab. Cada laboratorio se configura y se respalda por separado.
 
 Requisitos: AWS CLI, `flock`, `mysqldump`, `gzip`, el mismo usuario/IAM que ya
 subía los dumps. `HABILITAR_RESPALDO=1` en el **config del servidor**
@@ -124,14 +125,14 @@ Solo datos del **servidor** (no del lab):
 
 ```bash
 HABILITAR_RESPALDO=1
-SILAVET_ROOT=/home/USUARIO/public_html/silavet
 S3_PREFIX_DUMPS=backupDedicado/backupHora
 S3_PREFIX_ARCHIVOS=backupDedicado/archivos
 AWS_REGION=sa-east-1
 AWS_BIN=…   # si aws no está en PATH
 ```
 
-Cada laboratorio: bloque en **su** `.env` (se configura al darlo de alta):
+Cada laboratorio: bloque en **su** `.env` (se configura al darlo de alta) y
+**su propio cron** a `respaldar.sh` de esa carpeta:
 
 ```env
 TENANT_SLUG=alqu
@@ -154,14 +155,14 @@ bash /ruta/al/lab/scripts/emergencia/respaldar.sh
 aws s3 ls s3://sistesco/backupDedicado/backupHora/ | grep l1_alqu | tail
 ```
 
-Cron **único** para todos los labs (con `SILAVET_ROOT`):
+Cron **por laboratorio** (ejemplo alqu):
 
 ```cron
-5 * * * * /bin/bash /ruta/a/cualquier-lab/scripts/emergencia/respaldar-todos.sh >> $HOME/silavet-respaldo.log 2>&1
+5 * * * * /bin/bash /ruta/a/silavet/alqu/scripts/emergencia/respaldar.sh >> $HOME/silavet-respaldo-alqu.log 2>&1
 ```
 
-O un cron por lab apuntando a ese `respaldar.sh`. **El mismo día:** borrar el
-cron viejo de dumps. `respaldar-archivos.sh` reenvía a `respaldar.sh`.
+Otro lab = otra línea de cron apuntando a **su** `respaldar.sh`. **El mismo día:**
+borrar el cron viejo de dumps. `respaldar-archivos.sh` reenvía a `respaldar.sh`.
 
 ---
 
@@ -440,8 +441,7 @@ real sobre el VPS de reserva y entrar por su URL.
 
 | Script | Servidor | Frecuencia |
 |--------|----------|------------|
-| `scripts/emergencia/respaldar.sh` | Producción | Horario (un lab) |
-| `scripts/emergencia/respaldar-todos.sh` | Producción | Horario (todos los labs de `SILAVET_ROOT`) |
+| `scripts/emergencia/respaldar.sh` | Producción | Horario (un cron por lab) |
 | `scripts/emergencia/respaldar-archivos.sh` | Producción | Alias de `respaldar.sh` |
 | `scripts/emergencia/diagnostico.sh` | Emergencia | Cuando algo falla |
 | `scripts/emergencia/preparar-vps.sh` | Emergencia | Una vez por carpeta/tenant |
@@ -467,6 +467,8 @@ Override: variable `SILAVET_EMERGENCIA_CONF`.
   usuario `admin` y PHP-FPM no escribe `storage/`).
 - `HABILITAR_RESPALDO=1` o cron de `respaldar.sh` en el VPS de emergencia.
 - Dejar el cron viejo de dumps **y** `respaldar.sh` a la vez.
+- Un cron que respalde varios labs a la vez (cada lab tiene su propio
+  `respaldar.sh` y su propio cron).
 
 ---
 
@@ -475,7 +477,6 @@ Override: variable `SILAVET_EMERGENCIA_CONF`.
 - `scripts/emergencia/lib.sh`
 - `scripts/emergencia/diagnostico.sh`
 - `scripts/emergencia/respaldar.sh`
-- `scripts/emergencia/respaldar-todos.sh`
 - `scripts/emergencia/respaldar-archivos.sh`
 - `scripts/emergencia/preparar-vps.sh`
 - `scripts/emergencia/restaurar.sh`
