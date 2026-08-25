@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
 # Producción: UNA rutina horaria — dump MySQL + archivos de laboratorio.
-# No correr en el VPS de emergencia (hace falta HABILITAR_RESPALDO=1).
+# Datos del lab: .env (TENANT_SLUG, LAB_ORDEN, EMERGENCIA_*).
+# Datos del servidor: ~/.silavet/config.env o /etc/silavet/config.env
 #
-#   5 * * * * /bin/bash /ruta/silavet/scripts/emergencia/respaldar.sh >> /var/log/silavet-respaldo.log 2>&1
-#
-# Desactivar el cron viejo de dumps el mismo día.
+#   5 * * * * /bin/bash /ruta/silavet/scripts/emergencia/respaldar.sh >> $HOME/silavet-respaldo.log 2>&1
+# Varios labs: respaldar-todos.sh + SILAVET_ROOT en el config del servidor.
 
 set -euo pipefail
 
@@ -19,14 +19,14 @@ uso() {
     cat <<'EOF'
 Uso: respaldar.sh [--dry-run] [--solo-dump] [--solo-archivos]
 
-En el hosting de producción (HABILITAR_RESPALDO=1):
-  1. mysqldump de la BD del .env → s3://…/backupHora/lN_{PROYECTO}_….sql.gz
+En el hosting de producción (HABILITAR_RESPALDO=1 en el config del servidor):
+  1. mysqldump de DB_* del .env → s3://…/backupHora/l{LAB_ORDEN}_{TENANT_SLUG}_….sql.gz
   2. espejo incremental de archivos de laboratorio (sin --delete)
 
 Opciones:
   --dry-run         no sube nada
   --solo-dump       solo el .sql.gz
-  --solo-archivos   solo el espejo (equivalente al script anterior)
+  --solo-archivos   solo el espejo
 EOF
 }
 
@@ -44,11 +44,12 @@ done
 [[ "$SOLO_DUMP" == "1" && "$SOLO_ARCHIVOS" == "1" ]] && die "No combines --solo-dump y --solo-archivos."
 
 cargar_config
+aplicar_env_laboratorio
 require_vars PROYECTO APP_DIR S3_BUCKET
 require_aws
 require_cmd flock
 es_laravel_dir "$APP_DIR" || die "APP_DIR no parece Laravel: $APP_DIR"
-[[ "${HABILITAR_RESPALDO:-}" == "1" ]] || die "HABILITAR_RESPALDO=1 en config.env (solo producción). Si esto es el VPS de emergencia, no ejecutes respaldar.sh."
+[[ "${HABILITAR_RESPALDO:-}" == "1" ]] || die "HABILITAR_RESPALDO=1 en el config del servidor (solo producción). Si esto es el VPS de emergencia, no ejecutes respaldar.sh."
 
 LOCK="/tmp/silavet-${PROYECTO}-respaldar.lock"
 exec 9>"$LOCK"
