@@ -3,8 +3,8 @@
 # Datos del lab: .env (TENANT_SLUG, LAB_ORDEN, EMERGENCIA_*).
 # Datos del servidor: ~/.silavet/config.env o /etc/silavet/config.env
 #
-#   5 * * * * /bin/bash /ruta/silavet/scripts/emergencia/respaldar.sh >> $HOME/silavet-respaldo.log 2>&1
-# Varios labs: respaldar-todos.sh + SILAVET_ROOT en el config del servidor.
+#   5 * * * * /bin/bash /ruta/al/lab/scripts/emergencia/respaldar.sh >> $HOME/silavet-respaldo-LAB.log 2>&1
+# Un cron por laboratorio (cada lab apunta a su propio respaldar.sh).
 
 set -euo pipefail
 
