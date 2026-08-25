@@ -70,6 +70,9 @@ sync_archivos bajar
 
 log "4/6 overlay .env de emergencia"
 aplicar_env_laboratorio "$APP_DIR/.env"
+# El .env de producción trae AWS_BIN de Hostinger; en el VPS se ignora (sigue el del config / PATH).
+inferir_aws_bin
+require_aws
 if [[ "$PROYECTO" != "$(basename "$APP_DIR")" ]]; then
     log "AVISO: TENANT_SLUG=$PROYECTO distinto de la carpeta $(basename "$APP_DIR"). Conviene que coincidan."
 fi

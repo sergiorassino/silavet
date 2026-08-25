@@ -110,7 +110,9 @@ AWS_BIN=/home/u577894275/.local/bin/aws
 ```
 
 (ajustá el path; `echo $HOME` + `/.local/bin/aws`). Si `AWS_BIN` está vacío,
-los scripts intentan `~/.local/bin/aws` solos.
+los scripts intentan `~/.local/bin/aws` solos. **`AWS_BIN` solo lo usa
+`respaldar.sh`**: en el VPS, `restaurar.sh` ignora esa ruta (usa el `aws` del
+VPS) para no romper el paso del dump.
 
 Si no sabés cómo se suben hoy los dumps, buscá el cron o el script de backup: ahí están la key y la región.
 

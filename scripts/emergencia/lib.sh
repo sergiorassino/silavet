@@ -131,13 +131,14 @@ inferir_app_dir() {
     fi
 }
 
-# Tenant, LAB_ORDEN, MySQL de emergencia y personalización del hosting: .env del lab.
-# Las claves opcionales pisan lo que vino de config.env.
+# Tenant, LAB_ORDEN y MySQL de emergencia (bloque EMERGENCIA_*).
+# No aplica AWS_BIN ni paths del hosting de producción: en restaurar.sh el .env
+# bajado de S3 trae rutas de Hostinger que no existen en el VPS.
 aplicar_env_laboratorio() {
     local envf="${1:-$APP_DIR/.env}"
     [[ -f "$envf" ]] || die "No existe $envf"
 
-    local slug orden ehost eport edb euser epass v
+    local slug orden ehost eport edb euser epass
     slug="$(env_valor "$envf" TENANT_SLUG 0)"
     if [[ -n "$slug" ]]; then
         PROYECTO="$slug"
@@ -165,7 +166,16 @@ aplicar_env_laboratorio() {
     MYSQL_HOST="${MYSQL_HOST:-127.0.0.1}"
     MYSQL_PORT="${MYSQL_PORT:-3306}"
 
-    # Personalización por hosting / lab (no van en config.env).
+    S3_DUMP_FILTER="l${LAB_ORDEN}_${PROYECTO}"
+    log "Lab TENANT_SLUG=$PROYECTO LAB_ORDEN=$LAB_ORDEN filtro=$S3_DUMP_FILTER"
+}
+
+# Solo en producción (respaldar.sh): AWS_BIN, HABILITAR_RESPALDO, etc. del .env.
+aplicar_env_hosting_produccion() {
+    local envf="${1:-$APP_DIR/.env}"
+    [[ -f "$envf" ]] || die "No existe $envf"
+
+    local v
     v="$(env_valor "$envf" HABILITAR_RESPALDO 0)"
     [[ -n "$v" ]] && HABILITAR_RESPALDO="$v"
     v="$(env_valor "$envf" AWS_BIN 0)"
@@ -174,20 +184,8 @@ aplicar_env_laboratorio() {
     [[ -n "$v" ]] && AWS_REGION="$v"
     v="$(env_valor "$envf" MYSQLDUMP_BIN 0)"
     [[ -n "$v" ]] && MYSQLDUMP_BIN="$v"
-    v="$(env_valor "$envf" PHP_BIN 0)"
-    [[ -n "$v" ]] && PHP_BIN="$v"
-    v="$(env_valor "$envf" WEB_USER 0)"
-    [[ -n "$v" ]] && WEB_USER="$v"
-    v="$(env_valor "$envf" WEB_GROUP 0)"
-    [[ -n "$v" ]] && WEB_GROUP="$v"
     v="$(env_valor "$envf" SILAVET_TZ 0)"
     [[ -n "$v" ]] && SILAVET_TZ="$v"
-    v="$(env_valor "$envf" S3_BUCKET 0)"
-    [[ -n "$v" ]] && S3_BUCKET="$v"
-    v="$(env_valor "$envf" S3_PREFIX_DUMPS 0)"
-    [[ -n "$v" ]] && S3_PREFIX_DUMPS="$v"
-    v="$(env_valor "$envf" S3_PREFIX_ARCHIVOS 0)"
-    [[ -n "$v" ]] && S3_PREFIX_ARCHIVOS="$v"
 
     if [[ -z "${AWS_BIN:-}" ]]; then
         unset AWS_BIN
@@ -201,9 +199,6 @@ aplicar_env_laboratorio() {
 
     aplicar_zona_horaria
     inferir_aws_bin
-
-    S3_DUMP_FILTER="l${LAB_ORDEN}_${PROYECTO}"
-    log "Lab TENANT_SLUG=$PROYECTO LAB_ORDEN=$LAB_ORDEN filtro=$S3_DUMP_FILTER"
 }
 
 env_set_clave() {
