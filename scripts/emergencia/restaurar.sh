@@ -70,7 +70,8 @@ sync_archivos bajar
 
 log "4/6 overlay .env de emergencia"
 aplicar_env_laboratorio "$APP_DIR/.env"
-# El .env de producción trae AWS_BIN de Hostinger; en el VPS se ignora (sigue el del config / PATH).
+# Prefijos S3 y AWS del VPS (config.env), no los del .env de Hostinger.
+reafirmar_s3_desde_config
 inferir_aws_bin
 require_aws
 if [[ "$PROYECTO" != "$(basename "$APP_DIR")" ]]; then

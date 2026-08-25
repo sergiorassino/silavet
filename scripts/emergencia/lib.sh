@@ -108,6 +108,38 @@ cargar_config() {
     log "Config: $CONFIG_CARGADO"
 }
 
+# En restaurar.sh el .env bajado de producción no debe pisar bucket/prefijos del VPS.
+reafirmar_s3_desde_config() {
+    [[ -n "${CONFIG_CARGADO:-}" && -f "$CONFIG_CARGADO" ]] || return 0
+    local linea clave valor
+    while IFS= read -r linea || [[ -n "$linea" ]]; do
+        [[ "$linea" =~ ^[[:space:]]*# ]] && continue
+        [[ "$linea" =~ ^[[:space:]]*$ ]] && continue
+        [[ "$linea" == *=* ]] || continue
+        clave="${linea%%=*}"
+        valor="${linea#*=}"
+        case "$clave" in
+            S3_BUCKET|S3_PREFIX_DUMPS|S3_PREFIX_ARCHIVOS|AWS_REGION)
+                printf -v "$clave" '%s' "$valor"
+                export "$clave"
+                ;;
+        esac
+    done <"$CONFIG_CARGADO"
+    if [[ -z "${AWS_REGION:-}" ]]; then
+        unset AWS_REGION
+    fi
+    # Typo frecuente visto en .env de producción.
+    if [[ "${S3_PREFIX_DUMPS:-}" == *backupDedicdo* ]]; then
+        log "AVISO: S3_PREFIX_DUMPS tenía typo backupDedicdo; usando backupDedicado"
+        S3_PREFIX_DUMPS="${S3_PREFIX_DUMPS//backupDedicdo/backupDedicado}"
+    fi
+    if [[ "${S3_PREFIX_ARCHIVOS:-}" == *backupDedicdo* ]]; then
+        log "AVISO: S3_PREFIX_ARCHIVOS tenía typo backupDedicdo; usando backupDedicado"
+        S3_PREFIX_ARCHIVOS="${S3_PREFIX_ARCHIVOS//backupDedicdo/backupDedicado}"
+    fi
+    log "S3 desde config.env: bucket=$S3_BUCKET dumps=$S3_PREFIX_DUMPS"
+}
+
 # DirectAdmin: el PHP de PATH no es el de los sitios. Composer y `php` deben
 # ser el binario de PHP_BIN.
 prepend_php_path() {
