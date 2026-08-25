@@ -51,8 +51,9 @@ Reemplaza el cron viejo de dumps **y** el de archivos. Un job por lab, un
 `flock` por lab. Cada laboratorio se configura y se respalda por separado.
 
 Requisitos: AWS CLI, `flock`, `mysqldump`, `gzip`, el mismo usuario/IAM que ya
-subía los dumps. `HABILITAR_RESPALDO=1` en **`scripts/emergencia/config.env` de
-ese laboratorio** (solo en producción; en el VPS de emergencia queda en `0`).
+subía los dumps. `HABILITAR_RESPALDO=1` y, si hace falta, `AWS_BIN` van en el
+**`.env` del laboratorio** (solo producción; al restaurar en el VPS el overlay
+pone `HABILITAR_RESPALDO=0`).
 
 ### 2.1 Hosting compartido (`aws: command not found`)
 
@@ -101,14 +102,15 @@ aws sts get-caller-identity
 aws s3 ls s3://sistesco/
 ```
 
-En el `config.env` **de ese lab** (`…/silavet/alqu/scripts/emergencia/config.env`):
+En el **`.env` de ese lab** (no en `config.env`):
 
-```bash
+```env
+HABILITAR_RESPALDO=1
 AWS_BIN=/home/u577894275/.local/bin/aws
 ```
 
-(ajustá el usuario; `echo $HOME` + `/.local/bin/aws`). Cada lab nuevo en el
-mismo hosting puede copiar el `config.env` de otro y solo ajustar si hace falta.
+(ajustá el path; `echo $HOME` + `/.local/bin/aws`). Si `AWS_BIN` está vacío,
+los scripts intentan `~/.local/bin/aws` solos.
 
 Si no sabés cómo se suben hoy los dumps, buscá el cron o el script de backup: ahí están la key y la región.
 
@@ -118,23 +120,14 @@ Si no sabés cómo se suben hoy los dumps, buscá el cron o el script de backup:
 cd /ruta/al/lab
 cp scripts/emergencia/config.example.env scripts/emergencia/config.env
 chmod 600 scripts/emergencia/config.env
-nano scripts/emergencia/config.env
+# config.env queda igual en todos los labs (defaults S3 / PHP / git). No pongas AWS_BIN ahí.
 ```
 
-Datos de respaldo / stack de este lab (no van `TENANT_SLUG` ni `EMERGENCIA_*`):
-
-```bash
-HABILITAR_RESPALDO=1
-S3_PREFIX_DUMPS=backupDedicado/backupHora
-S3_PREFIX_ARCHIVOS=backupDedicado/archivos
-AWS_REGION=sa-east-1
-AWS_BIN=…   # si aws no está en PATH
-```
-
-En el `.env` Laravel del mismo lab (bloque de emergencia) y **su propio cron**
-a `respaldar.sh`:
+En el `.env` Laravel del mismo lab:
 
 ```env
+HABILITAR_RESPALDO=1
+AWS_BIN=/home/USUARIO/.local/bin/aws
 TENANT_SLUG=alqu
 LAB_ORDEN=1
 EMERGENCIA_APP_URL=https://sistemasescolares4.com/silavet/alqu
@@ -161,8 +154,8 @@ Cron **por laboratorio** (ejemplo alqu):
 5 * * * * /bin/bash /ruta/a/silavet/alqu/scripts/emergencia/respaldar.sh >> $HOME/silavet-respaldo-alqu.log 2>&1
 ```
 
-Otro lab = otra carpeta, otro `scripts/emergencia/config.env`, otro cron a **su**
-`respaldar.sh`. **El mismo día:** borrar el cron viejo de dumps.
+Otro lab = otra carpeta, mismo `config.env` impersonal, **otro** `.env` y otro cron
+a **su** `respaldar.sh`. **El mismo día:** borrar el cron viejo de dumps.
 `respaldar-archivos.sh` reenvía a `respaldar.sh`.
 
 ---
@@ -333,7 +326,6 @@ nano scripts/emergencia/config.env
 ```
 
 ```bash
-HABILITAR_RESPALDO=0
 WEB_USER=admin
 WEB_GROUP=admin
 GIT_URL=https://github.com/sergiorassino/silavet.git
@@ -345,9 +337,10 @@ S3_PREFIX_ARCHIVOS=backupDedicado/archivos
 AWS_REGION=sa-east-1
 ```
 
-`LAB_ORDEN`, `TENANT_SLUG` y MySQL de emergencia **no** van acá: están en el
-`.env` de cada lab (y llegan con `restaurar.sh` desde S3). La carpeta del clone
-tiene que llamarse como el tenant: `/home/admin/public_html/silavet/alqu`.
+`HABILITAR_RESPALDO`, `AWS_BIN`, `LAB_ORDEN`, `TENANT_SLUG` y MySQL de
+emergencia van en el `.env` (producción; `restaurar.sh` baja el `.env` y pone
+`HABILITAR_RESPALDO=0`). La carpeta del clone tiene que llamarse como el tenant:
+`/home/admin/public_html/silavet/alqu`.
 
 Si antes usabas `/etc/silavet/config.env` o `~/.silavet/config.env`, mové el
 contenido a `scripts/emergencia/config.env` de cada lab y borrá los globales:
@@ -450,9 +443,10 @@ real sobre el VPS de reserva y entrar por su URL.
 | `scripts/emergencia/preparar-vps.sh` | Emergencia | Una vez por carpeta/tenant |
 | `scripts/emergencia/restaurar.sh` | Emergencia | Solo ante caída (o ensayo) |
 
-Config **por lab**: `scripts/emergencia/config.env` (copiar desde
-`config.example.env`; no va a git).  
-Datos del lab en Laravel: bloque `LAB_ORDEN` / `EMERGENCIA_*` en su `.env`.  
+Config **por lab** (impersonal): `scripts/emergencia/config.env` ←
+`config.example.env`.  
+Personalización: `HABILITAR_RESPALDO`, `AWS_BIN`, `LAB_ORDEN`, `EMERGENCIA_*` en
+el `.env`.  
 Override puntual: variable `SILAVET_EMERGENCIA_CONF`.
 
 ---
@@ -470,6 +464,7 @@ Override puntual: variable `SILAVET_EMERGENCIA_CONF`.
 - Correr `preparar-vps.sh` como **root** (los archivos quedarían fuera del
   usuario `admin` y PHP-FPM no escribe `storage/`).
 - `HABILITAR_RESPALDO=1` o cron de `respaldar.sh` en el VPS de emergencia.
+- Poner `AWS_BIN` o paths de usuario en `config.env` (van en el `.env`).
 - Dejar el cron viejo de dumps **y** `respaldar.sh` a la vez.
 - Un cron que respalde varios labs a la vez (cada lab tiene su propio
   `respaldar.sh`, `config.env` y cron).

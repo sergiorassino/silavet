@@ -8,7 +8,7 @@ _EMERGENCIA_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 DRY_RUN="${DRY_RUN:-0}"
 
 # Nombres de dump y logs en hora argentina (el hosting suele estar en UTC).
-# Override: SILAVET_TZ en config.env.
+# Override: SILAVET_TZ en .env (o config.env).
 aplicar_zona_horaria() {
     export TZ="${SILAVET_TZ:-America/Argentina/Buenos_Aires}"
 }
@@ -23,7 +23,8 @@ die() {
     exit 1
 }
 
-# Hosting compartido: AWS CLI suele no estar en PATH. Usar AWS_BIN en config.env.
+# Hosting compartido: AWS CLI suele no estar en PATH. Preferí AWS_BIN en el .env;
+# si falta, se intenta ~/.local/bin/aws.
 aws() {
     local bin="${AWS_BIN:-aws}"
     command "$bin" "$@"
@@ -32,10 +33,21 @@ aws() {
 require_aws() {
     local bin="${AWS_BIN:-aws}"
     if [[ "$bin" == */* || "$bin" == ./* ]]; then
-        [[ -x "$bin" ]] || die "AWS_BIN no es ejecutable: $bin"
+        [[ -x "$bin" ]] || die "AWS_BIN no es ejecutable: $bin (definilo en el .env del lab)."
         return 0
     fi
-    type -P aws >/dev/null 2>&1 || die "No está instalado: aws. En Hostinger/shared instalalo en tu home y poné AWS_BIN en config.env (docs/13-backup-y-vps-emergencia.md §2.1)."
+    type -P aws >/dev/null 2>&1 || die "No está instalado: aws. En Hostinger/shared instalalo en tu home y poné AWS_BIN en el .env (docs/13 §2.1)."
+}
+
+# Si AWS_BIN quedó vacío: ~/.local/bin/aws (instalación típica sin root).
+inferir_aws_bin() {
+    if [[ -n "${AWS_BIN:-}" ]]; then
+        return 0
+    fi
+    if [[ -n "${HOME:-}" && -x "${HOME}/.local/bin/aws" ]]; then
+        AWS_BIN="${HOME}/.local/bin/aws"
+        log "AWS_BIN inferido: $AWS_BIN"
+    fi
 }
 
 require_cmd() {
@@ -90,6 +102,7 @@ cargar_config() {
     fi
 
     inferir_app_dir
+    inferir_aws_bin
 
     CONFIG_CARGADO="$candidato"
     log "Config: $CONFIG_CARGADO"
@@ -118,12 +131,13 @@ inferir_app_dir() {
     fi
 }
 
-# Tenant, LAB_ORDEN y MySQL de emergencia: bloque del .env del laboratorio.
+# Tenant, LAB_ORDEN, MySQL de emergencia y personalización del hosting: .env del lab.
+# Las claves opcionales pisan lo que vino de config.env.
 aplicar_env_laboratorio() {
     local envf="${1:-$APP_DIR/.env}"
     [[ -f "$envf" ]] || die "No existe $envf"
 
-    local slug orden ehost eport edb euser epass
+    local slug orden ehost eport edb euser epass v
     slug="$(env_valor "$envf" TENANT_SLUG 0)"
     if [[ -n "$slug" ]]; then
         PROYECTO="$slug"
@@ -150,6 +164,43 @@ aplicar_env_laboratorio() {
     [[ -n "$epass" ]] && MYSQL_PASSWORD="$epass"
     MYSQL_HOST="${MYSQL_HOST:-127.0.0.1}"
     MYSQL_PORT="${MYSQL_PORT:-3306}"
+
+    # Personalización por hosting / lab (no van en config.env).
+    v="$(env_valor "$envf" HABILITAR_RESPALDO 0)"
+    [[ -n "$v" ]] && HABILITAR_RESPALDO="$v"
+    v="$(env_valor "$envf" AWS_BIN 0)"
+    [[ -n "$v" ]] && AWS_BIN="$v"
+    v="$(env_valor "$envf" AWS_REGION 0)"
+    [[ -n "$v" ]] && AWS_REGION="$v"
+    v="$(env_valor "$envf" MYSQLDUMP_BIN 0)"
+    [[ -n "$v" ]] && MYSQLDUMP_BIN="$v"
+    v="$(env_valor "$envf" PHP_BIN 0)"
+    [[ -n "$v" ]] && PHP_BIN="$v"
+    v="$(env_valor "$envf" WEB_USER 0)"
+    [[ -n "$v" ]] && WEB_USER="$v"
+    v="$(env_valor "$envf" WEB_GROUP 0)"
+    [[ -n "$v" ]] && WEB_GROUP="$v"
+    v="$(env_valor "$envf" SILAVET_TZ 0)"
+    [[ -n "$v" ]] && SILAVET_TZ="$v"
+    v="$(env_valor "$envf" S3_BUCKET 0)"
+    [[ -n "$v" ]] && S3_BUCKET="$v"
+    v="$(env_valor "$envf" S3_PREFIX_DUMPS 0)"
+    [[ -n "$v" ]] && S3_PREFIX_DUMPS="$v"
+    v="$(env_valor "$envf" S3_PREFIX_ARCHIVOS 0)"
+    [[ -n "$v" ]] && S3_PREFIX_ARCHIVOS="$v"
+
+    if [[ -z "${AWS_BIN:-}" ]]; then
+        unset AWS_BIN
+    fi
+    if [[ -z "${MYSQLDUMP_BIN:-}" ]]; then
+        unset MYSQLDUMP_BIN
+    fi
+    if [[ -z "${AWS_REGION:-}" ]]; then
+        unset AWS_REGION
+    fi
+
+    aplicar_zona_horaria
+    inferir_aws_bin
 
     S3_DUMP_FILTER="l${LAB_ORDEN}_${PROYECTO}"
     log "Lab TENANT_SLUG=$PROYECTO LAB_ORDEN=$LAB_ORDEN filtro=$S3_DUMP_FILTER"
@@ -225,7 +276,7 @@ mysqldump_binario() {
 respaldar_mysql_hora() {
     require_aws
     require_vars PROYECTO APP_DIR S3_BUCKET S3_PREFIX_DUMPS LAB_ORDEN
-    [[ "${HABILITAR_RESPALDO:-}" == "1" ]] || die "HABILITAR_RESPALDO=1 en scripts/emergencia/config.env (solo producción). No corras el respaldo en el VPS de emergencia."
+    [[ "${HABILITAR_RESPALDO:-}" == "1" ]] || die "HABILITAR_RESPALDO=1 en el .env (solo producción). No corras el respaldo en el VPS de emergencia."
     es_laravel_dir "$APP_DIR" || die "APP_DIR no parece Laravel: $APP_DIR"
 
     local envf="$APP_DIR/.env"
@@ -475,6 +526,8 @@ aplicar_overlay_env() {
         env_set_clave "$env_file" DB_PASSWORD "$pass"
         env_set_clave "$env_file" SESSION_SECURE_COOKIE true
         env_set_clave "$env_file" SESSION_DOMAIN ""
+        # Evita que un cron o un respaldo accidental use el .env de producción en el VPS.
+        env_set_clave "$env_file" HABILITAR_RESPALDO 0
         log "Overlay aplicado desde bloque EMERGENCIA_* → $env_file"
         return 0
     fi
@@ -594,7 +647,7 @@ php_ok() {
     local php_bin="${PHP_BIN:-php}"
     require_cmd "$php_bin"
     "$php_bin" -r 'exit(PHP_VERSION_ID >= 80200 ? 0 : 1);' 2>/dev/null \
-        || die "Se necesita PHP 8.2 o superior ($php_bin). En DirectAdmin: PHP_BIN=/usr/local/php83/bin/php (o php82) en config.env."
+        || die "Se necesita PHP 8.2 o superior ($php_bin). En DirectAdmin: PHP_BIN=/usr/local/php83/bin/php en config.env (default) o en el .env."
 
     local ext ini
     ini="$("$php_bin" -r 'echo php_ini_loaded_file() ?: "(ninguno)";' 2>/dev/null || true)"

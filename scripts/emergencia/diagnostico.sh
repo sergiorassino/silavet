@@ -78,21 +78,28 @@ else
 fi
 
 cargar_config
+if [[ -f "$APP_DIR/.env" ]]; then
+    # shellcheck disable=SC2034
+    aplicar_env_laboratorio "$APP_DIR/.env" 2>/dev/null || true
+fi
 prepend_php_path
 echo "    APP_DIR=$APP_DIR"
 echo "    PHP_BIN=${PHP_BIN:-php}"
 echo "    WEB_USER=${WEB_USER:-}  WEB_GROUP=${WEB_GROUP:-}"
 echo "    GIT_URL=${GIT_URL:-}  GIT_BRANCH=${GIT_BRANCH:-}"
 echo "    S3_BUCKET=$S3_BUCKET"
+echo "    AWS_BIN=${AWS_BIN:-"(PATH / inferido)"}"
+echo "    HABILITAR_RESPALDO=${HABILITAR_RESPALDO:-0}"
 echo "    S3_PREFIX_DUMPS=$S3_PREFIX_DUMPS"
 echo "    S3_PREFIX_ARCHIVOS=$S3_PREFIX_ARCHIVOS"
-echo "    HABILITAR_RESPALDO=${HABILITAR_RESPALDO:-0}"
 PROYECTO="${PROYECTO:-$(basename "$APP_DIR")}"
 echo
 
 echo "--- .env del laboratorio ---"
 if [[ -f "$APP_DIR/.env" ]]; then
     ok "$APP_DIR/.env"
+    echo "    HABILITAR_RESPALDO=$(env_valor "$APP_DIR/.env" HABILITAR_RESPALDO 0)"
+    echo "    AWS_BIN=$(env_valor "$APP_DIR/.env" AWS_BIN 0)"
     echo "    TENANT_SLUG=$(env_valor "$APP_DIR/.env" TENANT_SLUG 0)"
     echo "    LAB_ORDEN=$(env_valor "$APP_DIR/.env" LAB_ORDEN 0)"
     echo "    EMERGENCIA_APP_URL=$(env_valor "$APP_DIR/.env" EMERGENCIA_APP_URL 0)"
