@@ -86,7 +86,8 @@ EMERGENCIA_* del .env de producción (se baja con restaurar.sh).
   2. Virtual host apuntando a $APP_DIR (carpeta = TENANT_SLUG)
   3. Base/usuario DirectAdmin iguales a EMERGENCIA_DB_* del .env de producción
 
-Este VPS NO debe tener cron de sync horario ni HABILITAR_RESPALDO=1.
+Este VPS NO debe tener cron de sync horario. Tras restaurar, HABILITAR_RESPALDO
+queda en 0 en el .env (overlay). No ejecutes respaldar.sh acá.
 Cuando caiga el servidor original:
 
   bash $APP_DIR/scripts/emergencia/restaurar.sh

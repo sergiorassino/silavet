@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 # Producción: UNA rutina horaria — dump MySQL + archivos de laboratorio.
 # Datos del lab: .env (TENANT_SLUG, LAB_ORDEN, EMERGENCIA_*).
-# Config de este lab: scripts/emergencia/config.env (copiar desde config.example.env).
+# Config impersonal: scripts/emergencia/config.env (copiar desde config.example.env).
+# Personalización (AWS_BIN, HABILITAR_RESPALDO, LAB_ORDEN, EMERGENCIA_*): .env del lab.
 #
 #   5 * * * * /bin/bash /ruta/al/lab/scripts/emergencia/respaldar.sh >> $HOME/silavet-respaldo-LAB.log 2>&1
 # Un cron por laboratorio (cada lab apunta a su propio respaldar.sh).
@@ -19,7 +20,7 @@ uso() {
     cat <<'EOF'
 Uso: respaldar.sh [--dry-run] [--solo-dump] [--solo-archivos]
 
-En el hosting de producción (HABILITAR_RESPALDO=1 en scripts/emergencia/config.env):
+En el hosting de producción (HABILITAR_RESPALDO=1 en el .env):
   1. mysqldump de DB_* del .env → s3://…/backupHora/l{LAB_ORDEN}_{TENANT_SLUG}_….sql.gz
   2. espejo incremental de archivos de laboratorio (sin --delete)
 
@@ -49,7 +50,7 @@ require_vars PROYECTO APP_DIR S3_BUCKET
 require_aws
 require_cmd flock
 es_laravel_dir "$APP_DIR" || die "APP_DIR no parece Laravel: $APP_DIR"
-[[ "${HABILITAR_RESPALDO:-}" == "1" ]] || die "HABILITAR_RESPALDO=1 en scripts/emergencia/config.env (solo producción). Si esto es el VPS de emergencia, no ejecutes respaldar.sh."
+[[ "${HABILITAR_RESPALDO:-}" == "1" ]] || die "HABILITAR_RESPALDO=1 en el .env (solo producción). Si esto es el VPS de emergencia, no ejecutes respaldar.sh."
 
 LOCK="/tmp/silavet-${PROYECTO}-respaldar.lock"
 exec 9>"$LOCK"
