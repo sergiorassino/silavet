@@ -18,7 +18,7 @@ El VPS de emergencia queda **preparado** (stack + clone + Composer + overlay de
 
 ## 1. Qué se sube a S3 (archivos)
 
-Prefijo: `s3://sistesco/backupDedicado/archivos/{PROYECTO}/`
+Prefijo: `s3://sistesco/backupDedicado/archivos/{TENANT_SLUG}/`
 
 | Ruta | Contenido |
 |------|-----------|
@@ -33,17 +33,12 @@ Prefijo: `s3://sistesco/backupDedicado/archivos/{PROYECTO}/`
 No se sube `vendor/`, logs, cache, `livewire-tmp` ni el árbol git. El sync **no**
 usa `--delete`: un archivo borrado en disco no se borra en S3.
 
-Dump horario (misma rutina): `l{LAB_ORDEN}_{PROYECTO}_YYYY_MM_DD_HH_MM_SS.sql.gz`
+Dump horario (misma rutina): `l{LAB_ORDEN}_{TENANT_SLUG}_YYYY_MM_DD_HH_MM_SS.sql.gz`
 en `s3://sistesco/{S3_PREFIX_DUMPS}/` (`backupDedicado/backupHora`).
-Ejemplo: `l1_alqu_2026_07_24_21_30_02.sql.gz`. El `l1_` es el número de
-orden del lab (para ver de un vistazo si backupuearon todos). La BD se lee del
-`.env` de Laravel (`DB_*`), no de `MYSQL_*` (eso es el MySQL **local** del VPS
-de emergencia).
-
-Los dumps de la rutina anterior se llamaban `l1_alqu_…`. El filtro nuevo
-`l1_alqu` **no** coincide con esos nombres. Hasta el primer dump nuevo, en el
-VPS de emergencia usá un filtro que matchee ambos (p. ej. `_alqu_`) o el
-nombre viejo.
+Ejemplo: `l1_alqu_2026_07_24_21_30_02.sql.gz`. `LAB_ORDEN` y el resto de la
+emergencia van en el **`.env` del laboratorio** (no en `config.env`).
+La BD que se dumpuea es `DB_*` de producción. `EMERGENCIA_DB_*` es el MySQL
+**local del VPS de reserva** (se usa al restaurar).
 
 ---
 
@@ -52,7 +47,8 @@ nombre viejo.
 Reemplaza el cron viejo de dumps **y** el de archivos. Un job, un `flock`.
 
 Requisitos: AWS CLI, `flock`, `mysqldump`, `gzip`, el mismo usuario/IAM que ya
-subía los dumps. `HABILITAR_RESPALDO=1` en `config.env` **solo** en este hosting.
+subía los dumps. `HABILITAR_RESPALDO=1` en el **config del servidor**
+(`~/.silavet/config.env` o `/etc/silavet/config.env`), **solo** en este hosting.
 
 ### 2.1 Hosting compartido (`aws: command not found`)
 
@@ -101,7 +97,8 @@ aws sts get-caller-identity
 aws s3 ls s3://sistesco/
 ```
 
-En `scripts/emergencia/config.env` (del laboratorio):
+En `~/.silavet/config.env` o `/etc/silavet/config.env` del **hosting** (un
+archivo para todos los labs):
 
 ```bash
 AWS_BIN=/home/u577894275/.local/bin/aws
@@ -114,27 +111,37 @@ Si no sabés cómo se suben hoy los dumps, buscá el cron o el script de backup:
 ---
 
 ```bash
-sudo mkdir -p /etc/silavet
-sudo cp /var/www/silavet/scripts/emergencia/config.example.env /etc/silavet/config.env
-sudo chmod 600 /etc/silavet/config.env
-sudo nano /etc/silavet/config.env
+mkdir -p ~/.silavet
+cp scripts/emergencia/config.example.env ~/.silavet/config.env
+chmod 600 ~/.silavet/config.env
+nano ~/.silavet/config.env
 ```
 
-Ajustar, además de rutas y bucket:
+Solo datos del **servidor** (no del lab):
 
 ```bash
 HABILITAR_RESPALDO=1
-LAB_ORDEN=1
-PROYECTO=alqu
+SILAVET_ROOT=/home/USUARIO/public_html/silavet
 S3_PREFIX_DUMPS=backupDedicado/backupHora
-S3_DUMP_FILTER=l1_alqu
 S3_PREFIX_ARCHIVOS=backupDedicado/archivos
-APP_DIR=…   # carpeta con artisan y .env
+AWS_REGION=sa-east-1
 AWS_BIN=…   # si aws no está en PATH
 ```
 
-`S3_DUMP_FILTER` tiene que ser el mismo en el VPS de emergencia. Si lo dejás
-vacío, se arma `l{LAB_ORDEN}_{PROYECTO}`.
+Cada laboratorio: bloque en **su** `.env` (se configura al darlo de alta):
+
+```env
+TENANT_SLUG=alqu
+LAB_ORDEN=1
+EMERGENCIA_APP_URL=https://sistemasescolares4.com/silavet/alqu
+EMERGENCIA_DB_HOST=127.0.0.1
+EMERGENCIA_DB_PORT=3306
+EMERGENCIA_DB_DATABASE=admin_alqu
+EMERGENCIA_DB_USERNAME=admin_alqu
+EMERGENCIA_DB_PASSWORD=…
+```
+
+La carpeta del lab debe llamarse igual que `TENANT_SLUG` (`…/silavet/alqu`).
 
 Probar (en el hosting del lab, no en el VPS de reserva):
 
@@ -144,19 +151,14 @@ bash /ruta/al/lab/scripts/emergencia/respaldar.sh
 aws s3 ls s3://sistesco/backupDedicado/backupHora/ | grep l1_alqu | tail
 ```
 
-Cron **único** (adaptar ruta y log). Minuto 5 de cada hora está bien:
+Cron **único** para todos los labs (con `SILAVET_ROOT`):
 
 ```cron
-5 * * * * /bin/bash /ruta/al/lab/scripts/emergencia/respaldar.sh >> $HOME/silavet-respaldo.log 2>&1
+5 * * * * /bin/bash /ruta/a/cualquier-lab/scripts/emergencia/respaldar-todos.sh >> $HOME/silavet-respaldo.log 2>&1
 ```
 
-**El mismo día:** borrar el cron/script viejo que subía `l1_labo_*.sql.gz`. Si
-deja los dos, vas a tener dos dumps por hora. `respaldar-archivos.sh` ahora
-llama a `respaldar.sh` (por si el cron de archivos ya estaba cargado).
-
-Hasta que esto corra **una vez**, el VPS de emergencia no tiene archivos ni un
-dump nuevo de Laravel que bajar (los dumps viejos siguen sirviendo si el
-filtro coincide).
+O un cron por lab apuntando a ese `respaldar.sh`. **El mismo día:** borrar el
+cron viejo de dumps. `respaldar-archivos.sh` reenvía a `respaldar.sh`.
 
 ---
 
@@ -166,9 +168,9 @@ Este VPS de reserva es **DirectAdmin + AlmaLinux**
 (`sistemasescolares4.com.ar`). No uses `/var/www` ni `www-data`: el sitio vive
 en el `public_html` del usuario del panel. El recetario detallado es el **§3.1**.
 
-Resumen: clone en `APP_DIR` → PHP CLI del panel con extensiones reales →
-`config.env` + overlay → Composer → **sin cron**. Los datos se bajan recién
-con `restaurar.sh`.
+Resumen: clone en carpeta `{TENANT_SLUG}` → PHP CLI del panel → config
+**del servidor** → Composer → **sin cron**. Los datos y el overlay salen del
+`.env` de producción (S3).
 
 Diagnóstico (no cambia nada; pegá la salida si falla):
 
@@ -221,7 +223,8 @@ ls -d /usr/local/php*/bin/php
 
 #### A1. Si algún binario dice `yes`
 
-Ese es tu `PHP_BIN`. En `scripts/emergencia/config.env`:
+Ese es tu `PHP_BIN`. En el config del servidor (`~/.silavet/config.env` o
+`/etc/silavet/config.env`):
 
 ```bash
 PHP_BIN=/usr/local/php83/bin/php
@@ -303,9 +306,8 @@ cuando corras `preparar-vps.sh` (o agregalo en `~/.bashrc`).
 2. Anotá **exactamente** los nombres que genera el panel. DirectAdmin suele
    prefijar: `admin_labvetciudad` / usuario `admin_silavet` (no `silavet` suelto
    ni `lb_labvetciudad` si el panel no te deja).
-3. Esos tres valores (base, usuario, clave) van **iguales** en
-   `config.env` (`MYSQL_*`) y en `env.emergencia` (`DB_*`).
-4. Host: `127.0.0.1`. El dump todavía no se importa.
+3. Esos tres valores van en el `.env` de **producción** (`EMERGENCIA_DB_*`),
+   no en un archivo del VPS. Host: `127.0.0.1`. El dump todavía no se importa.
 
 Prueba:
 
@@ -313,61 +315,36 @@ Prueba:
 mysql -h 127.0.0.1 -u ADMIN_USUARIO -p -e "SHOW DATABASES;"
 ```
 
-### Paso D — Config y overlay (secretos, no van a git)
+### Paso D — Config del servidor (un archivo, todos los labs)
+
+En el VPS, **un** config compartido (no por laboratorio):
 
 ```bash
-cd /home/admin/public_html/silavet/alqu
-
-cp -n scripts/emergencia/config.example.env scripts/emergencia/config.env
-cp -n scripts/emergencia/env.emergencia.example scripts/emergencia/env.emergencia
-chmod 600 scripts/emergencia/config.env scripts/emergencia/env.emergencia
-nano scripts/emergencia/config.env
-nano scripts/emergencia/env.emergencia
+sudo mkdir -p /etc/silavet
+sudo cp /home/admin/public_html/silavet/alqu/scripts/emergencia/config.example.env /etc/silavet/config.env
+sudo chmod 600 /etc/silavet/config.env
+sudo nano /etc/silavet/config.env
 ```
 
-`config.env` (valores de este VPS):
-
 ```bash
-PROYECTO=alqu
-APP_DIR=/home/admin/public_html/silavet/alqu
+HABILITAR_RESPALDO=0
 WEB_USER=admin
 WEB_GROUP=admin
 GIT_URL=https://github.com/sergiorassino/silavet.git
 GIT_BRANCH=main
 PHP_BIN=/usr/local/php83/bin/php
-ENV_EMERGENCIA_FILE=/home/admin/public_html/silavet/alqu/scripts/emergencia/env.emergencia
 S3_BUCKET=sistesco
 S3_PREFIX_DUMPS=backupDedicado/backupHora
 S3_PREFIX_ARCHIVOS=backupDedicado/archivos
-S3_DUMP_FILTER=l1_alqu
 AWS_REGION=sa-east-1
-AWS_BIN=
-MYSQL_HOST=127.0.0.1
-MYSQL_PORT=3306
-MYSQL_USER=admin_silavet          # el que creó DirectAdmin
-MYSQL_PASSWORD=...
-MYSQL_DATABASE=admin_labvetciudad # el que creó DirectAdmin
 ```
 
-`env.emergencia` (pisa el `.env` de producción al restaurar):
+`LAB_ORDEN`, `TENANT_SLUG` y MySQL de emergencia **no** van acá: están en el
+`.env` de cada lab (y llegan con `restaurar.sh` desde S3). La carpeta del clone
+tiene que llamarse como el tenant: `/home/admin/public_html/silavet/alqu`.
 
-```bash
-APP_ENV=production
-APP_DEBUG=false
-APP_URL=https://sistemasescolares4.com.ar/silavet/alqu
-
-DB_HOST=127.0.0.1
-DB_PORT=3306
-DB_DATABASE=admin_labvetciudad
-DB_USERNAME=admin_silavet
-DB_PASSWORD=...
-
-SESSION_SECURE_COOKIE=true
-SESSION_DOMAIN=
-```
-
-Sin `__CAMBIAR__`. `APP_URL` sin barra final. `SESSION_DOMAIN` vacío (no
-`null`).
+Si ya existe `scripts/emergencia/config.env` de un lab, podés dejarlo; gana
+`/etc/silavet/config.env` o `~/.silavet/config.env` si están.
 
 ### Paso E — RewriteBase (subcarpeta)
 
@@ -440,8 +417,8 @@ bash scripts/emergencia/restaurar.sh --yes
 ```
 
 Hace, en orden: `git pull` → `composer install --no-dev` → `s3 sync` de
-archivos → overlay de `.env` → importa el dump **más reciente** de
-`S3_PREFIX_DUMPS` que coincida con `S3_DUMP_FILTER` → caches Artisan y
+archivos → aplica `EMERGENCIA_*` del `.env` sobre `APP_URL`/`DB_*` → importa
+el dump más reciente `l{LAB_ORDEN}_{TENANT_SLUG}_…` → caches Artisan y
 `lb:migrate-legacy --force`.
 
 Tiempo: minutos de git/composer/archivos + lo que tarde el import MySQL
@@ -460,15 +437,16 @@ real sobre el VPS de reserva y entrar por su URL.
 
 | Script | Servidor | Frecuencia |
 |--------|----------|------------|
-| `scripts/emergencia/respaldar.sh` | Producción | Horario (dump + archivos) |
+| `scripts/emergencia/respaldar.sh` | Producción | Horario (un lab) |
+| `scripts/emergencia/respaldar-todos.sh` | Producción | Horario (todos los labs de `SILAVET_ROOT`) |
 | `scripts/emergencia/respaldar-archivos.sh` | Producción | Alias de `respaldar.sh` |
 | `scripts/emergencia/diagnostico.sh` | Emergencia | Cuando algo falla |
-| `scripts/emergencia/preparar-vps.sh` | Emergencia | Una vez |
+| `scripts/emergencia/preparar-vps.sh` | Emergencia | Una vez por carpeta/tenant |
 | `scripts/emergencia/restaurar.sh` | Emergencia | Solo ante caída (o ensayo) |
 
-Config: `scripts/emergencia/config.env` o `/etc/silavet/config.env`  
-Overlay: `scripts/emergencia/env.emergencia` o `/etc/silavet/env.emergencia`  
-Override de ruta: variable `SILAVET_EMERGENCIA_CONF`.
+Config del **servidor**: `~/.silavet/config.env` o `/etc/silavet/config.env`  
+Datos de cada **lab**: bloque `LAB_ORDEN` / `EMERGENCIA_*` en su `.env`  
+Override: variable `SILAVET_EMERGENCIA_CONF`.
 
 ---
 
@@ -494,6 +472,7 @@ Override de ruta: variable `SILAVET_EMERGENCIA_CONF`.
 - `scripts/emergencia/lib.sh`
 - `scripts/emergencia/diagnostico.sh`
 - `scripts/emergencia/respaldar.sh`
+- `scripts/emergencia/respaldar-todos.sh`
 - `scripts/emergencia/respaldar-archivos.sh`
 - `scripts/emergencia/preparar-vps.sh`
 - `scripts/emergencia/restaurar.sh`

@@ -16,7 +16,6 @@ Una sola vez en vpsEmergencia:
   - clona (o actualiza) el repo
   - composer install --no-dev
   - crea carpetas de laboratorio
-  - instala /etc/silavet/env.emergencia si no existe
   - verifica PHP, MySQL client, git, aws, composer
 
 NO descarga dumps ni archivos de S3. NO importa la base.
@@ -35,7 +34,8 @@ done
 
 cargar_config
 prepend_php_path
-require_vars PROYECTO APP_DIR GIT_URL GIT_BRANCH WEB_USER
+inferir_app_dir
+require_vars GIT_URL GIT_BRANCH WEB_USER
 
 php_ok
 require_cmd git
@@ -72,20 +72,6 @@ fi
 
 composer_instalar "$APP_DIR"
 
-overlay="$(ruta_overlay)"
-if [[ ! -f "$overlay" ]]; then
-    if [[ "$DRY_RUN" == "1" ]]; then
-        log "[dry-run] instalaría $overlay"
-    else
-        mkdir -p "$(dirname "$overlay")"
-        cp "$SCRIPT_DIR/env.emergencia.example" "$overlay"
-        chmod 600 "$overlay"
-        log "Creado $overlay — completá APP_URL y DB_* antes de restaurar."
-    fi
-else
-    log "Overlay ya existe: $overlay"
-fi
-
 if [[ "$DRY_RUN" != "1" ]]; then
     aplicar_permisos "$APP_DIR"
     verificar_preparacion
@@ -93,13 +79,14 @@ fi
 
 cat <<EOF
 
-Preparación lista. Completá a mano si aún no lo hiciste:
-  1. $overlay
-  2. Credenciales AWS (\`aws configure\` o IAM role)
-  3. Virtual host Apache/nginx apuntando a $APP_DIR (ver docs/13-backup-y-vps-emergencia.md)
-  4. Usuario MySQL local y base vacía $MYSQL_DATABASE
+Preparación lista. El MySQL y APP_URL de emergencia salen del bloque
+EMERGENCIA_* del .env de producción (se baja con restaurar.sh).
 
-Este VPS NO debe tener cron de sync horario.
+  1. Credenciales AWS en este VPS
+  2. Virtual host apuntando a $APP_DIR (carpeta = TENANT_SLUG)
+  3. Base/usuario DirectAdmin iguales a EMERGENCIA_DB_* del .env de producción
+
+Este VPS NO debe tener cron de sync horario ni HABILITAR_RESPALDO=1.
 Cuando caiga el servidor original:
 
   bash $APP_DIR/scripts/emergencia/restaurar.sh

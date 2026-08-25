@@ -120,6 +120,14 @@ APP_URL=https://dominio.com/lab/neolab
 TENANT_SLUG=neolab
 DB_DATABASE=lb_neolab
 
+LAB_ORDEN=1
+EMERGENCIA_APP_URL=https://sistemasescolares4.com/silavet/neolab
+EMERGENCIA_DB_HOST=127.0.0.1
+EMERGENCIA_DB_PORT=3306
+EMERGENCIA_DB_DATABASE=admin_neolab
+EMERGENCIA_DB_USERNAME=admin_neolab
+EMERGENCIA_DB_PASSWORD=
+
 SESSION_SECURE_COOKIE=true
 SESSION_DOMAIN=
 ```

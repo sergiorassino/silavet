@@ -71,45 +71,67 @@ if [[ -n "${SILAVET_EMERGENCIA_CONF:-}" && -f "${SILAVET_EMERGENCIA_CONF}" ]]; t
     ok "SILAVET_EMERGENCIA_CONF=$SILAVET_EMERGENCIA_CONF"
 elif [[ -f /etc/silavet/config.env ]]; then
     ok "/etc/silavet/config.env"
+elif [[ -f "${HOME:-}/.silavet/config.env" ]]; then
+    ok "$HOME/.silavet/config.env"
 elif [[ -f "$SCRIPT_DIR/config.env" ]]; then
-    ok "$SCRIPT_DIR/config.env"
+    ok "$SCRIPT_DIR/config.env (legado por lab)"
 else
-    fail "no hay config.env (copiá config.example.env → scripts/emergencia/config.env)"
+    fail "no hay config del servidor (~/.silavet/config.env o /etc/silavet/config.env)"
     echo "=== fin (sin config) ==="
     exit 0
 fi
 
 cargar_config
 prepend_php_path
-echo "    PROYECTO=$PROYECTO"
 echo "    APP_DIR=$APP_DIR"
 echo "    PHP_BIN=${PHP_BIN:-php}"
 echo "    WEB_USER=${WEB_USER:-}  WEB_GROUP=${WEB_GROUP:-}"
 echo "    GIT_URL=${GIT_URL:-}  GIT_BRANCH=${GIT_BRANCH:-}"
 echo "    S3_BUCKET=$S3_BUCKET"
-echo "    S3_PREFIX_DUMPS=$S3_PREFIX_DUMPS  S3_DUMP_FILTER=$S3_DUMP_FILTER"
+echo "    S3_PREFIX_DUMPS=$S3_PREFIX_DUMPS"
 echo "    S3_PREFIX_ARCHIVOS=$S3_PREFIX_ARCHIVOS"
-echo "    MYSQL_HOST=$MYSQL_HOST  MYSQL_USER=$MYSQL_USER  MYSQL_DATABASE=$MYSQL_DATABASE"
-if [[ "${MYSQL_PASSWORD:-}" == "__CAMBIAR__" || -z "${MYSQL_PASSWORD:-}" ]]; then
-    fail "MYSQL_PASSWORD aún es placeholder"
+echo "    HABILITAR_RESPALDO=${HABILITAR_RESPALDO:-0}"
+PROYECTO="${PROYECTO:-$(basename "$APP_DIR")}"
+echo
+
+echo "--- .env del laboratorio ---"
+if [[ -f "$APP_DIR/.env" ]]; then
+    ok "$APP_DIR/.env"
+    echo "    TENANT_SLUG=$(env_valor "$APP_DIR/.env" TENANT_SLUG 0)"
+    echo "    LAB_ORDEN=$(env_valor "$APP_DIR/.env" LAB_ORDEN 0)"
+    echo "    EMERGENCIA_APP_URL=$(env_valor "$APP_DIR/.env" EMERGENCIA_APP_URL 0)"
+    echo "    EMERGENCIA_DB_HOST=$(env_valor "$APP_DIR/.env" EMERGENCIA_DB_HOST 0)"
+    echo "    EMERGENCIA_DB_DATABASE=$(env_valor "$APP_DIR/.env" EMERGENCIA_DB_DATABASE 0)"
+    echo "    EMERGENCIA_DB_USERNAME=$(env_valor "$APP_DIR/.env" EMERGENCIA_DB_USERNAME 0)"
+    epass="$(env_valor "$APP_DIR/.env" EMERGENCIA_DB_PASSWORD 0)"
+    if [[ -z "$epass" || "$epass" == "__CAMBIAR__" ]]; then
+        fail "EMERGENCIA_DB_PASSWORD vacío"
+    else
+        ok "EMERGENCIA_DB_PASSWORD definido (no se muestra)"
+        MYSQL_PASSWORD="$epass"
+    fi
+    slug="$(env_valor "$APP_DIR/.env" TENANT_SLUG 0)"
+    [[ -n "$slug" ]] && PROYECTO="$slug"
+    orden="$(env_valor "$APP_DIR/.env" LAB_ORDEN 0)"
+    [[ -n "$orden" ]] && S3_DUMP_FILTER="l${orden}_${PROYECTO}"
+    edb="$(env_valor "$APP_DIR/.env" EMERGENCIA_DB_DATABASE 0)"
+    euser="$(env_valor "$APP_DIR/.env" EMERGENCIA_DB_USERNAME 0)"
+    ehost="$(env_valor "$APP_DIR/.env" EMERGENCIA_DB_HOST 0)"
+    [[ -n "$edb" ]] && MYSQL_DATABASE="$edb"
+    [[ -n "$euser" ]] && MYSQL_USER="$euser"
+    [[ -n "$ehost" ]] && MYSQL_HOST="$ehost"
+    MYSQL_HOST="${MYSQL_HOST:-127.0.0.1}"
 else
-    ok "MYSQL_PASSWORD definido (no se muestra)"
+    fail "no hay .env (restaurar.sh lo baja de S3)"
 fi
 echo
 
-echo "--- overlay ---"
+echo "--- overlay legado (opcional) ---"
 overlay="$(ruta_overlay)"
 if [[ -f "$overlay" ]]; then
-    ok "$overlay"
-    if grep -q '__CAMBIAR__' "$overlay"; then
-        fail "todavía hay __CAMBIAR__ en el overlay"
-        grep '__CAMBIAR__' "$overlay" | sed 's/^/    /'
-    else
-        ok "sin placeholders"
-    fi
-    grep -E '^(APP_URL|DB_HOST|DB_DATABASE|DB_USERNAME)=' "$overlay" | sed 's/^/    /' || true
+    info "existe $overlay (solo se usa si el .env no tiene EMERGENCIA_APP_URL)"
 else
-    fail "no existe $overlay"
+    ok "sin overlay legado (correcto si usás el bloque .env)"
 fi
 echo
 
@@ -181,7 +203,7 @@ if command -v mysql >/dev/null 2>&1; then
             ok "conexión MySQL $MYSQL_USER@$MYSQL_HOST"
             mysql --defaults-extra-file="$cnf" -e "SHOW DATABASES LIKE '${MYSQL_DATABASE}';" 2>/dev/null | sed 's/^/    /'
         else
-            fail "no conecta con MYSQL_* de config.env (creá usuario/base en DirectAdmin → MySQL Management)"
+            fail "no conecta con EMERGENCIA_DB_* del .env (creá usuario/base en DirectAdmin)"
         fi
         rm -f "$cnf"
     else

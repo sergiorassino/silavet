@@ -52,11 +52,13 @@ cargar_config() {
         candidato="$SILAVET_EMERGENCIA_CONF"
     elif [[ -f /etc/silavet/config.env ]]; then
         candidato="/etc/silavet/config.env"
+    elif [[ -f "${HOME:-}/.silavet/config.env" ]]; then
+        candidato="${HOME}/.silavet/config.env"
     elif [[ -f "$_EMERGENCIA_DIR/config.env" ]]; then
         candidato="$_EMERGENCIA_DIR/config.env"
     fi
 
-    [[ -n "$candidato" && -f "$candidato" ]] || die "No hay configuración. Copiá config.example.env a scripts/emergencia/config.env (o /etc/silavet/config.env) y completá los valores."
+    [[ -n "$candidato" && -f "$candidato" ]] || die "No hay configuración del servidor. Copiá config.example.env a ~/.silavet/config.env o /etc/silavet/config.env (no es por laboratorio)."
 
     # shellcheck disable=SC1090
     set -a
@@ -82,6 +84,8 @@ cargar_config() {
         log "S3_DUMP_FILTER por defecto: $S3_DUMP_FILTER"
     fi
 
+    inferir_app_dir
+
     CONFIG_CARGADO="$candidato"
     log "Config: $CONFIG_CARGADO"
 }
@@ -99,6 +103,60 @@ prepend_php_path() {
         *) export PATH="${php_dir}:$PATH" ;;
     esac
     log "PATH PHP: $resolved"
+}
+
+# Carpeta Laravel = padre de scripts/emergencia, si config.env no trae APP_DIR.
+inferir_app_dir() {
+    if [[ -z "${APP_DIR:-}" ]]; then
+        APP_DIR="$(cd "$_EMERGENCIA_DIR/../.." && pwd)"
+        log "APP_DIR inferido: $APP_DIR"
+    fi
+}
+
+# Tenant, LAB_ORDEN y MySQL de emergencia: bloque del .env del laboratorio.
+aplicar_env_laboratorio() {
+    local envf="${1:-$APP_DIR/.env}"
+    [[ -f "$envf" ]] || die "No existe $envf"
+
+    local slug orden ehost eport edb euser epass
+    slug="$(env_valor "$envf" TENANT_SLUG 0)"
+    if [[ -n "$slug" ]]; then
+        PROYECTO="$slug"
+    elif [[ -z "${PROYECTO:-}" ]]; then
+        PROYECTO="$(basename "$APP_DIR")"
+        log "PROYECTO = basename (sin TENANT_SLUG): $PROYECTO"
+    fi
+
+    orden="$(env_valor "$envf" LAB_ORDEN 0)"
+    if [[ -n "$orden" ]]; then
+        LAB_ORDEN="$orden"
+    fi
+    [[ -n "${LAB_ORDEN:-}" ]] || die "Falta LAB_ORDEN en $envf (bloque de emergencia). Ver .env.example."
+
+    ehost="$(env_valor "$envf" EMERGENCIA_DB_HOST 0)"
+    eport="$(env_valor "$envf" EMERGENCIA_DB_PORT 0)"
+    edb="$(env_valor "$envf" EMERGENCIA_DB_DATABASE 0)"
+    euser="$(env_valor "$envf" EMERGENCIA_DB_USERNAME 0)"
+    epass="$(env_valor "$envf" EMERGENCIA_DB_PASSWORD 0)"
+    [[ -n "$ehost" ]] && MYSQL_HOST="$ehost"
+    [[ -n "$eport" ]] && MYSQL_PORT="$eport"
+    [[ -n "$edb" ]] && MYSQL_DATABASE="$edb"
+    [[ -n "$euser" ]] && MYSQL_USER="$euser"
+    [[ -n "$epass" ]] && MYSQL_PASSWORD="$epass"
+    MYSQL_HOST="${MYSQL_HOST:-127.0.0.1}"
+    MYSQL_PORT="${MYSQL_PORT:-3306}"
+
+    S3_DUMP_FILTER="l${LAB_ORDEN}_${PROYECTO}"
+    log "Lab TENANT_SLUG=$PROYECTO LAB_ORDEN=$LAB_ORDEN filtro=$S3_DUMP_FILTER"
+}
+
+env_set_clave() {
+    local archivo="$1" clave="$2" valor="$3"
+    local tmp
+    tmp="$(mktemp)"
+    grep -vE "^${clave}=" "$archivo" >"$tmp" || true
+    printf '%s=%s\n' "$clave" "$valor" >>"$tmp"
+    mv "$tmp" "$archivo"
 }
 
 ruta_overlay() {
@@ -378,14 +436,49 @@ EOF
     echo "$tmp"
 }
 
-# Pisa en .env las claves definidas en el overlay del VPS (APP_URL, DB_*, etc.).
+# Pisa APP_URL y DB_* con el bloque EMERGENCIA_* del mismo .env (bajado de S3).
+# Si no hay bloque, usa el overlay viejo env.emergencia.
 aplicar_overlay_env() {
     local env_file="$1"
-    local overlay
-    overlay="$(ruta_overlay)"
+    local url host port db user pass overlay
 
     [[ -f "$env_file" ]] || die "No existe $env_file (¿falló la descarga de S3?)."
-    [[ -f "$overlay" ]] || die "No existe el overlay $overlay. Ejecutá primero preparar-vps.sh y completá env.emergencia."
+
+    url="$(env_valor "$env_file" EMERGENCIA_APP_URL 0)"
+    if [[ -n "$url" ]]; then
+        host="$(env_valor "$env_file" EMERGENCIA_DB_HOST 0)"
+        port="$(env_valor "$env_file" EMERGENCIA_DB_PORT 0)"
+        db="$(env_valor "$env_file" EMERGENCIA_DB_DATABASE)"
+        user="$(env_valor "$env_file" EMERGENCIA_DB_USERNAME)"
+        pass="$(env_valor "$env_file" EMERGENCIA_DB_PASSWORD 0)"
+        host="${host:-127.0.0.1}"
+        port="${port:-3306}"
+        if [[ "$url" == *__CAMBIAR__* || "$pass" == "__CAMBIAR__" || "$db" == "__CAMBIAR__" ]]; then
+            die "El bloque EMERGENCIA_* de $env_file todavía tiene placeholders. Completalo en producción y volvé a respaldar."
+        fi
+        [[ -n "$pass" ]] || die "Falta EMERGENCIA_DB_PASSWORD en $env_file"
+
+        if [[ "$DRY_RUN" == "1" ]]; then
+            log "[dry-run] overlay desde .env: APP_URL=$url DB=$db user=$user host=$host"
+            return 0
+        fi
+
+        env_set_clave "$env_file" APP_ENV production
+        env_set_clave "$env_file" APP_DEBUG false
+        env_set_clave "$env_file" APP_URL "$url"
+        env_set_clave "$env_file" DB_HOST "$host"
+        env_set_clave "$env_file" DB_PORT "$port"
+        env_set_clave "$env_file" DB_DATABASE "$db"
+        env_set_clave "$env_file" DB_USERNAME "$user"
+        env_set_clave "$env_file" DB_PASSWORD "$pass"
+        env_set_clave "$env_file" SESSION_SECURE_COOKIE true
+        env_set_clave "$env_file" SESSION_DOMAIN ""
+        log "Overlay aplicado desde bloque EMERGENCIA_* → $env_file"
+        return 0
+    fi
+
+    overlay="$(ruta_overlay)"
+    [[ -f "$overlay" ]] || die "No hay EMERGENCIA_APP_URL en $env_file ni overlay $overlay. Completá el bloque de emergencia en el .env de producción."
 
     if grep -q '__CAMBIAR__' "$overlay"; then
         die "El overlay $overlay todavía tiene placeholders __CAMBIAR__. Completalo antes de restaurar."
@@ -516,9 +609,6 @@ php_ok() {
 }
 
 verificar_preparacion() {
-    local overlay
-    overlay="$(ruta_overlay)"
-
     php_ok
     require_cmd git
     command -v composer >/dev/null 2>&1 || die "No está instalado: composer."
@@ -527,12 +617,11 @@ verificar_preparacion() {
 
     es_laravel_dir "$APP_DIR" || die "APP_DIR no es un proyecto Laravel: $APP_DIR"
     [[ -d "$APP_DIR/.git" ]] || die "No hay .git en $APP_DIR."
-    [[ -f "$overlay" ]] || die "Falta overlay $overlay"
 
-    if grep -q '__CAMBIAR__' "$overlay"; then
-        log "AVISO: $overlay todavía tiene placeholders. Completalo antes de restaurar."
+    if [[ -f "$APP_DIR/.env" ]] && grep -qE '^EMERGENCIA_APP_URL=' "$APP_DIR/.env"; then
+        log "Bloque EMERGENCIA_* presente en .env (se completa al restaurar desde S3)."
     else
-        log "Overlay $overlay sin placeholders."
+        log "AVISO: el .env local aún no tiene EMERGENCIA_*. restaurar.sh lo baja de S3 (tiene que estar en el .env de producción)."
     fi
 
     if aws sts get-caller-identity >/dev/null 2>&1; then

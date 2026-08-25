@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # VPS de emergencia: restauración a demanda (última hora).
-# No está pensado para cron. Pisa la BD local y los archivos de laboratorio.
+# Tenant y MySQL de emergencia: bloque EMERGENCIA_* / LAB_ORDEN del .env (S3).
 
 set -euo pipefail
 
@@ -13,11 +13,11 @@ uso() {
 Uso: restaurar.sh [--yes] [--dry-run]
 
 En el VPS de emergencia (tras preparar-vps.sh):
-  1. git pull (rama configurada)
+  1. git pull
   2. composer install --no-dev
-  3. baja el espejo de archivos desde S3
-  4. aplica /etc/silavet/env.emergencia sobre .env
-  5. importa el dump MySQL más reciente de backupHora
+  3. baja el espejo de archivos desde S3 (carpeta = TENANT_SLUG)
+  4. aplica EMERGENCIA_* del .env sobre APP_URL / DB_*
+  5. importa el dump MySQL más reciente (l{LAB_ORDEN}_{tenant}_…)
   6. limpia caches Laravel
 
 Opciones:
@@ -39,16 +39,15 @@ done
 
 cargar_config
 prepend_php_path
-require_vars PROYECTO APP_DIR S3_BUCKET S3_PREFIX_ARCHIVOS S3_PREFIX_DUMPS S3_DUMP_FILTER
-require_vars MYSQL_HOST MYSQL_USER MYSQL_DATABASE GIT_BRANCH
+PROYECTO="$(basename "$APP_DIR")"
+log "PROYECTO (carpeta) = $PROYECTO"
+
+require_vars PROYECTO APP_DIR S3_BUCKET S3_PREFIX_ARCHIVOS S3_PREFIX_DUMPS
+require_vars GIT_BRANCH
 require_aws
 require_cmd mysql
 require_cmd flock
 php_ok
-
-if [[ "${MYSQL_PASSWORD:-}" == "__CAMBIAR__" ]]; then
-    die "Completá MYSQL_PASSWORD en $CONFIG_CARGADO"
-fi
 
 es_laravel_dir "$APP_DIR" || die "APP_DIR no parece Laravel: $APP_DIR"
 [[ -d "$APP_DIR/.git" ]] || die "Falta el clone. Ejecutá primero preparar-vps.sh."
@@ -57,7 +56,7 @@ LOCK="/tmp/silavet-${PROYECTO}-restaurar.lock"
 exec 9>"$LOCK"
 flock -n 9 || die "Ya hay una restauración en curso."
 
-confirmar "Esto PISA la base '${MYSQL_DATABASE}' y los archivos de laboratorio en ${APP_DIR} con el último dump y el espejo S3."
+confirmar "Esto PISA la base de emergencia y los archivos de laboratorio en ${APP_DIR} con el último dump y el espejo S3 (tenant ${PROYECTO})."
 
 log "1/6 git pull"
 git_actualizar "$APP_DIR"
@@ -70,6 +69,14 @@ log "3/6 archivos de laboratorio desde S3"
 sync_archivos bajar
 
 log "4/6 overlay .env de emergencia"
+aplicar_env_laboratorio "$APP_DIR/.env"
+if [[ "$PROYECTO" != "$(basename "$APP_DIR")" ]]; then
+    log "AVISO: TENANT_SLUG=$PROYECTO distinto de la carpeta $(basename "$APP_DIR"). Conviene que coincidan."
+fi
+require_vars MYSQL_HOST MYSQL_USER MYSQL_DATABASE LAB_ORDEN S3_DUMP_FILTER
+if [[ "${MYSQL_PASSWORD:-}" == "__CAMBIAR__" || -z "${MYSQL_PASSWORD:-}" ]]; then
+    die "Falta EMERGENCIA_DB_PASSWORD en el .env (bloque de emergencia de producción)."
+fi
 aplicar_overlay_env "$APP_DIR/.env"
 
 log "5/6 dump MySQL más reciente"
@@ -108,5 +115,5 @@ aplicar_permisos "$APP_DIR"
 laravel_post_restaurar "$APP_DIR"
 
 log "Restauración lista."
-echo "Probá la APP_URL definida en $(ruta_overlay)."
+echo "Probá APP_URL=$(env_valor "$APP_DIR/.env" APP_URL 0) (bloque EMERGENCIA_*)."
 echo "Si el virtual host o el DNS de emergencia ya apuntan acá, el laboratorio debería responder con datos de la última hora."
