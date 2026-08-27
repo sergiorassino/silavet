@@ -226,5 +226,29 @@ else
 fi
 
 echo
+echo "--- Restaurar desde el celular ---"
+web="${HABILITAR_RESTAURAR_WEB:-}"
+tok="${RESTAURAR_WEB_TOKEN:-}"
+whost="${RESTAURAR_WEB_HOST:-}"
+ex="$SCRIPT_DIR/config.example.env"
+if [[ "$web" != "1" && -f "$ex" ]]; then
+    web="$(grep -E '^[[:space:]]*HABILITAR_RESTAURAR_WEB=' "$ex" | tail -n 1 | cut -d= -f2- || true)"
+    [[ -z "$tok" ]] && tok="$(grep -E '^[[:space:]]*RESTAURAR_WEB_TOKEN=' "$ex" | tail -n 1 | cut -d= -f2- || true)"
+    [[ -z "$whost" ]] && whost="$(grep -E '^[[:space:]]*RESTAURAR_WEB_HOST=' "$ex" | tail -n 1 | cut -d= -f2- || true)"
+    info "este config.env no tiene las claves web; se usan las de la plantilla"
+fi
+if [[ "$web" == "1" ]]; then
+    if [[ ${#tok} -ge 16 ]]; then
+        ok "HABILITAR_RESTAURAR_WEB=1 (token definido)"
+    else
+        fail "HABILITAR_RESTAURAR_WEB=1 pero RESTAURAR_WEB_TOKEN corto o vacío"
+    fi
+    echo "    host permitido: ${whost:-'(falta RESTAURAR_WEB_HOST)'}"
+    echo "    página: public/emergencia-restaurar.php"
+else
+    info "página web de restauración apagada (normal en producción; en el VPS ver docs/13 §4.1)"
+fi
+
+echo
 echo "=== fin ==="
 echo "Si PHP_BIN tiene FAIL de extensiones: docs/13-backup-y-vps-emergencia.md §3.1 (DirectAdmin)."

@@ -12,7 +12,8 @@ Piezas:
 | Archivos de laboratorio | S3 espejo incremental | Lo que no está en git |
 
 El VPS de emergencia queda **preparado** (stack + clone + Composer + overlay de
-`.env`). **No** hay cron ahí. Cuando cae producción se corre un solo comando.
+`.env`). **No** hay cron ahí. Cuando cae producción se corre un solo comando
+(SSH) o, si está el Paso H, un botón en el celular.
 
 ---
 
@@ -337,6 +338,9 @@ S3_BUCKET=sistesco
 S3_PREFIX_DUMPS=backupDedicado/backupHora
 S3_PREFIX_ARCHIVOS=backupDedicado/archivos
 AWS_REGION=sa-east-1
+HABILITAR_RESTAURAR_WEB=1
+RESTAURAR_WEB_TOKEN=…   # ya viene en la plantilla; no hace falta openssl
+RESTAURAR_WEB_HOST=sistemasescolares4.com.ar,sistemasescolares4.com
 ```
 
 `HABILITAR_RESPALDO`, `AWS_BIN`, `LAB_ORDEN`, `TENANT_SLUG` y MySQL de
@@ -396,6 +400,27 @@ Esto **sí** pisa la base local y los archivos de laboratorio. No toca
 Hostinger. Para probar sin cambiar el DNS de producción: el dominio ya apunta
 a este VPS, o usá `/etc/hosts` en tu PC.
 
+### Paso H — Página para restaurar desde el celular
+
+`restaurar.sh` sigue siendo bash. El PHP del VPS lo dispara en segundo plano.
+
+La clave, el host y el flag **ya están en** `config.example.env`. Al crear un
+lab (`cp …/config.example.env …/config.env`) quedan en ese `config.env`. No
+hace falta `openssl` ni editar nada más. Labs viejos: `preparar-vps.sh` copia
+las claves que falten; o un `git pull` alcanza (el PHP usa la plantilla si
+`config.env` aún no las tiene).
+
+URL (acceso directo en el celular; cambiá el slug):
+
+`https://sistemasescolares4.com.ar/silavet/alqu/emergencia-restaurar.php`
+
+La clave es `RESTAURAR_WEB_TOKEN` de la plantilla (la misma en todos los labs).
+En Hostinger la página responde **404** (`RESTAURAR_WEB_HOST` no coincide y
+además `HABILITAR_RESPALDO=1`). El PHP del sitio tiene que tener `exec()`.
+
+Ensayo: abrí la URL, clave, **Simular**. Tiene que aparecer dump y archivos en
+el log, sin importar BD.
+
 ---
 
 ## 3.2 VPS genérico (sin DirectAdmin)
@@ -407,6 +432,23 @@ es el mismo (`preparar-vps.sh` una vez, `restaurar.sh` a demanda).
 ---
 
 ## 4. Cuando cae producción
+
+### 4.1 Desde el celular (si hiciste el Paso H)
+
+1. Abrí la URL de `emergencia-restaurar.php` de **ese** lab (la del acceso
+   directo).
+2. Ingresá la clave (`RESTAURAR_WEB_TOKEN`).
+3. Marcá la casilla y **Restaurar ahora**.
+4. Dejá la pantalla abierta. El log se actualiza solo. Listo cuando dice
+   `Restauración lista.`
+
+Otro laboratorio = otra carpeta = otra URL (`…/silavet/{slug}/emergencia-restaurar.php`).
+Producción no se toca: solo pisa el VPS de reserva.
+
+Si la página da 404: faltó el `git pull` del PHP, o entraste por el host de
+Hostinger. En ese caso usá SSH (§4.2).
+
+### 4.2 Por SSH
 
 En el VPS de emergencia (DirectAdmin, como `admin`):
 
@@ -457,11 +499,15 @@ real sobre el VPS de reserva y entrar por su URL.
 | `scripts/emergencia/diagnostico.sh` | Emergencia | Cuando algo falla |
 | `scripts/emergencia/preparar-vps.sh` | Emergencia | Una vez por carpeta/tenant |
 | `scripts/emergencia/restaurar.sh` | Emergencia | Solo ante caída (o ensayo) |
+| `public/emergencia-restaurar.php` | Emergencia | Opcional: dispara `restaurar.sh` desde el celular |
 
 Config **por lab** (impersonal): `scripts/emergencia/config.env` ←
 `config.example.env`.  
 Personalización: `HABILITAR_RESPALDO`, `AWS_BIN`, `LAB_ORDEN`, `EMERGENCIA_*` en
 el `.env`.  
+Página celular: `HABILITAR_RESTAURAR_WEB`, `RESTAURAR_WEB_TOKEN` y
+`RESTAURAR_WEB_HOST` ya van en `config.example.env` y se copian a cada
+`config.env` (Paso H). No hace falta `openssl` por lab.  
 Override puntual: variable `SILAVET_EMERGENCIA_CONF`.
 
 ---
@@ -485,6 +531,10 @@ Override puntual: variable `SILAVET_EMERGENCIA_CONF`.
   `respaldar.sh`, `config.env` y cron).
 - Confiar en `/etc/silavet/config.env` o `~/.silavet/config.env` (ya no se
   leen; usá `scripts/emergencia/config.env` de cada lab).
+- Generar un token distinto con `openssl` por cada laboratorio: la plantilla
+  ya trae uno compartido. Para rotarlo, cambiá `RESTAURAR_WEB_TOKEN` en
+  `config.example.env` y en los `config.env` que ya existan.
+- Reescribir `restaurar.sh` en PHP: el PHP solo lo lanza en background con `--yes`.
 
 ---
 
@@ -496,5 +546,6 @@ Override puntual: variable `SILAVET_EMERGENCIA_CONF`.
 - `scripts/emergencia/respaldar-archivos.sh`
 - `scripts/emergencia/preparar-vps.sh`
 - `scripts/emergencia/restaurar.sh`
+- `public/emergencia-restaurar.php`
 - `scripts/emergencia/config.example.env`
 - `scripts/emergencia/env.emergencia.example`
