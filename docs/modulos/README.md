@@ -18,6 +18,7 @@ en esta carpeta (si existe) y respetar las reglas de negocio ahí listadas.
 | Valores de referencia (rangovalores) | [valores-referencia.md](valores-referencia.md) |
 | Stock de reactivos e insumos | [stock-reactivos.md](stock-reactivos.md) |
 | Tesorería (variantes por tenant) | [tesoreria.md](tesoreria.md) |
+| Cuenta corriente de clientes | [cuenta-corriente.md](cuenta-corriente.md) |
 | Resumen cliente entre fechas (PDF) | [resumen-cliente-entre-fechas.md](resumen-cliente-entre-fechas.md) |
 | Determinaciones por cliente (listado + Excel) | [determinaciones-por-cliente.md](determinaciones-por-cliente.md) |
 | Clientes resumen mensual (grid + PDF + Excel) | [clientes-resumen-mensual.md](clientes-resumen-mensual.md) |

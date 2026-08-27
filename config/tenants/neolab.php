@@ -9,6 +9,12 @@ return [
         'simular' => true,
     ],
 
+    'tesoreria' => [
+        'columna_pagado' => true,
+        'pago_global' => true,
+        'mostrar_modulo' => false,
+    ],
+
     'portal_cliente' => [
         'permite_descarga_excel' => true,
     ],

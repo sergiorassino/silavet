@@ -103,13 +103,17 @@ else
     fi
     aws s3 cp "s3://${S3_BUCKET}/${clave}" "$tmp_dump" "${extra[@]}"
 
+    # Vaciar por si un import anterior falló a mitad (p. ej. collation desconocida).
     mysql --defaults-extra-file="$tmp_cnf" -e \
-        "CREATE DATABASE IF NOT EXISTS \`${MYSQL_DATABASE}\` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;"
+        "DROP DATABASE IF EXISTS \`${MYSQL_DATABASE}\`; CREATE DATABASE \`${MYSQL_DATABASE}\` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;"
 
+    log "Importando dump (collations UCA1400 → unicode_ci si hace falta)…"
     if [[ "$clave" == *.gz ]]; then
-        gzip -dc "$tmp_dump" | mysql --defaults-extra-file="$tmp_cnf" "$MYSQL_DATABASE"
+        gzip -dc "$tmp_dump" | normalizar_collations_dump \
+            | mysql --defaults-extra-file="$tmp_cnf" "$MYSQL_DATABASE"
     else
-        mysql --defaults-extra-file="$tmp_cnf" "$MYSQL_DATABASE" <"$tmp_dump"
+        normalizar_collations_dump <"$tmp_dump" \
+            | mysql --defaults-extra-file="$tmp_cnf" "$MYSQL_DATABASE"
     fi
     log "Importación MySQL terminada."
 fi

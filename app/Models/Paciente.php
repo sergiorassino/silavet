@@ -88,6 +88,19 @@ class Paciente extends Model
         ];
     }
 
+    protected static function booted(): void
+    {
+        static::creating(function (self $paciente): void {
+            $attrs = $paciente->getAttributes();
+            if (! array_key_exists('tipoRegistro', $attrs)
+                || $attrs['tipoRegistro'] === null
+                || (int) $attrs['tipoRegistro'] === 0
+            ) {
+                $paciente->tipoRegistro = self::TIPO_PROTOCOLO;
+            }
+        });
+    }
+
     /**
      * Orden de listado (lab, autogestión, cuenta corriente): días más recientes
      * primero; dentro de cada día, protocolos/pacientes y luego pagos.

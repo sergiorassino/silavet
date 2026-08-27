@@ -426,6 +426,19 @@ el dump más reciente `l{LAB_ORDEN}_{TENANT_SLUG}_…` → caches Artisan y
 Tiempo: minutos de git/composer/archivos + lo que tarde el import MySQL
 (eso suele ser lo lento).
 
+### Collations Hostinger → DirectAdmin
+
+Los dumps de producción (MariaDB 10.10+/11 en Hostinger) pueden traer
+`utf8mb4_uca1400_ai_ci` (y variantes). El MySQL/MariaDB del VPS de emergencia
+(DirectAdmin, a menudo 10.5/10.6) **no** las conoce →
+`ERROR 1273 (HY000): Unknown collation: 'utf8mb4_uca1400_ai_ci'`.
+
+`restaurar.sh` reescribe esas collations a `utf8mb4_unicode_ci` (y equivalentes
+utf8/utf8mb3) al importar. No hace falta editar el `.sql.gz` a mano.
+
+Si un import falló a mitad antes de ese fix: volvé a correr
+`restaurar.sh --yes` (el script vuelve a crear la base vacía y reimporta).
+
 Después: apuntar DNS o usar la URL de emergencia. El laboratorio queda con
 datos de **como máximo ~1 hora** de atraso (el último dump + el espejo de
 archivos de ese mismo ciclo).

@@ -2,7 +2,9 @@
 
 namespace App\Livewire\Clientes;
 
+use App\Livewire\Concerns\ConModalPagoGlobal;
 use App\Models\Cliente;
+use App\Models\Paciente;
 use App\Support\CuentaCorriente\CuentaCorrienteConsulta;
 use App\Support\PermisosIaCatalog;
 use App\Support\UsuarioMenuPortal;
@@ -10,6 +12,8 @@ use Livewire\Component;
 
 class CuentaCorrienteDetalle extends Component
 {
+    use ConModalPagoGlobal;
+
     public int $idClientes;
 
     public string $fechaDesde = '';
@@ -57,13 +61,37 @@ class CuentaCorrienteDetalle extends Component
         $resumen = CuentaCorrienteConsulta::resumenProtocolos($filas);
         $saldoHoy = CuentaCorrienteConsulta::saldoClienteHoy($this->idClientes);
         $saldoAnterior = CuentaCorrienteConsulta::saldoAnteriorAFecha($this->idClientes, $this->fechaDesde);
+        $pagoGlobalVista = $this->datosVistaPagoGlobal();
 
-        return view('livewire.clientes.cuenta-corriente-detalle', [
+        return view('livewire.clientes.cuenta-corriente-detalle', array_merge([
             'cliente' => $cliente,
             'filas' => $filas,
             'resumen' => $resumen,
             'saldoHoy' => $saldoHoy,
             'saldoAnterior' => $saldoAnterior,
-        ])->layout('layouts.staff', UsuarioMenuPortal::staffLayoutParams(labCtx()->idRoles));
+        ], $pagoGlobalVista))->layout('layouts.staff', UsuarioMenuPortal::staffLayoutParams(labCtx()->idRoles));
+    }
+
+    protected function pagoGlobalAssertPermiso(): void
+    {
+        abort_unless(tienePermiso(PermisosIaCatalog::FACTURACION), 403);
+    }
+
+    protected function pagoGlobalClienteInicial(): ?int
+    {
+        return $this->idClientes;
+    }
+
+    public function pagoGlobalClienteEditable(): bool
+    {
+        return false;
+    }
+
+    protected function pagoGlobalPacienteEnAlcance(int $id): ?Paciente
+    {
+        return Paciente::query()
+            ->where('idPacientes', $id)
+            ->where('idClientes', $this->idClientes)
+            ->first();
     }
 }

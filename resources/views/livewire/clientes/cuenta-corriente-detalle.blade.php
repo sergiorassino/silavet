@@ -11,6 +11,13 @@
                 </p>
             </x-vl-hero-heading>
             <div class="flex flex-wrap items-center gap-2 shrink-0">
+                @if ($mostrarPagoGlobal)
+                    <button type="button"
+                            wire:click="abrirModalPagoGlobal"
+                            class="btn-secondary bg-white/10 text-white border-white/30 hover:bg-white/20">
+                        Pago global
+                    </button>
+                @endif
                 <a href="{{ route('clientes.cuenta-corriente.index') }}"
                    class="btn-secondary bg-white/10 text-white border-white/30 hover:bg-white/20">
                     Volver al listado
@@ -84,7 +91,21 @@
                             <td class="vl-pacientes-td font-semibold whitespace-nowrap">{{ $fila->nombreProtocolo ?: '—' }}</td>
                             <td class="vl-pacientes-td">
                                 @if ($fila->esPagoGlobal)
-                                    <span class="vl-pacientes-pago-global-badge">Pago global</span>
+                                    <span class="inline-flex items-center gap-1.5">
+                                        <span class="vl-pacientes-pago-global-badge">Pago global</span>
+                                        @if ($mostrarPagoGlobal)
+                                            <button type="button"
+                                                    wire:click="abrirModalEditarPagoGlobal({{ $fila->idPacientes }})"
+                                                    title="Editar pago global"
+                                                    aria-label="Editar pago global"
+                                                    class="vl-grid-icon-btn text-neutral-600 hover:bg-neutral-100">
+                                                <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.75"
+                                                          d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                                                </svg>
+                                            </button>
+                                        @endif
+                                    </span>
                                 @else
                                     {{ $fila->nombre ?: '—' }}
                                 @endif
@@ -138,4 +159,5 @@
             </table>
         </div>
     </div>
+    @include('livewire.partials.modal-pago-global')
 </div>

@@ -82,7 +82,8 @@ No bifurcar lógica en vistas.
 variantes: [10-numero-de-protocolo.md](10-numero-de-protocolo.md).
 
 **Ejemplo implementado:** tesorería (`tesoreria_movimientos` vs
-`tesoreria_pacientes`). Detalle flags: [11-tesoreria-por-tenant.md](11-tesoreria-por-tenant.md).
+`tesoreria_pacientes`; flags `mostrar_modulo`, `pago_global` y `columna_pagado`).
+Detalle flags: [11-tesoreria-por-tenant.md](11-tesoreria-por-tenant.md).
 Especificación del módulo: [modulos/tesoreria.md](modulos/tesoreria.md).
 
 **Ejemplo implementado:** listas de precios (`cliente` default / `paciente`).

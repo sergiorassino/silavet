@@ -42,6 +42,7 @@ Config `id_cuenta_cc` (solo variante `tesoreria_pacientes`):
 - `app/Support/CuentaCorriente/CuentaCorrienteConsulta.php`
 - `app/Livewire/Clientes/CuentaCorrienteIndex.php`
 - `app/Livewire/Clientes/CuentaCorrienteDetalle.php`
+- `app/Livewire/Concerns/ConModalPagoGlobal.php` (botón opt-in)
 - `app/Support/CuentaCorriente/CuentaCorrienteClientesTcpdf.php`
 - `app/Support/CuentaCorriente/CuentaCorrienteDetalleTcpdf.php`
 - `app/Support/CuentaCorriente/CuentaCorrienteExporter.php`
@@ -115,11 +116,37 @@ El ítem de menú sidebar es único (`clientes.cuenta-corriente.index`).
   (`mapaSaldoAcumuladoPorProtocolo`). Con `tesoreria_pacientes`, se pasa `[]`
   y la columna muestra 0 por fila (la CC no vive en `pacientes`).
 
+## Staff: columna Pagado (opt-in por tenant)
+
+En `PacienteIndex` staff, **Pagado** editable (`pacientes.pagado`) aparece solo
+si el tenant declara `tesoreria.columna_pagado => true`. Independiente de AFIP.
+Hoy lo declaran lvm, neolab, civetfranca y epizoolab (junto con pago global
+y Tesorería oculta). Ese valor es el que usa la CC
+(`precio − pagado`). Labs que no lo declaran (alqu, labvetciudad, default) no
+muestran la columna.
+
+## Pago global (opt-in por tenant)
+
+Default **off**. Solo labs que declaran `tesoreria.pago_global => true` (y usan
+`tesoreria_movimientos`) ven el botón **Pago global** en:
+
+- Gestión de Pacientes (`PacienteIndex`) — alta y edición.
+- Cuenta Corriente listado y detalle (`CuentaCorrienteIndex` / `Detalle`) — alta;
+  en el detalle, edición sobre filas de pago.
+
+Persiste un ingreso en `pacientes` (`tipoRegistro = 2`). El saldo de CC
+(`precio − pagado` + pagos) se actualiza al instante. No hay botón en la
+variante `tesoreria_pacientes` (`CuentaCorrienteMovimientos*`).
+
+Labs que **no** declaran el flag no cambian: sin botón, staff de pacientes
+sigue listando solo protocolos.
+
 ## Qué no hacer
 
 - No tocar `CuentaCorrienteConsulta` (NeoLab); no mezclar sus fórmulas con `movimientos`.
 - No persistir `clientes.tmpSaldo` (legacy ScriptCase).
 - No hardcodear `if (slug === 'labvetciudad')` — solo `TesoreriaConfig`.
+- No mostrar el botón Pago global sin `TesoreriaConfig::pagoGlobalHabilitado()`.
 - No cambiar `id_cuenta_cc` sin confirmar que la BD de ese tenant tiene esa FK en `mediodepago`.
 - PDFs nuevos: TCPDF A4 (detalle/listado vertical; resumen entre fechas landscape explícito).
 
@@ -129,4 +156,6 @@ El ítem de menú sidebar es único (`clientes.cuenta-corriente.index`).
 - [ ] ¿El cambio toca la rama correcta (`tesoreria_movimientos` o `tesoreria_pacientes`)?
 - [ ] ¿Facade actualizado si se agrega un método de saldo compartido?
 - [ ] ¿Las rutas siguen usando los mismos `name()`?
+- [ ] ¿Pago global solo visible con `TesoreriaConfig::pagoGlobalHabilitado()` (Pacientes y este módulo)?
+- [ ] ¿Columna Pagado en `PacienteIndex` solo con `TesoreriaConfig::columnaPagadoHabilitada()`?
 - [ ] ¿Los archivos para producción incluyen `public/build/` si se tocó CSS/JS?

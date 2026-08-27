@@ -31,6 +31,26 @@ Config:
 Helper: `App\Support\Tesoreria\TesoreriaConfig`
 (`usaMovimientos()` / `usaPacientes()` según la clave).
 
+Flags opcionales (default = no cambiar nada):
+
+| Clave | Default | Efecto |
+|-------|---------|--------|
+| `mostrar_modulo` | `true` | `false` oculta el grupo Tesorería (menú + 404 en rutas). |
+| `pago_global` | `false` | `true` muestra el botón en Pacientes y Cuenta Corriente (solo `tesoreria_movimientos`). |
+| `columna_pagado` | `false` | `true` muestra la columna Pagado editable en Gestión de Pacientes (independiente de AFIP). |
+
+```php
+// Solo en labs que lo pidan, config/tenants/{slug}.php
+'tesoreria' => [
+    'pago_global' => true,
+    'columna_pagado' => true,
+    'mostrar_modulo' => false,
+],
+```
+
+Detalle operativo: [modulos/tesoreria.md](modulos/tesoreria.md) (sección «Ocultar Tesorería / Pago global / columna Pagado»).
+[modulos/cuenta-corriente.md](modulos/cuenta-corriente.md).
+
 ---
 
 ## 2. Variante `tesoreria_movimientos`
@@ -40,8 +60,17 @@ Helper: `App\Support\Tesoreria\TesoreriaConfig`
 - Listado: toggle **Hoy** / **Historial** + filtro opcional Desde/Hasta sobre `fechhoy`.
 - Incluye menú de transferencias y ABM de `cuentas` / `cuentasdetalle`.
 - En **Gestión de pacientes** staff (`PacienteIndex`) **no** se listan pagos/ingresos
-  (`tipoRegistro = 2`); solo protocolos (`tipoRegistro = 1`). En **autogestión
+  (`tipoRegistro = 2`); solo protocolos (`tipoRegistro = 1`), **salvo** que el
+  tenant declare `tesoreria.pago_global => true`. En **autogestión
   cliente** sí se listan protocolos y pagos globales (`tipoRegistro IN (1, 2)`).
+- **Alta de protocolo** (cualquier tenant): `PacienteForm` + `Paciente::creating`
+  persisten `tipoRegistro = 1`. En civetfranca la columna se agregó con
+  `DEFAULT 0`; si el INSERT omite el campo, el caso queda en 0 y el listado
+  staff no lo muestra. SQL: `database/sql/pacientes_tipo_registro_alta_protocolo.sql`.
+- Columna **Pagado** en el listado staff: flag `tesoreria.columna_pagado`
+  (default false; lvm, neolab, civetfranca y epizoolab la declaran `true`,
+  junto con `pago_global` y `mostrar_modulo => false`). Independiente
+  del icono AFIP (`facturacion_afip.modo = paciente`).
 
 ---
 
