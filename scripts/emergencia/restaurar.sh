@@ -37,6 +37,7 @@ while [[ $# -gt 0 ]]; do
     shift
 done
 
+asegurar_claves_restaurar_web
 cargar_config
 prepend_php_path
 PROYECTO="$(basename "$APP_DIR")"
