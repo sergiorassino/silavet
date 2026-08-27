@@ -466,8 +466,9 @@ document.addEventListener('alpine:init', () => {
      * Combobox genérico de búsqueda para selects de formulario (ej. Cliente en alta de paciente).
      * Filtra en el cliente por la cadena completa; sincroniza con Livewire solo al confirmar.
      *
-     * Config: { opciones: [{id, nombre}], idInicial, nombreInicial, propiedad }
+     * Config: { opciones: [{id, nombre}], idInicial, nombreInicial, propiedad, abrirSoloConTexto }
      *   - propiedad: nombre de la propiedad Livewire a actualizar ($wire.set).
+     *   - abrirSoloConTexto: si true, no muestra la lista al hacer foco/clic; solo al escribir.
      */
     Alpine.data('vlSearchSelect', (config = {}) => ({
         opciones: Array.isArray(config.opciones) ? config.opciones : [],
@@ -475,18 +476,40 @@ document.addEventListener('alpine:init', () => {
         idSeleccionado: String(config.idInicial || ''),
         nombreConfirmado: String(config.nombreInicial || ''),
         propiedad: String(config.propiedad || ''),
+        abrirSoloConTexto: Boolean(config.abrirSoloConTexto),
         abierto: false,
         indice: -1,
+
+        hayBusqueda() {
+            const term = this.consulta.trim();
+            if (term === '') {
+                return false;
+            }
+
+            return this.consulta !== this.nombreConfirmado;
+        },
 
         get filtrados() {
             const term = this.consulta.trim().toLowerCase();
             if (term === '') {
-                return this.opciones;
+                return this.abrirSoloConTexto ? [] : this.opciones;
             }
             return this.opciones.filter((o) => String(o.nombre || '').toLowerCase().includes(term));
         },
 
+        onFocus() {
+            if (this.abrirSoloConTexto) {
+                this.$nextTick(() => this.$refs.input?.select());
+
+                return;
+            }
+            this.abrir();
+        },
+
         abrir() {
+            if (this.abrirSoloConTexto && ! this.hayBusqueda()) {
+                return;
+            }
             this.abierto = true;
             this.$nextTick(() => {
                 this.posicionarLista();
@@ -509,6 +532,11 @@ document.addEventListener('alpine:init', () => {
         },
 
         onInput() {
+            if (this.abrirSoloConTexto && ! this.hayBusqueda()) {
+                this.cerrar();
+
+                return;
+            }
             this.abierto = true;
             this.indice = this.filtrados.length > 0 ? 0 : -1;
             this.$nextTick(() => {
@@ -535,6 +563,9 @@ document.addEventListener('alpine:init', () => {
 
         onKeydown(event) {
             if (event.key === 'ArrowDown') {
+                if (this.abrirSoloConTexto && ! this.abierto && ! this.hayBusqueda()) {
+                    return;
+                }
                 event.preventDefault();
                 event.stopPropagation();
                 if (!this.abierto) {
@@ -550,6 +581,9 @@ document.addEventListener('alpine:init', () => {
             }
 
             if (event.key === 'ArrowUp') {
+                if (this.abrirSoloConTexto && ! this.abierto && ! this.hayBusqueda()) {
+                    return;
+                }
                 event.preventDefault();
                 event.stopPropagation();
                 if (!this.abierto) {

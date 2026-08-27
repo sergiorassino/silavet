@@ -68,8 +68,10 @@ cambia si declara el override en `config/tenants/{slug}.php`:
 ```
 
 - **`pago_global`:** opt-in. Alta/edición de ingreso (`pacientes.tipoRegistro = 2`).
-  En staff, el listado de pacientes incluye esos pagos. No aplica a
-  `tesoreria_pacientes` (la caja vive en `movimientos`).
+  En staff, el listado de pacientes incluye esos pagos. El campo Cliente del
+  modal es un texto con `vlSearchSelect` (`abrirSoloConTexto`: la lista solo
+  aparece al escribir). No aplica a `tesoreria_pacientes` (la caja vive en
+  `movimientos`).
 - **`columna_pagado`:** opt-in. Columna **Pagado** editable inline en `PacienteIndex`
   staff (`pacientes.pagado`). No depende de AFIP. Labs con el flag (lvm, neolab,
   civetfranca, epizoolab) también ocultan Tesorería y muestran Pago global.
