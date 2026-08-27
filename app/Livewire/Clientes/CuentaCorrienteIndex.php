@@ -2,6 +2,7 @@
 
 namespace App\Livewire\Clientes;
 
+use App\Livewire\Concerns\ConModalPagoGlobal;
 use App\Support\CuentaCorriente\CuentaCorrienteConsulta;
 use App\Support\PermisosIaCatalog;
 use App\Support\UsuarioMenuPortal;
@@ -9,6 +10,8 @@ use Livewire\Component;
 
 class CuentaCorrienteIndex extends Component
 {
+    use ConModalPagoGlobal;
+
     public string $busqueda = '';
 
     public function mount(): void
@@ -34,8 +37,16 @@ class CuentaCorrienteIndex extends Component
     {
         $clientes = CuentaCorrienteConsulta::clientesListado($this->busqueda);
         $saldoTotal = round($clientes->sum(fn ($cliente) => (float) $cliente->saldo_total), 2);
+        $pagoGlobalVista = $this->datosVistaPagoGlobal();
 
-        return view('livewire.clientes.cuenta-corriente-index', compact('clientes', 'saldoTotal'))
-            ->layout('layouts.staff', UsuarioMenuPortal::staffLayoutParams(labCtx()->idRoles));
+        return view('livewire.clientes.cuenta-corriente-index', array_merge(
+            compact('clientes', 'saldoTotal'),
+            $pagoGlobalVista,
+        ))->layout('layouts.staff', UsuarioMenuPortal::staffLayoutParams(labCtx()->idRoles));
+    }
+
+    protected function pagoGlobalAssertPermiso(): void
+    {
+        abort_unless(tienePermiso(PermisosIaCatalog::FACTURACION), 403);
     }
 }

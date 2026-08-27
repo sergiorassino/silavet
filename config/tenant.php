@@ -132,6 +132,27 @@ return [
     'tesoreria' => [
         'implementacion' => 'tesoreria_movimientos',
 
+        /*
+        | Mostrar el grupo Tesorería en el menú y permitir sus rutas.
+        | Default true: no declarar nada = comportamiento actual.
+        | Un lab que no usa caja declara false en config/tenants/{slug}.php.
+        */
+        'mostrar_modulo' => true,
+
+        /*
+        | Botón «Pago global» en Gestión de Pacientes y Cuenta Corriente.
+        | Default false: solo labs que lo declaren expresamente lo ven.
+        | Aplica a tesoreria_movimientos (ingresos en pacientes). No aplica
+        | a tesoreria_pacientes (caja en tabla movimientos).
+        */
+        'pago_global' => false,
+
+        /*
+        | Columna Pagado editable en Gestión de Pacientes (staff).
+        | Default false: independiente de AFIP. Solo labs que lo declaren.
+        */
+        'columna_pagado' => false,
+
         'movimientos' => [
             'concepto_ingresos_diarios' => 'Ingresos Diarios',
             'concepto_cadeteria' => 'Cadetería',
@@ -141,9 +162,10 @@ return [
 
     /*
     | Facturación AFIP — individual (sin masiva). Emisor y certs en `usuarios`.
-    | - modo paciente: icono en protocolos (tipoRegistro 1→paciente, 2→cliente).
-    | - modo movimiento: icono en movimientos NeoLab, solo ingresos (→cliente).
-    | - modo movimiento_caja: icono en movimientos labvetciudad; al facturar elige receptor.
+| - modo paciente: icono AFIP en protocolos (tipoRegistro 1→paciente, 2→cliente).
+|   La columna Pagado del listado NO depende de AFIP: ver tesoreria.columna_pagado.
+| - modo movimiento: icono en movimientos NeoLab, solo ingresos (→cliente).
+| - modo movimiento_caja: icono en movimientos labvetciudad; al facturar elige receptor.
     */
     'facturacion_afip' => [
         'habilitado' => false,

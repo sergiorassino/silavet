@@ -501,6 +501,17 @@ clave_dump_mas_reciente() {
     echo "$clave"
 }
 
+# Hostinger (MariaDB 10.10+/11) emite collations UCA 14.0 que DirectAdmin
+# (MariaDB 10.5/10.6 típico) no conoce → ERROR 1273 Unknown collation.
+# Reescribe a equivalentes amplios antes de importar en el VPS de emergencia.
+normalizar_collations_dump() {
+    sed -E \
+        -e 's/utf8mb4_uca1400_[a-z0-9_]+/utf8mb4_unicode_ci/g' \
+        -e 's/utf8mb3_uca1400_[a-z0-9_]+/utf8mb3_general_ci/g' \
+        -e 's/utf8_uca1400_[a-z0-9_]+/utf8_general_ci/g' \
+        -e 's/\buca1400_[a-z0-9_]+\b/utf8mb4_unicode_ci/g'
+}
+
 mysql_cnf_tmp() {
     require_vars MYSQL_HOST MYSQL_USER MYSQL_DATABASE
     local tmp

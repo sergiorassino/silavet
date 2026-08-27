@@ -82,6 +82,15 @@ final class FacturacionAfipConfig
         return self::modo() === self::MODO_PACIENTE;
     }
 
+    /**
+     * Icono AFIP en Gestión de pacientes (lvm, neolab, civetfranca).
+     * La columna Pagado no usa este método: ver TesoreriaConfig::columnaPagadoHabilitada().
+     */
+    public static function enListadoPacientes(): bool
+    {
+        return self::habilitada() && self::esModoPaciente();
+    }
+
     public static function esModoMovimiento(): bool
     {
         return self::modo() === self::MODO_MOVIMIENTO;

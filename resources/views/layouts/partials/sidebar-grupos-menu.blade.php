@@ -40,6 +40,7 @@
     @endif
 </x-vl-sidebar-grupo>
 
+@if (\App\Support\Tesoreria\TesoreriaConfig::mostrarModulo())
 <x-vl-sidebar-grupo group-key="tesoreria" label="Tesorería" title="Tesorería v1.0">
     <x-slot:icon><x-vl-sidebar-icon name="grupo-tesoreria" /></x-slot:icon>
 
@@ -97,6 +98,7 @@
         @endif
     @endif
 </x-vl-sidebar-grupo>
+@endif
 
 <x-vl-sidebar-grupo group-key="gestionStock" label="Gestión de Stock" title="Gestión de Stock v1.0">
     <x-slot:icon><x-vl-sidebar-icon name="grupo-stock" /></x-slot:icon>

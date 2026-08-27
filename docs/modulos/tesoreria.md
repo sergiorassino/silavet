@@ -29,7 +29,12 @@ según variante).
 
 ```php
 // config/tenant.php (default)
-'tesoreria' => ['implementacion' => 'tesoreria_movimientos'],
+'tesoreria' => [
+    'implementacion' => 'tesoreria_movimientos',
+    'mostrar_modulo' => true,   // false = oculta el grupo Tesorería y sus rutas
+    'pago_global' => false,     // true = botón en Pacientes y Cuenta Corriente
+    'columna_pagado' => false,  // true = columna Pagado editable en Pacientes
+],
 
 // config/tenants/labvetciudad.php
 'tesoreria' => ['implementacion' => 'tesoreria_pacientes'],
@@ -41,9 +46,37 @@ Helper: `App\Support\Tesoreria\TesoreriaConfig`.
 |--------|-------|-------------------|
 | `usaMovimientos()` | `tesoreria_movimientos` | filas en `pacientes` |
 | `usaPacientes()` | `tesoreria_pacientes` | tabla `movimientos` |
+| `mostrarModulo()` | `mostrar_modulo` (default **true**) | menú + rutas `tesoreria.*` |
+| `pagoGlobalHabilitado()` | `pago_global` (default **false**) + `usaMovimientos()` | botón en Pacientes y CC |
+| `columnaPagadoHabilitada()` | `columna_pagado` (default **false**) | columna Pagado en Pacientes |
 
 **Trampa de nombres:** los métodos siguen la clave de config, **no** el nombre de
 la tabla. Al documentar o codear, citar siempre clave + clase + tabla juntos.
+
+### Ocultar Tesorería / Pago global / columna Pagado
+
+Los flags son **independientes** de la variante y de AFIP. Defaults = tesorería
+visible, sin botón de pago global, sin columna Pagado. Un laboratorio **solo**
+cambia si declara el override en `config/tenants/{slug}.php`:
+
+```php
+'tesoreria' => [
+    'pago_global' => true,       // botón en Gestión de Pacientes y Cuenta Corriente
+    'columna_pagado' => true,    // columna Pagado editable en Gestión de Pacientes
+    'mostrar_modulo' => false,   // oculta el grupo Tesorería (menú + 404 en rutas)
+],
+```
+
+- **`pago_global`:** opt-in. Alta/edición de ingreso (`pacientes.tipoRegistro = 2`).
+  En staff, el listado de pacientes incluye esos pagos. No aplica a
+  `tesoreria_pacientes` (la caja vive en `movimientos`).
+- **`columna_pagado`:** opt-in. Columna **Pagado** editable inline en `PacienteIndex`
+  staff (`pacientes.pagado`). No depende de AFIP. Labs con el flag (lvm, neolab,
+  civetfranca, epizoolab) también ocultan Tesorería y muestran Pago global.
+- **`mostrar_modulo`:** default true. `false` oculta el grupo del sidebar y responde
+  404 en `tesoreria.*` (middleware `tesoreria.modulo`). No cambia la variante ni
+  la cuenta corriente.
+
 
 ### Menú por variante
 
@@ -135,6 +168,10 @@ En listados de protocolos / dashboard de esta variante: **no** exigir
    (protocolos). Los pagos / ingresos (`tipoRegistro = 2`) **no** se listan ahí;
    van a Tesorería. **Autogestión cliente** (`cliente.pacientes`): sí lista
    `tipoRegistro IN (1, 2)` (protocolos + pagos globales del cliente).
+   **Alta de protocolo** (`PacienteForm` + `Paciente::creating`): siempre
+   `tipoRegistro = 1` en todas las implementaciones de numeración. En labs
+   donde la columna se agregó después (`DEFAULT 0`, p. ej. civetfranca), omitir
+   el campo deja 0 y el listado staff no muestra el caso.
 6. **Resumen bajo el listado**:
    - **Total Devengado / Ingresos / Egresos:** mismo rango de fechas que el filtro
      Hoy / Historial (Desde–Hasta).
@@ -176,8 +213,9 @@ En listados de protocolos / dashboard de esta variante: **no** exigir
 5. **Saldos por Día:** filtros **Desde / Hasta** destacados encima de la grilla (por defecto ambas fechas = hoy; editables). Una fila por día / saldos por `mediodepago` (columnas en el mismo orden que la tabla: `orden` si existe, si no `id`); expandir día → cuentas; expandir cuenta → movimientos + suma (`SaldosPorDiaConsulta`). Encabezados abreviados; variantes **Mercado Pago** incluyen el sufijo del nombre (`MP …`).
 6. **Eliminar** movimiento: si era el último Ingresos Diarios/Cadetería de ese protocolo → limpia `cargado` / `cargadoCadete`.
 7. En listado de protocolos: columna **Cadete** editable inline (`PacienteIndex::guardarCadete`).
-8. **Sin botón «Pago global»** en `PacienteIndex`: ese alta escribe ingresos en
-   `pacientes` (modelo NeoLab); aquí la caja es `movimientos`.
+8. **Sin botón «Pago global»** en `PacienteIndex` ni Cuenta Corriente: ese alta
+   escribe ingresos en `pacientes` (modelo NeoLab); aquí la caja es `movimientos`.
+   El flag `tesoreria.pago_global` se ignora en esta variante.
 
 Rate limits típicos: save ~30/min; delete caja ~10/min por usuario.
 
@@ -187,6 +225,7 @@ Rate limits típicos: save ~30/min; delete caja ~10/min por usuario.
 |------|---------------|----------------|
 | Variante activa | config tenant + `TesoreriaConfig` | Rutas, sidebar, guards Livewire |
 | Caja NeoLab | `MovimientoIndex` / `TransferenciaIntercuenta` → `pacientes` | Listados, AFIP modo movimiento, resumen del día |
+| Pago global (opt-in) | `PacienteIndex` / `CuentaCorrienteIndex` / `Detalle` → `pacientes` tipo 2 | CC NeoLab |
 | Resumen NeoLab | `MovimientosResumenConsulta` (solo lee `determinaciones` + `pacientes`) | `MovimientoIndex` |
 | Caja labvetciudad | `MovimientosCajaIndex` / asientos / entre cuentas → `movimientos` | Saldos por día; Excel (`MovimientosCajaExporter`) |
 | Cuentas contables NeoLab | ABM `Cuenta*` / `CuentaDetalle*` | Formulario de egresos NeoLab |
@@ -200,13 +239,18 @@ Rate limits típicos: save ~30/min; delete caja ~10/min por usuario.
 - Config: `tenant.facturacion_afip` (`modo`: `paciente` | `movimiento` | `movimiento_caja`). labvetciudad: `simular => false` (en el servidor llama a WSAA/WSFE; hace falta certificado en `afipSE/cert/{idUsuarios}/`, cargado desde Gestión de Usuarios). En local sigue simulando vía `simular_local`. El resto de tenants mantiene CAE simulado. La fecha de vencimiento del `.crt` se persiste en `usuarios.crtVencimiento` al cargarlo.
 - **`modo = movimiento`** (ej. alqu): icono en `MovimientoIndex` sobre **ingresos** en `pacientes`; emite contra ese `idPacientes` (receptor = cliente del ingreso).
 - **`modo = movimiento_caja`** (labvetciudad): icono en `MovimientosCajaIndex` sobre **ingresos** en tabla `movimientos`; comprobantes en `compafip.idMovimientos`. Al emitir factura/comanda el usuario elige receptor: **cliente**, **paciente** o **consumidor final**; en pantalla se muestra el DNI (y CUIT del cliente si existe) y se puede cargar el DNI faltante (`clientes.dni` / `pacientes.dni`) antes de emitir. Nota de crédito y comanda igual que la variante NeoLab. Emisor = usuario logueado (certificados en gestión de usuarios).
-- **`modo = paciente`**: icono en listado de protocolos.
+- **`modo = paciente`** (lvm, neolab, civetfranca): icono AFIP en listado de protocolos.
+  El icono exige permiso 6. La columna **Pagado** es **independiente** (flag
+  `tesoreria.columna_pagado`). El importe facturado del protocolo sigue siendo
+  `precio`; `pagado` registra el cobro (cuenta corriente = `precio − pagado`).
 
 ## Archivos clave
 
 | Pieza | Ruta |
 |-------|------|
 | Config helper | `app/Support/Tesoreria/TesoreriaConfig.php` |
+| Pago global (opt-in) | `PagoGlobalRegistro.php` + `app/Livewire/Concerns/ConModalPagoGlobal.php` |
+| Guard menú oculto | `app/Http/Middleware/EnsureTesoreriaModuloVisible.php` (`tesoreria.modulo`) |
 | Resumen caja NeoLab | `app/Support/Tesoreria/MovimientosResumenConsulta.php` |
 | Listado caja labvetciudad | `app/Support/Tesoreria/MovimientosCajaConsulta.php` |
 | Excel caja labvetciudad | `app/Support/Tesoreria/MovimientosCajaExporter.php` |
@@ -235,11 +279,15 @@ Rate limits típicos: save ~30/min; delete caja ~10/min por usuario.
 Modelos: `Paciente`, `Movimiento`, `Concepto`, `Proveedor`, `Cuenta`, `CuentaDetalle`,
 `MedioDePago`, `TipoMovimiento`, `Cliente`.
 
-Cross-cutting: `PacienteIndex` (cadete en labvetciudad; con `tesoreria_movimientos`
-staff lista solo `tipoRegistro = 1`, sin botón Pago global — ingresos en Tesorería;
+Cross-cutting: `PacienteIndex` (cadete en labvetciudad; Pagado editable con
+`tesoreria.columna_pagado` — hoy lvm/neolab/civetfranca/epizoolab, junto con
+pago global y Tesorería oculta; icono AFIP aparte si
+`modo = paciente`; con `tesoreria_movimientos`
+staff lista solo `tipoRegistro = 1` **salvo** `pago_global => true`, que muestra
+protocolos + pagos y el botón Pago global en Pacientes y Cuenta Corriente;
 autogestión cliente lista `tipoRegistro IN (1, 2)`; con `tesoreria_pacientes`
-tampoco hay Pago global); `DashboardLabConsulta`; AFIP (`FacturacionAfipConfig`,
-icono en `MovimientoIndex`).
+no hay Pago global); `DashboardLabConsulta`; AFIP (`FacturacionAfipConfig`,
+icono en `MovimientoIndex` o en protocolos según modo).
 
 ## Qué no hacer / reglas de negocio
 
@@ -254,16 +302,23 @@ icono en `MovimientoIndex`).
 7. **Asiento** (modal) exige cliente; **Movimientos entre Cuentas** (menú) no.
 8. No eliminar conceptos/proveedores con movimientos (o proveedores) asociados.
 9. En labvetciudad **no exigir** `tipoRegistro = 1` en listados de protocolos.
-10. Con `tesoreria_movimientos`, **no** listar `tipoRegistro = 2` (pagos) en
-    `PacienteIndex` **staff**; esos registros son de Tesorería. En **autogestión
-    cliente** sí listar `tipoRegistro` 1 y 2. Tampoco el botón **Pago global**
-    en staff (ingresos → `MovimientoIndex`).
+10. Con `tesoreria_movimientos` **sin** `pago_global`, **no** listar `tipoRegistro = 2`
+    (pagos) en `PacienteIndex` **staff**; esos registros son de Tesorería. En
+    **autogestión cliente** sí listar `tipoRegistro` 1 y 2. Tampoco el botón
+    **Pago global** en staff (ingresos → `MovimientoIndex`).
+    Con `pago_global => true` (opt-in por tenant): sí botón y listado de pagos
+    en Pacientes **y** Cuenta Corriente. No activar el flag sin declararlo.
+    Al alta de protocolo **no omitir** `tipoRegistro` ni confiar en el DEFAULT
+    de la columna (en civetfranca es `0`): persistir `Paciente::TIPO_PROTOCOLO`.
 11. Con `tesoreria_pacientes`, **no** mostrar ni permitir **Pago global** en
-    `PacienteIndex` (caja en `movimientos`).
+    `PacienteIndex` ni en Cuenta Corriente (caja en `movimientos`). El flag
+    `pago_global` se ignora en esta variante.
 12. Conceptos Ingresos Diarios / Cadetería: resolver por **nombre** de config, no hardcodear ids.
 13. No alterar tablas legacy; columnas nuevas solo con migración aditiva + SQL entregado.
 14. AFIP modo `movimiento` solo sobre ingresos NeoLab en `pacientes`. Modo `movimiento_caja` solo sobre ingresos en tabla `movimientos` (labvetciudad).
 15. Diálogos: `vlSwal*`; sin `wire:confirm` / `alert`.
+16. Columna **Pagado** en `PacienteIndex` staff: solo con `TesoreriaConfig::columnaPagadoHabilitada()`
+    (`tesoreria.columna_pagado => true`). No acoplar a AFIP ni al slug.
 
 ## Checklist al modificar
 
@@ -275,10 +330,13 @@ icono en `MovimientoIndex`).
 - [ ] ¿`usaPacientes()` / `usaMovimientos()` siguen alineados con sidebar y `routes/web.php`?
 - [ ] Si Ingresos Diarios / Cadetería: ¿flags `cargado*` y selectores de protocolo intactos?
 - [ ] Si protocolos en labvetciudad: ¿filtro `tipoRegistro` y columna Cadete intactos?
-- [ ] Con `tesoreria_movimientos`: ¿`PacienteIndex` staff lista solo `tipoRegistro = 1`?
+- [ ] Con `tesoreria_movimientos` **sin** `pago_global`: ¿`PacienteIndex` staff lista solo `tipoRegistro = 1`?
 - [ ] Autogestión cliente: ¿lista `tipoRegistro` 1 y 2 (protocolos + pagos globales)?
-- [ ] Con `tesoreria_pacientes`: ¿sin botón «Pago global» en `PacienteIndex`?
+- [ ] Con `pago_global => true` (y `tesoreria_movimientos`): ¿botón en Pacientes **y** Cuenta Corriente? ¿Labs sin el flag siguen sin el botón?
+- [ ] Con `mostrar_modulo => false`: ¿sin grupo Tesorería en el menú y 404 en `tesoreria.*`?
+- [ ] Con `tesoreria_pacientes`: ¿sin botón «Pago global» en `PacienteIndex` (aunque el flag esté en true)?
 - [ ] Si AFIP: ¿`facturacion_afip.modo` correcto (`movimiento` → `pacientes.idPacientes`; `movimiento_caja` → `movimientos.id` + `compafip.idMovimientos`)?
+- [ ] Columna Pagado: ¿solo con `columna_pagado => true`? ¿AFIP `modo = paciente` sigue mostrando el icono sin imponer Pagado?
 - [ ] ¿Permiso 6 + rate limits + paginación 50 + `vlSwal*`?
 - [ ] ¿Export Excel (solo `tesoreria_pacientes`): ruta `tesoreria.movimientos.excel` + mismos filtros (Desde/Hasta + búsqueda) que la grilla?
 - [ ] ¿Tenant nuevo a caja: BD con `movimientos`/`conceptos`/`tipomovimiento`/`proveedores` + config `tesoreria_pacientes`?

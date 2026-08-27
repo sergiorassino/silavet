@@ -2,8 +2,8 @@
 
 namespace App\Livewire\Protocolos;
 
+use App\Livewire\Concerns\ConModalPagoGlobal;
 use App\Models\Cliente;
-use App\Models\MedioDePago;
 use App\Models\Notificacion;
 use App\Models\Paciente;
 use App\Models\Renglon;
@@ -23,6 +23,7 @@ use App\Support\Security\OpaqueRouteToken;
 use App\Support\Resultados\InformeVisibilidadConsulta;
 use App\Support\Resultados\RenglonesMaterializer;
 use App\Support\Resultados\ResultadosEstadosCatalog;
+use App\Support\Tesoreria\PagoGlobalRegistro;
 use App\Support\Tesoreria\TesoreriaConfig;
 use App\Support\UsuarioMenuPortal;
 use Illuminate\Support\Facades\RateLimiter;
@@ -35,6 +36,7 @@ use Livewire\WithPagination;
 
 class PacienteIndex extends Component
 {
+    use ConModalPagoGlobal;
     use WithFileUploads;
     use WithPagination;
 
@@ -143,16 +145,6 @@ class PacienteIndex extends Component
 
     public string $iaClinica = '';
 
-    public bool $modalPagoGlobalAbierto = false;
-
-    public ?int $pagoGlobalIdPacientes = null;
-
-    public ?int $pagoGlobalIdClientes = null;
-
-    public string $pagoGlobalImporte = '';
-
-    public ?int $pagoGlobalIdMediodepago = null;
-
     public function mount(): void
     {
         abort_unless(tienePermiso(PermisosIaCatalog::PROTOCOLOS), 403);
@@ -258,126 +250,6 @@ class PacienteIndex extends Component
         return $fecha;
     }
 
-    public function abrirModalPagoGlobal(): void
-    {
-        abort_unless(tienePermiso(PermisosIaCatalog::PROTOCOLOS), 403);
-        $this->abortSiAutogestion();
-        // Ingresos: MovimientoIndex (tesoreria_movimientos) o tabla movimientos
-        // (tesoreria_pacientes). No hay alta de pago global en PacienteIndex.
-        abort_unless($this->pagoGlobalDisponible(), 404);
-
-        $ctx = labCtx();
-        $this->pagoGlobalIdPacientes = null;
-        $this->pagoGlobalImporte = '';
-        $this->pagoGlobalIdMediodepago = null;
-        $this->pagoGlobalIdClientes = ($ctx->esCliente() && $ctx->idClientes)
-            ? $ctx->idClientes
-            : null;
-        $this->modalPagoGlobalAbierto = true;
-        $this->resetErrorBag();
-    }
-
-    public function abrirModalEditarPagoGlobal(int $id): void
-    {
-        abort_unless(tienePermiso(PermisosIaCatalog::PROTOCOLOS), 403);
-        $this->abortSiAutogestion();
-        abort_unless($this->pagoGlobalDisponible(), 404);
-
-        $paciente = $this->pacienteEnAlcance($id);
-        if ($paciente === null || ! $paciente->esPagoGlobal()) {
-            $this->dispatch('vl-swal-error', mensaje: 'No se encontró el pago global.');
-
-            return;
-        }
-
-        $this->pagoGlobalIdPacientes = (int) $paciente->idPacientes;
-        $this->pagoGlobalIdClientes = (int) $paciente->idClientes;
-        $this->pagoGlobalImporte = number_format((float) $paciente->pagado, 2, ',', '');
-        $this->pagoGlobalIdMediodepago = (int) ($paciente->idMediodepago ?: 0) ?: null;
-        $this->modalPagoGlobalAbierto = true;
-        $this->resetErrorBag();
-    }
-
-    public function cerrarModalPagoGlobal(): void
-    {
-        $this->modalPagoGlobalAbierto = false;
-        $this->pagoGlobalIdPacientes = null;
-        $this->pagoGlobalImporte = '';
-        $this->pagoGlobalIdMediodepago = null;
-        $this->resetErrorBag();
-    }
-
-    public function guardarPagoGlobal(): void
-    {
-        $this->abortSiAutogestion();
-        abort_unless(tienePermiso(PermisosIaCatalog::PROTOCOLOS), 403);
-        abort_unless($this->pagoGlobalDisponible(), 404);
-
-        $uid = labCtx()->idUsuarios ?? 0;
-        $key = 'protocolos-pago-global:'.$uid;
-        abort_if(RateLimiter::tooManyAttempts($key, 30), 429);
-
-        $this->pagoGlobalImporte = $this->normalizarImporte($this->pagoGlobalImporte);
-
-        $this->validate([
-            'pagoGlobalIdClientes' => ['required', 'integer', 'exists:clientes,idClientes'],
-            'pagoGlobalImporte' => ['required', 'numeric', 'gt:0'],
-            'pagoGlobalIdMediodepago' => ['required', 'integer', 'exists:mediodepago,id'],
-        ], [
-            'pagoGlobalIdClientes.required' => 'Seleccione el cliente.',
-            'pagoGlobalIdClientes.exists' => 'El cliente seleccionado no es válido.',
-            'pagoGlobalImporte.required' => 'Ingrese el importe.',
-            'pagoGlobalImporte.numeric' => 'El importe no es válido.',
-            'pagoGlobalImporte.gt' => 'El importe debe ser mayor a cero.',
-            'pagoGlobalIdMediodepago.required' => 'Seleccione el medio de pago.',
-            'pagoGlobalIdMediodepago.exists' => 'El medio de pago seleccionado no es válido.',
-        ]);
-
-        $ctx = labCtx();
-        if ($ctx->esCliente() && $ctx->idClientes) {
-            abort_unless((int) $this->pagoGlobalIdClientes === $ctx->idClientes, 403);
-        }
-
-        $payload = [
-            'idClientes' => (int) $this->pagoGlobalIdClientes,
-            'pagado' => round((float) $this->pagoGlobalImporte, 2),
-            'idMediodepago' => (int) $this->pagoGlobalIdMediodepago,
-        ];
-
-        RateLimiter::hit($key, 60);
-
-        if ($this->pagoGlobalIdPacientes !== null) {
-            $paciente = $this->pacienteEnAlcance($this->pagoGlobalIdPacientes);
-            if ($paciente === null || ! $paciente->esPagoGlobal()) {
-                $this->dispatch('vl-swal-error', mensaje: 'No se encontró el pago global.');
-                $this->cerrarModalPagoGlobal();
-
-                return;
-            }
-
-            if ($ctx->esCliente() && $ctx->idClientes) {
-                abort_unless((int) $paciente->idClientes === $ctx->idClientes, 403);
-            }
-
-            $paciente->update($payload);
-            $mensaje = 'Pago global actualizado correctamente.';
-        } else {
-            Paciente::create(array_merge($payload, [
-                'tipoRegistro' => Paciente::TIPO_PAGO_GLOBAL,
-                'fechhoy' => $this->fechaVistaEfectiva(),
-                'nombre' => 'Pago global',
-                'precio' => 0,
-                'descuento' => 0,
-                'saldo' => 0,
-                'estado' => '',
-            ]));
-            $mensaje = 'Pago global registrado correctamente.';
-        }
-
-        $this->cerrarModalPagoGlobal();
-        $this->dispatch('vl-swal-exito', mensaje: $mensaje);
-    }
-
     public function avanzarEstado(int $id): void
     {
         abort_unless(tienePermiso(PermisosIaCatalog::PROTOCOLOS), 403);
@@ -395,6 +267,54 @@ class PacienteIndex extends Component
         RateLimiter::hit($key, 60);
         $paciente->update([
             'estado' => ResultadosEstadosCatalog::siguiente($paciente->estado),
+        ]);
+    }
+
+    /**
+     * Edición inline de pacientes.pagado (flag tenant tesoreria.columna_pagado).
+     */
+    public function guardarPagado(int $id, string $valor = ''): void
+    {
+        abort_unless(tienePermiso(PermisosIaCatalog::PROTOCOLOS), 403);
+        $this->abortSiAutogestion();
+        abort_unless(TesoreriaConfig::columnaPagadoHabilitada(), 404);
+
+        if (! Schema::hasColumn('pacientes', 'pagado')) {
+            $this->dispatch(
+                'vl-swal-error',
+                mensaje: 'No se puede guardar el pago: falta la columna pacientes.pagado en este laboratorio.'
+            );
+
+            return;
+        }
+
+        $uid = labCtx()->idUsuarios ?? 0;
+        $key = 'protocolos-pagado:'.$uid;
+        abort_if(RateLimiter::tooManyAttempts($key, 30), 429);
+
+        $paciente = $this->pacienteGestionable($id);
+        if ($paciente === null) {
+            return;
+        }
+
+        $normalizado = $this->normalizarImporte($valor);
+        if ($normalizado === '') {
+            $normalizado = '0';
+        }
+
+        $validated = validator(
+            ['pagado' => $normalizado],
+            ['pagado' => ['required', 'numeric', 'min:0']],
+            [
+                'pagado.required' => 'Ingrese el importe pagado.',
+                'pagado.numeric' => 'El importe pagado no es válido.',
+                'pagado.min' => 'El importe pagado no puede ser negativo.',
+            ]
+        )->validate();
+
+        RateLimiter::hit($key, 60);
+        $paciente->update([
+            'pagado' => round((float) $validated['pagado'], 2),
         ]);
     }
 
@@ -1226,21 +1146,6 @@ class PacienteIndex extends Component
             }
         }
 
-        $clientesPagoGlobal = collect();
-        $mediosPago = collect();
-        if ($this->modalPagoGlobalAbierto) {
-            $clientesPagoGlobal = Cliente::query()
-                ->when($ctx->esCliente() && $ctx->idClientes, fn ($q) => $q->where('idClientes', $ctx->idClientes))
-                ->orderBy('nombre')
-                ->get(['idClientes', 'nombre']);
-
-            if (Schema::hasTable('mediodepago')) {
-                $mediosPago = MedioDePago::query()
-                    ->orderBy('nombreMedioPago')
-                    ->get(['id', 'nombreMedioPago']);
-            }
-        }
-
         $autogestion = $ctx->esCliente();
         $vista = $autogestion
             ? 'livewire.protocolos.paciente-index-autogestion'
@@ -1262,15 +1167,15 @@ class PacienteIndex extends Component
             && TesoreriaConfig::usaPacientes()
             && Schema::hasColumn('pacientes', 'cadete');
 
+        $mostrarColumnaPagado = ! $autogestion
+            && TesoreriaConfig::columnaPagadoHabilitada()
+            && Schema::hasColumn('pacientes', 'pagado');
+
         $mostrarColumnaAfip = ! $autogestion
-            && FacturacionAfipConfig::habilitada()
-            && FacturacionAfipConfig::esModoPaciente()
+            && FacturacionAfipConfig::enListadoPacientes()
             && tienePermiso(PermisosIaCatalog::FACTURACION);
 
-        // Con tesorería dedicada no hay «Pago global» en este listado:
-        // - tesoreria_movimientos → ingresos en MovimientoIndex
-        // - tesoreria_pacientes → caja en tabla movimientos (labvetciudad)
-        $mostrarPagoGlobal = ! $autogestion && $this->pagoGlobalDisponible();
+        $pagoGlobalVista = $this->datosVistaPagoGlobal(! $autogestion);
 
         $afipEmitidos = $mostrarColumnaAfip
             ? FacturacionAfipIndicadores::mapaConEmitido($pacientes->getCollection()->pluck('idPacientes')->all())
@@ -1279,14 +1184,15 @@ class PacienteIndex extends Component
         return view($vista, [
             'pacientes' => $pacientes,
             'edInfRenglones' => $edInfRenglones,
-            'clientesPagoGlobal' => $clientesPagoGlobal,
-            'mediosPago' => $mediosPago,
+            'clientesPagoGlobal' => $pagoGlobalVista['clientesPagoGlobal'],
+            'mediosPago' => $pagoGlobalVista['mediosPago'],
             'rutaInforme' => $autogestion ? 'cliente.pacientes.informe' : 'protocolos.informe',
             'saldosAcumulados' => $saldosAcumulados,
             'encabezadoDescuento' => $encabezadoDescuento,
             'mostrarCadete' => $mostrarCadete,
+            'mostrarColumnaPagado' => $mostrarColumnaPagado,
             'mostrarColumnaAfip' => $mostrarColumnaAfip,
-            'mostrarPagoGlobal' => $mostrarPagoGlobal,
+            'mostrarPagoGlobal' => $pagoGlobalVista['mostrarPagoGlobal'],
             'mostrarListaPrecios' => ListaPreciosConfig::mostrarColumnaListadoPacientes(),
             'afipEmitidos' => $afipEmitidos,
         ])->layout('layouts.staff', UsuarioMenuPortal::layoutParamsDesdeContexto());
@@ -1310,7 +1216,8 @@ class PacienteIndex extends Component
      * Filtro de `tipoRegistro` del listado / alcance:
      * - labvetciudad (`tesoreria_pacientes`): sin filtro (protocolos legacy suelen ser 0).
      * - Autogestión cliente (`tesoreria_movimientos`): protocolos (1) + pagos globales (2).
-     * - Staff NeoLab (`tesoreria_movimientos`): solo protocolos (1); ingresos/egresos en Tesorería.
+     * - Staff con `pago_global`: protocolos (1) + pagos globales (2).
+     * - Staff NeoLab sin el flag: solo protocolos (1); ingresos/egresos en Tesorería.
      *
      * @param  \Illuminate\Database\Eloquent\Builder<\App\Models\Paciente>  $query
      */
@@ -1320,7 +1227,7 @@ class PacienteIndex extends Component
             return;
         }
 
-        if (labCtx()->esCliente()) {
+        if (labCtx()->esCliente() || TesoreriaConfig::pagoGlobalHabilitado()) {
             $query->whereIn('pacientes.tipoRegistro', [
                 Paciente::TIPO_PROTOCOLO,
                 Paciente::TIPO_INGRESO,
@@ -1353,33 +1260,47 @@ class PacienteIndex extends Component
         return $paciente;
     }
 
-    /**
-     * «Pago global» desde PacienteIndex.
-     * Oculto con tesoreria_pacientes (labvetciudad: caja en `movimientos`)
-     * y con tesoreria_movimientos (ingresos → MovimientoIndex).
-     */
-    private function pagoGlobalDisponible(): bool
+    protected function pagoGlobalAssertPermiso(): void
     {
-        return ! TesoreriaConfig::usaPacientes()
-            && ! TesoreriaConfig::usaMovimientos();
+        abort_unless(tienePermiso(PermisosIaCatalog::PROTOCOLOS), 403);
+        $this->abortSiAutogestion();
+    }
+
+    protected function pagoGlobalFecha(): string
+    {
+        return $this->fechaVistaEfectiva();
+    }
+
+    protected function pagoGlobalClienteInicial(): ?int
+    {
+        $ctx = labCtx();
+
+        return ($ctx->esCliente() && $ctx->idClientes) ? $ctx->idClientes : null;
+    }
+
+    public function pagoGlobalClienteEditable(): bool
+    {
+        return ! labCtx()->esCliente();
+    }
+
+    protected function pagoGlobalPacienteEnAlcance(int $id): ?Paciente
+    {
+        return $this->pacienteEnAlcance($id);
+    }
+
+    protected function pagoGlobalClientesParaSelect()
+    {
+        $ctx = labCtx();
+
+        return Cliente::query()
+            ->when($ctx->esCliente() && $ctx->idClientes, fn ($q) => $q->where('idClientes', $ctx->idClientes))
+            ->orderBy('nombre')
+            ->get(['idClientes', 'nombre']);
     }
 
     private function normalizarImporte(string $valor): string
     {
-        $valor = trim(str_replace(' ', '', $valor));
-        if ($valor === '') {
-            return $valor;
-        }
-
-        // Formato AR: 1.234,56 → 1234.56; también acepta 1234.56
-        if (str_contains($valor, ',') && str_contains($valor, '.')) {
-            $valor = str_replace('.', '', $valor);
-            $valor = str_replace(',', '.', $valor);
-        } elseif (str_contains($valor, ',')) {
-            $valor = str_replace(',', '.', $valor);
-        }
-
-        return $valor;
+        return PagoGlobalRegistro::normalizarImporte($valor);
     }
 
     private function guardarContactoCliente(): void

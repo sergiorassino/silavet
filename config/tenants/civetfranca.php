@@ -3,6 +3,18 @@
 return [
     'nombre' => 'CIVET Franca',
 
+    'facturacion_afip' => [
+        'habilitado' => true,
+        'modo' => 'paciente',
+        'simular' => true,
+    ],
+
+    'tesoreria' => [
+        'columna_pagado' => true,
+        'pago_global' => true,
+        'mostrar_modulo' => false,
+    ],
+
     'tipodeterminaciones' => [
         'derivacion' => 'catalogo',
     ],

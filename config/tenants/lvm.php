@@ -9,6 +9,12 @@ return [
         'simular' => true,
     ],
 
+    'tesoreria' => [
+        'columna_pagado' => true,
+        'pago_global' => true,
+        'mostrar_modulo' => false,
+    ],
+
     'autoanalizadores' => [
         'aparatos' => [
             'incaa' => [

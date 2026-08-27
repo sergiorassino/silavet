@@ -7,6 +7,13 @@
                 <p class="mt-2 text-sm text-white/80">Saldo pendiente de cada cliente al día de hoy.</p>
             </x-vl-hero-heading>
             <div class="flex flex-wrap items-center gap-2 shrink-0">
+                @if ($mostrarPagoGlobal)
+                    <button type="button"
+                            wire:click="abrirModalPagoGlobal"
+                            class="btn-secondary bg-white/10 text-white border-white/30 hover:bg-white/20">
+                        Pago global
+                    </button>
+                @endif
                 <a href="{{ $this->excelUrl }}"
                    class="btn-secondary bg-white/10 text-white border-white/30 hover:bg-white/20">
                     Exportar Excel
@@ -80,4 +87,5 @@
             </table>
         </div>
     </div>
+    @include('livewire.partials.modal-pago-global')
 </div>

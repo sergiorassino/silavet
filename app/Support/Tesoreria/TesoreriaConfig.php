@@ -40,6 +40,35 @@ final class TesoreriaConfig
         return self::implementacion() === self::IMPL_PACIENTES;
     }
 
+    /**
+     * Grupo Tesorería en el menú y acceso a rutas `tesoreria.*`.
+     * Default true. Solo se oculta si el tenant declara `mostrar_modulo => false`.
+     */
+    public static function mostrarModulo(): bool
+    {
+        return (bool) config('tenant.tesoreria.mostrar_modulo', true);
+    }
+
+    /**
+     * Botón «Pago global» en Pacientes y Cuenta Corriente (NeoLab).
+     * Default false. Requiere declaración expresa `pago_global => true`
+     * y variante `tesoreria_movimientos` (ingresos en `pacientes`).
+     */
+    public static function pagoGlobalHabilitado(): bool
+    {
+        return (bool) config('tenant.tesoreria.pago_global', false)
+            && self::usaMovimientos();
+    }
+
+    /**
+     * Columna Pagado editable en Gestión de Pacientes (staff).
+     * Default false. Independiente de AFIP: requiere `columna_pagado => true`.
+     */
+    public static function columnaPagadoHabilitada(): bool
+    {
+        return (bool) config('tenant.tesoreria.columna_pagado', false);
+    }
+
     /** Días hacia atrás para el selector “Fecha de los Protocolos a Cargar”. */
     public static function diasProtocolos(): int
     {

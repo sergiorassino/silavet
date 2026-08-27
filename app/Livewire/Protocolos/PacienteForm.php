@@ -304,6 +304,13 @@ class PacienteForm extends Component
             $payload['listaPreciosPaciente'] = $nroLista;
         }
 
+        if (! $this->idPacientes && ! Schema::hasColumn('pacientes', 'tipoRegistro')) {
+            $mensaje = 'No se puede guardar el protocolo: falta la columna pacientes.tipoRegistro en este laboratorio. '
+                .'Ejecute el SQL de database/sql/pacientes_tipo_registro_alta_protocolo.sql.';
+            $this->dispatch('vl-swal-error', mensaje: $mensaje);
+            throw ValidationException::withMessages(['nombre' => $mensaje]);
+        }
+
         try {
             if ($this->idPacientes) {
                 if ($this->nombreProtocoloEditableEnEdicion() || ProtocoloNumero::dejaNombreProtocoloVacio()) {
@@ -318,6 +325,9 @@ class PacienteForm extends Component
                 $focoId = $this->idPacientes;
                 $filtrosVolver = $this->listadoFiltros;
             } else {
+                $payload['tipoRegistro'] = Paciente::TIPO_PROTOCOLO;
+                $payload['estado'] = ResultadosEstadosCatalog::EN_PROC;
+
                 try {
                     $nuevoId = null;
 
@@ -328,8 +338,6 @@ class PacienteForm extends Component
                         );
                         $creado = Paciente::create(array_merge($payload, [
                             'nombreProtocolo' => $numero,
-                            'tipoRegistro' => 1,
-                            'estado' => ResultadosEstadosCatalog::EN_PROC,
                         ]));
                         $nuevoId = (int) $creado->idPacientes;
                     } else {
@@ -340,8 +348,6 @@ class PacienteForm extends Component
                         ProtocoloNumero::withSiguienteReservado($payload['fechhoy'], function (string $numero) use ($payload, &$nuevoId): void {
                             $creado = Paciente::create(array_merge($payload, [
                                 'nombreProtocolo' => $numero,
-                                'tipoRegistro' => 1,
-                                'estado' => ResultadosEstadosCatalog::EN_PROC,
                             ]));
                             $nuevoId = (int) $creado->idPacientes;
                         }, $tipo);

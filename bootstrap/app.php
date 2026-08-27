@@ -48,6 +48,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'menu.portal' => EnsureMenuPortal::class,
             'login.limpiar-sesion' => \App\Http\Middleware\LimpiarSesionEnPaginaLogin::class,
             'no-store' => \App\Http\Middleware\NoStoreResponse::class,
+            'tesoreria.modulo' => \App\Http\Middleware\EnsureTesoreriaModuloVisible::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {
