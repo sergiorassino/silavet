@@ -138,6 +138,11 @@ Persiste un ingreso en `pacientes` (`tipoRegistro = 2`). El saldo de CC
 (`precio − pagado` + pagos) se actualiza al instante. No hay botón en la
 variante `tesoreria_pacientes` (`CuentaCorrienteMovimientos*`).
 
+El campo **Cliente** (cuando es editable: Pacientes staff y CC listado) usa el
+combobox de búsqueda `vlSearchSelect` con `abrirSoloConTexto`: es un campo de
+texto; la lista no se abre al hacer clic, solo al escribir. En el detalle de CC
+el cliente queda fijo.
+
 Labs que **no** declaran el flag no cambian: sin botón, staff de pacientes
 sigue listando solo protocolos.
 
