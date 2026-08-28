@@ -108,6 +108,33 @@ cargar_config() {
     log "Config: $CONFIG_CARGADO"
 }
 
+# Si config.env aún no tiene las claves de la página celular, las copia desde
+# la plantilla (mismo token en todos los labs). No pisa un valor ya escrito.
+asegurar_claves_restaurar_web() {
+    local dest="${1:-$_EMERGENCIA_DIR/config.env}"
+    local src="$_EMERGENCIA_DIR/config.example.env"
+    local clave val
+
+    [[ -f "$src" ]] || return 0
+    if [[ ! -f "$dest" ]]; then
+        cp "$src" "$dest"
+        chmod 600 "$dest"
+        log "Creado $dest desde la plantilla (incluye restauración web)."
+        return 0
+    fi
+
+    for clave in HABILITAR_RESTAURAR_WEB RESTAURAR_WEB_TOKEN RESTAURAR_WEB_HOST; do
+        if grep -qE "^[[:space:]]*${clave}=" "$dest"; then
+            continue
+        fi
+        val="$(grep -E "^[[:space:]]*${clave}=" "$src" | tail -n 1 || true)"
+        if [[ -n "$val" ]]; then
+            echo "$val" >> "$dest"
+            log "Agregado $clave a $dest (plantilla)."
+        fi
+    done
+}
+
 # En restaurar.sh el .env bajado de producción no debe pisar bucket/prefijos del VPS.
 reafirmar_s3_desde_config() {
     [[ -n "${CONFIG_CARGADO:-}" && -f "$CONFIG_CARGADO" ]] || return 0
