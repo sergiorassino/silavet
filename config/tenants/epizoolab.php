@@ -8,4 +8,8 @@ return [
         'pago_global' => true,
         'mostrar_modulo' => false,
     ],
+
+    'tipodeterminaciones' => [
+        'derivacion' => 'catalogo',
+    ],
 ];

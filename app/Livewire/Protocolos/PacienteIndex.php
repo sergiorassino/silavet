@@ -2,6 +2,7 @@
 
 namespace App\Livewire\Protocolos;
 
+use App\Livewire\Concerns\ConModalPagadoProtocolo;
 use App\Livewire\Concerns\ConModalPagoGlobal;
 use App\Models\Cliente;
 use App\Models\Notificacion;
@@ -36,6 +37,7 @@ use Livewire\WithPagination;
 
 class PacienteIndex extends Component
 {
+    use ConModalPagadoProtocolo;
     use ConModalPagoGlobal;
     use WithFileUploads;
     use WithPagination;
@@ -267,54 +269,6 @@ class PacienteIndex extends Component
         RateLimiter::hit($key, 60);
         $paciente->update([
             'estado' => ResultadosEstadosCatalog::siguiente($paciente->estado),
-        ]);
-    }
-
-    /**
-     * Edición inline de pacientes.pagado (flag tenant tesoreria.columna_pagado).
-     */
-    public function guardarPagado(int $id, string $valor = ''): void
-    {
-        abort_unless(tienePermiso(PermisosIaCatalog::PROTOCOLOS), 403);
-        $this->abortSiAutogestion();
-        abort_unless(TesoreriaConfig::columnaPagadoHabilitada(), 404);
-
-        if (! Schema::hasColumn('pacientes', 'pagado')) {
-            $this->dispatch(
-                'vl-swal-error',
-                mensaje: 'No se puede guardar el pago: falta la columna pacientes.pagado en este laboratorio.'
-            );
-
-            return;
-        }
-
-        $uid = labCtx()->idUsuarios ?? 0;
-        $key = 'protocolos-pagado:'.$uid;
-        abort_if(RateLimiter::tooManyAttempts($key, 30), 429);
-
-        $paciente = $this->pacienteGestionable($id);
-        if ($paciente === null) {
-            return;
-        }
-
-        $normalizado = $this->normalizarImporte($valor);
-        if ($normalizado === '') {
-            $normalizado = '0';
-        }
-
-        $validated = validator(
-            ['pagado' => $normalizado],
-            ['pagado' => ['required', 'numeric', 'min:0']],
-            [
-                'pagado.required' => 'Ingrese el importe pagado.',
-                'pagado.numeric' => 'El importe pagado no es válido.',
-                'pagado.min' => 'El importe pagado no puede ser negativo.',
-            ]
-        )->validate();
-
-        RateLimiter::hit($key, 60);
-        $paciente->update([
-            'pagado' => round((float) $validated['pagado'], 2),
         ]);
     }
 
@@ -1176,6 +1130,7 @@ class PacienteIndex extends Component
             && tienePermiso(PermisosIaCatalog::FACTURACION);
 
         $pagoGlobalVista = $this->datosVistaPagoGlobal(! $autogestion);
+        $pagadoProtocoloVista = $this->datosVistaPagadoProtocolo($mostrarColumnaPagado);
 
         $afipEmitidos = $mostrarColumnaAfip
             ? FacturacionAfipIndicadores::mapaConEmitido($pacientes->getCollection()->pluck('idPacientes')->all())
@@ -1186,6 +1141,7 @@ class PacienteIndex extends Component
             'edInfRenglones' => $edInfRenglones,
             'clientesPagoGlobal' => $pagoGlobalVista['clientesPagoGlobal'],
             'mediosPago' => $pagoGlobalVista['mediosPago'],
+            'mediosPagoPagadoProtocolo' => $pagadoProtocoloVista['mediosPagoPagadoProtocolo'],
             'rutaInforme' => $autogestion ? 'cliente.pacientes.informe' : 'protocolos.informe',
             'saldosAcumulados' => $saldosAcumulados,
             'encabezadoDescuento' => $encabezadoDescuento,
@@ -1260,10 +1216,20 @@ class PacienteIndex extends Component
         return $paciente;
     }
 
-    protected function pagoGlobalAssertPermiso(): void
+    protected function pagadoProtocoloAssertPermiso(): void
     {
         abort_unless(tienePermiso(PermisosIaCatalog::PROTOCOLOS), 403);
         $this->abortSiAutogestion();
+    }
+
+    protected function pagadoProtocoloPacienteGestionable(int $id): ?Paciente
+    {
+        return $this->pacienteGestionable($id);
+    }
+
+    protected function pagoGlobalAssertPermiso(): void
+    {
+        $this->pagadoProtocoloAssertPermiso();
     }
 
     protected function pagoGlobalFecha(): string
