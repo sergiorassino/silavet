@@ -319,10 +319,26 @@ function leer_log(string $logFile): string
     return $txt;
 }
 
+function php_fn_ok(string $name): bool
+{
+    if (! function_exists($name)) {
+        return false;
+    }
+    $dis = array_map('trim', explode(',', strtolower((string) ini_get('disable_functions'))));
+
+    return ! in_array(strtolower($name), $dis, true);
+}
+
+function pedido_path(string $logFile): string
+{
+    return dirname($logFile).'/restaurar-web.pedido';
+}
+
 function estado_restauracion(string $lockFile, string $logFile): array
 {
     $log = leer_log($logFile);
     $running = restore_en_curso($lockFile);
+    $enCola = is_file(pedido_path($logFile));
     $exit = null;
     if (preg_match('/^EXIT:(\d+)\s*$/m', $log, $m)) {
         $exit = (int) $m[1];
@@ -332,22 +348,13 @@ function estado_restauracion(string $lockFile, string $logFile): array
 
     return [
         'ok' => true,
-        'running' => $running,
+        'running' => $running || $enCola,
+        'en_cola' => $enCola,
         'exit' => $exit,
-        'lista' => $lista && $exit === 0,
+        'lista' => $lista && $exit === 0 && ! $enCola,
         'error' => $error || ($exit !== null && $exit !== 0),
         'log' => $log,
     ];
-}
-
-function exec_habilitado(): bool
-{
-    if (! function_exists('exec')) {
-        return false;
-    }
-    $dis = array_map('trim', explode(',', (string) ini_get('disable_functions')));
-
-    return ! in_array('exec', $dis, true);
 }
 
 function home_dir(): string
@@ -363,6 +370,54 @@ function home_dir(): string
     return ($h !== false && $h !== '') ? $h : '/home/admin';
 }
 
+function lanzar_en_fondo(string $lanzador): ?int
+{
+    if (php_fn_ok('proc_open')) {
+        $des = [
+            0 => ['file', '/dev/null', 'r'],
+            1 => ['pipe', 'w'],
+            2 => ['file', '/dev/null', 'w'],
+        ];
+        $pipes = [];
+        $proc = @proc_open($lanzador, $des, $pipes);
+        if (is_resource($proc)) {
+            $out = '';
+            if (isset($pipes[1]) && is_resource($pipes[1])) {
+                $out = (string) stream_get_contents($pipes[1]);
+                fclose($pipes[1]);
+            }
+            proc_close($proc);
+            $pid = (int) trim($out);
+
+            return $pid > 0 ? $pid : 1;
+        }
+    }
+    if (php_fn_ok('exec')) {
+        $lineas = [];
+        exec($lanzador, $lineas);
+
+        return isset($lineas[0]) ? (int) $lineas[0] : 1;
+    }
+    if (php_fn_ok('shell_exec')) {
+        $out = (string) shell_exec($lanzador);
+        $pid = (int) trim($out);
+
+        return $pid > 0 ? $pid : 1;
+    }
+    if (php_fn_ok('popen')) {
+        $h = @popen($lanzador, 'r');
+        if (is_resource($h)) {
+            $out = (string) stream_get_contents($h);
+            pclose($h);
+            $pid = (int) trim($out);
+
+            return $pid > 0 ? $pid : 1;
+        }
+    }
+
+    return null;
+}
+
 function lanzar_restaurar(
     string $appDir,
     string $scriptSh,
@@ -371,9 +426,6 @@ function lanzar_restaurar(
     array $conf,
     bool $dry
 ): array {
-    if (! exec_habilitado()) {
-        return ['ok' => false, 'mensaje' => 'PHP tiene exec() deshabilitado. No se puede disparar el script desde la web.'];
-    }
     if (! is_executable('/bin/bash') && ! is_executable('/usr/bin/bash')) {
         return ['ok' => false, 'mensaje' => 'No está /bin/bash en este servidor.'];
     }
@@ -382,6 +434,10 @@ function lanzar_restaurar(
     }
     if (restore_en_curso($lockFile)) {
         return ['ok' => false, 'mensaje' => 'Ya hay una restauración en curso.'];
+    }
+    $pedido = pedido_path($logFile);
+    if (is_file($pedido)) {
+        return ['ok' => false, 'mensaje' => 'Ya hay un pedido en cola. Esperá al cron web-cola.sh o borrá storage/logs/restaurar-web.pedido.'];
     }
 
     $logDir = dirname($logFile);
@@ -414,18 +470,31 @@ function lanzar_restaurar(
         .' </dev/null >/dev/null 2>&1 & echo $!';
 
     ignore_user_abort(true);
-    $pid = [];
-    exec($lanzador, $pid);
-    $pidN = isset($pid[0]) ? (int) $pid[0] : 0;
-    if ($pidN > 0) {
-        file_put_contents($logFile, '['.date('Y-m-d H:i:s')."] PID {$pidN}\n", FILE_APPEND);
+    $pidN = lanzar_en_fondo($lanzador);
+    if ($pidN !== null) {
+        if ($pidN > 1) {
+            file_put_contents($logFile, '['.date('Y-m-d H:i:s')."] PID {$pidN}\n", FILE_APPEND);
+        }
+
+        return [
+            'ok' => true,
+            'mensaje' => $dry
+                ? 'Simulación lanzada. El log se actualiza abajo (no pisa la base).'
+                : 'Restauración lanzada. Dejá esta pantalla abierta; tarda varios minutos (sobre todo el import MySQL).',
+        ];
     }
+
+    $linea = $dry ? "dry-run\n" : "yes\n";
+    file_put_contents($pedido, $linea);
+    file_put_contents(
+        $logFile,
+        '['.date('Y-m-d H:i:s')."] PHP no puede lanzar procesos (exec/proc_open deshabilitados). Pedido en cola para web-cola.sh.\n",
+        FILE_APPEND
+    );
 
     return [
         'ok' => true,
-        'mensaje' => $dry
-            ? 'Simulación lanzada. El log se actualiza abajo (no pisa la base).'
-            : 'Restauración lanzada. Dejá esta pantalla abierta; tarda varios minutos (sobre todo el import MySQL).',
+        'mensaje' => 'PHP-FPM no puede ejecutar bash (exec/proc_open están cortados). Dejé el pedido en cola. En el VPS, una sola vez: DirectAdmin → Cron Jobs, cada minuto, este comando (ajustá el slug): /bin/bash /home/admin/public_html/silavet/alqu/scripts/emergencia/web-cola.sh — o habilitá exec en PHP Settings (docs/13 Paso H).',
     ];
 }
 
@@ -537,7 +606,10 @@ function html_pagina(
             <?php
             $cls = 'idle';
             $txt = 'En espera';
-            if (! empty($estado['running'])) {
+            if (! empty($estado['en_cola'])) {
+                $cls = 'run';
+                $txt = 'En cola…';
+            } elseif (! empty($estado['running'])) {
                 $cls = 'run';
                 $txt = 'En curso…';
             } elseif (! empty($estado['lista'])) {
@@ -588,7 +660,8 @@ function html_pagina(
         logEl.textContent = s.log || '(todavía no hay log)';
         logEl.scrollTop = logEl.scrollHeight;
         let cls = 'idle', txt = 'En espera';
-        if (s.running) { cls = 'run'; txt = 'En curso…'; }
+        if (s.en_cola) { cls = 'run'; txt = 'En cola…'; }
+        else if (s.running) { cls = 'run'; txt = 'En curso…'; }
         else if (s.lista) { cls = 'ok'; txt = 'Lista'; }
         else if (s.error) { cls = 'err'; txt = 'Falló'; }
         badge.className = 'badge ' + cls;
