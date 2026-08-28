@@ -26,7 +26,7 @@ Ninguna. Igual en todos los tenants.
 | `pacientes` | Una fila por protocolo. Fecha `fechhoy`. **Precio con IVA** = `neto` (nunca negativo). **Pagado** = `pagado`. Recuadro de descuento = `precio`. Se excluye `tipoRegistro = 2` (ingresos de tesorería). |
 | `clientes` | Nombre del grupo; `descuento` solo para el recuadro verde si hay un cliente filtrado |
 | `mediodepago` | `nombreMedioPago`; si falta, «Sin medio» |
-| `determinaciones` + `tipodeterminaciones` | Mini-tabla: `td.nombre` y `d.precio`, orden `td.orden`, `td.nombre` |
+| `determinaciones` + `tipodeterminaciones` | Mini-tabla: solo `td.nombre`, orden `td.orden`, `td.nombre` |
 
 ## Flujo principal
 

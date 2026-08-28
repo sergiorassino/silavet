@@ -189,7 +189,7 @@ No ejecutes `preparar-vps.sh` con `php`: es un script **bash**.
 
 URL de emergencia:
 
-`https://sistemasescolares4.com.ar/silavet/alqu`
+`https://sistemasescolares4.com/silavet/alqu`
 
 Carpeta Laravel (`APP_DIR`, donde está `artisan`):
 
@@ -340,7 +340,7 @@ S3_PREFIX_ARCHIVOS=backupDedicado/archivos
 AWS_REGION=sa-east-1
 HABILITAR_RESTAURAR_WEB=1
 RESTAURAR_WEB_TOKEN=…   # ya viene en la plantilla; no hace falta openssl
-RESTAURAR_WEB_HOST=sistemasescolares4.com.ar,sistemasescolares4.com
+RESTAURAR_WEB_HOST=sistemasescolares4.com,sistemasescolares4.com.ar
 ```
 
 `HABILITAR_RESPALDO`, `AWS_BIN`, `LAB_ORDEN`, `TENANT_SLUG` y MySQL de
@@ -412,11 +412,32 @@ las claves que falten; o un `git pull` alcanza (el PHP usa la plantilla si
 
 URL (acceso directo en el celular; cambiá el slug):
 
-`https://sistemasescolares4.com.ar/silavet/alqu/emergencia-restaurar.php`
+`https://sistemasescolares4.com/silavet/alqu/emergencia-restaurar.php`
 
 La clave es `RESTAURAR_WEB_TOKEN` de la plantilla (la misma en todos los labs).
 En Hostinger la página responde **404** (`RESTAURAR_WEB_HOST` no coincide y
-además `HABILITAR_RESPALDO=1`). El PHP del sitio tiene que tener `exec()`.
+además `HABILITAR_RESPALDO=1`).
+
+DirectAdmin suele **cortar** `exec()` / `proc_open` en PHP-FPM: la página entra
+pero no lanza el `.sh`. Dos formas (con una alcanza):
+
+**A — Habilitar exec (queda al toque)**  
+DirectAdmin (usuario `admin`) → **PHP Settings** (o Extra Features → PHP
+Configuration) del dominio → en `disable_functions` borrá `exec`,
+`shell_exec`, `passthru`, `system`, `proc_open` y `popen` → guardar y
+reiniciar PHP. Por SSH (root), el ini CLI/FPM suele ser
+`/usr/local/php83/lib/php.ini`; después `systemctl restart php-fpm83`.
+
+**B — Cron de cola (1 minuto, no es sync horario)**  
+Si no querés tocar el ini, un cron **por lab** que solo mira si hay pedido:
+
+```cron
+* * * * * /bin/bash /home/admin/public_html/silavet/alqu/scripts/emergencia/web-cola.sh
+```
+
+(DirectAdmin → Cron Jobs). El botón de la web deja un archivo en
+`storage/logs/restaurar-web.pedido`; el cron corre `restaurar.sh` a lo sumo
+un minuto después.
 
 Ensayo: abrí la URL, clave, **Simular**. Tiene que aparecer dump y archivos en
 el log, sin importar BD.
@@ -500,6 +521,7 @@ real sobre el VPS de reserva y entrar por su URL.
 | `scripts/emergencia/preparar-vps.sh` | Emergencia | Una vez por carpeta/tenant |
 | `scripts/emergencia/restaurar.sh` | Emergencia | Solo ante caída (o ensayo) |
 | `public/emergencia-restaurar.php` | Emergencia | Opcional: dispara `restaurar.sh` desde el celular |
+| `scripts/emergencia/web-cola.sh` | Emergencia | Si PHP no tiene exec: cron 1 min por lab |
 
 Config **por lab** (impersonal): `scripts/emergencia/config.env` ←
 `config.example.env`.  
@@ -514,7 +536,8 @@ Override puntual: variable `SILAVET_EMERGENCIA_CONF`.
 
 ## 6. Qué no hacer
 
-- Cron horario en el VPS de emergencia (git pull, sync o import).
+- Cron horario en el VPS de emergencia (git pull, sync o import). El cron de
+  1 minuto de `web-cola.sh` sí aplica (solo si PHP-FPM no puede hacer exec).
 - Subir `vendor/` o todo el proyecto a S3.
 - Restaurar el `.env` de producción sin overlay (`APP_URL` / `DB_HOST` del
   servidor caído).
@@ -546,6 +569,7 @@ Override puntual: variable `SILAVET_EMERGENCIA_CONF`.
 - `scripts/emergencia/respaldar-archivos.sh`
 - `scripts/emergencia/preparar-vps.sh`
 - `scripts/emergencia/restaurar.sh`
+- `scripts/emergencia/web-cola.sh`
 - `public/emergencia-restaurar.php`
 - `scripts/emergencia/config.example.env`
 - `scripts/emergencia/env.emergencia.example`

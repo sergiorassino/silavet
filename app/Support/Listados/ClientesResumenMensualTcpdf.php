@@ -272,9 +272,7 @@ final class ClientesResumenMensualTcpdf extends TCPDF
 
         $lineas = [];
         foreach ($dets as $det) {
-            $lineas[] = trim((string) ($det->nombre ?? ''))
-                .'  '
-                .ClientesResumenMensualConsulta::formatearMoneda((float) ($det->precio ?? 0));
+            $lineas[] = trim((string) ($det->nombre ?? ''));
         }
 
         return $lineas;
