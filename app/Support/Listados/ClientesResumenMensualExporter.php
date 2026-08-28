@@ -224,9 +224,7 @@ final class ClientesResumenMensualExporter
 
         $partes = [];
         foreach ($dets as $det) {
-            $partes[] = trim((string) ($det->nombre ?? ''))
-                .' - '
-                .ClientesResumenMensualConsulta::formatearMoneda((float) ($det->precio ?? 0));
+            $partes[] = trim((string) ($det->nombre ?? ''));
         }
 
         return implode("\n", $partes);

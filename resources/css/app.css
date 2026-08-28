@@ -3140,11 +3140,6 @@ table.vl-crm-mini td.c-det-nom {
 table.vl-crm-mini tr:last-child td {
     border-bottom: none;
 }
-table.vl-crm-mini td.num {
-    text-align: right;
-    white-space: nowrap;
-    width: 48px;
-}
 .vl-crm-sin-det {
     display: block;
     color: #888;

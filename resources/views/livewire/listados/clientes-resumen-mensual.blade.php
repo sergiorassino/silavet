@@ -135,7 +135,6 @@
                                                 @foreach ($fila->determinaciones as $det)
                                                     <tr>
                                                         <td class="c-det-nom">{{ $det->nombre }}</td>
-                                                        <td class="num">{{ \App\Support\Listados\ClientesResumenMensualConsulta::formatearMoneda((float) $det->precio) }}</td>
                                                     </tr>
                                                 @endforeach
                                             </tbody>
