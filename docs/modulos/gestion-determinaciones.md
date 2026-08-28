@@ -17,7 +17,7 @@ perfil y centro de derivación predeterminado. No carga determinaciones a un pro
 | Columna perfil | `mostrar_columna_perfil` (alqu) | Select No/Sí → `perfil` |
 | Precio 2 / 3 | Columnas aditivas `precio2` / `precio3` | Si faltan: aviso ámbar; no se muestran. El alcance (quién usa cada lista) es `tenant.precios.lista`: ver [../12-listas-de-precios-por-tenant.md](../12-listas-de-precios-por-tenant.md) |
 
-Tenants con `catalogo` hoy: **alqu**, **neolab**, **laboratoriosiv**, **labvetciudad**, **civetfranca**.
+Tenants con `catalogo` hoy: **alqu**, **neolab**, **laboratoriosiv**, **labvetciudad**, **civetfranca**, **epizoolab**.
 
 ## Actores y permisos
 

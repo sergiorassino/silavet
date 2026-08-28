@@ -303,13 +303,19 @@
                                 <td class="vl-pacientes-td vl-pacientes-td--num whitespace-nowrap">{{ $paciente->precioFormateado() }}</td>
                                 @if ($mostrarColumnaPagado)
                                     <td class="vl-pacientes-td vl-pacientes-td--num">
-                                        <input type="text"
-                                               value="{{ number_format((float) ($paciente->pagado ?? 0), 2, ',', '.') }}"
-                                               wire:blur="guardarPagado({{ $paciente->idPacientes }}, $event.target.value)"
-                                               wire:keydown.enter.prevent="$event.target.blur()"
-                                               class="vl-determinaciones-input vl-determinaciones-input--precio"
-                                               inputmode="decimal"
-                                               aria-label="Pagado del protocolo {{ $paciente->nombreProtocolo }}">
+                                        @php
+                                            $medioPagado = trim((string) ($paciente->medioDePago?->nombreMedioPago ?? ''));
+                                            $tituloPagado = $medioPagado !== ''
+                                                ? 'Medio de pago: '.$medioPagado
+                                                : 'Registrar importe y medio de pago';
+                                        @endphp
+                                        <button type="button"
+                                                wire:click="abrirModalPagadoProtocolo({{ $paciente->idPacientes }})"
+                                                class="vl-determinaciones-input vl-determinaciones-input--precio w-full text-right"
+                                                title="{{ $tituloPagado }}"
+                                                aria-label="Pagado del protocolo {{ $paciente->nombreProtocolo }}">
+                                            {{ number_format((float) ($paciente->pagado ?? 0), 2, ',', '.') }}
+                                        </button>
                                     </td>
                                 @endif
                                 @if ($mostrarCadete)
@@ -500,4 +506,5 @@
     </div>
     @include('livewire.protocolos.partials.paciente-protocolo-modales')
     @include('livewire.partials.modal-pago-global')
+    @include('livewire.partials.modal-pagado-protocolo')
 </div>

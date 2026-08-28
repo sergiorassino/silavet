@@ -118,8 +118,10 @@ El ítem de menú sidebar es único (`clientes.cuenta-corriente.index`).
 
 ## Staff: columna Pagado (opt-in por tenant)
 
-En `PacienteIndex` staff, **Pagado** editable (`pacientes.pagado`) aparece solo
-si el tenant declara `tesoreria.columna_pagado => true`. Independiente de AFIP.
+En `PacienteIndex` staff, **Pagado** editable (`pacientes.pagado` +
+`pacientes.idMediodepago`) aparece solo si el tenant declara
+`tesoreria.columna_pagado => true`. Al hacer clic en la celda se abre un modal
+con importe y medio de pago (como NeoLab). Independiente de AFIP.
 Hoy lo declaran lvm, neolab, civetfranca y epizoolab (junto con pago global
 y Tesorería oculta). Ese valor es el que usa la CC
 (`precio − pagado`). Labs que no lo declaran (alqu, labvetciudad, default) no

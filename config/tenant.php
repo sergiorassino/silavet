@@ -45,7 +45,7 @@ return [
     | - derivacion: si_no (Sí/No en columna destino) | catalogo (select centros).
     |   En catálogo el FK va en tipodeterminaciones.derivacion (legacy ScriptCase),
     |   no en destino (código 0–3 de otra semántica).
-    |   alqu, neolab, laboratoriosiv, labvetciudad y civetfranca usan catalogo; resto usa si_no.
+    |   alqu, neolab, laboratoriosiv, labvetciudad, civetfranca y epizoolab usan catalogo; resto usa si_no.
     */
     'tipodeterminaciones' => [
         'mostrar_columna_perfil' => false,
