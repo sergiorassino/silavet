@@ -51,4 +51,15 @@ class ProtocoloNumero
     {
         return ProtocoloNumeroRegistry::dejaNombreProtocoloVacio();
     }
+
+    /** Alta y edición: número ingresado manualmente (preview sugerido en consecutivo_simple). */
+    public static function usaNombreProtocoloManual(): bool
+    {
+        return ProtocoloNumeroRegistry::usaNombreProtocoloManual();
+    }
+
+    public static function esConsecutivoSimple(): bool
+    {
+        return ProtocoloNumeroRegistry::esConsecutivoSimple();
+    }
 }

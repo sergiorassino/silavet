@@ -24,4 +24,8 @@ return [
             ],
         ],
     ],
+
+    'protocolos' => [
+        'implementacion' => 'consecutivo_simple',
+    ],
 ];

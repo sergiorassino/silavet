@@ -7,6 +7,9 @@ use Illuminate\Support\Facades\Schema;
 
 class ItemsinformeCatalog
 {
+    /** % y absoluto calculados por entorno.formulas (columna % readonly en carga). */
+    public const TIPO_FORMULA_DOS_VALORES = 11;
+
     /** @return array<int, string> */
     public static function modosCarga(): array
     {
@@ -20,7 +23,24 @@ class ItemsinformeCatalog
             8 => 'Texto Largo',
             9 => 'Dos Valores',
             10 => 'Imagen',
+            self::TIPO_FORMULA_DOS_VALORES => 'Fórmula dos valores',
         ];
+    }
+
+    /**
+     * Dos columnas (% + absoluto) con ambas calculadas por formulas().
+     * Legacy ScriptCase: tipoItem 9 + actualiza 0 (p. ej. neutrófilos segmentados en LVM).
+     */
+    public static function esFormulaDosValores(int $tipoItem, int $actualiza = 0): bool
+    {
+        return $tipoItem === self::TIPO_FORMULA_DOS_VALORES
+            || ($tipoItem === 9 && $actualiza === 0);
+    }
+
+    /** tipoItem 9 editable o 11 (fórmula dos valores). */
+    public static function esDosValores(int $tipoItem): bool
+    {
+        return $tipoItem === 9 || $tipoItem === self::TIPO_FORMULA_DOS_VALORES;
     }
 
     /** @return list<int> */

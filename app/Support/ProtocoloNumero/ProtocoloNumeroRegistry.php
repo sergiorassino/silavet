@@ -3,6 +3,7 @@
 namespace App\Support\ProtocoloNumero;
 
 use App\Support\ProtocoloNumero\Generators\AnualConsecutivoGenerator;
+use App\Support\ProtocoloNumero\Generators\ConsecutivoSimpleGenerator;
 use App\Support\ProtocoloNumero\Generators\DualCortoLargoGenerator;
 use App\Support\ProtocoloNumero\Generators\FechaDiariaGenerator;
 use App\Support\ProtocoloNumero\Generators\VacioGenerator;
@@ -13,6 +14,7 @@ class ProtocoloNumeroRegistry
     /** @var array<string, class-string<ProtocoloNumeroGenerator>> */
     private const MAP = [
         'anual_consecutivo' => AnualConsecutivoGenerator::class,
+        'consecutivo_simple' => ConsecutivoSimpleGenerator::class,
         'fecha_diaria' => FechaDiariaGenerator::class,
         'dual_corto_largo' => DualCortoLargoGenerator::class,
         'vacio' => VacioGenerator::class,
@@ -37,5 +39,16 @@ class ProtocoloNumeroRegistry
     public static function dejaNombreProtocoloVacio(): bool
     {
         return config('tenant.protocolos.implementacion') === 'vacio';
+    }
+
+    /** Alta y edición: el usuario ingresa el número (preview sugerido, no reserva automática). */
+    public static function usaNombreProtocoloManual(): bool
+    {
+        return in_array(config('tenant.protocolos.implementacion'), ['consecutivo_simple', 'vacio'], true);
+    }
+
+    public static function esConsecutivoSimple(): bool
+    {
+        return config('tenant.protocolos.implementacion') === 'consecutivo_simple';
     }
 }

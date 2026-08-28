@@ -151,7 +151,7 @@ SQL;
             ->where('r.mostrar', 1)
             ->whereNotNull('r.valor')
             ->whereRaw("TRIM(r.valor) <> ''")
-            ->whereIn('r.tipoItem', [1, 4, 7, 8, 9])
+            ->whereIn('r.tipoItem', [1, 4, 7, 8, 9, 11])
             ->when($idClientes !== null, fn ($q) => $q->where('p.idClientes', $idClientes))
             ->when($ctx->esCliente() && $ctx->idClientes, fn ($q) => $q->where('p.idClientes', $ctx->idClientes))
             ->when($paciente !== '', function ($q) use ($paciente) {

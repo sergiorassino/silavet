@@ -176,6 +176,8 @@
                 @unless ($idPacientes)
                     @if ($dejaNombreProtocoloVacio)
                         <p class="mt-0.5 text-[10px] leading-tight text-neutral-500">Opcional — sin número automático.</p>
+                    @elseif ($esConsecutivoSimple)
+                        <p class="mt-0.5 text-[10px] leading-tight text-neutral-500">Sugerido — puede modificarlo antes de guardar.</p>
                     @else
                         <p class="mt-0.5 text-[10px] leading-tight text-neutral-500">Provisional — se confirma al guardar.</p>
                     @endif

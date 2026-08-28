@@ -122,6 +122,7 @@ fijas al scroll vertical y horizontal de la página.
 | 7 | Readonly (resultado de fórmula) | — |
 | 8 | Textarea (Serie Roja/Blanca, textos largos) | No |
 | 9 | % editable (`id`) + absoluto oculto (`id_2`) + display (`id_T`) | Sí (`formatearYCalcular`) |
+| 11 | % readonly (`id`) + absoluto oculto (`id_2`) + display (`id_T`); ambos los escribe `formulas()` | No (no dispara al editar; se recalcula al cambiar orígenes) |
 | 3 / 5 / 10 | Título / línea / imágenes | Sin valor de resultado numérico |
 
 `renglones.mostrar` / `itemsinforme.mostrar` **no** ocultan campos en esta pantalla

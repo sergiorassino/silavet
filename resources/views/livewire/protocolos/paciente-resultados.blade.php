@@ -86,6 +86,10 @@
                                 $tipo = (int) $renglon['tipoItem'];
                                 $estilo = (int) $renglon['estiloNum'];
                                 $actualiza = (int) $renglon['actualiza'] === 1;
+                                $esFormulaDosValores = \App\Support\Itemsinforme\ItemsinformeCatalog::esFormulaDosValores(
+                                    $tipo,
+                                    (int) $renglon['actualiza']
+                                );
                                 // ScriptCase: actualiza=1 ó conteo manual de plaquetas dispara formulas().
                                 $idConteoPlt = (int) ($contextoFormulas['idConteoPlaquetas'] ?? 0);
                                 $disparaFormulas = $actualiza || ($idConteoPlt > 0 && (int) $idI === $idConteoPlt);
@@ -169,7 +173,7 @@
                                                       data-renglon="{{ $idR }}"
                                                       data-campo="valor"
                                                       rows="3">{{ $renglon['valor'] }}</textarea>
-                                        @elseif ($tipo === 9)
+                                        @elseif ($tipo === 9 && ! $esFormulaDosValores)
                                             <div class="vl-carga-doble">
                                                 <input type="text"
                                                        id="{{ $idI }}"
@@ -180,6 +184,28 @@
                                                        autocomplete="off"
                                                        @input="reemplazarComa('{{ $idI }}', {{ $estilo }})"
                                                        @change="formatearYCalcular({{ $idI }}, {{ $estilo }})">
+                                                <input type="hidden"
+                                                       id="{{ $idI }}_2"
+                                                       data-renglon="{{ $idR }}"
+                                                       data-campo="valor2"
+                                                       value="{{ $renglon['valor2'] }}">
+                                                <input type="text"
+                                                       id="{{ $idI }}_T"
+                                                       class="form-input vl-carga-input vl-carga-input--readonly"
+                                                       value="{{ $renglon['valor2'] }}"
+                                                       disabled
+                                                       tabindex="-1">
+                                            </div>
+                                        @elseif ($esFormulaDosValores)
+                                            <div class="vl-carga-doble">
+                                                <input type="text"
+                                                       id="{{ $idI }}"
+                                                       class="form-input vl-carga-input vl-carga-input--readonly"
+                                                       data-renglon="{{ $idR }}"
+                                                       data-campo="valor"
+                                                       value="{{ $renglon['valor'] }}"
+                                                       readonly
+                                                       tabindex="-1">
                                                 <input type="hidden"
                                                        id="{{ $idI }}_2"
                                                        data-renglon="{{ $idR }}"

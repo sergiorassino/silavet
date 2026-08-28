@@ -90,6 +90,32 @@ class ProtocoloNumeroTest extends TestCase
         $this->assertSame('', $recibido);
     }
 
+    public function test_previsualizar_consecutivo_simple_devuelve_entero_sugerido(): void
+    {
+        Config::set('tenant.protocolos.implementacion', 'consecutivo_simple');
+
+        $numero = ProtocoloNumero::previsualizarParaFecha('2026-07-06');
+        $otraVez = ProtocoloNumero::previsualizarParaFecha('2026-07-06');
+
+        $this->assertSame($numero, $otraVez);
+        $this->assertMatchesRegularExpression('/^\d+$/', $numero);
+        $this->assertGreaterThan(0, (int) $numero);
+    }
+
+    public function test_usa_nombre_protocolo_manual_en_consecutivo_simple_y_vacio(): void
+    {
+        Config::set('tenant.protocolos.implementacion', 'fecha_diaria');
+        $this->assertFalse(ProtocoloNumero::usaNombreProtocoloManual());
+
+        Config::set('tenant.protocolos.implementacion', 'consecutivo_simple');
+        $this->assertTrue(ProtocoloNumero::usaNombreProtocoloManual());
+        $this->assertTrue(ProtocoloNumero::esConsecutivoSimple());
+
+        Config::set('tenant.protocolos.implementacion', 'vacio');
+        $this->assertTrue(ProtocoloNumero::usaNombreProtocoloManual());
+        $this->assertFalse(ProtocoloNumero::esConsecutivoSimple());
+    }
+
     public function test_deja_nombre_protocolo_vacio_solo_en_implementacion_vacio(): void
     {
         Config::set('tenant.protocolos.implementacion', 'fecha_diaria');

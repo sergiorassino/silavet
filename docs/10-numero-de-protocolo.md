@@ -11,7 +11,7 @@
 | Concepto | Detalle |
 |----------|---------|
 | **Campo en BD** | `pacientes.nombreProtocolo` (string, hasta 50 caracteres) |
-| **Cuándo se asigna** | Al **alta**, por el generador del tenant (salvo `vacio`, que deja `''`). En **edición** es fijo salvo que el tenant active `protocolos.nombre_protocolo_editable_en_edicion`. |
+| **Cuándo se asigna** | Al **alta**, por el generador del tenant (salvo `vacio`, que deja `''`; salvo `consecutivo_simple`, sugerido y editable). En **edición** es fijo salvo `consecutivo_simple`, `vacio` o `protocolos.nombre_protocolo_editable_en_edicion`. |
 | **Zona horaria** | `America/Argentina/Buenos_Aires` para prefijos con fecha |
 | **Vista previa** | El formulario muestra un número **provisional** (o vacío si `vacio`); puede cambiar si otro usuario guarda antes. |
 | **Reserva definitiva** | Al guardar, bajo lock exclusivo + transacción, se confirma el siguiente libre (`vacio` no usa lock). |
@@ -32,6 +32,7 @@ y no deben renombrarse una vez en producción.
 | `fecha_diaria` | `YYMMDD` + secuencia diaria | 9 (`260706001`) | **Implementada** | ScriptCase opción 2 |
 | `dual_corto_largo` | Largo: `YYMMDDNNN` · Corto: `C` + 9 dígitos | 9 o 10 | **Implementada** | ScriptCase opción 3 |
 | `anual_consecutivo` | `AA` + secuencia anual | 7 (`2600001`) | **Implementada** | ScriptCase opción 1 |
+| `consecutivo_simple` | Secuencia numérica global | variable (`13155`) | **Implementada** | LVM |
 | `vacio` | (sin número) | 0 (`''`) | **Implementada** | Pedido Bio |
 
 **Tenants configurados hoy:**
@@ -43,6 +44,7 @@ y no deben renombrarse una vez en producción.
 | `labvetciudad` | `anual_consecutivo` | `config/tenants/labvetciudad.php` |
 | `laboratoriosiv` | `anual_consecutivo` | `config/tenants/laboratoriosiv.php` |
 | `civetfranca` | `dual_corto_largo` | `config/tenants/civetfranca.php` |
+| `lvm` | `consecutivo_simple` | `config/tenants/lvm.php` |
 | `bio` | `vacio` | `config/tenants/bio.php` |
 
 ---
@@ -203,7 +205,64 @@ No requiere campos extra. Solo fecha + vista previa del protocolo.
 
 ---
 
-## 6. Variante `vacio`
+## 6. Variante `consecutivo_simple`
+
+Usada por **lvm**. Secuencia numérica global sin prefijo de fecha ni año.
+
+### Formato
+
+```
+NNNNN
+└── entero incremental (sin ceros a la izquierda forzados)
+```
+
+**Ejemplo:** último `13154` → siguiente sugerido `13155`
+
+### Reglas de cálculo
+
+1. Considerar solo `nombreProtocolo` compuestos **exclusivamente por dígitos**
+   (protocolos legacy con otro formato no alteran la secuencia).
+2. Si no hay ninguno numérico → usar `inicio` (default `1`).
+3. Si hay → `MAX(numérico) + 1`.
+4. La fecha del protocolo (`fechhoy`) **no influye** en la secuencia.
+
+### Edición manual
+
+A diferencia del resto de variantes con secuencia automática:
+
+- El formulario muestra el **siguiente sugerido** al abrir el alta.
+- El campo es **editable en alta y en edición**.
+- Al guardar se persiste el valor ingresado (validación de unicidad).
+- **No** se usa reserva con lock al alta: el usuario puede corregir el número antes de guardar.
+
+### Configuración
+
+```php
+// config/tenants/lvm.php
+'protocolos' => [
+    'implementacion' => 'consecutivo_simple',
+],
+
+// config/tenant.php (defaults)
+'consecutivo_simple' => [
+    'inicio' => 1,
+],
+```
+
+### UI
+
+Campo editable con texto de ayuda: «Sugerido — puede modificarlo antes de guardar».
+Obligatorio en alta (solo dígitos).
+
+### Código
+
+- Generador: `App\Support\ProtocoloNumero\Generators\ConsecutivoSimpleGenerator`
+- Helper: `ProtocoloNumero::usaNombreProtocoloManual()` / `ProtocoloNumero::esConsecutivoSimple()`
+- Lock MySQL (solo si se invocara reserva automática): `vl_protocolo_consecutivo_simple`
+
+---
+
+## 7. Variante `vacio`
 
 Usada por **bio**. No genera número de protocolo: al alta `nombreProtocolo` queda
 como cadena vacía. Varios protocolos pueden compartir el valor vacío (no hay
@@ -246,7 +305,7 @@ manual opcional; vacío por defecto.
 
 ---
 
-## 7. Concurrencia y consistencia
+## 8. Concurrencia y consistencia
 
 Varios usuarios pueden crear protocolos a la vez. Para evitar duplicados:
 
@@ -281,7 +340,7 @@ ProtocoloNumero::withContextoReservado($ctx, $callback);
 
 ---
 
-## 8. Configuración por tenant
+## 9. Configuración por tenant
 
 Patrón estándar del proyecto: defaults en `config/tenant.php`, solo diferencias en
 `config/tenants/{slug}.php`.
@@ -316,7 +375,7 @@ instalación; no hay `tenant_id` en `pacientes`.
 
 ---
 
-## 9. Agregar una nueva variante
+## 10. Agregar una nueva variante
 
 Checklist obligatorio para no romper otros laboratorios:
 
@@ -350,12 +409,13 @@ app/Support/
         ├── AnualConsecutivoGenerator.php
         ├── FechaDiariaGenerator.php
         ├── DualCortoLargoGenerator.php
+        ├── ConsecutivoSimpleGenerator.php
         └── VacioGenerator.php
 ```
 
 ---
 
-## 10. Tests
+## 11. Tests
 
 `tests/Unit/ProtocoloNumeroTest.php` valida:
 
@@ -371,7 +431,7 @@ Al agregar variantes, incluir al menos:
 
 ---
 
-## 11. Decisiones de diseño
+## 12. Decisiones de diseño
 
 | Decisión | Motivo |
 |----------|--------|
@@ -380,10 +440,11 @@ Al agregar variantes, incluir al menos:
 | Preview sin lock | Mejor UX; el número definitivo se fija al guardar |
 | Lock por secuencia, no global | Dos días, años o tipos (largo/corto) no se bloquean entre sí |
 | `vacio` sin lock ni unicidad | Varios casos sin número; no hay secuencia que proteger |
+| `consecutivo_simple` sin lock al alta | El usuario puede corregir el sugerido; unicidad al guardar |
 
 ---
 
-## 12. Referencias
+## 13. Referencias
 
 - Modelo de datos: `pacientes.nombreProtocolo` en [02-modelo-de-datos.md](02-modelo-de-datos.md)
 - Personalización por tenant: [07-versionado-de-modulos-por-tenant.md](07-versionado-de-modulos-por-tenant.md)

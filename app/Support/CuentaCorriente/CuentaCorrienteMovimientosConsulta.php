@@ -7,6 +7,7 @@ use App\Models\Movimiento;
 use Carbon\Carbon;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 
 /**
  * Consultas de cuenta corriente para la variante `tesoreria_pacientes`
@@ -53,9 +54,11 @@ final class CuentaCorrienteMovimientosConsulta
             ->select('clientes.*')
             ->selectRaw('COALESCE(saldos.saldo_total, 0) as saldo_total')
             ->where('clientes.idClientes', '>', 1)
-            ->where(function ($q) {
-                $q->whereNull('clientes.tipoCliente')
-                    ->orWhere('clientes.tipoCliente', '!=', 1);
+            ->when(Schema::hasColumn('clientes', 'tipoCliente'), function ($q) {
+                $q->where(function ($inner) {
+                    $inner->whereNull('clientes.tipoCliente')
+                        ->orWhere('clientes.tipoCliente', '!=', 1);
+                });
             })
             ->when($term !== '', function ($q) use ($term) {
                 $q->where(function ($inner) use ($term) {
