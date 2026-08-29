@@ -14,10 +14,10 @@ use Illuminate\Validation\ValidationException;
 class ResultadosGuardarServicio
 {
     /** Tipos cuyo `valor` puede guardarse desde el formulario. */
-    private const TIPOS_CON_VALOR = [1, 4, 7, 8, 9];
+    private const TIPOS_CON_VALOR = [1, 4, 6, 7, 8, 9];
 
     /** Tipos cuyo `valor2` puede guardarse desde el formulario. */
-    private const TIPOS_CON_VALOR2 = [4, 9];
+    private const TIPOS_CON_VALOR2 = [4, 6, 9];
 
     /**
      * @param  array<string, string|null>  $valores  clave = idRenglones

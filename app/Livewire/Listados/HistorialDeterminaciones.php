@@ -232,7 +232,7 @@ class HistorialDeterminaciones extends Component
 
         $determinaciones = Itemsinforme::query()
             ->when($this->idGrupos, fn ($q) => $q->where('idGrupos', $this->idGrupos))
-            ->whereIn('tipoItem', [1, 4, 7, 8, 9])
+            ->whereIn('tipoItem', [1, 4, 6, 7, 8, 9])
             ->orderBy('nombreItem')
             ->get(['idItems', 'nombreItem', 'idGrupos']);
 

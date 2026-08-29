@@ -9,6 +9,7 @@ use Carbon\Carbon;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 
 final class CuentaCorrienteConsulta
 {
@@ -65,10 +66,12 @@ final class CuentaCorrienteConsulta
             ->leftJoinSub($saldoSubquery, 'saldos', 'saldos.idClientes', '=', 'clientes.idClientes')
             ->select('clientes.*')
             ->selectRaw('COALESCE(saldos.saldo_total, 0) as saldo_total')
-            // tipoCliente = 1: no forman parte de la cuenta corriente.
-            ->where(function ($q) {
-                $q->whereNull('clientes.tipoCliente')
-                    ->orWhere('clientes.tipoCliente', '!=', 1);
+            // tipoCliente = 1: no forman parte de la cuenta corriente (solo si existe la columna legacy).
+            ->when(Schema::hasColumn('clientes', 'tipoCliente'), function ($q) {
+                $q->where(function ($inner) {
+                    $inner->whereNull('clientes.tipoCliente')
+                        ->orWhere('clientes.tipoCliente', '!=', 1);
+                });
             })
             ->when($term !== '', function ($q) use ($term) {
                 $q->where(function ($inner) use ($term) {

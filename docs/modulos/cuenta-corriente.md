@@ -56,7 +56,9 @@ Config `id_cuenta_cc` (solo variante `tesoreria_pacientes`):
 - Solo se suman movimientos de la cuenta CC (`id_cuenta_cc`).
 - No se escribe `clientes.tmpSaldo` (legacy ScriptCase); se calcula siempre en consulta.
 
-**Listado de clientes:** `idClientes > 1` + exclusión `tipoCliente != 1`.
+**Listado de clientes:** `idClientes > 1` (variante movimientos) + exclusión
+`tipoCliente != 1` **solo si** existe la columna legacy `clientes.tipoCliente`
+(neoLab/LVM no la tienen; epizoolab sí).
 
 **Detalle por cliente:** solo movimientos de la cuenta CC (`idCuentas =
 id_cuenta_cc`), orden `fechhora` DESC; filtrable por Desde/Hasta. El saldo del

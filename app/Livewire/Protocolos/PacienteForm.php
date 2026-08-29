@@ -123,7 +123,7 @@ class PacienteForm extends Component
 
     public function updatedFechhoy(string $value): void
     {
-        if ($this->idPacientes || $value === '') {
+        if ($this->idPacientes || $value === '' || ProtocoloNumero::usaNombreProtocoloManual()) {
             return;
         }
 
@@ -173,10 +173,14 @@ class PacienteForm extends Component
                 Rule::in(['L', 'C']),
             ],
             'nombreProtocolo' => [
-                Rule::requiredIf((bool) $this->idPacientes && ! ProtocoloNumero::dejaNombreProtocoloVacio()),
+                Rule::requiredIf(
+                    ProtocoloNumero::esConsecutivoSimple()
+                    || ((bool) $this->idPacientes && ! ProtocoloNumero::dejaNombreProtocoloVacio())
+                ),
                 'nullable',
                 'string',
                 'max:50',
+                Rule::when(ProtocoloNumero::esConsecutivoSimple(), ['regex:/^\d+$/']),
             ],
             'nombre' => ['required', 'string', 'max:50'],
             'propietario' => ['nullable', 'string', 'max:100'],
@@ -210,6 +214,8 @@ class PacienteForm extends Component
         return [
             'listaPreciosPaciente.required' => 'Seleccione la lista de precios del protocolo.',
             'listaPreciosPaciente.in' => 'La lista de precios debe ser 1, 2 o 3.',
+            'nombreProtocolo.required' => 'Ingrese el número de protocolo.',
+            'nombreProtocolo.regex' => 'El número de protocolo debe contener solo dígitos.',
         ];
     }
 
@@ -313,7 +319,7 @@ class PacienteForm extends Component
 
         try {
             if ($this->idPacientes) {
-                if ($this->nombreProtocoloEditableEnEdicion() || ProtocoloNumero::dejaNombreProtocoloVacio()) {
+                if ($this->nombreProtocoloEditableEnEdicion() || ProtocoloNumero::usaNombreProtocoloManual()) {
                     $payload['nombreProtocolo'] = $this->nombreProtocoloAPersistir(
                         trim((string) ($data['nombreProtocolo'] ?? '')),
                         $this->idPacientes
@@ -331,7 +337,7 @@ class PacienteForm extends Component
                 try {
                     $nuevoId = null;
 
-                    if (ProtocoloNumero::dejaNombreProtocoloVacio()) {
+                    if (ProtocoloNumero::usaNombreProtocoloManual()) {
                         $numero = $this->nombreProtocoloAPersistir(
                             trim((string) ($data['nombreProtocolo'] ?? '')),
                             null
@@ -594,7 +600,7 @@ class PacienteForm extends Component
         $clienteBloqueado = $ctx->esCliente() && $ctx->idClientes;
         $usaTipoProtocolo = ProtocoloNumero::usaTipoProtocolo();
         $dejaNombreProtocoloVacio = ProtocoloNumero::dejaNombreProtocoloVacio();
-        $nombreProtocoloEditable = $dejaNombreProtocoloVacio
+        $nombreProtocoloEditable = ProtocoloNumero::usaNombreProtocoloManual()
             || ((bool) $this->idPacientes && $this->nombreProtocoloEditableEnEdicion());
         $puedeEliminar = false;
 
@@ -615,6 +621,7 @@ class PacienteForm extends Component
             'clienteBloqueado' => $clienteBloqueado,
             'usaTipoProtocolo' => $usaTipoProtocolo,
             'dejaNombreProtocoloVacio' => $dejaNombreProtocoloVacio,
+            'esConsecutivoSimple' => ProtocoloNumero::esConsecutivoSimple(),
             'nombreProtocoloEditable' => $nombreProtocoloEditable,
             'puedeEliminar' => $puedeEliminar,
             'mostrarListaPrecios' => ListaPreciosConfig::mostrarSelectorPaciente(),

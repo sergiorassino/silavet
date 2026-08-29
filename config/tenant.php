@@ -83,7 +83,7 @@ return [
 
         /*
         | Si true, en edición de paciente el campo nombreProtocolo es editable.
-        | En alta: de solo lectura (generado) salvo implementacion vacio (queda vacío).
+        | En alta: de solo lectura (generado) salvo `consecutivo_simple`, `vacio` o flag editable.
         | Default: false. alqu: true.
         */
         'nombre_protocolo_editable_en_edicion' => false,
@@ -111,6 +111,14 @@ return [
         | Sin parámetros de secuencia.
         */
         'vacio' => [],
+
+        /*
+        | consecutivo_simple: secuencia numérica global (13154 → 13155).
+        | Editable en alta y edición; preview sugerido, sin reserva automática.
+        */
+        'consecutivo_simple' => [
+            'inicio' => 1,
+        ],
     ],
 
     /*

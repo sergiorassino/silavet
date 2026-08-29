@@ -160,8 +160,8 @@ final class DiagnosticoIaPromptBuilder
         $unidad2 = trim((string) ($r['unidadMedida2'] ?? ''));
         $referencia = trim((string) ($r['referencia'] ?? ''));
 
-        // tipoItem 9 usa valor2 / unidadMedida2 (paridad NeoLab).
-        if ($tipo === 9) {
+        // tipoItem 6 / 9: valor2 / unidadMedida2 (paridad NeoLab).
+        if (in_array($tipo, [6, 9], true)) {
             $partes = array_filter([$nombre, $valor2, $unidad2], static fn ($v) => $v !== '');
             $linea = implode(' ', $partes);
         } elseif (in_array($tipo, [3, 8], true)) {
