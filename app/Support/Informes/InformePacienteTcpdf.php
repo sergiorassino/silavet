@@ -333,7 +333,7 @@ final class InformePacienteTcpdf extends Fpdi
             3 => $this->dibujarTituloItem((string) ($r['nombreItem'] ?? '')),
             2 => $this->dibujarTextoFijo($r),
             8 => $this->dibujarTextoLargo($r),
-            9, 11 => $this->dibujarDosValores($r),
+            6, 9 => $this->dibujarDosValores($r),
             10 => $this->dibujarImagenes($r),
             default => $this->dibujarValorReferencia($r),
         };

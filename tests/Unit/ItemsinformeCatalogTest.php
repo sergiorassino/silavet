@@ -29,9 +29,9 @@ class ItemsinformeCatalogTest extends TestCase
         $this->assertSame('Fórmula dos valores', $modos[ItemsinformeCatalog::TIPO_FORMULA_DOS_VALORES]);
     }
 
-    public function test_es_formula_dos_valores_tipo_11_y_legacy_tipo_9_sin_actualiza(): void
+    public function test_es_formula_dos_valores_tipo_6_y_legacy_tipo_9_sin_actualiza(): void
     {
-        $this->assertTrue(ItemsinformeCatalog::esFormulaDosValores(11));
+        $this->assertTrue(ItemsinformeCatalog::esFormulaDosValores(6));
         $this->assertTrue(ItemsinformeCatalog::esFormulaDosValores(9, 0));
         $this->assertFalse(ItemsinformeCatalog::esFormulaDosValores(9, 1));
         $this->assertFalse(ItemsinformeCatalog::esFormulaDosValores(1));
