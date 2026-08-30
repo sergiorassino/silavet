@@ -12,16 +12,20 @@
     <span x-show="!sidebarCollapsed" x-cloak class="truncate">Pacientes</span>
 </a>
 
+@if (\App\Support\Cliente\PortalClienteConfig::mostrarListaPrecios())
 <a href="{{ route('cliente.lista-precios') }}"
    class="vl-sidebar-link {{ request()->routeIs('cliente.lista-precios*') ? 'is-active' : '' }}"
    title="Lista de Precios (v1.0)">
     <x-vl-sidebar-icon name="lista-precios" class="h-5 w-5 shrink-0 opacity-80" />
     <span x-show="!sidebarCollapsed" x-cloak class="truncate">Lista de Precios</span>
 </a>
+@endif
 
+@if (\App\Support\Cliente\PortalClienteConfig::mostrarEstimacionCostos())
 <a href="{{ route('cliente.estimacion-costos') }}"
    class="vl-sidebar-link {{ request()->routeIs('cliente.estimacion-costos') ? 'is-active' : '' }}"
    title="Estimación de Costos (v1.0)">
     <x-vl-sidebar-icon name="estimacion-costos" class="h-5 w-5 shrink-0 opacity-80" />
     <span x-show="!sidebarCollapsed" x-cloak class="truncate">Estimación de Costos</span>
 </a>
+@endif

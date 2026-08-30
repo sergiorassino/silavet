@@ -18,8 +18,17 @@ return [
         'titulo_cliente' => 'Portal de clientes',
     ],
 
+    /*
+    | Autogestión (Menú de Clientes). No afecta el menú de laboratorio/administración.
+    | - permite_descarga_excel: Excel en listados del portal (si aplica).
+    | - mostrar_lista_precios / mostrar_estimacion_costos: ítems del sidebar y rutas
+    |   /cliente/lista-precios y /cliente/estimacion-costos. Default true.
+    |   epizoolab declara ambos en false. Helper: App\Support\Cliente\PortalClienteConfig.
+    */
     'portal_cliente' => [
         'permite_descarga_excel' => true,
+        'mostrar_lista_precios' => true,
+        'mostrar_estimacion_costos' => true,
     ],
 
     /*

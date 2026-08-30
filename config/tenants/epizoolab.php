@@ -9,6 +9,11 @@ return [
         'mostrar_modulo' => false,
     ],
 
+    'portal_cliente' => [
+        'mostrar_lista_precios' => false,
+        'mostrar_estimacion_costos' => false,
+    ],
+
     'tipodeterminaciones' => [
         'derivacion' => 'catalogo',
     ],

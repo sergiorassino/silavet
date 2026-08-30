@@ -6,6 +6,7 @@ use App\Models\Cliente;
 use App\Models\Requerimiento;
 use App\Models\Reqxtipodet;
 use App\Models\Tipodeterminacion;
+use App\Support\Cliente\PortalClienteConfig;
 use App\Support\PermisosIaCatalog;
 use App\Support\PrecioInput;
 use App\Support\Precios\DescuentoDeterminacionResolver;
@@ -31,8 +32,11 @@ class EstimacionCostos extends Component
         abort_unless(Schema::hasTable('tipodeterminaciones'), 404, 'La tabla de tipodeterminaciones no está disponible.');
 
         $ctx = labCtx();
-        if ($ctx->esCliente() && $ctx->idClientes) {
-            $this->idClientes = $ctx->idClientes;
+        if ($ctx->esCliente()) {
+            abort_unless(PortalClienteConfig::mostrarEstimacionCostos(), 404);
+            if ($ctx->idClientes) {
+                $this->idClientes = $ctx->idClientes;
+            }
         }
     }
 
