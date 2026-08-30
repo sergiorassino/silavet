@@ -290,12 +290,15 @@ class MovimientoIndex extends Component
             $mensaje = 'Movimiento actualizado correctamente.';
         } else {
             Paciente::create($payload);
-            $mensaje = 'Movimiento registrado correctamente.';
+            $mensaje = null;
         }
 
         $this->cancelarFormulario();
         $this->resetPage();
-        $this->dispatch('vl-swal-exito', mensaje: $mensaje);
+
+        if ($mensaje !== null) {
+            $this->dispatch('vl-swal-exito', mensaje: $mensaje);
+        }
     }
 
     public function eliminar(): void

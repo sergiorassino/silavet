@@ -96,6 +96,7 @@
                                 $onchangeFmt = $disparaFormulas
                                     ? "formatearYCalcular({$idI}, {$estilo})"
                                     : "formatearSolo({$idI}, {$estilo})";
+                                $ocultoEnInforme = (int) ($renglon['mostrar'] ?? 1) !== 1;
                             @endphp
 
                             @if ($tipo === 5)
@@ -104,12 +105,22 @@
                                 </div>
                             @elseif ($tipo === 3)
                                 <div class="vl-carga-fila vl-carga-fila--titulo" wire:ignore wire:key="ren-{{ $idR }}">
-                                    <div class="vl-carga-label">{{ $renglon['nombreItem'] }}</div>
+                                    <div class="vl-carga-label">
+                                        {{ $renglon['nombreItem'] }}
+                                        @if ($ocultoEnInforme)
+                                            <span class="vl-carga-no-informe">No se muestra en el informe</span>
+                                        @endif
+                                    </div>
                                     <div class="vl-carga-control"></div>
                                 </div>
                             @elseif ($tipo === 10)
                                 <div class="vl-carga-fila vl-carga-fila--imagen" wire:key="ren-img-{{ $idR }}">
-                                    <div class="vl-carga-label">{{ $renglon['nombreItem'] }}</div>
+                                    <div class="vl-carga-label">
+                                        {{ $renglon['nombreItem'] }}
+                                        @if ($ocultoEnInforme)
+                                            <span class="vl-carga-no-informe">No se muestra en el informe</span>
+                                        @endif
+                                    </div>
                                     <div class="vl-carga-control">
                                         <livewire:protocolos.renglon-imagenes
                                             :id-renglones="$idR"
@@ -122,6 +133,9 @@
                                 <div class="vl-carga-fila" wire:ignore wire:key="ren-{{ $idR }}">
                                     <div class="vl-carga-label">
                                         <label for="{{ $idI }}">{{ $renglon['nombreItem'] }}</label>
+                                        @if ($ocultoEnInforme)
+                                            <span class="vl-carga-no-informe">No se muestra en el informe</span>
+                                        @endif
                                     </div>
                                     <div class="vl-carga-control">
                                         @if ($tipo === 1)

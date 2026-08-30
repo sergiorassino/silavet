@@ -17,6 +17,7 @@ use App\Support\DniInput;
 use App\Support\PermisosIaCatalog;
 use App\Support\ProtocoloNumero;
 use App\Support\Precios\ListaPreciosConfig;
+use App\Support\Protocolos\DerivacionListadoFiltros;
 use App\Support\Protocolos\PacienteAdjuntoStorage;
 use App\Support\Protocolos\PacienteListadoFiltros;
 use App\Support\Resultados\RenglonImagenesStorage;
@@ -71,14 +72,23 @@ class PacienteForm extends Component
 
     public int $listaPreciosPaciente = ListaPreciosConfig::DEFAULT;
 
-    /** @var array{vista?: string, filtroEstado?: string, page?: int} */
+    public string $origen = 'pacientes';
+
+    /** @var array{vista?: string, filtroEstado?: string, page?: int, agrupacion?: string, incluirFinalizados?: int} */
     public array $listadoFiltros = [];
 
     public function mount(?int $id = null): void
     {
         abort_unless(tienePermiso(PermisosIaCatalog::PROTOCOLOS), 403);
 
-        $this->listadoFiltros = PacienteListadoFiltros::desdeRequest();
+        $origen = request()->query('origen', 'pacientes');
+        $this->origen = in_array($origen, ['pacientes', 'derivaciones'], true)
+            ? $origen
+            : 'pacientes';
+
+        $this->listadoFiltros = $this->origen === 'derivaciones'
+            ? DerivacionListadoFiltros::desdeRequest()
+            : PacienteListadoFiltros::desdeRequest();
 
         $ctx = labCtx();
 
@@ -394,7 +404,7 @@ class PacienteForm extends Component
         $this->dispatch('vl-swal-exito', mensaje: $mensaje);
 
         $this->redirect(
-            PacienteListadoFiltros::urlIndex($filtrosVolver, $focoId),
+            $this->urlVolver($filtrosVolver, $focoId),
             navigate: false
         );
     }
@@ -505,7 +515,7 @@ class PacienteForm extends Component
         $this->dispatch('vl-swal-exito', mensaje: 'Protocolo eliminado correctamente.');
 
         $this->redirect(
-            PacienteListadoFiltros::urlIndex($this->listadoFiltros),
+            $this->urlVolver($this->listadoFiltros),
             navigate: false
         );
     }
@@ -627,7 +637,19 @@ class PacienteForm extends Component
             'mostrarListaPrecios' => ListaPreciosConfig::mostrarSelectorPaciente(),
             'tieneColumnaListaPrecios' => ListaPreciosConfig::tieneColumnaPaciente(),
             'opcionesListaPrecios' => ListaPreciosConfig::opciones(),
-            'urlVolver' => PacienteListadoFiltros::urlIndex($this->listadoFiltros, $this->idPacientes),
+            'urlVolver' => $this->urlVolver($this->listadoFiltros, $this->idPacientes),
         ])->layout('layouts.staff', UsuarioMenuPortal::staffLayoutParams(labCtx()->idRoles));
+    }
+
+    /**
+     * @param  array{vista?: string, filtroEstado?: string, page?: int, agrupacion?: string, incluirFinalizados?: int}  $filtros
+     */
+    private function urlVolver(array $filtros = [], ?int $focoIdPaciente = null): string
+    {
+        if ($this->origen === 'derivaciones') {
+            return DerivacionListadoFiltros::urlIndex($filtros, $focoIdPaciente);
+        }
+
+        return PacienteListadoFiltros::urlIndex($filtros, $focoIdPaciente);
     }
 }

@@ -24,7 +24,8 @@
                     <tr>
                         <th class="table-header">Cliente</th>
                         <th class="table-header">Nombre</th>
-                        <th class="table-header">DNI</th>
+                        <th class="table-header">Usuario/DNI</th>
+                        <th class="table-header">Contraseña</th>
                         <th class="table-header">Rol</th>
                         <th class="table-header text-center">AFIP</th>
                         <th class="table-header text-center">Acciones</th>
@@ -36,6 +37,7 @@
                             <td class="table-cell">{{ $usuario->cliente?->nombre ?: '—' }}</td>
                             <td class="table-cell font-medium">{{ $usuario->apenom }}</td>
                             <td class="table-cell tabular-nums">{{ $usuario->dni }}</td>
+                            <td class="table-cell">{{ $usuario->password ?: '—' }}</td>
                             <td class="table-cell">{{ $usuario->rol?->rol ?: '—' }}</td>
                             <td class="table-cell text-center">
                                 @if ((int) $usuario->permisoAfip === 1)
@@ -69,7 +71,7 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="6" class="table-cell text-center text-neutral-500 py-8">
+                            <td colspan="7" class="table-cell text-center text-neutral-500 py-8">
                                 No hay usuarios registrados.
                             </td>
                         </tr>

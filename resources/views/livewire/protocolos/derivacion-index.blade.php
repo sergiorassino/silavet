@@ -1,4 +1,31 @@
-<div class="vl-page vl-page--wide">
+<div class="vl-page vl-page--wide"
+     x-data="{
+        enfocarFila(id) {
+            this.$nextTick(() => {
+                const row = document.querySelector('[data-id-paciente=\'' + id + '\']');
+                if (!row) {
+                    return;
+                }
+
+                row.scrollIntoView({ block: 'center', behavior: 'smooth' });
+                row.classList.add('vl-pacientes-row-focus');
+                row.focus({ preventScroll: true });
+
+                window.setTimeout(() => row.classList.remove('vl-pacientes-row-focus'), 2500);
+
+                try {
+                    const url = new URL(window.location.href);
+                    if (url.searchParams.has('foco')) {
+                        url.searchParams.delete('foco');
+                        const qs = url.searchParams.toString();
+                        window.history.replaceState({}, '', url.pathname + (qs ? '?' + qs : '') + url.hash);
+                    }
+                } catch (e) {}
+            });
+        }
+     }"
+     x-init="@if ($focoIdPaciente) enfocarFila({{ (int) $focoIdPaciente }}) @endif"
+     @derivaciones-enfocar-fila.window="enfocarFila($event.detail.id)">
     <div class="vl-hero mb-4">
         <div class="vl-hero-inner flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <x-vl-hero-heading>
@@ -133,12 +160,16 @@
                                 </td>
                             </tr>
                         @else
-                            <tr class="vl-pacientes-row {{ $paciente->filaClaseCss() }}" wire:key="deriv-{{ $determinacion->idDeterminaciones }}">
+                            <tr id="deriv-row-{{ $determinacion->idDeterminaciones }}"
+                                data-id-paciente="{{ $paciente->idPacientes }}"
+                                tabindex="-1"
+                                class="vl-pacientes-row {{ $paciente->filaClaseCss() }}"
+                                wire:key="deriv-{{ $determinacion->idDeterminaciones }}">
                                 <td class="vl-pacientes-td vl-pacientes-td--num">
                                     {{ ($registros->currentPage() - 1) * $registros->perPage() + $loop->iteration }}
                                 </td>
                                 <td class="vl-pacientes-td vl-pacientes-td--icon">
-                                    <a href="{{ route('protocolos.edit', $paciente->idPacientes) }}"
+                                    <a href="{{ route('protocolos.edit', array_merge(['id' => $paciente->idPacientes, 'origen' => 'derivaciones'], $this->filtrosListadoParaUrl())) }}"
                                        title="Editar paciente"
                                        aria-label="Editar paciente"
                                        class="vl-grid-icon-btn text-neutral-600 hover:bg-neutral-100">
@@ -193,7 +224,7 @@
                                 </td>
                                 <td class="vl-pacientes-td vl-pacientes-td--icon">
                                     @if (tienePermiso(\App\Support\PermisosIaCatalog::RESULTADOS))
-                                        <a href="{{ route('protocolos.resultados', ['id' => $paciente->idPacientes, 'origen' => 'derivaciones']) }}"
+                                        <a href="{{ route('protocolos.resultados', array_merge(['id' => $paciente->idPacientes, 'origen' => 'derivaciones'], $this->filtrosListadoParaUrl())) }}"
                                            title="Cargar resultados"
                                            aria-label="Cargar resultados"
                                            class="vl-grid-icon-btn text-primary-700 hover:bg-primary-50">

@@ -21,6 +21,16 @@ class ItemsinformeCatalogTest extends TestCase
         $this->assertSame(17, ItemsinformeCatalog::columnasVisibles());
     }
 
+    public function test_referencias_por_especie_permiten_varchar_200(): void
+    {
+        $campos = ItemsinformeCatalog::camposEditables();
+
+        foreach (['ref_caninos', 'ref_felinos', 'ref_equinos', 'ref_porcinos', 'ref_bovinos'] as $campo) {
+            $this->assertSame(200, $campos[$campo]['max']);
+            $this->assertSame('textarea', $campos[$campo]['tipo']);
+        }
+    }
+
     public function test_modos_carga_incluye_formula_dos_valores(): void
     {
         $modos = ItemsinformeCatalog::modosCarga();

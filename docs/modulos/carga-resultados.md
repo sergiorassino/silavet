@@ -126,8 +126,10 @@ fijas al scroll vertical y horizontal de la página.
 | 3 / 5 / 10 | Título / línea / imágenes | Sin valor de resultado numérico |
 
 `renglones.mostrar` / `itemsinforme.mostrar` **no** ocultan campos en esta pantalla
-(Sí/No = solo visibilidad del informe PDF). Tipo 2 (valor fijo) sigue sin listarse
-en carga, igual que el sistema anterior.
+(Sí/No = solo visibilidad del informe PDF). Si `renglones.mostrar = 0`, el ítem
+sigue en el form con la leyenda **No se muestra en el informe** al lado del
+nombre. Tipo 2 (valor fijo) sigue sin listarse en carga, igual que el sistema
+anterior.
 
 IDs DOM: el operador edita `#idItems`; el diferencial absoluto vive en `#idItems_2`
 (y se refleja en `#idItems_T` disabled). `formulas()` escribe `_2` y `_T`.
@@ -245,7 +247,9 @@ es solo `Normal.`, se conserva el manual.
    Serie Roja/Blanca ya se actualizó al editar orígenes).
 2. Recolecta `[data-renglon][data-campo=valor|valor2]` del DOM (`wire:ignore` en filas).
 3. `ResultadosGuardarServicio` → UPDATE `renglones` + estado en `pacientes`.
-4. Sin salir: `vl-swal-exito`. Con salir: redirect al listado de origen.
+4. Sin salir: `vl-swal-exito`. Con salir: redirect al listado de origen
+   (desde derivaciones: misma agrupación/página + `foco` = `idPacientes` para
+   dejar el cursor sobre la fila, igual que en Pacientes).
 
 ### E. Autoanalizadores (si hay aparatos activos)
 
@@ -299,6 +303,7 @@ conteo manual).
 | Defaults | `config/tenant.php` → `hemograma_auto` / `autoanalizadores` |
 | Override labvetciudad | `config/tenants/labvetciudad.php` |
 | Override civetfranca | `config/tenants/civetfranca.php` (Edan H 30, Geo MC, Incca, Incca v2) |
+| Filtros + foco al volver (derivaciones) | `app/Support/Protocolos/DerivacionListadoFiltros.php` |
 | Ruta | `routes/web.php` → `protocolos.resultados` |
 | Tests config | `tests/Unit/HemogramaAutoConfigTest.php` |
 
@@ -346,7 +351,8 @@ conteo manual).
   despliegue.
 - **No** filtrar la carga por `renglones.mostrar`. Ese flag solo oculta el
   renglón en el informe PDF (`InformePacienteConsulta`). Auxiliares como
-  Plaquetas (conteo manual) deben poder cargarse aunque no se impriman.
+  Plaquetas (conteo manual) deben poder cargarse aunque no se impriman; en el
+  form llevan la leyenda “No se muestra en el informe”.
 
 ## Checklist al modificar
 
@@ -362,4 +368,4 @@ conteo manual).
 9. Actualizar **este** documento si cambian roles, frases, disparos o el contrato
    del runner.
 10. ¿Ítems con `mostrar = 0` (p. ej. conteo manual de plaquetas) aparecen en
-    carga y **no** en el PDF?
+    carga con la leyenda “No se muestra en el informe” y **no** en el PDF?

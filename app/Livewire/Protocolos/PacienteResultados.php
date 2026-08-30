@@ -8,6 +8,7 @@ use App\Support\Autoanalizadores\AutoanalizadorCarpeta;
 use App\Support\Autoanalizadores\AutoanalizadorConfig;
 use App\Support\Autoanalizadores\AutoanalizadorImportador;
 use App\Support\PermisosIaCatalog;
+use App\Support\Protocolos\DerivacionListadoFiltros;
 use App\Support\Protocolos\PacienteListadoFiltros;
 use App\Support\Resultados\HemogramaAutoConfig;
 use App\Support\Resultados\HemogramaAutoPayload;
@@ -35,7 +36,7 @@ class PacienteResultados extends Component
 
     public string $origen = 'pacientes';
 
-    /** @var array{vista?: string, filtroEstado?: string, page?: int} */
+    /** @var array{vista?: string, filtroEstado?: string, page?: int, agrupacion?: string, incluirFinalizados?: int} */
     public array $listadoFiltros = [];
 
     public bool $modalAutoanalizadorAbierto = false;
@@ -70,7 +71,9 @@ class PacienteResultados extends Component
             ? $origen
             : 'pacientes';
 
-        $this->listadoFiltros = PacienteListadoFiltros::desdeRequest();
+        $this->listadoFiltros = $this->origen === 'derivaciones'
+            ? DerivacionListadoFiltros::desdeRequest()
+            : PacienteListadoFiltros::desdeRequest();
 
         (new RenglonesMaterializer)->asegurarParaPaciente($paciente);
 
@@ -304,7 +307,7 @@ class PacienteResultados extends Component
     private function urlVolver(): string
     {
         return match ($this->origen) {
-            'derivaciones' => route('derivaciones.index'),
+            'derivaciones' => DerivacionListadoFiltros::urlIndex($this->listadoFiltros, $this->idPacientes),
             default => PacienteListadoFiltros::urlIndex($this->listadoFiltros, $this->idPacientes),
         };
     }

@@ -1980,6 +1980,10 @@
         @apply cursor-pointer;
     }
 
+    .vl-carga-no-informe {
+        @apply ml-1.5 inline whitespace-nowrap text-[10px] font-normal italic text-amber-800;
+    }
+
     .vl-carga-control {
         @apply min-w-0;
     }
