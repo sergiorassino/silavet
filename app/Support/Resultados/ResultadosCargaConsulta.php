@@ -12,7 +12,8 @@ use Illuminate\Support\Facades\Schema;
  * Una sola consulta (join), ordenada por grupo y tipodeterminación.
  *
  * No filtra por `renglones.mostrar`: ese flag solo oculta el renglón en el
- * informe PDF. En carga se listan todos (salvo tipoItem 2, valor fijo).
+ * informe PDF. En carga se listan todos (salvo tipoItem 2, valor fijo) y
+ * `mostrar` viaja a la vista para la leyenda “No se muestra en el informe”.
  */
 class ResultadosCargaConsulta
 {
@@ -24,6 +25,8 @@ class ResultadosCargaConsulta
         if (! Schema::hasTable('renglones')) {
             return [];
         }
+
+        $tieneMostrar = Schema::hasColumn('renglones', 'mostrar');
 
         $query = Renglon::query()
             ->from('renglones as r')
@@ -50,6 +53,10 @@ class ResultadosCargaConsulta
             ->orderBy('g.orden')
             ->orderBy('g.idGrupos')
             ->orderBy('t.orden');
+
+        if ($tieneMostrar) {
+            $query->addSelect('r.mostrar');
+        }
 
         if (Schema::hasColumn('renglones', 'duplic')) {
             $query->orderBy('r.duplic');
@@ -95,6 +102,7 @@ class ResultadosCargaConsulta
                 'textos' => (string) ($fila->textos ?? ''),
                 'estiloNum' => (int) ($fila->estiloNum ?? 0),
                 'actualiza' => (int) ($fila->actualiza ?? 0),
+                'mostrar' => $tieneMostrar ? ((int) ($fila->mostrar ?? 1) === 1 ? 1 : 0) : 1,
                 'opciones' => $this->opcionesSelect((string) ($fila->textos ?? '')),
                 'placeholder' => $this->placeholderEstiloNum((int) ($fila->estiloNum ?? 0)),
             ];

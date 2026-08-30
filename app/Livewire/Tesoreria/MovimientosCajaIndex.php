@@ -500,13 +500,14 @@ class MovimientosCajaIndex extends Component
             }
         });
 
-        $mensaje = $this->idMovimiento !== null
-            ? 'Movimiento actualizado correctamente.'
-            : 'Movimiento registrado correctamente.';
+        $fueEdicion = $this->idMovimiento !== null;
 
         $this->cancelarFormulario();
         $this->resetPage();
-        $this->dispatch('vl-swal-exito', mensaje: $mensaje);
+
+        if ($fueEdicion) {
+            $this->dispatch('vl-swal-exito', mensaje: 'Movimiento actualizado correctamente.');
+        }
     }
 
     public function eliminar(): void

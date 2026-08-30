@@ -4,6 +4,7 @@ namespace App\Livewire\Protocolos;
 
 use App\Models\Determinacion;
 use App\Support\PermisosIaCatalog;
+use App\Support\Protocolos\DerivacionListadoFiltros;
 use App\Support\Resultados\InformeVisibilidadConsulta;
 use App\Support\Resultados\ResultadosEstadosCatalog;
 use App\Support\UsuarioMenuPortal;
@@ -23,6 +24,28 @@ class DerivacionIndex extends PacienteIndex
     public string $agrupacion = self::AGRUPACION_CENTRO;
 
     public bool $incluirFinalizados = false;
+
+    public function mount(): void
+    {
+        parent::mount();
+
+        $filtros = DerivacionListadoFiltros::desdeRequest();
+        if (isset($filtros['agrupacion'])) {
+            $this->agrupacion = $filtros['agrupacion'];
+        }
+        if (! empty($filtros['incluirFinalizados'])) {
+            $this->incluirFinalizados = true;
+        }
+    }
+
+    public function filtrosListadoParaUrl(): array
+    {
+        return DerivacionListadoFiltros::sanitizar([
+            'agrupacion' => $this->agrupacion,
+            'incluirFinalizados' => $this->incluirFinalizados,
+            'page' => $this->getPage(),
+        ]);
+    }
 
     public function updatingAgrupacion(): void
     {

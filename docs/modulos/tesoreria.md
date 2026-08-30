@@ -163,6 +163,7 @@ En listados de protocolos / dashboard de esta variante: **no** exigir
    **Historial** (con filtro opcional Desde/Hasta). El filtro de tipo afecta
    solo el listado; el resumen bajo la grilla sigue el rango de fechas.
 2. Alta/edición (modal): tipo → fecha/hora → (ingreso: cliente | egreso: cuenta + detalle) → importe → medio de pago → observaciones.
+   Tras un **alta** no se muestra el diálogo «Listo / Movimiento registrado correctamente»; el listado se actualiza y el modal se cierra. Tras **edición** o **eliminación** sí hay `vl-swal-exito`.
 3. Persistencia: `Paciente::create` / `update` (misma tabla que protocolos).
 4. **Eliminar** (solo en modal de edición): confirma con `vlSwalConfirmar` y borra la fila
    `pacientes` (ingreso/egreso) vía `MovimientoIndex::eliminar` (rate limit 10/min).
@@ -204,6 +205,7 @@ En listados de protocolos / dashboard de esta variante: **no** exigir
 
    Los selectores de protocolo (Ingresos Diarios / Cadetería) usan el mismo
    orden que el módulo Pacientes (`Paciente::scopeOrdenListado`).
+   Tras un **alta** no se muestra el diálogo «Listo / Movimiento registrado correctamente»; el listado se actualiza y el modal se cierra. Tras **edición** o **eliminación** sí hay `vl-swal-exito`.
 
    El selector **Fecha de los Protocolos a Cargar** (hoy y hasta
    `dias_protocolos` días atrás) filtra los protocolos y, al cambiarlo,

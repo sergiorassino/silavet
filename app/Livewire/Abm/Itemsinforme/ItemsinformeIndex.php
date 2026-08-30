@@ -274,7 +274,7 @@ class ItemsinformeIndex extends Component
             'tipo_item' => ['nullable', 'integer', 'in:'.implode(',', ItemsinformeCatalog::modosCargaValores())],
             'textos' => ['nullable', 'string', 'max:500'],
             'unidad_medida', 'unidad_medida2' => ['nullable', 'string', 'max:20'],
-            'ref_caninos', 'ref_felinos', 'ref_equinos', 'ref_porcinos', 'ref_bovinos' => ['nullable', 'string', 'max:80'],
+            'ref_caninos', 'ref_felinos', 'ref_equinos', 'ref_porcinos', 'ref_bovinos' => ['nullable', 'string', 'max:200'],
             'estilo_num' => ['nullable', 'integer', 'in:'.implode(',', array_keys(ItemsinformeCatalog::formatosValor()))],
             'actualiza' => ['nullable', 'integer', 'in:0,1'],
             'mostrar' => ['nullable', 'integer', 'in:0,1'],

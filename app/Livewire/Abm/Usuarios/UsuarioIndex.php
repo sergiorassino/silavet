@@ -73,6 +73,8 @@ class UsuarioIndex extends Component
             ->orderBy('usuarios.apenom')
             ->paginate(self::POR_PAGINA);
 
+        $usuarios->getCollection()->each(fn (Usuario $u) => $u->makeVisible(['password']));
+
         return view('livewire.abm.usuarios.usuario-index', compact('usuarios'))
             ->layout('layouts.staff', UsuarioMenuPortal::staffLayoutParams(labCtx()->idRoles));
     }
