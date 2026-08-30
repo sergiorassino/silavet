@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Cliente;
 
 use App\Http\Controllers\Controller;
 use App\Models\Entorno;
+use App\Support\Cliente\PortalClienteConfig;
 use App\Support\Entorno\EntornoArchivos;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\RateLimiter;
@@ -15,6 +16,7 @@ class ListaPreciosPdfController extends Controller
     public function __invoke(Request $request): BinaryFileResponse
     {
         abort_unless(labCtx()->esCliente(), 403);
+        abort_unless(PortalClienteConfig::mostrarListaPrecios(), 404);
 
         $uid = (int) (auth()->id() ?? 0);
         $key = 'cliente-lista-precios-pdf:'.$uid;

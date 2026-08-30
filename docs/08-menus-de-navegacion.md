@@ -60,7 +60,13 @@ Orientación UI: **desktop-first**.
 - **Rutas:** prefijo `/cliente/…` · middleware `auth` + `lab.context` + `menu.portal:cliente`.
 - **Login:** el mismo `/login` que el personal; la redirección depende de `idClientes`.
 - **Contexto:** filtrado estricto por `labCtx()->idClientes`.
-- **Opciones del sidebar:** Pacientes · Lista de Precios · Estimación de Costos.
+- **Opciones del sidebar:** Inicio · Pacientes · Lista de Precios · Estimación de Costos.
+  Visibilidad de Lista de Precios y Estimación: flags
+  `tenant.portal_cliente.mostrar_lista_precios` /
+  `mostrar_estimacion_costos` (default `true`). Helper
+  `App\Support\Cliente\PortalClienteConfig`. Solo afectan autogestión
+  (`/cliente/…`); no el listado staff `listados.estimacion-costos`.
+  Epizoolab declara ambos en `false`.
 - **Layout:** misma estética que el Menú de Laboratorio (`layouts.staff` + `sidebar-nav-cliente`).
 
 ---

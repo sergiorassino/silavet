@@ -2,6 +2,7 @@
 
 namespace App\Livewire\Cliente;
 
+use App\Support\Cliente\PortalClienteConfig;
 use App\Support\UsuarioMenuPortal;
 use Livewire\Component;
 
@@ -10,6 +11,7 @@ class ListaPrecios extends Component
     public function mount(): void
     {
         abort_unless(labCtx()->esCliente(), 403);
+        abort_unless(PortalClienteConfig::mostrarListaPrecios(), 404);
     }
 
     public function render()

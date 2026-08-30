@@ -46,13 +46,17 @@ return [
     ],
     'portal_cliente' => [
         'permite_descarga_excel' => true,
+        // Solo Menú de Clientes (no staff). Default true en config/tenant.php.
+        // 'mostrar_lista_precios' => false,
+        // 'mostrar_estimacion_costos' => false,
     ],
 ];
 ```
 
 **Regla:** en `config/tenants/{slug}.php` declarar **solo** lo que difiere del default.
 
-Usos típicos: URLs de LIS externos, flags de informe, textos legales, límites.
+Usos típicos: URLs de LIS externos, flags de informe, textos legales, límites,
+ítems del sidebar de autogestión (`portal_cliente.mostrar_*`).
 
 ### 3.2 Parametrización en BD (`entorno`, permisos)
 
