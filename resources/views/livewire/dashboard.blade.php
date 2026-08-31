@@ -9,8 +9,8 @@
             <x-vl-hero-heading>
                 <p class="vl-eyebrow">{{ config('tenant.nombre') }}</p>
                 <h1 class="font-bold">Panel de laboratorio</h1>
-                <p class="mt-1.5 max-w-xl text-sm text-white/80">
-                    Hola, {{ labCtx()->usuario()?->apenom ?? 'usuario' }}.
+                <x-vl-hero-usuario />
+                <p class="mt-0.5 max-w-xl text-sm text-white/80">
                     Resumen operativo del {{ $metricas['fechaFormato'] }}.
                 </p>
             </x-vl-hero-heading>

@@ -11,7 +11,8 @@ use TCPDF;
  *
  * Planilla A4 vertical de hemograma del día: fecha + paginado, un bloque
  * por protocolo, celdas en blanco para anotar valores. Sin membrete
- * institucional y sin columna de citologías.
+ * institucional. La columna de citologías se dibuja solo si
+ * tenant.hoja_ruta_hemograma.mostrar_citologias = true.
  */
 final class HojaRutaHemogramaTcpdf extends TCPDF
 {
@@ -23,11 +24,18 @@ final class HojaRutaHemogramaTcpdf extends TCPDF
     private const ANCHO_ID = 34.0;
 
     /**
-     * Ancho de cada columna de determinación.
-     * 16 cols × 10.375 = 166 mm: se reparte el recorte de 10 mm de la
-     * columna de identificación (planilla 200 mm).
+     * Ancho de cada columna de determinación sin citologías.
+     * 16 cols × 10.375 = 166 mm (planilla 200 mm).
      */
     private const ANCHO_COL = 10.375;
+
+    /**
+     * Con citologías: 16 cols × 9.25 = 148 mm + 18 mm de especiales.
+     */
+    private const ANCHO_COL_CON_CITOLOGIAS = 9.25;
+
+    /** Columna derecha Líq.Punción / Cit.* (ScriptCase). */
+    private const ANCHO_ESPECIAL = 18.0;
 
     private const ANCHO_HEMO_ETIQUETA = 68.0;
 
@@ -153,7 +161,7 @@ final class HojaRutaHemogramaTcpdf extends TCPDF
         $this->dibujarColumnaIdentificacion($x0, $y0, $fila, $altoId);
 
         $this->SetXY($x0, $y0 + $altoId);
-        $this->dibujarFilaObs();
+        $this->dibujarFilaObs($pedidos);
         $this->dibujarFilaHemoparasitos($pedidos);
         $this->Ln(self::GAP_BLOQUE);
     }
@@ -199,9 +207,9 @@ final class HojaRutaHemogramaTcpdf extends TCPDF
         $this->SetXY($x, $y);
         $this->dibujarFilaTitulos($columnas);
         $this->SetX($x);
-        $this->dibujarFilaValores($columnas, $pedidos);
+        $this->dibujarFilaValores($columnas, $pedidos, 'liq_puncion');
         $this->SetX($x);
-        $this->dibujarFilaValores($columnas, $pedidos);
+        $this->dibujarFilaValores($columnas, $pedidos, 'cit_oido');
     }
 
     /**
@@ -216,7 +224,7 @@ final class HojaRutaHemogramaTcpdf extends TCPDF
             } else {
                 $this->SetFillColor(255, 255, 150);
             }
-            $this->Cell(self::ANCHO_COL, self::ALTO, $col['titulo'], 1, 0, 'C', true);
+            $this->Cell($this->anchoCol(), self::ALTO, $col['titulo'], 1, 0, 'C', true);
         }
         $this->Ln();
     }
@@ -225,13 +233,14 @@ final class HojaRutaHemogramaTcpdf extends TCPDF
      * @param  list<array{clave: string, titulo: string, encabezado: string, id: int}>  $columnas
      * @param  list<int>  $pedidos
      */
-    private function dibujarFilaValores(array $columnas, array $pedidos): void
+    private function dibujarFilaValores(array $columnas, array $pedidos, string $claveCitologia): void
     {
         TcpdfFuenteArial::aplicar($this, '', 7);
         foreach ($columnas as $col) {
             $fill = $this->aplicarFondoPedido(HojaRutaHemogramaConfig::itemPedido($col['id'], $pedidos));
-            $this->Cell(self::ANCHO_COL, self::ALTO, '', 1, 0, 'C', $fill);
+            $this->Cell($this->anchoCol(), self::ALTO, '', 1, 0, 'C', $fill);
         }
+        $this->dibujarCeldaCitologia($claveCitologia, $pedidos);
         $this->Ln();
     }
 
@@ -244,16 +253,62 @@ final class HojaRutaHemogramaTcpdf extends TCPDF
         $fill = $this->aplicarFondoPedido(
             HojaRutaHemogramaConfig::itemPedido(HojaRutaHemogramaConfig::idEspecial('hemoparasitos'), $pedidos)
         );
-        $anchoValor = self::ANCHO_BLOQUE - self::ANCHO_HEMO_ETIQUETA;
+        $anchoValor = $this->anchoSinCitologia() - self::ANCHO_HEMO_ETIQUETA;
         $this->Cell(self::ANCHO_HEMO_ETIQUETA, self::ALTO, 'Hemoparásitos:', 1, 0, 'L', $fill);
-        $this->Cell($anchoValor, self::ALTO, '', 1, 1, 'C', $fill);
+        $this->Cell($anchoValor, self::ALTO, '', 1, 0, 'C', $fill);
+        $this->dibujarCeldaCitologia('cit_vaginal', $pedidos);
+        $this->Ln();
     }
 
-    private function dibujarFilaObs(): void
+    /**
+     * @param  list<int>  $pedidos
+     */
+    private function dibujarFilaObs(array $pedidos): void
     {
         TcpdfFuenteArial::aplicar($this, '', 7);
         $this->SetFillColor(255, 255, 255);
-        $this->Cell(self::ANCHO_BLOQUE, self::ALTO, 'Obs:', 1, 1, 'L', false);
+        $this->Cell($this->anchoSinCitologia(), self::ALTO, 'Obs:', 1, 0, 'L', false);
+        $this->dibujarCeldaCitologia('cit_piel', $pedidos);
+        $this->Ln();
+    }
+
+    /**
+     * Celda de citología a la derecha (Líq.Punción / Cit.*). No dibuja nada
+     * si mostrar_citologias está apagado.
+     *
+     * @param  list<int>  $pedidos
+     */
+    private function dibujarCeldaCitologia(string $clave, array $pedidos): void
+    {
+        if (! HojaRutaHemogramaConfig::mostrarCitologias()) {
+            return;
+        }
+
+        $fill = $this->aplicarFondoPedido(
+            HojaRutaHemogramaConfig::itemPedido(HojaRutaHemogramaConfig::idEspecial($clave), $pedidos)
+        );
+        $this->Cell(
+            self::ANCHO_ESPECIAL,
+            self::ALTO,
+            HojaRutaHemogramaConfig::tituloCitologia($clave),
+            1,
+            0,
+            'C',
+            $fill
+        );
+    }
+
+    private function anchoCol(): float
+    {
+        return HojaRutaHemogramaConfig::mostrarCitologias()
+            ? self::ANCHO_COL_CON_CITOLOGIAS
+            : self::ANCHO_COL;
+    }
+
+    /** Ancho de Obs / Hemoparásitos sin la columna de citologías. */
+    private function anchoSinCitologia(): float
+    {
+        return self::ANCHO_BLOQUE - (HojaRutaHemogramaConfig::mostrarCitologias() ? self::ANCHO_ESPECIAL : 0.0);
     }
 
     private function aplicarFondoPedido(bool $pedido): int

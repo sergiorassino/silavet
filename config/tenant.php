@@ -259,11 +259,15 @@ return [
     /*
     | Hoja de ruta (hemograma) — planilla PDF del día para carga manual.
     | IDs por defecto = catálogo NeoLab / ScriptCase. Un lab con otro
-    | itemsinforme debe remapear columnas (y hemoparasitos). Ver
+    | itemsinforme debe remapear columnas y especiales. Ver
     | docs/modulos/hoja-ruta-hemograma.md.
+    |
+    | mostrar_citologias: columna Líq.Punción / Cit.Oído / Cit.Vaginal / Cit.Piel.
+    | Default false (oculta). Poner true cuando el lab quiera usarla.
     */
     'hoja_ruta_hemograma' => [
         'activo' => true,
+        'mostrar_citologias' => false,
         'columnas' => [
             'wbc' => 6,
             'lym' => 7,
@@ -284,6 +288,10 @@ return [
         ],
         'especiales' => [
             'hemoparasitos' => 14,
+            'liq_puncion' => 114,
+            'cit_oido' => 141,
+            'cit_vaginal' => 142,
+            'cit_piel' => 194,
         ],
     ],
 

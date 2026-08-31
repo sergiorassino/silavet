@@ -23,6 +23,25 @@ class HojaRutaHemogramaTest extends TestCase
         $this->assertFalse(HojaRutaHemogramaConfig::activo());
     }
 
+    public function test_citologias_ocultas_por_defecto(): void
+    {
+        config(['tenant.hoja_ruta_hemograma.mostrar_citologias' => false]);
+
+        $this->assertFalse(HojaRutaHemogramaConfig::mostrarCitologias());
+        $this->assertSame(114, HojaRutaHemogramaConfig::idEspecial('liq_puncion'));
+        $this->assertSame(141, HojaRutaHemogramaConfig::idEspecial('cit_oido'));
+        $this->assertSame(142, HojaRutaHemogramaConfig::idEspecial('cit_vaginal'));
+        $this->assertSame(194, HojaRutaHemogramaConfig::idEspecial('cit_piel'));
+        $this->assertSame('Líq.Punción', HojaRutaHemogramaConfig::tituloCitologia('liq_puncion'));
+    }
+
+    public function test_citologias_se_pueden_activar(): void
+    {
+        config(['tenant.hoja_ruta_hemograma.mostrar_citologias' => true]);
+
+        $this->assertTrue(HojaRutaHemogramaConfig::mostrarCitologias());
+    }
+
     public function test_columnas_usan_ids_del_tenant(): void
     {
         config([
@@ -156,5 +175,38 @@ class HojaRutaHemogramaTest extends TestCase
         ]);
 
         $this->assertSame(2, $pdf->getNumPages());
+    }
+
+    public function test_pdf_con_citologias_respeta_paginado(): void
+    {
+        config(['tenant.hoja_ruta_hemograma.mostrar_citologias' => true]);
+
+        $filas = [];
+        for ($i = 1; $i <= 9; $i++) {
+            $filas[] = [
+                'nombreProtocolo' => 'P'.$i,
+                'nombre' => 'N'.$i,
+                'especie' => 'Canino',
+                'detPedidas' => [114, 141, 142, 194],
+            ];
+        }
+
+        $pdfNueve = HojaRutaHemogramaTcpdf::generar([
+            'fecha_texto' => '31/08/2026',
+            'filas' => $filas,
+        ]);
+        $this->assertSame(1, $pdfNueve->getNumPages());
+
+        $filas[] = [
+            'nombreProtocolo' => 'P10',
+            'nombre' => 'N10',
+            'especie' => 'Felino',
+            'detPedidas' => [],
+        ];
+        $pdfDiez = HojaRutaHemogramaTcpdf::generar([
+            'fecha_texto' => '31/08/2026',
+            'filas' => $filas,
+        ]);
+        $this->assertSame(2, $pdfDiez->getNumPages());
     }
 }

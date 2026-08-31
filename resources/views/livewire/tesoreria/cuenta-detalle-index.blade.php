@@ -4,7 +4,8 @@
             <x-vl-hero-heading>
                 <p class="vl-eyebrow">Tesorería</p>
                 <h1 class="text-2xl font-bold sm:text-3xl">Gestión de Cuentas Detalle</h1>
-                <p class="mt-2 text-sm text-white/80">Subcuentas asociadas al plan de cuentas.</p>
+                <x-vl-hero-usuario />
+                <p class="mt-1 text-sm text-white/80">Subcuentas asociadas al plan de cuentas.</p>
             </x-vl-hero-heading>
             <a href="{{ route('tesoreria.cuentas-detalle.create') }}" class="btn-primary shrink-0 bg-white text-primary-700 hover:bg-accent-50">Nueva subcuenta</a>
         </div>

@@ -31,7 +31,8 @@
             <x-vl-hero-heading>
                 <p class="vl-eyebrow">Protocolos</p>
                 <h1 class="text-2xl font-bold sm:text-3xl">Pacientes</h1>
-                <p class="mt-2 text-sm text-white/80">
+                <x-vl-hero-usuario />
+                <p class="mt-1 text-sm text-white/80">
                     @if ($vista === 'hoy')
                         @php
                             $fechaEfectiva = $this->fechaVistaEfectiva();

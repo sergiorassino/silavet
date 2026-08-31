@@ -37,9 +37,41 @@ final class HojaRutaHemogramaConfig
         ['clave' => 'pt', 'titulo' => 'PT', 'encabezado' => self::ENCABEZADO_AZUL],
     ];
 
+    /**
+     * Columna derecha de citologías (ScriptCase). Oculta por defecto.
+     *
+     * @var list<array{clave: string, titulo: string}>
+     */
+    public const CITOLOGIAS = [
+        ['clave' => 'liq_puncion', 'titulo' => 'Líq.Punción'],
+        ['clave' => 'cit_oido', 'titulo' => 'Cit.Oído'],
+        ['clave' => 'cit_vaginal', 'titulo' => 'Cit.Vaginal'],
+        ['clave' => 'cit_piel', 'titulo' => 'Cit.Piel'],
+    ];
+
     public static function activo(): bool
     {
         return (bool) config('tenant.hoja_ruta_hemograma.activo', true);
+    }
+
+    /**
+     * Si true, se imprime la columna Líq.Punción / Cit.Oído / Cit.Vaginal / Cit.Piel.
+     * Default false: el espacio queda en las columnas de determinación.
+     */
+    public static function mostrarCitologias(): bool
+    {
+        return (bool) config('tenant.hoja_ruta_hemograma.mostrar_citologias', false);
+    }
+
+    public static function tituloCitologia(string $clave): string
+    {
+        foreach (self::CITOLOGIAS as $col) {
+            if ($col['clave'] === $clave) {
+                return $col['titulo'];
+            }
+        }
+
+        return '';
     }
 
     /**
