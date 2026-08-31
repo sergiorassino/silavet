@@ -2,8 +2,8 @@
 
 namespace App\Livewire\Facturacion;
 
-use App\Models\CompAfip;
 use App\Models\Cliente;
+use App\Models\CompAfip;
 use App\Models\Movimiento;
 use App\Models\Paciente;
 use App\Support\CuitInput;
@@ -13,6 +13,8 @@ use App\Support\Facturacion\FacturacionAfipService;
 use App\Support\PermisosIaCatalog;
 use App\Support\Protocolos\PacienteListadoFiltros;
 use App\Support\Security\OpaqueRouteToken;
+use App\Support\Tesoreria\MovimientoListadoFiltros;
+use App\Support\Tesoreria\MovimientosCajaListadoFiltros;
 use App\Support\UsuarioMenuPortal;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Facades\Schema;
@@ -73,7 +75,7 @@ class ComprobantesAfipIndex extends Component
         $tipo = (int) $paciente->tipoRegistro;
         if (FacturacionAfipConfig::esModoMovimiento()) {
             abort_unless($tipo === Paciente::TIPO_INGRESO, 404);
-            $this->volverUrl = route('tesoreria.movimientos.index');
+            $this->volverUrl = MovimientoListadoFiltros::urlIndex();
             $this->origenLabel = 'Ingreso #'.$paciente->idPacientes;
         } else {
             abort_unless(in_array($tipo, [Paciente::TIPO_PROTOCOLO, Paciente::TIPO_INGRESO], true), 404);
@@ -110,7 +112,7 @@ class ComprobantesAfipIndex extends Component
             ->find($this->idMovimientos);
         abort_if($movimiento === null || ! $movimiento->esIngreso(), 404);
 
-        $this->volverUrl = route('tesoreria.movimientos.index');
+        $this->volverUrl = MovimientosCajaListadoFiltros::urlIndex();
         $this->origenLabel = 'Ingreso #'.$movimiento->id
             .($movimiento->concepto?->concepto ? ' · '.$movimiento->concepto->concepto : '');
 

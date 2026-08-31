@@ -15,8 +15,8 @@ use App\Models\Usuario;
 use App\Support\CuitInput;
 use App\Support\DniInput;
 use App\Support\PermisosIaCatalog;
-use App\Support\ProtocoloNumero;
 use App\Support\Precios\ListaPreciosConfig;
+use App\Support\ProtocoloNumero;
 use App\Support\Protocolos\DerivacionListadoFiltros;
 use App\Support\Protocolos\PacienteAdjuntoStorage;
 use App\Support\Protocolos\PacienteListadoFiltros;
@@ -74,7 +74,7 @@ class PacienteForm extends Component
 
     public string $origen = 'pacientes';
 
-    /** @var array{vista?: string, filtroEstado?: string, page?: int, agrupacion?: string, incluirFinalizados?: int} */
+    /** @var array{vista?: string, filtroEstado?: string, fechaVista?: string, page?: int, agrupacion?: string, incluirFinalizados?: int} */
     public array $listadoFiltros = [];
 
     public function mount(?int $id = null): void
@@ -642,7 +642,7 @@ class PacienteForm extends Component
     }
 
     /**
-     * @param  array{vista?: string, filtroEstado?: string, page?: int, agrupacion?: string, incluirFinalizados?: int}  $filtros
+     * @param  array{vista?: string, filtroEstado?: string, fechaVista?: string, page?: int, agrupacion?: string, incluirFinalizados?: int}  $filtros
      */
     private function urlVolver(array $filtros = [], ?int $focoIdPaciente = null): string
     {

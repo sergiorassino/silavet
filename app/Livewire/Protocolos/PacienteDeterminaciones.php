@@ -16,6 +16,8 @@ use App\Support\Resultados\RenglonesMaterializer;
 use App\Support\Stock\StockReactivosService;
 use App\Support\Tipodeterminaciones\TipodeterminacionesGridConfig;
 use App\Support\UsuarioMenuPortal;
+use Carbon\CarbonInterface;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Facades\Schema;
 use Livewire\Component;
@@ -26,7 +28,7 @@ class PacienteDeterminaciones extends Component
 
     public string $busquedaRapida = '';
 
-    /** @var array{vista?: string, filtroEstado?: string, page?: int} */
+    /** @var array{vista?: string, filtroEstado?: string, fechaVista?: string, page?: int} */
     public array $listadoFiltros = [];
 
     /** @var array<int, array<string, mixed>> */
@@ -759,7 +761,7 @@ class PacienteDeterminaciones extends Component
             return '';
         }
 
-        if ($valor instanceof \Carbon\CarbonInterface) {
+        if ($valor instanceof CarbonInterface) {
             return $valor->format('Y-m-d');
         }
 
@@ -839,7 +841,7 @@ class PacienteDeterminaciones extends Component
         return $idDerivaciones > 0 ? '1' : '0';
     }
 
-    /** @return \Illuminate\Support\Collection<int, Derivacion> */
+    /** @return Collection<int, Derivacion> */
     private function centrosDerivacion()
     {
         if (! TipodeterminacionesGridConfig::derivacionEsCatalogo()

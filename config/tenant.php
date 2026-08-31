@@ -256,4 +256,35 @@ return [
         ],
     ],
 
+    /*
+    | Hoja de ruta (hemograma) — planilla PDF del día para carga manual.
+    | IDs por defecto = catálogo NeoLab / ScriptCase. Un lab con otro
+    | itemsinforme debe remapear columnas (y hemoparasitos). Ver
+    | docs/modulos/hoja-ruta-hemograma.md.
+    */
+    'hoja_ruta_hemograma' => [
+        'activo' => true,
+        'columnas' => [
+            'wbc' => 6,
+            'lym' => 7,
+            'mon' => 8,
+            'neb' => 9,
+            'neu' => 10,
+            'eos' => 11,
+            'rbc' => 1,
+            'vcm' => 2,
+            'hct' => 3,
+            'hgb' => 29,
+            'hcm' => 4,
+            'chcm' => 5,
+            'rdw' => 13,
+            'plt' => 18,
+            'r_ipr' => 15,
+            'pt' => 21,
+        ],
+        'especiales' => [
+            'hemoparasitos' => 14,
+        ],
+    ],
+
 ];

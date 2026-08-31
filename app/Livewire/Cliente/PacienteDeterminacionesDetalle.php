@@ -17,7 +17,7 @@ class PacienteDeterminacionesDetalle extends Component
 
     public string $busquedaRapida = '';
 
-    /** @var array{vista?: string, filtroEstado?: string, page?: int} */
+    /** @var array{vista?: string, filtroEstado?: string, fechaVista?: string, page?: int} */
     public array $listadoFiltros = [];
 
     public function mount(string $ref): void

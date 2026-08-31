@@ -53,6 +53,14 @@
                         Pago global
                     </button>
                 @endif
+                @if ($mostrarHojaRutaHemograma)
+                    <button type="button"
+                            wire:click="abrirHojaRutaHemograma"
+                            class="btn-secondary shrink-0 border-white/40 bg-white/15 text-white hover:bg-white/25"
+                            title="Planilla de hemograma del día seleccionado">
+                        Hoja de Ruta (Hemograma)
+                    </button>
+                @endif
                 <a href="{{ route('protocolos.create', $this->filtrosListadoParaUrl()) }}"
                    class="btn-primary shrink-0 bg-white text-primary-700 hover:bg-accent-50">
                     Nuevo Paciente

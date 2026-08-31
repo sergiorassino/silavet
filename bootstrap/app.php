@@ -1,8 +1,13 @@
 <?php
 
+use App\Http\Middleware\CheckPermiso;
 use App\Http\Middleware\EnsureLabContext;
 use App\Http\Middleware\EnsureMenuPortal;
+use App\Http\Middleware\EnsureTesoreriaModuloVisible;
 use App\Http\Middleware\ForceHttpsBehindProxy;
+use App\Http\Middleware\LimpiarSesionEnPaginaLogin;
+use App\Http\Middleware\NoStoreResponse;
+use App\Http\Middleware\OlvidarFiltrosListadoPacientesFueraDelModulo;
 use App\Http\Middleware\RegenerarSesionPostLogin;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
@@ -27,6 +32,7 @@ return Application::configure(basePath: dirname(__DIR__))
 
         $middleware->prependToGroup('web', ForceHttpsBehindProxy::class);
         $middleware->appendToGroup('web', RegenerarSesionPostLogin::class);
+        $middleware->appendToGroup('web', OlvidarFiltrosListadoPacientesFueraDelModulo::class);
 
         $middleware->redirectGuestsTo(function (Request $request) {
             if (! $request->expectsJson() && $request->hasSession()) {
@@ -44,11 +50,11 @@ return Application::configure(basePath: dirname(__DIR__))
 
         $middleware->alias([
             'lab.context' => EnsureLabContext::class,
-            'permiso' => \App\Http\Middleware\CheckPermiso::class,
+            'permiso' => CheckPermiso::class,
             'menu.portal' => EnsureMenuPortal::class,
-            'login.limpiar-sesion' => \App\Http\Middleware\LimpiarSesionEnPaginaLogin::class,
-            'no-store' => \App\Http\Middleware\NoStoreResponse::class,
-            'tesoreria.modulo' => \App\Http\Middleware\EnsureTesoreriaModuloVisible::class,
+            'login.limpiar-sesion' => LimpiarSesionEnPaginaLogin::class,
+            'no-store' => NoStoreResponse::class,
+            'tesoreria.modulo' => EnsureTesoreriaModuloVisible::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {

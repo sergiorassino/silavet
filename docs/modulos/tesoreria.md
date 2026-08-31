@@ -161,7 +161,9 @@ En listados de protocolos / dashboard de esta variante: **no** exigir
 1. Listado: `pacientes` con `tipoRegistro IN (2, 3)`. Toggle **Todos / Ingreso /
    Egreso** (default Todos) y **Hoy** (default: solo `fechhoy` de hoy) /
    **Historial** (con filtro opcional Desde/Hasta). El filtro de tipo afecta
-   solo el listado; el resumen bajo la grilla sigue el rango de fechas.
+   solo el listado; el resumen bajo la grilla sigue el rango de fechas. Los
+   filtros se conservan en sesión al ir a comprobantes AFIP o volver por el menú
+   **Movimientos**; se resetean al salir del módulo o al cambiarlos en pantalla.
 2. Alta/edición (modal): tipo → fecha/hora → (ingreso: cliente | egreso: cuenta + detalle) → importe → medio de pago → observaciones.
    Tras un **alta** no se muestra el diálogo «Listo / Movimiento registrado correctamente»; el listado se actualiza y el modal se cierra. Tras **edición** o **eliminación** sí hay `vl-swal-exito`.
 3. Persistencia: `Paciente::create` / `update` (misma tabla que protocolos).
@@ -191,7 +193,9 @@ En listados de protocolos / dashboard de esta variante: **no** exigir
 
 1. Listado: tabla `movimientos` (orden `fechhora` desc). Filtros **Desde / Hasta**
    sobre `fechhora` (por defecto ambas = hoy; si se invierten se intercambian) y
-   búsqueda de texto. Botón **Exportar Excel** en el hero: descarga `.xlsx` con
+   búsqueda de texto. Los filtros de fechas/página se conservan en sesión al ir a
+   AFIP o volver por el menú **Movimientos**; se resetean al salir del módulo.
+   Botón **Exportar Excel** en el hero: descarga `.xlsx` con
    las mismas columnas de la grilla (respeta fechas + búsqueda; todas las filas
    coincidentes, no solo la página actual).
 2. Formulario según tipo / concepto:

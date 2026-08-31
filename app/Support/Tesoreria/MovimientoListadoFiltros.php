@@ -1,25 +1,21 @@
 <?php
 
-namespace App\Support\Protocolos;
+namespace App\Support\Tesoreria;
 
-use App\Livewire\Protocolos\DerivacionIndex;
+use App\Livewire\Tesoreria\MovimientoIndex;
+use App\Support\Facturacion\FacturacionAfipConfig;
 use Illuminate\Http\Request;
 use Livewire\Mechanisms\HandleRequests\EndpointResolver;
 
 /**
- * Conserva agrupación / finalizados / página del listado de derivaciones al ir
- * a cargar resultados (o editar el protocolo) y al volver, y mientras no se
- * cierre el módulo.
+ * Conserva filtros del listado NeoLab (`MovimientoIndex`: Hoy/Historial, tipo,
+ * fechas, página) al navegar dentro del módulo y hasta salir de Tesorería → Movimientos.
  *
- * Al volver también puede incluirse `foco` (idPacientes) para posicionar la fila.
- *
- * @phpstan-type Filtros array{agrupacion?: string, incluirFinalizados?: int, page?: int}
+ * @phpstan-type Filtros array{vista?: string, filtroTipo?: string, fechaDesde?: string, fechaHasta?: string, page?: int}
  */
-final class DerivacionListadoFiltros
+final class MovimientoListadoFiltros
 {
     /**
-     * Query string + sesión (la URL gana por clave).
-     *
      * @return Filtros
      */
     public static function desdeRequest(): array
@@ -35,7 +31,7 @@ final class DerivacionListadoFiltros
         $request ??= request();
         $raw = [];
 
-        foreach (['agrupacion', 'incluirFinalizados', 'page'] as $clave) {
+        foreach (['vista', 'filtroTipo', 'fechaDesde', 'fechaHasta', 'page'] as $clave) {
             if ($request->query->has($clave)) {
                 $raw[$clave] = $request->query($clave);
             }
@@ -82,7 +78,7 @@ final class DerivacionListadoFiltros
             return;
         }
 
-        session()->forget("lab.derivacion_index.filtros.{$uid}.staff");
+        session()->forget("lab.tesoreria_movimientos.filtros.{$uid}.staff");
     }
 
     /**
@@ -103,22 +99,26 @@ final class DerivacionListadoFiltros
     {
         $out = [];
 
-        $agrupacion = trim((string) ($filtros['agrupacion'] ?? ''));
-        if (in_array($agrupacion, [
-            DerivacionIndex::AGRUPACION_NINGUNA,
-            DerivacionIndex::AGRUPACION_CENTRO,
-            DerivacionIndex::AGRUPACION_CLIENTE,
-            DerivacionIndex::AGRUPACION_FECHA,
-        ], true)) {
-            if (! $omitirDefaults || $agrupacion !== DerivacionIndex::AGRUPACION_CENTRO) {
-                $out['agrupacion'] = $agrupacion;
+        $vista = trim((string) ($filtros['vista'] ?? ''));
+        if (in_array($vista, [MovimientoIndex::VISTA_HOY, MovimientoIndex::VISTA_HISTORIAL], true)) {
+            if (! $omitirDefaults || $vista !== MovimientoIndex::VISTA_HOY) {
+                $out['vista'] = $vista;
             }
         }
 
-        $incluir = $filtros['incluirFinalizados'] ?? false;
-        $incluirFinalizados = $incluir === true || $incluir === 1 || $incluir === '1' || $incluir === 'true';
-        if ($incluirFinalizados) {
-            $out['incluirFinalizados'] = 1;
+        $filtroTipo = trim((string) ($filtros['filtroTipo'] ?? ''));
+        if (in_array($filtroTipo, [
+            MovimientoIndex::FILTRO_TIPO_INGRESO,
+            MovimientoIndex::FILTRO_TIPO_EGRESO,
+        ], true)) {
+            $out['filtroTipo'] = $filtroTipo;
+        }
+
+        foreach (['fechaDesde', 'fechaHasta'] as $campo) {
+            $fecha = trim((string) ($filtros[$campo] ?? ''));
+            if (preg_match('/^\d{4}-\d{2}-\d{2}$/', $fecha) === 1) {
+                $out[$campo] = $fecha;
+            }
         }
 
         $page = (int) ($filtros['page'] ?? 0);
@@ -132,15 +132,11 @@ final class DerivacionListadoFiltros
     /**
      * @param  Filtros  $filtros
      */
-    public static function urlIndex(array $filtros = [], ?int $focoIdPaciente = null): string
+    public static function urlIndex(array $filtros = []): string
     {
         $params = $filtros !== [] ? self::sanitizar($filtros) : self::sanitizar(self::desdeRequest());
 
-        if ($focoIdPaciente !== null && $focoIdPaciente > 0) {
-            $params['foco'] = $focoIdPaciente;
-        }
-
-        return route('derivaciones.index', $params);
+        return route('tesoreria.movimientos.index', $params);
     }
 
     public static function requestPerteneceAlModulo(?Request $request = null): bool
@@ -165,12 +161,11 @@ final class DerivacionListadoFiltros
             return true;
         }
 
-        if ($request->routeIs('derivaciones.*')) {
-            return true;
+        if ($request->routeIs('tesoreria.movimientos.index', 'tesoreria.movimientos.excel')) {
+            return TesoreriaConfig::usaMovimientos();
         }
 
-        $origen = trim((string) $request->query('origen', ''));
-        if ($origen === 'derivaciones' && $request->routeIs('protocolos.edit', 'protocolos.resultados')) {
+        if ($request->routeIs('facturacion.afip.comprobantes') && FacturacionAfipConfig::esModoMovimiento()) {
             return true;
         }
 
@@ -184,6 +179,6 @@ final class DerivacionListadoFiltros
             return null;
         }
 
-        return "lab.derivacion_index.filtros.{$uid}.staff";
+        return "lab.tesoreria_movimientos.filtros.{$uid}.staff";
     }
 }
