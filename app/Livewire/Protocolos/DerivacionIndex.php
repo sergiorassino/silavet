@@ -29,18 +29,37 @@ class DerivacionIndex extends PacienteIndex
     {
         parent::mount();
 
-        $filtros = DerivacionListadoFiltros::desdeRequest();
-        if (isset($filtros['agrupacion'])) {
-            $this->agrupacion = $filtros['agrupacion'];
-        }
-        if (! empty($filtros['incluirFinalizados'])) {
-            $this->incluirFinalizados = true;
-        }
+        $this->restaurarFiltrosListado();
     }
 
     public function filtrosListadoParaUrl(): array
     {
         return DerivacionListadoFiltros::sanitizar([
+            'agrupacion' => $this->agrupacion,
+            'incluirFinalizados' => $this->incluirFinalizados,
+            'page' => $this->getPage(),
+        ]);
+    }
+
+    /**
+     * Restaura agrupación / finalizados / página desde la URL o la sesión (la URL gana).
+     */
+    private function restaurarFiltrosListado(): void
+    {
+        $filtros = DerivacionListadoFiltros::desdeRequest();
+
+        if (isset($filtros['agrupacion'])) {
+            $this->agrupacion = $filtros['agrupacion'];
+        }
+        $this->incluirFinalizados = ! empty($filtros['incluirFinalizados']);
+        if (isset($filtros['page'])) {
+            $this->setPage((int) $filtros['page']);
+        }
+    }
+
+    private function persistirFiltrosListado(): void
+    {
+        DerivacionListadoFiltros::guardarSesion([
             'agrupacion' => $this->agrupacion,
             'incluirFinalizados' => $this->incluirFinalizados,
             'page' => $this->getPage(),
@@ -70,6 +89,8 @@ class DerivacionIndex extends PacienteIndex
 
     public function render()
     {
+        $this->persistirFiltrosListado();
+
         abort_unless(Schema::hasTable('determinaciones'), 404, 'La tabla de determinaciones no está disponible.');
 
         $term = trim($this->busqueda);

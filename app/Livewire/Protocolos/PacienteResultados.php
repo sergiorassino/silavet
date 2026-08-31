@@ -22,6 +22,7 @@ use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Validation\ValidationException;
 use Livewire\Component;
+use Livewire\Features\SupportFileUploads\TemporaryUploadedFile;
 use Livewire\WithFileUploads;
 use RuntimeException;
 use Throwable;
@@ -36,7 +37,7 @@ class PacienteResultados extends Component
 
     public string $origen = 'pacientes';
 
-    /** @var array{vista?: string, filtroEstado?: string, page?: int, agrupacion?: string, incluirFinalizados?: int} */
+    /** @var array{vista?: string, filtroEstado?: string, fechaVista?: string, page?: int, agrupacion?: string, incluirFinalizados?: int} */
     public array $listadoFiltros = [];
 
     public bool $modalAutoanalizadorAbierto = false;
@@ -45,7 +46,7 @@ class PacienteResultados extends Component
 
     public string $archivoSeleccionado = '';
 
-    /** @var \Livewire\Features\SupportFileUploads\TemporaryUploadedFile|null */
+    /** @var TemporaryUploadedFile|null */
     public $archivoCsv = null;
 
     /** @var list<array{clave: string, etiqueta: string}> */

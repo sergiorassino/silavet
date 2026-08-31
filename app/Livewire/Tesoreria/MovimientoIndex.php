@@ -11,6 +11,7 @@ use App\Support\Facturacion\FacturacionAfipConfig;
 use App\Support\Facturacion\FacturacionAfipIndicadores;
 use App\Support\PermisosIaCatalog;
 use App\Support\Security\OpaqueRouteToken;
+use App\Support\Tesoreria\MovimientoListadoFiltros;
 use App\Support\Tesoreria\MovimientosResumenConsulta;
 use App\Support\Tesoreria\TesoreriaConfig;
 use App\Support\UsuarioMenuPortal;
@@ -76,9 +77,8 @@ class MovimientoIndex extends Component
     {
         abort_unless(tienePermiso(PermisosIaCatalog::FACTURACION), 403);
         abort_unless(TesoreriaConfig::usaMovimientos(), 404);
-        $this->vista = self::VISTA_HOY;
-        $this->filtroTipo = self::FILTRO_TIPO_TODOS;
         $this->reiniciarFechaHora();
+        $this->restaurarFiltrosListado();
     }
 
     public function updatingBusqueda(): void
@@ -340,8 +340,58 @@ class MovimientoIndex extends Component
         );
     }
 
+    /**
+     * Query params a propagar al salir del listado (p. ej. comprobantes AFIP).
+     *
+     * @return array{vista?: string, filtroTipo?: string, fechaDesde?: string, fechaHasta?: string, page?: int}
+     */
+    public function filtrosListadoParaUrl(): array
+    {
+        return MovimientoListadoFiltros::sanitizar([
+            'vista' => $this->vistaEfectiva(),
+            'filtroTipo' => $this->filtroTipoEfectivo(),
+            'fechaDesde' => $this->fechaDesde,
+            'fechaHasta' => $this->fechaHasta,
+            'page' => $this->getPage(),
+        ]);
+    }
+
+    private function restaurarFiltrosListado(): void
+    {
+        $filtros = MovimientoListadoFiltros::desdeRequest();
+
+        if (isset($filtros['vista'])) {
+            $this->vista = $filtros['vista'];
+        }
+        if (isset($filtros['filtroTipo'])) {
+            $this->filtroTipo = $filtros['filtroTipo'];
+        }
+        if (array_key_exists('fechaDesde', $filtros)) {
+            $this->fechaDesde = $filtros['fechaDesde'];
+        }
+        if (array_key_exists('fechaHasta', $filtros)) {
+            $this->fechaHasta = $filtros['fechaHasta'];
+        }
+        if (isset($filtros['page'])) {
+            $this->setPage((int) $filtros['page']);
+        }
+    }
+
+    private function persistirFiltrosListado(): void
+    {
+        MovimientoListadoFiltros::guardarSesion([
+            'vista' => $this->vistaEfectiva(),
+            'filtroTipo' => $this->filtroTipoEfectivo(),
+            'fechaDesde' => $this->fechaDesde,
+            'fechaHasta' => $this->fechaHasta,
+            'page' => $this->getPage(),
+        ]);
+    }
+
     public function render()
     {
+        $this->persistirFiltrosListado();
+
         $vista = $this->vistaEfectiva();
         $desde = $this->fechaFiltroNormalizada($this->fechaDesde);
         $hasta = $this->fechaFiltroNormalizada($this->fechaHasta);
@@ -445,9 +495,10 @@ class MovimientoIndex extends Component
             'vistaEfectiva' => $vista,
             'filtroTipoEfectivo' => $filtroTipo,
             'resumen' => MovimientosResumenConsulta::paraRango($resumenDesde, $resumenHasta),
-            'urlAfipFn' => static fn (int $id): string => route('facturacion.afip.comprobantes', [
-                'ref' => OpaqueRouteToken::forCompAfipPaciente($id),
-            ]),
+            'urlAfipFn' => fn (int $id): string => route('facturacion.afip.comprobantes', array_merge(
+                ['ref' => OpaqueRouteToken::forCompAfipPaciente($id)],
+                $this->filtrosListadoParaUrl(),
+            )),
         ])->layout('layouts.staff', UsuarioMenuPortal::staffLayoutParams(labCtx()->idRoles));
     }
 

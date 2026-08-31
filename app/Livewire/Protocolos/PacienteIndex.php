@@ -9,29 +9,31 @@ use App\Models\Notificacion;
 use App\Models\Paciente;
 use App\Models\Renglon;
 use App\Support\CuentaCorriente\CuentaCorrienteConsulta;
-use App\Support\CuentaCorriente\CuentaCorrienteFacade;
 use App\Support\EmailList;
 use App\Support\Envio\InformeEnvioServicio;
 use App\Support\Facturacion\FacturacionAfipConfig;
 use App\Support\Facturacion\FacturacionAfipIndicadores;
+use App\Support\PermisosIaCatalog;
 use App\Support\Precios\DescuentoDeterminacionResolver;
 use App\Support\Precios\ListaPreciosConfig;
-use App\Support\PermisosIaCatalog;
 use App\Support\Protocolos\DiagnosticoIaPromptBuilder;
+use App\Support\Protocolos\HojaRutaHemogramaConfig;
 use App\Support\Protocolos\PacienteAdjuntoStorage;
 use App\Support\Protocolos\PacienteListadoFiltros;
-use App\Support\Security\OpaqueRouteToken;
 use App\Support\Resultados\InformeVisibilidadConsulta;
 use App\Support\Resultados\RenglonesMaterializer;
 use App\Support\Resultados\ResultadosEstadosCatalog;
+use App\Support\Security\OpaqueRouteToken;
 use App\Support\Tesoreria\PagoGlobalRegistro;
 use App\Support\Tesoreria\TesoreriaConfig;
 use App\Support\UsuarioMenuPortal;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Validation\ValidationException;
 use Livewire\Attributes\Url;
 use Livewire\Component;
+use Livewire\Features\SupportFileUploads\TemporaryUploadedFile;
 use Livewire\WithFileUploads;
 use Livewire\WithPagination;
 
@@ -120,7 +122,7 @@ class PacienteIndex extends Component
 
     public string $adjuntoNombreActual = '';
 
-    /** @var \Livewire\Features\SupportFileUploads\TemporaryUploadedFile|null */
+    /** @var TemporaryUploadedFile|null */
     public $adjuntoArchivo = null;
 
     public bool $modalAvisoAbierto = false;
@@ -150,7 +152,6 @@ class PacienteIndex extends Component
     public function mount(): void
     {
         abort_unless(tienePermiso(PermisosIaCatalog::PROTOCOLOS), 403);
-        $this->fechaVista = now()->toDateString();
 
         $ctx = labCtx();
         if ($ctx->esCliente() && $ctx->idClientes) {
@@ -160,6 +161,12 @@ class PacienteIndex extends Component
         $foco = (int) request()->query('foco', 0);
         if ($foco > 0) {
             $this->focoIdPaciente = $foco;
+        }
+
+        if (static::class === self::class) {
+            $this->restaurarFiltrosListado();
+        } else {
+            $this->fechaVista = now()->toDateString();
         }
     }
 
@@ -204,13 +211,51 @@ class PacienteIndex extends Component
     /**
      * Query params a propagar al salir del listado (editar, determinaciones, etc.).
      *
-     * @return array{vista?: string, filtroEstado?: string, page?: int}
+     * @return array{vista?: string, filtroEstado?: string, fechaVista?: string, page?: int}
      */
     public function filtrosListadoParaUrl(): array
     {
         return PacienteListadoFiltros::sanitizar([
             'vista' => $this->vista,
             'filtroEstado' => $this->filtroEstado,
+            'fechaVista' => $this->fechaVistaEfectiva(),
+            'page' => $this->getPage(),
+        ]);
+    }
+
+    /**
+     * Restaura día / historial / página desde la URL o la sesión (la URL gana).
+     */
+    private function restaurarFiltrosListado(): void
+    {
+        $filtros = PacienteListadoFiltros::desdeRequest();
+
+        if (isset($filtros['vista'])) {
+            $this->vista = $filtros['vista'];
+        }
+        if (array_key_exists('filtroEstado', $filtros)) {
+            $this->filtroEstado = $filtros['filtroEstado'];
+        }
+        if (isset($filtros['fechaVista'])) {
+            $this->fechaVista = $filtros['fechaVista'];
+        } else {
+            $this->fechaVista = now()->toDateString();
+        }
+        if (isset($filtros['page'])) {
+            $this->setPage((int) $filtros['page']);
+        }
+    }
+
+    private function persistirFiltrosListado(): void
+    {
+        if (static::class !== self::class) {
+            return;
+        }
+
+        PacienteListadoFiltros::guardarSesion([
+            'vista' => $this->vista,
+            'filtroEstado' => $this->filtroEstado,
+            'fechaVista' => $this->fechaVistaEfectiva(),
             'page' => $this->getPage(),
         ]);
     }
@@ -464,6 +509,25 @@ class PacienteIndex extends Component
 
         $url = route('protocolos.etiquetas', [
             'ref' => OpaqueRouteToken::forEtiquetasTubo((int) $paciente->idPacientes, $cantidad),
+        ]);
+
+        $this->dispatch('vl-abrir-url', url: $url);
+    }
+
+    public function abrirHojaRutaHemograma(): void
+    {
+        abort_unless(tienePermiso(PermisosIaCatalog::PROTOCOLOS), 403);
+        $this->abortSiAutogestion();
+        abort_unless(HojaRutaHemogramaConfig::activo(), 404);
+        abort_unless($this->vista === self::VISTA_HOY, 404);
+
+        $uid = labCtx()->idUsuarios ?? 0;
+        $key = 'protocolos-hoja-ruta-abrir:'.$uid;
+        abort_if(RateLimiter::tooManyAttempts($key, 20), 429);
+        RateLimiter::hit($key, 60);
+
+        $url = route('protocolos.hoja-ruta-hemograma', [
+            'fecha' => $this->fechaVistaEfectiva(),
         ]);
 
         $this->dispatch('vl-abrir-url', url: $url);
@@ -1044,6 +1108,8 @@ class PacienteIndex extends Component
 
     public function render()
     {
+        $this->persistirFiltrosListado();
+
         $term = trim($this->busqueda);
         $ctx = labCtx();
 
@@ -1149,6 +1215,9 @@ class PacienteIndex extends Component
             'mostrarColumnaPagado' => $mostrarColumnaPagado,
             'mostrarColumnaAfip' => $mostrarColumnaAfip,
             'mostrarPagoGlobal' => $pagoGlobalVista['mostrarPagoGlobal'],
+            'mostrarHojaRutaHemograma' => ! $autogestion
+                && $this->vista === self::VISTA_HOY
+                && HojaRutaHemogramaConfig::activo(),
             'mostrarListaPrecios' => ListaPreciosConfig::mostrarColumnaListadoPacientes(),
             'afipEmitidos' => $afipEmitidos,
         ])->layout('layouts.staff', UsuarioMenuPortal::layoutParamsDesdeContexto());
@@ -1175,7 +1244,7 @@ class PacienteIndex extends Component
      * - Staff con `pago_global`: protocolos (1) + pagos globales (2).
      * - Staff NeoLab sin el flag: solo protocolos (1); ingresos/egresos en Tesorería.
      *
-     * @param  \Illuminate\Database\Eloquent\Builder<\App\Models\Paciente>  $query
+     * @param  Builder<Paciente>  $query
      */
     protected function aplicarFiltroTipoRegistroListado($query): void
     {

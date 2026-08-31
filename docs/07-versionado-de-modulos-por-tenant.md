@@ -98,6 +98,10 @@ Módulo: [modulos/listas-de-precios.md](modulos/listas-de-precios.md).
 resultados (`tenant.hemograma_auto`). Flag + mapa rol → `idItems` por laboratorio.
 Doc: [modulos/carga-resultados.md](modulos/carga-resultados.md).
 
+**Ejemplo implementado:** hoja de ruta de hemograma (`tenant.hoja_ruta_hemograma`).
+Flag + mapa de columnas/especiales → `idItems`. Default = catálogo NeoLab.
+Doc: [modulos/hoja-ruta-hemograma.md](modulos/hoja-ruta-hemograma.md).
+
 ---
 
 ## 4. Identidad por tenant

@@ -14,6 +14,7 @@ use App\Support\Facturacion\FacturacionAfipIndicadores;
 use App\Support\PermisosIaCatalog;
 use App\Support\Security\OpaqueRouteToken;
 use App\Support\Tesoreria\MovimientosCajaConsulta;
+use App\Support\Tesoreria\MovimientosCajaListadoFiltros;
 use App\Support\Tesoreria\TesoreriaConfig;
 use App\Support\UsuarioMenuPortal;
 use Carbon\Carbon;
@@ -94,10 +95,8 @@ class MovimientosCajaIndex extends Component
         abort_unless(Schema::hasTable('movimientos'), 404);
 
         $this->fechaElegirProtocolos = now()->toDateString();
-        $hoy = now()->toDateString();
-        $this->fechaDesde = $hoy;
-        $this->fechaHasta = $hoy;
         $this->reiniciarFechaHora();
+        $this->restaurarFiltrosListado();
     }
 
     public function updatingBusqueda(): void
@@ -124,6 +123,39 @@ class MovimientosCajaIndex extends Component
             'desde' => $desde,
             'hasta' => $hasta,
         ]));
+    }
+
+    /**
+     * @return array{fechaDesde?: string, fechaHasta?: string, page?: int}
+     */
+    public function filtrosListadoParaUrl(): array
+    {
+        return MovimientosCajaListadoFiltros::sanitizar([
+            'fechaDesde' => $this->fechaDesde,
+            'fechaHasta' => $this->fechaHasta,
+            'page' => $this->getPage(),
+        ]);
+    }
+
+    private function restaurarFiltrosListado(): void
+    {
+        $filtros = MovimientosCajaListadoFiltros::desdeRequest();
+        $hoy = now()->toDateString();
+
+        $this->fechaDesde = $filtros['fechaDesde'] ?? $hoy;
+        $this->fechaHasta = $filtros['fechaHasta'] ?? $hoy;
+        if (isset($filtros['page'])) {
+            $this->setPage((int) $filtros['page']);
+        }
+    }
+
+    private function persistirFiltrosListado(): void
+    {
+        MovimientosCajaListadoFiltros::guardarSesion([
+            'fechaDesde' => $this->fechaDesde,
+            'fechaHasta' => $this->fechaHasta,
+            'page' => $this->getPage(),
+        ]);
     }
 
     public function updatedIdTipoMovimiento(): void
@@ -569,6 +601,8 @@ class MovimientosCajaIndex extends Component
 
     public function render()
     {
+        $this->persistirFiltrosListado();
+
         [$desde, $hasta] = $this->rangoFechasFiltro();
 
         $movimientos = MovimientosCajaConsulta::listado($this->busqueda, $desde, $hasta)
@@ -629,9 +663,10 @@ class MovimientosCajaIndex extends Component
             'esEgreso' => $this->esEgreso(),
             'mostrarColumnaAfip' => $mostrarColumnaAfip,
             'afipEmitidos' => $afipEmitidos,
-            'urlAfipFn' => static fn (int $id): string => route('facturacion.afip.comprobantes', [
-                'ref' => OpaqueRouteToken::forCompAfipMovimiento($id),
-            ]),
+            'urlAfipFn' => fn (int $id): string => route('facturacion.afip.comprobantes', array_merge(
+                ['ref' => OpaqueRouteToken::forCompAfipMovimiento($id)],
+                $this->filtrosListadoParaUrl(),
+            )),
         ])->layout('layouts.staff', UsuarioMenuPortal::staffLayoutParams(labCtx()->idRoles));
     }
 
