@@ -4,7 +4,8 @@
             <x-vl-hero-heading>
                 <p class="vl-eyebrow">Tesorería</p>
                 <h1 class="text-2xl font-bold sm:text-3xl">Movimientos</h1>
-                <p class="mt-1 text-sm text-white/80">Ingresos y egresos de caja.</p>
+                <x-vl-hero-usuario />
+                <p class="mt-0.5 text-sm text-white/80">Ingresos y egresos de caja.</p>
             </x-vl-hero-heading>
             <button type="button"
                     wire:click="abrirFormularioNuevo"

@@ -115,7 +115,8 @@ Los conceptos especiales se resuelven por **nombre** en `conceptos` (no por id f
 | Usuario cliente / portal | — | **No** usa este módulo |
 
 Paginación listados: 50/página, `vendor.pagination.vl-compact`.  
-Diálogos: `vl-swal-*` / `vlSwal*`, no `wire:confirm` / `alert`.
+Diálogos: `vl-swal-*` / `vlSwal*`, no `wire:confirm` / `alert`.  
+Hero: todas las pantallas del módulo muestran el usuario de sesión con la etiqueta **Usuario:** (`usuarios.apenom`), no un saludo. Es el usuario que factura (emisor AFIP).
 
 ## Tablas y campos críticos
 
@@ -269,6 +270,7 @@ Rate limits típicos: save ~30/min; delete caja ~10/min por usuario.
 | Override labvetciudad | `config/tenants/labvetciudad.php` |
 | Rutas | `routes/web.php` (grupo `tesoreria/*`, `permiso:6`) |
 | Sidebar | `resources/views/layouts/partials/sidebar-grupos-menu.blade.php` |
+| Usuario en hero | `resources/views/components/vl-hero-usuario.blade.php` |
 | Doc flags tenant | `docs/11-tesoreria-por-tenant.md` |
 
 ### Livewire + Blade (`app/Livewire/Tesoreria/`, `resources/views/livewire/tesoreria/`)
@@ -346,6 +348,7 @@ icono en `MovimientoIndex` o en protocolos según modo).
 - [ ] Con `tesoreria_pacientes`: ¿sin botón «Pago global» en `PacienteIndex` (aunque el flag esté en true)?
 - [ ] Si AFIP: ¿`facturacion_afip.modo` correcto (`movimiento` → `pacientes.idPacientes`; `movimiento_caja` → `movimientos.id` + `compafip.idMovimientos`)?
 - [ ] Columna Pagado: ¿solo con `columna_pagado => true`? ¿AFIP `modo = paciente` sigue mostrando el icono sin imponer Pagado?
+- [ ] ¿Hero: `Usuario:` + `apenom` de sesión (no un saludo) en ambas variantes?
 - [ ] ¿Permiso 6 + rate limits + paginación 50 + `vlSwal*`?
 - [ ] ¿Export Excel (solo `tesoreria_pacientes`): ruta `tesoreria.movimientos.excel` + mismos filtros (Desde/Hasta + búsqueda) que la grilla?
 - [ ] ¿Tenant nuevo a caja: BD con `movimientos`/`conceptos`/`tipomovimiento`/`proveedores` + config `tesoreria_pacientes`?

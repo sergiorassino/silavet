@@ -20,24 +20,33 @@ en el encabezado, junto a Nuevo Paciente. Usa la fecha del selector “Día”
 |----------|--------|--------|
 | Activa (default) | `tenant.hoja_ruta_hemograma.activo` = `true` | Botón visible; PDF con IDs del mapa |
 | Inactiva | `activo` = `false` | Sin botón; ruta 404 |
+| Citologías ocultas (default) | `mostrar_citologias` = `false` | Sin columna Líq.Punción / Cit.*; ese ancho queda en las 16 determinaciones |
+| Citologías visibles | `mostrar_citologias` = `true` | Columna derecha de 18 mm (Líq.Punción, Cit.Oído, Cit.Vaginal, Cit.Piel) |
 | IDs del catálogo | `columnas` / `especiales` | Remapear `idItems` si el lab no usa el catálogo NeoLab |
 
 Los IDs de la grilla coinciden con el ScriptCase. La columna de citologías
-(Líq.Punción / Cit.Oído / Cit.Vaginal / Cit.Piel) **no se imprime**: ese
-ancho (18 mm) más 10 mm hacia el margen derecho se reparte en las 16
-columnas de determinación. La columna de identificación es 34 mm; cada
-columna de resultado 10,375 mm (bloque 200 mm).
+(Líq.Punción / Cit.Oído / Cit.Vaginal / Cit.Piel) **queda en el código** y
+se prende con `mostrar_citologias`. Con el default (`false`) no se imprime:
+ese ancho (18 mm) se reparte en las 16 columnas de determinación
+(10,375 mm cada una). Con `true`, cada determinación pasa a 9,25 mm y a la
+derecha van las cuatro celdas originales. La columna de identificación
+es 34 mm; el bloque sigue en 200 mm.
 
 A la izquierda, **una sola columna de identificación** (34 mm) reúne
 protocolo, paciente, especie · raza, sexo · edad y veterinaria (cliente,
 abreviado si es largo). La grilla de determinaciones queda a la derecha.
-Debajo: **Obs** y luego **Hemoparásitos**.
+Debajo: **Obs** y luego **Hemoparásitos**. Con citologías, Obs lleva
+Cit.Piel y Hemoparásitos lleva Cit.Vaginal (mismo apareo que el ScriptCase).
 
 | Rol | Título | idItems default |
 |-----|--------|-----------------|
 | wbc…plt | WBC … PLT (14 cols amarillas) | 6, 7, 8, 9, 10, 11, 1, 2, 3, 29, 4, 5, 13, 18 |
 | r_ipr, pt | %R/IPR, PT (azules) | 15, 21 |
 | hemoparasitos | Hemoparásitos | 14 |
+| liq_puncion | Líq.Punción | 114 |
+| cit_oido | Cit.Oído | 141 |
+| cit_vaginal | Cit.Vaginal | 142 |
+| cit_piel | Cit.Piel | 194 |
 
 Un laboratorio con otro `itemsinforme` declara solo el mapa distinto en
 `config/tenants/{slug}.php`. No usar `if (tenant === …)` en Blade.
@@ -99,7 +108,7 @@ Rate limit: 20/min al abrir y al generar el PDF.
 - No hardcodear `idItems` fuera de `tenant.hoja_ruta_hemograma`.
 - No usar DomPDF ni vistas Blade para este PDF.
 - No mostrar el botón en autogestión ni en la vista Historial.
-- No volver a dibujar la columna de citologías (Líq.Punción / Cit.*) sin pedido explícito.
+- No prender `mostrar_citologias` sin pedido explícito (el default es oculto).
 - No separar de nuevo Protocolo / Paciente / Esp: van en la columna única de identificación.
 
 ## Checklist al modificar
@@ -109,3 +118,4 @@ Rate limit: 20/min al abrir y al generar el PDF.
 - [ ] ¿Un lab con otro catálogo puede remapear IDs sin tocar el TCPDF?
 - [ ] ¿Sigue sin membrete institucional?
 - [ ] ¿El botón respeta `activo`, solo staff y solo la vista Por día?
+- [ ] ¿`mostrar_citologias` sigue en false salvo pedido explícito?

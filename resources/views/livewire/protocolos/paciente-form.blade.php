@@ -4,6 +4,7 @@
             <x-vl-hero-heading>
                 <p class="vl-eyebrow">Protocolos</p>
                 <h1>{{ $titulo }}</h1>
+                <x-vl-hero-usuario />
             </x-vl-hero-heading>
         </div>
     </div>

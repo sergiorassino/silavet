@@ -4,7 +4,8 @@
             <x-vl-hero-heading>
                 <p class="vl-eyebrow">Tesorería</p>
                 <h1 class="text-2xl font-bold sm:text-3xl">Gestión de Cuentas Contables</h1>
-                <p class="mt-2 text-sm text-white/80">Plan de cuentas (nivel 1).</p>
+                <x-vl-hero-usuario />
+                <p class="mt-1 text-sm text-white/80">Plan de cuentas (nivel 1).</p>
             </x-vl-hero-heading>
             <a href="{{ route('tesoreria.cuentas.create') }}" class="btn-primary shrink-0 bg-white text-primary-700 hover:bg-accent-50">Nueva cuenta</a>
         </div>

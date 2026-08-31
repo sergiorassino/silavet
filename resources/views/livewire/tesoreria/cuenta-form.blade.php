@@ -4,6 +4,7 @@
             <x-vl-hero-heading>
                 <p class="vl-eyebrow">Tesorería</p>
                 <h1 class="text-2xl font-bold sm:text-3xl">{{ $titulo }}</h1>
+                <x-vl-hero-usuario />
             </x-vl-hero-heading>
         </div>
     </div>

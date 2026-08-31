@@ -4,7 +4,8 @@
             <x-vl-hero-heading>
                 <p class="vl-eyebrow">Tesorería</p>
                 <h1 class="text-2xl font-bold sm:text-3xl">Transferencias Intercuenta</h1>
-                <p class="mt-2 text-sm text-white/80">Movimientos entre cuentas de medio de pago (retiro + depósito).</p>
+                <x-vl-hero-usuario />
+                <p class="mt-1 text-sm text-white/80">Movimientos entre cuentas de medio de pago (retiro + depósito).</p>
             </x-vl-hero-heading>
         </div>
     </div>

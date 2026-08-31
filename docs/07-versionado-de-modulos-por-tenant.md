@@ -99,7 +99,8 @@ resultados (`tenant.hemograma_auto`). Flag + mapa rol → `idItems` por laborato
 Doc: [modulos/carga-resultados.md](modulos/carga-resultados.md).
 
 **Ejemplo implementado:** hoja de ruta de hemograma (`tenant.hoja_ruta_hemograma`).
-Flag + mapa de columnas/especiales → `idItems`. Default = catálogo NeoLab.
+Flag `activo` + `mostrar_citologias` (columna Líq.Punción / Cit.*, default
+oculto) + mapa de columnas/especiales → `idItems`. Default = catálogo NeoLab.
 Doc: [modulos/hoja-ruta-hemograma.md](modulos/hoja-ruta-hemograma.md).
 
 ---
