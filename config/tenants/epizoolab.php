@@ -3,6 +3,10 @@
 return [
     'nombre' => 'Epizoolab',
 
+    'protocolos' => [
+        'implementacion' => 'anual_consecutivo',
+    ],
+
     'tesoreria' => [
         'columna_pagado' => true,
         'pago_global' => true,

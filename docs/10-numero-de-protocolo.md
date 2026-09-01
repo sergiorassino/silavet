@@ -43,6 +43,7 @@ y no deben renombrarse una vez en producción.
 | `neolab` | `fecha_diaria` | `config/tenants/neolab.php` |
 | `labvetciudad` | `anual_consecutivo` | `config/tenants/labvetciudad.php` |
 | `laboratoriosiv` | `anual_consecutivo` | `config/tenants/laboratoriosiv.php` |
+| `epizoolab` | `anual_consecutivo` | `config/tenants/epizoolab.php` |
 | `civetfranca` | `dual_corto_largo` | `config/tenants/civetfranca.php` |
 | `lvm` | `consecutivo_simple` | `config/tenants/lvm.php` |
 | `bio` | `vacio` | `config/tenants/bio.php` |
@@ -161,7 +162,7 @@ El tipo **no se persiste** en BD: queda codificado en el número generado.
 
 ## 5. Variante `anual_consecutivo`
 
-Migrada desde ScriptCase (opción 1). Usada por **labvetciudad** y **laboratoriosiv**.
+Migrada desde ScriptCase (opción 1). Usada por **labvetciudad**, **laboratoriosiv** y **epizoolab**.
 
 ### Formato
 
