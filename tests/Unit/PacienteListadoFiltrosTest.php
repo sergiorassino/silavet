@@ -21,18 +21,32 @@ class PacienteListadoFiltrosTest extends TestCase
         ]));
     }
 
-    public function test_sanitizar_para_url_conserva_historial_y_dia_distinto(): void
+    public function test_sanitizar_para_url_conserva_historial_y_rango(): void
     {
         $this->assertSame(
             [
                 'vista' => PacienteIndex::VISTA_HISTORIAL,
-                'fechaVista' => '2020-01-15',
+                'fechaDesde' => '2024-06-01',
+                'fechaHasta' => '2024-06-30',
                 'page' => 3,
             ],
             PacienteListadoFiltros::sanitizar([
                 'vista' => PacienteIndex::VISTA_HISTORIAL,
-                'fechaVista' => '2020-01-15',
+                'fechaDesde' => '2024-06-01',
+                'fechaHasta' => '2024-06-30',
                 'page' => 3,
+            ])
+        );
+    }
+
+    public function test_sanitizar_omite_fechas_de_historial_invalidas(): void
+    {
+        $this->assertSame(
+            ['vista' => PacienteIndex::VISTA_HISTORIAL],
+            PacienteListadoFiltros::sanitizar([
+                'vista' => PacienteIndex::VISTA_HISTORIAL,
+                'fechaDesde' => '01/06/2024',
+                'fechaHasta' => '',
             ])
         );
     }
@@ -69,6 +83,25 @@ class PacienteListadoFiltrosTest extends TestCase
         $this->assertSame(PacienteIndex::VISTA_HOY, $combinado['vista']);
         $this->assertSame('2020-01-15', $combinado['fechaVista']);
         $this->assertSame(PacienteIndex::FILTRO_PENDIENTES, $combinado['filtroEstado']);
+    }
+
+    public function test_combinar_conserva_rango_de_historial(): void
+    {
+        $combinado = PacienteListadoFiltros::combinar(
+            [
+                'vista' => PacienteIndex::VISTA_HISTORIAL,
+                'fechaDesde' => '2024-01-01',
+                'fechaHasta' => '2024-01-31',
+            ],
+            [
+                'vista' => PacienteIndex::VISTA_HISTORIAL,
+                'fechaHasta' => '2024-02-15',
+            ]
+        );
+
+        $this->assertSame(PacienteIndex::VISTA_HISTORIAL, $combinado['vista']);
+        $this->assertSame('2024-01-01', $combinado['fechaDesde']);
+        $this->assertSame('2024-02-15', $combinado['fechaHasta']);
     }
 
     public function test_request_de_protocolos_pertenece_al_modulo(): void

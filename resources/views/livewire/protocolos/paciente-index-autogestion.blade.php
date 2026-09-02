@@ -14,11 +14,22 @@
                         {{ $esHoy ? 'de hoy' : 'del día' }}
                         ({{ \Illuminate\Support\Carbon::parse($fechaEfectiva)->format('d/m/Y') }}).
                     @else
-                        Historial de protocolos de tu clínica.
+                        @php $rangoHistorial = $this->etiquetaRangoHistorial(); @endphp
+                        @if ($rangoHistorial)
+                            Historial de protocolos de tu clínica ({{ $rangoHistorial }}).
+                        @else
+                            Historial de protocolos de tu clínica.
+                        @endif
                     @endif
                 </p>
             </x-vl-hero-heading>
-            <x-vl-cli-avisos-campana />
+            <div class="flex shrink-0 flex-col gap-2 sm:flex-row sm:items-center">
+                <a href="{{ $this->excelUrl }}"
+                   class="btn-secondary shrink-0 border-white/40 bg-white/15 text-white hover:bg-white/25">
+                    Exportar Excel
+                </a>
+                <x-vl-cli-avisos-campana />
+            </div>
         </div>
     </div>
 
@@ -53,7 +64,7 @@
                    type="search"
                    placeholder="Buscar por protocolo, paciente o tutor…"
                    class="form-input max-w-xl w-full sm:flex-1">
-            <div class="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-3 shrink-0">
+            <div class="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center sm:gap-3 shrink-0">
                 @if ($this->filtroEstadoEfectivo() !== '')
                     <div class="inline-flex items-center gap-2 rounded-full border border-primary-200 bg-primary-50 px-3 py-1 text-xs font-semibold text-primary-800">
                         <span>{{ $this->etiquetaFiltroEstado() }}</span>
@@ -81,6 +92,21 @@
                                 Hoy
                             </button>
                         @endif
+                    </div>
+                @elseif ($vista === 'historial')
+                    <div class="vl-pacientes-fecha-filtro inline-flex items-center gap-2 text-xs font-semibold text-neutral-600">
+                        <label for="pacCliFechaDesde" class="whitespace-nowrap">Desde</label>
+                        <input wire:model.live="fechaDesde"
+                               id="pacCliFechaDesde"
+                               type="date"
+                               class="form-input py-1.5 text-xs w-auto"
+                               aria-label="Filtrar historial desde">
+                        <label for="pacCliFechaHasta" class="whitespace-nowrap">Hasta</label>
+                        <input wire:model.live="fechaHasta"
+                               id="pacCliFechaHasta"
+                               type="date"
+                               class="form-input py-1.5 text-xs w-auto"
+                               aria-label="Filtrar historial hasta">
                     </div>
                 @endif
                 <div class="vl-pacientes-vista-toggle" role="group" aria-label="Vista del listado">
@@ -234,7 +260,12 @@
                                     No hay protocolos registrados
                                     {{ $esHoy ? 'para hoy' : 'para el '. \Illuminate\Support\Carbon::parse($fechaEfectiva)->format('d/m/Y') }}.
                                 @else
-                                    No hay protocolos registrados.
+                                    @php $rangoHistorial = $this->etiquetaRangoHistorial(); @endphp
+                                    @if ($rangoHistorial)
+                                        No hay protocolos registrados en el período {{ $rangoHistorial }}.
+                                    @else
+                                        No hay protocolos registrados.
+                                    @endif
                                 @endif
                             </td>
                         </tr>

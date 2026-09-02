@@ -25,6 +25,7 @@ use App\Http\Controllers\Listados\HistorialDeterminacionesPdfController;
 use App\Http\Controllers\Listados\ListadoEstadisticoPacientesExcelController;
 use App\Http\Controllers\Listados\ListadoEstadisticoPacientesPdfController;
 use App\Http\Controllers\Protocolos\EtiquetasTuboPdfController;
+use App\Http\Controllers\Protocolos\PacienteListadoExcelController;
 use App\Http\Controllers\Protocolos\HojaRutaHemogramaPdfController;
 use App\Http\Controllers\Protocolos\InformePacientePdfController;
 use App\Http\Controllers\Protocolos\InformePublicoPdfController;
@@ -120,6 +121,9 @@ Route::middleware(['auth', 'lab.context'])->group(function () {
     Route::prefix('cliente')->middleware('menu.portal:cliente')->group(function () {
         Route::get('/', ClienteHome::class)->name('cliente.home');
         Route::get('/pacientes', PacienteIndex::class)->name('cliente.pacientes');
+        Route::get('/pacientes/excel', PacienteListadoExcelController::class)
+            ->middleware('throttle:10,1')
+            ->name('cliente.pacientes.excel');
         Route::get('/pacientes/informe/{ref}', InformePacientePdfController::class)
             ->middleware('no-store')
             ->where('ref', '[A-Za-z0-9_-]+')
@@ -321,6 +325,9 @@ Route::middleware(['auth', 'lab.context'])->group(function () {
 
     Route::prefix('protocolos')->middleware(['menu.portal:staff', 'permiso:3'])->group(function () {
         Route::get('/', PacienteIndex::class)->name('protocolos.index');
+        Route::get('/excel', PacienteListadoExcelController::class)
+            ->middleware('throttle:10,1')
+            ->name('protocolos.excel');
         Route::get('/nuevo', PacienteForm::class)->name('protocolos.create');
         Route::get('/etiquetas/{ref}', EtiquetasTuboPdfController::class)
             ->where('ref', '[A-Za-z0-9_-]+')

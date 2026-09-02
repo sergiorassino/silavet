@@ -74,7 +74,7 @@ class PacienteForm extends Component
 
     public string $origen = 'pacientes';
 
-    /** @var array{vista?: string, filtroEstado?: string, fechaVista?: string, page?: int, agrupacion?: string, incluirFinalizados?: int} */
+    /** @var array{vista?: string, filtroEstado?: string, fechaVista?: string, fechaDesde?: string, fechaHasta?: string, page?: int, agrupacion?: string, incluirFinalizados?: int} */
     public array $listadoFiltros = [];
 
     public function mount(?int $id = null): void
@@ -433,7 +433,7 @@ class PacienteForm extends Component
             return;
         }
 
-        if (Schema::hasTable('movimientos')
+        if (Movimiento::tieneColumnaIdPacientes()
             && Movimiento::query()->where('idPacientes', $paciente->idPacientes)->exists()) {
             $this->dispatch(
                 'vl-swal-error',
@@ -642,7 +642,7 @@ class PacienteForm extends Component
     }
 
     /**
-     * @param  array{vista?: string, filtroEstado?: string, fechaVista?: string, page?: int, agrupacion?: string, incluirFinalizados?: int}  $filtros
+     * @param  array{vista?: string, filtroEstado?: string, fechaVista?: string, fechaDesde?: string, fechaHasta?: string, page?: int, agrupacion?: string, incluirFinalizados?: int}  $filtros
      */
     private function urlVolver(array $filtros = [], ?int $focoIdPaciente = null): string
     {
