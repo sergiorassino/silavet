@@ -250,8 +250,9 @@ es solo `Normal.`, se conserva el manual.
 4. Sin salir: `vl-swal-exito`. Con salir: redirect al listado de origen
    (desde derivaciones: misma agrupación/página + `foco` = `idPacientes` para
    dejar el cursor sobre la fila, igual que en Pacientes). Desde Pacientes:
-   se conservan **Por día** (fecha) e **Historial** (sesión + query) hasta
-   que el usuario cambie el filtro o salga del módulo (otro ítem del menú).
+   se conservan **Por día** (fecha) e **Historial** con rango Desde/Hasta
+   (sesión + query) hasta que el usuario cambie el filtro o salga del módulo
+   (otro ítem del menú).
 
 ### E. Autoanalizadores (si hay aparatos activos)
 

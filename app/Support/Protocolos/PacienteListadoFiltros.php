@@ -11,13 +11,14 @@ use Livewire\Mechanisms\HandleRequests\EndpointResolver;
  * Conserva los filtros del listado de pacientes al ir a editar / determinaciones /
  * resultados (y al volver), y mientras no se cierre el módulo.
  *
- * Query params alineados con PacienteIndex: vista, filtroEstado, fechaVista, page.
+ * Query params alineados con PacienteIndex: vista, filtroEstado, fechaVista,
+ * fechaDesde, fechaHasta, page.
  * Al volver también puede incluirse `foco` (idPacientes) para posicionar la fila.
  *
  * Persistencia: sesión PHP hasta que el usuario cambie el filtro o navegue a otra
  * sección (fuera de protocolos / pacientes del portal).
  *
- * @phpstan-type Filtros array{vista?: string, filtroEstado?: string, fechaVista?: string, page?: int}
+ * @phpstan-type Filtros array{vista?: string, filtroEstado?: string, fechaVista?: string, fechaDesde?: string, fechaHasta?: string, page?: int}
  */
 final class PacienteListadoFiltros
 {
@@ -42,7 +43,7 @@ final class PacienteListadoFiltros
         $request ??= request();
         $raw = [];
 
-        foreach (['vista', 'filtroEstado', 'fechaVista', 'page'] as $clave) {
+        foreach (['vista', 'filtroEstado', 'fechaVista', 'fechaDesde', 'fechaHasta', 'page'] as $clave) {
             if ($request->query->has($clave)) {
                 $raw[$clave] = $request->query($clave);
             }
@@ -131,6 +132,13 @@ final class PacienteListadoFiltros
         if (preg_match('/^\d{4}-\d{2}-\d{2}$/', $fechaVista) === 1) {
             if (! $omitirDefaults || $fechaVista !== now()->toDateString()) {
                 $out['fechaVista'] = $fechaVista;
+            }
+        }
+
+        foreach (['fechaDesde', 'fechaHasta'] as $campo) {
+            $fecha = trim((string) ($filtros[$campo] ?? ''));
+            if (preg_match('/^\d{4}-\d{2}-\d{2}$/', $fecha) === 1) {
+                $out[$campo] = $fecha;
             }
         }
 

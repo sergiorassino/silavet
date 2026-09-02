@@ -83,6 +83,12 @@ class Movimiento extends Model
             && Schema::hasColumn('movimientos', 'fechhoraCarga');
     }
 
+    public static function tieneColumnaIdPacientes(): bool
+    {
+        return Schema::hasTable('movimientos')
+            && Schema::hasColumn('movimientos', 'idPacientes');
+    }
+
     public static function mensajeColumnaCargaFaltante(): string
     {
         return 'No se puede registrar el movimiento: falta la columna movimientos.fechhoraCarga. '

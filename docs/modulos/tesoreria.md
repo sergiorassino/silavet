@@ -143,7 +143,7 @@ Catálogos: `clientes`, `cuentas`, `cuentasdetalle`, `mediodepago`.
 | `idCuentas` | FK a **`mediodepago.id`** (UI etiqueta “Cuenta”; **no** es `cuentas`) |
 | `idConcepto` | `conceptos` con `tipoConcepto` = tipo de movimiento |
 | `idProveedores` | egresos **obligatorio**; filtrados por `idConceptos` |
-| `idPacientes` / `idClientes` | Ingresos Diarios / Cadetería (tomados del protocolo) |
+| `idPacientes` / `idClientes` | Ingresos Diarios / Cadetería (tomados del protocolo). `idPacientes` = 0 si no hay protocolo. En labs cuya tabla `movimientos` no traía la columna, se agrega aditiva (`database/sql/movimientos_id_pacientes.sql`). Al borrar un protocolo, `PacienteForm` bloquea si hay filas con ese `idPacientes`. |
 | `monto` | ingresos positivos; egresos **negativos** |
 | `fechhora`, `comprobante`, `obs` | metadatos de negocio |
 | `fechhoraCarga` | fecha/hora **real de alta** (now al crear; no se pisa al editar). Distinta de `fechhora`, que puede quedar con fecha de protocolos anteriores. |
@@ -332,6 +332,9 @@ icono en `MovimientoIndex` o en protocolos según modo).
 15. Diálogos: `vlSwal*`; sin `wire:confirm` / `alert`.
 16. Columna **Pagado** en `PacienteIndex` staff: solo con `TesoreriaConfig::columnaPagadoHabilitada()`
     (`tesoreria.columna_pagado => true`). No acoplar a AFIP ni al slug.
+17. Consultas a `movimientos.idPacientes` (p. ej. al borrar un protocolo): solo si
+    `Movimiento::tieneColumnaIdPacientes()`. No asumir que la tabla legacy ya trae
+    la columna. No eliminar un protocolo si hay movimientos con ese `idPacientes`.
 
 ## Checklist al modificar
 
@@ -355,4 +358,5 @@ icono en `MovimientoIndex` o en protocolos según modo).
 - [ ] ¿Export Excel (solo `tesoreria_pacientes`): ruta `tesoreria.movimientos.excel` + mismos filtros (Desde/Hasta + búsqueda) que la grilla?
 - [ ] ¿Tenant nuevo a caja: BD con `movimientos`/`conceptos`/`tipomovimiento`/`proveedores` + config `tesoreria_pacientes`?
 - [ ] ¿Alta de caja (`MovimientosCajaIndex` / asiento / entre cuentas) escribe `fechhoraCarga` = ahora y no la pisa al editar?
+- [ ] ¿Borrado de protocolo: `tieneColumnaIdPacientes()` antes de consultar `movimientos`?
 - [ ] ¿Si cambió el comportamiento documentado, se actualizó este archivo y/o `docs/11-…`?

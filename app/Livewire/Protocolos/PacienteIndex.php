@@ -19,6 +19,7 @@ use App\Support\Precios\ListaPreciosConfig;
 use App\Support\Protocolos\DiagnosticoIaPromptBuilder;
 use App\Support\Protocolos\HojaRutaHemogramaConfig;
 use App\Support\Protocolos\PacienteAdjuntoStorage;
+use App\Support\Protocolos\PacienteListadoConsulta;
 use App\Support\Protocolos\PacienteListadoFiltros;
 use App\Support\Resultados\InformeVisibilidadConsulta;
 use App\Support\Resultados\RenglonesMaterializer;
@@ -27,6 +28,7 @@ use App\Support\Security\OpaqueRouteToken;
 use App\Support\Tesoreria\PagoGlobalRegistro;
 use App\Support\Tesoreria\TesoreriaConfig;
 use App\Support\UsuarioMenuPortal;
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Facades\Schema;
@@ -71,6 +73,11 @@ class PacienteIndex extends Component
 
     /** Fecha (Y-m-d) para filtrar la vista diaria; por defecto hoy. */
     public string $fechaVista = '';
+
+    /** Rango opcional (vista historial); formato Y-m-d. Vacío = sin tope. */
+    public string $fechaDesde = '';
+
+    public string $fechaHasta = '';
 
     public bool $modalEnvioAbierto = false;
 
@@ -190,6 +197,16 @@ class PacienteIndex extends Component
         $this->resetPage();
     }
 
+    public function updatingFechaDesde(): void
+    {
+        $this->resetPage();
+    }
+
+    public function updatingFechaHasta(): void
+    {
+        $this->resetPage();
+    }
+
     public function updatingFiltroEstado(): void
     {
         $this->resetPage();
@@ -211,7 +228,7 @@ class PacienteIndex extends Component
     /**
      * Query params a propagar al salir del listado (editar, determinaciones, etc.).
      *
-     * @return array{vista?: string, filtroEstado?: string, fechaVista?: string, page?: int}
+     * @return array{vista?: string, filtroEstado?: string, fechaVista?: string, fechaDesde?: string, fechaHasta?: string, page?: int}
      */
     public function filtrosListadoParaUrl(): array
     {
@@ -219,8 +236,34 @@ class PacienteIndex extends Component
             'vista' => $this->vista,
             'filtroEstado' => $this->filtroEstado,
             'fechaVista' => $this->fechaVistaEfectiva(),
+            'fechaDesde' => $this->fechaDesde,
+            'fechaHasta' => $this->fechaHasta,
             'page' => $this->getPage(),
         ]);
+    }
+
+    public function getExcelUrlProperty(): string
+    {
+        $vista = $this->vista === self::VISTA_HISTORIAL
+            ? self::VISTA_HISTORIAL
+            : self::VISTA_HOY;
+
+        $params = array_filter([
+            'vista' => $vista,
+            'fechaVista' => $vista === self::VISTA_HOY ? $this->fechaVistaEfectiva() : null,
+            'fechaDesde' => $vista === self::VISTA_HISTORIAL
+                ? $this->fechaFiltroNormalizada($this->fechaDesde)
+                : null,
+            'fechaHasta' => $vista === self::VISTA_HISTORIAL
+                ? $this->fechaFiltroNormalizada($this->fechaHasta)
+                : null,
+            'filtroEstado' => $this->filtroEstadoEfectivo() !== '' ? $this->filtroEstadoEfectivo() : null,
+            'busqueda' => trim($this->busqueda) !== '' ? trim($this->busqueda) : null,
+        ], static fn ($valor) => $valor !== null && $valor !== '');
+
+        $ruta = labCtx()->esCliente() ? 'cliente.pacientes.excel' : 'protocolos.excel';
+
+        return route($ruta, $params);
     }
 
     /**
@@ -241,6 +284,12 @@ class PacienteIndex extends Component
         } else {
             $this->fechaVista = now()->toDateString();
         }
+        if (array_key_exists('fechaDesde', $filtros)) {
+            $this->fechaDesde = $filtros['fechaDesde'];
+        }
+        if (array_key_exists('fechaHasta', $filtros)) {
+            $this->fechaHasta = $filtros['fechaHasta'];
+        }
         if (isset($filtros['page'])) {
             $this->setPage((int) $filtros['page']);
         }
@@ -256,6 +305,8 @@ class PacienteIndex extends Component
             'vista' => $this->vista,
             'filtroEstado' => $this->filtroEstado,
             'fechaVista' => $this->fechaVistaEfectiva(),
+            'fechaDesde' => $this->fechaDesde,
+            'fechaHasta' => $this->fechaHasta,
             'page' => $this->getPage(),
         ]);
     }
@@ -295,6 +346,40 @@ class PacienteIndex extends Component
         }
 
         return $fecha;
+    }
+
+    /**
+     * Texto del rango en vista historial, o null si no hay fechas.
+     */
+    public function etiquetaRangoHistorial(): ?string
+    {
+        $desde = $this->fechaFiltroNormalizada($this->fechaDesde);
+        $hasta = $this->fechaFiltroNormalizada($this->fechaHasta);
+
+        if ($desde === null && $hasta === null) {
+            return null;
+        }
+
+        $fmt = static fn (string $f): string => Carbon::createFromFormat('Y-m-d', $f)->format('d/m/Y');
+
+        if ($desde !== null && $hasta !== null) {
+            return $fmt($desde).' – '.$fmt($hasta);
+        }
+        if ($desde !== null) {
+            return 'desde el '.$fmt($desde);
+        }
+
+        return 'hasta el '.$fmt($hasta);
+    }
+
+    private function fechaFiltroNormalizada(string $valor): ?string
+    {
+        $valor = trim($valor);
+        if ($valor === '' || preg_match('/^\d{4}-\d{2}-\d{2}$/', $valor) !== 1) {
+            return null;
+        }
+
+        return $valor;
     }
 
     public function avanzarEstado(int $id): void
@@ -1110,53 +1195,16 @@ class PacienteIndex extends Component
     {
         $this->persistirFiltrosListado();
 
-        $term = trim($this->busqueda);
         $ctx = labCtx();
 
-        $with = ['cliente', 'especie', 'raza', 'medioDePago'];
-        if (Schema::hasTable('notificaciones')) {
-            $with[] = 'notificacion';
-        }
-
-        $pacientes = Paciente::query()
-            ->with($with)
-            ->tap(fn ($q) => $this->aplicarFiltroTipoRegistroListado($q))
-            ->when(
-                $ctx->esCliente() && $ctx->idClientes,
-                function ($q) use ($ctx) {
-                    $q->where('pacientes.idClientes', $ctx->idClientes);
-                }
-            )
-            ->when($this->vista === self::VISTA_HOY, function ($q) {
-                $q->whereDate('pacientes.fechhoy', $this->fechaVistaEfectiva());
-            })
-            ->when($term !== '', function ($q) use ($term, $ctx) {
-                $q->where(function ($inner) use ($term, $ctx) {
-                    $inner->where('pacientes.nombreProtocolo', 'like', "%{$term}%")
-                        ->orWhere('pacientes.nombre', 'like', "%{$term}%")
-                        ->orWhere('pacientes.propietario', 'like', "%{$term}%");
-                    if (! ($ctx->esCliente() && $ctx->idClientes)) {
-                        $inner->orWhereHas('cliente', fn ($c) => $c->where('nombre', 'like', "%{$term}%"));
-                    }
-                });
-            })
-            ->when($this->filtroEstadoEfectivo() === self::FILTRO_PENDIENTES, function ($q) {
-                $estados = [
-                    ResultadosEstadosCatalog::EN_PROC,
-                    ResultadosEstadosCatalog::PARCIAL,
-                ];
-                $q->where(function ($inner) use ($estados) {
-                    $inner->whereIn('pacientes.estado', $estados)
-                        ->orWhereNull('pacientes.estado')
-                        ->orWhere('pacientes.estado', '');
-                });
-            })
-            ->when($this->filtroEstadoEfectivo() === self::FILTRO_LISTOS, function ($q) {
-                $q->whereIn('pacientes.estado', ResultadosEstadosCatalog::estadosFinalizados());
-            })
-            // Mismo orden que cuenta corriente / autogestión (Paciente::scopeOrdenListado).
-            ->ordenListado()
-            ->paginate(self::POR_PAGINA);
+        $pacientes = PacienteListadoConsulta::query([
+            'vista' => $this->vista,
+            'fechaVista' => $this->fechaVistaEfectiva(),
+            'fechaDesde' => $this->fechaDesde,
+            'fechaHasta' => $this->fechaHasta,
+            'busqueda' => $this->busqueda,
+            'filtroEstado' => $this->filtroEstadoEfectivo(),
+        ])->paginate(self::POR_PAGINA);
 
         $edInfRenglones = [];
         if ($this->modalEdInfAbierto && $this->edInfIdPaciente !== null) {
@@ -1229,7 +1277,7 @@ class PacienteIndex extends Component
 
         return Paciente::query()
             ->with('cliente')
-            ->tap(fn ($q) => $this->aplicarFiltroTipoRegistroListado($q))
+            ->tap(fn ($q) => PacienteListadoConsulta::aplicarFiltroTipoRegistro($q))
             ->when($ctx->esCliente() && $ctx->idClientes, function ($q) use ($ctx) {
                 $q->where('pacientes.idClientes', $ctx->idClientes);
             })
@@ -1238,30 +1286,13 @@ class PacienteIndex extends Component
     }
 
     /**
-     * Filtro de `tipoRegistro` del listado / alcance:
-     * - labvetciudad (`tesoreria_pacientes`): sin filtro (protocolos legacy suelen ser 0).
-     * - Autogestión cliente (`tesoreria_movimientos`): protocolos (1) + pagos globales (2).
-     * - Staff con `pago_global`: protocolos (1) + pagos globales (2).
-     * - Staff NeoLab sin el flag: solo protocolos (1); ingresos/egresos en Tesorería.
+     * Filtro de `tipoRegistro` del listado / alcance (ver PacienteListadoConsulta).
      *
      * @param  Builder<Paciente>  $query
      */
     protected function aplicarFiltroTipoRegistroListado($query): void
     {
-        if (TesoreriaConfig::usaPacientes()) {
-            return;
-        }
-
-        if (labCtx()->esCliente() || TesoreriaConfig::pagoGlobalHabilitado()) {
-            $query->whereIn('pacientes.tipoRegistro', [
-                Paciente::TIPO_PROTOCOLO,
-                Paciente::TIPO_INGRESO,
-            ]);
-
-            return;
-        }
-
-        $query->where('pacientes.tipoRegistro', Paciente::TIPO_PROTOCOLO);
+        PacienteListadoConsulta::aplicarFiltroTipoRegistro($query);
     }
 
     /**

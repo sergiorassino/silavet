@@ -37,7 +37,7 @@ class PacienteResultados extends Component
 
     public string $origen = 'pacientes';
 
-    /** @var array{vista?: string, filtroEstado?: string, fechaVista?: string, page?: int, agrupacion?: string, incluirFinalizados?: int} */
+    /** @var array{vista?: string, filtroEstado?: string, fechaVista?: string, fechaDesde?: string, fechaHasta?: string, page?: int, agrupacion?: string, incluirFinalizados?: int} */
     public array $listadoFiltros = [];
 
     public bool $modalAutoanalizadorAbierto = false;
