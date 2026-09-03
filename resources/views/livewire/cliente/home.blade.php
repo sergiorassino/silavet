@@ -33,14 +33,20 @@
         </div>
     </div>
 
-    <section class="vl-dash-cli-destacado" aria-label="Resumen de cuenta corriente">
-        <p class="vl-dash-cli-destacado-saldo">
-            Saldo Cuenta Corriente: $ {{ $cc['saldoFormateado'] }}
-        </p>
-        <p class="vl-dash-cli-destacado-desc">
-            Descuentos obtenidos durante el mes: $ {{ $cc['descuentosMesFormateado'] }}
-        </p>
-    </section>
+    @if (\App\Support\Cliente\PortalClienteConfig::mostrarResumenFinanciero())
+        <section class="vl-dash-cli-destacado" aria-label="Resumen de cuenta corriente">
+            @if (\App\Support\Cliente\PortalClienteConfig::mostrarSaldoCuentaCorriente())
+                <p class="vl-dash-cli-destacado-saldo">
+                    Saldo Cuenta Corriente: $ {{ $cc['saldoFormateado'] }}
+                </p>
+            @endif
+            @if (\App\Support\Cliente\PortalClienteConfig::mostrarDescuentosObtenidos())
+                <p class="vl-dash-cli-destacado-desc">
+                    Descuentos obtenidos durante el mes: $ {{ $cc['descuentosMesFormateado'] }}
+                </p>
+            @endif
+        </section>
+    @endif
 
     <div class="vl-dash-grid">
         {{-- 1. Estado de mis casos --}}

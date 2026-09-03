@@ -4,6 +4,7 @@ namespace App\Support\Dashboard;
 
 use App\Models\Notificacion;
 use App\Models\Paciente;
+use App\Support\Cliente\PortalClienteConfig;
 use App\Support\CuentaCorriente\CuentaCorrienteFacade;
 use App\Support\Precios\DescuentoPerfilesVolumenConsulta;
 use App\Support\Resultados\ResultadosEstadosCatalog;
@@ -121,7 +122,14 @@ final class DashboardClienteConsulta
             'ultimosInformes' => self::ultimosInformes($idClientes, $puedeVerInformes),
             'avisosNoLeidos' => self::conteoAvisosNoLeidos($idClientes),
             'avisos' => self::avisosNoLeidos($idClientes, $puedeVerInformes),
-            'cuentaCorriente' => self::resumenCuentaCorriente($idClientes),
+            'cuentaCorriente' => PortalClienteConfig::mostrarResumenFinanciero()
+                ? self::resumenCuentaCorriente($idClientes)
+                : [
+                    'saldo' => 0.0,
+                    'saldoFormateado' => '0,00',
+                    'descuentosMes' => 0.0,
+                    'descuentosMesFormateado' => '0,00',
+                ],
             'actividadReciente' => self::actividadReciente($idClientes, $puedeVerInformes),
         ];
     }

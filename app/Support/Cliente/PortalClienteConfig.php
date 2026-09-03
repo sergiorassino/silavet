@@ -27,4 +27,27 @@ final class PortalClienteConfig
     {
         return (bool) config('tenant.portal_cliente.mostrar_estimacion_costos', true);
     }
+
+    /**
+     * Resumen «Saldo Cuenta Corriente» en Inicio y Pacientes (autogestión).
+     * Default true. Solo se oculta si el tenant declara `mostrar_saldo_cuenta_corriente => false`.
+     */
+    public static function mostrarSaldoCuentaCorriente(): bool
+    {
+        return (bool) config('tenant.portal_cliente.mostrar_saldo_cuenta_corriente', true);
+    }
+
+    /**
+     * Resumen «Descuentos obtenidos durante el mes» y detalle de perfiles por volumen.
+     * Default true. Solo se oculta si el tenant declara `mostrar_descuentos_obtenidos => false`.
+     */
+    public static function mostrarDescuentosObtenidos(): bool
+    {
+        return (bool) config('tenant.portal_cliente.mostrar_descuentos_obtenidos', true);
+    }
+
+    public static function mostrarResumenFinanciero(): bool
+    {
+        return self::mostrarSaldoCuentaCorriente() || self::mostrarDescuentosObtenidos();
+    }
 }

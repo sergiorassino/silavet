@@ -9,6 +9,7 @@ use App\Models\Notificacion;
 use App\Models\Paciente;
 use App\Models\Renglon;
 use App\Support\CuentaCorriente\CuentaCorrienteConsulta;
+use App\Support\Cliente\PortalClienteConfig;
 use App\Support\EmailList;
 use App\Support\Envio\InformeEnvioServicio;
 use App\Support\Facturacion\FacturacionAfipConfig;
@@ -1233,7 +1234,9 @@ class PacienteIndex extends Component
             if (! TesoreriaConfig::usaPacientes()) {
                 $saldosAcumulados = CuentaCorrienteConsulta::mapaSaldoAcumuladoPorProtocolo($idCliente);
             }
-            $encabezadoDescuento = DescuentoDeterminacionResolver::encabezadoAutogestion($idCliente);
+            if (PortalClienteConfig::mostrarResumenFinanciero()) {
+                $encabezadoDescuento = DescuentoDeterminacionResolver::encabezadoAutogestion($idCliente);
+            }
         }
 
         $mostrarCadete = ! $autogestion
