@@ -124,8 +124,8 @@ En `PacienteIndex` staff, **Pagado** editable (`pacientes.pagado` +
 `pacientes.idMediodepago`) aparece solo si el tenant declara
 `tesoreria.columna_pagado => true`. Al hacer clic en la celda se abre un modal
 con importe y medio de pago (como NeoLab). Independiente de AFIP.
-Hoy lo declaran lvm, neolab, civetfranca y epizoolab (junto con pago global
-y Tesorería oculta). Ese valor es el que usa la CC
+Hoy lo declaran lvm, neolab, civetfranca y epizoolab (junto con pago global;
+Tesorería oculta solo en civetfranca y epizoolab). Ese valor es el que usa la CC
 (`precio − pagado`). Labs que no lo declaran (alqu, labvetciudad, default) no
 muestran la columna.
 

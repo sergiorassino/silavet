@@ -12,7 +12,6 @@ return [
     'tesoreria' => [
         'columna_pagado' => true,
         'pago_global' => true,
-        'mostrar_modulo' => false,
     ],
 
     'portal_cliente' => [

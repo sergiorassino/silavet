@@ -73,8 +73,9 @@ cambia si declara el override en `config/tenants/{slug}.php`:
   aparece al escribir). No aplica a `tesoreria_pacientes` (la caja vive en
   `movimientos`).
 - **`columna_pagado`:** opt-in. Columna **Pagado** editable inline en `PacienteIndex`
-  staff (`pacientes.pagado`). No depende de AFIP. Labs con el flag (lvm, neolab,
-  civetfranca, epizoolab) también ocultan Tesorería y muestran Pago global.
+  staff (`pacientes.pagado`). No depende de AFIP. Labs con el flag hoy: lvm, neolab,
+  civetfranca, epizoolab (también `pago_global`). Tesorería oculta solo en
+  civetfranca y epizoolab.
 - **`mostrar_modulo`:** default true. `false` oculta el grupo del sidebar y responde
   404 en `tesoreria.*` (middleware `tesoreria.modulo`). No cambia la variante ni
   la cuenta corriente.
@@ -294,7 +295,7 @@ Modelos: `Paciente`, `Movimiento`, `Concepto`, `Proveedor`, `Cuenta`, `CuentaDet
 
 Cross-cutting: `PacienteIndex` (cadete en labvetciudad; Pagado editable con
 `tesoreria.columna_pagado` — hoy lvm/neolab/civetfranca/epizoolab, junto con
-pago global y Tesorería oculta; icono AFIP aparte si
+pago global; Tesorería oculta solo en civetfranca/epizoolab; icono AFIP aparte si
 `modo = paciente`; con `tesoreria_movimientos`
 staff lista solo `tipoRegistro = 1` **salvo** `pago_global => true`, que muestra
 protocolos + pagos y el botón Pago global en Pacientes y Cuenta Corriente;

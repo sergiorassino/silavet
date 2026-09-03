@@ -69,7 +69,7 @@ Detalle operativo: [modulos/tesoreria.md](modulos/tesoreria.md) (sección «Ocul
   staff no lo muestra. SQL: `database/sql/pacientes_tipo_registro_alta_protocolo.sql`.
 - Columna **Pagado** en el listado staff: flag `tesoreria.columna_pagado`
   (default false; lvm, neolab, civetfranca y epizoolab la declaran `true`,
-  junto con `pago_global` y `mostrar_modulo => false`). Independiente
+  junto con `pago_global`. Tesorería oculta solo en civetfranca y epizoolab). Independiente
   del icono AFIP (`facturacion_afip.modo = paciente`).
 
 ---
