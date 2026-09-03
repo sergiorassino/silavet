@@ -67,6 +67,19 @@ class PacienteListadoFiltrosTest extends TestCase
         );
     }
 
+    public function test_sanitizar_conserva_busqueda_no_vacia(): void
+    {
+        $this->assertSame(
+            ['busqueda' => '12345'],
+            PacienteListadoFiltros::sanitizar(['busqueda' => '  12345  '])
+        );
+    }
+
+    public function test_sanitizar_omite_busqueda_vacia(): void
+    {
+        $this->assertSame([], PacienteListadoFiltros::sanitizar(['busqueda' => '   ']));
+    }
+
     public function test_combinar_la_query_pisa_la_sesion(): void
     {
         $combinado = PacienteListadoFiltros::combinar(

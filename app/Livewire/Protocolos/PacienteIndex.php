@@ -228,7 +228,7 @@ class PacienteIndex extends Component
     /**
      * Query params a propagar al salir del listado (editar, determinaciones, etc.).
      *
-     * @return array{vista?: string, filtroEstado?: string, fechaVista?: string, fechaDesde?: string, fechaHasta?: string, page?: int}
+     * @return array{vista?: string, filtroEstado?: string, fechaVista?: string, fechaDesde?: string, fechaHasta?: string, page?: int, busqueda?: string}
      */
     public function filtrosListadoParaUrl(): array
     {
@@ -239,6 +239,7 @@ class PacienteIndex extends Component
             'fechaDesde' => $this->fechaDesde,
             'fechaHasta' => $this->fechaHasta,
             'page' => $this->getPage(),
+            'busqueda' => $this->busqueda,
         ]);
     }
 
@@ -293,6 +294,9 @@ class PacienteIndex extends Component
         if (isset($filtros['page'])) {
             $this->setPage((int) $filtros['page']);
         }
+        if (isset($filtros['busqueda'])) {
+            $this->busqueda = $filtros['busqueda'];
+        }
     }
 
     private function persistirFiltrosListado(): void
@@ -308,6 +312,7 @@ class PacienteIndex extends Component
             'fechaDesde' => $this->fechaDesde,
             'fechaHasta' => $this->fechaHasta,
             'page' => $this->getPage(),
+            'busqueda' => $this->busqueda,
         ]);
     }
 
