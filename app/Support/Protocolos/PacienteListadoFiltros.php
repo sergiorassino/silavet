@@ -12,13 +12,13 @@ use Livewire\Mechanisms\HandleRequests\EndpointResolver;
  * resultados (y al volver), y mientras no se cierre el módulo.
  *
  * Query params alineados con PacienteIndex: vista, filtroEstado, fechaVista,
- * fechaDesde, fechaHasta, page.
+ * fechaDesde, fechaHasta, page, busqueda.
  * Al volver también puede incluirse `foco` (idPacientes) para posicionar la fila.
  *
  * Persistencia: sesión PHP hasta que el usuario cambie el filtro o navegue a otra
  * sección (fuera de protocolos / pacientes del portal).
  *
- * @phpstan-type Filtros array{vista?: string, filtroEstado?: string, fechaVista?: string, fechaDesde?: string, fechaHasta?: string, page?: int}
+ * @phpstan-type Filtros array{vista?: string, filtroEstado?: string, fechaVista?: string, fechaDesde?: string, fechaHasta?: string, page?: int, busqueda?: string}
  */
 final class PacienteListadoFiltros
 {
@@ -43,7 +43,7 @@ final class PacienteListadoFiltros
         $request ??= request();
         $raw = [];
 
-        foreach (['vista', 'filtroEstado', 'fechaVista', 'fechaDesde', 'fechaHasta', 'page'] as $clave) {
+        foreach (['vista', 'filtroEstado', 'fechaVista', 'fechaDesde', 'fechaHasta', 'page', 'busqueda'] as $clave) {
             if ($request->query->has($clave)) {
                 $raw[$clave] = $request->query($clave);
             }
@@ -145,6 +145,11 @@ final class PacienteListadoFiltros
         $page = (int) ($filtros['page'] ?? 0);
         if ($page > 1) {
             $out['page'] = $page;
+        }
+
+        $busqueda = trim((string) ($filtros['busqueda'] ?? ''));
+        if ($busqueda !== '') {
+            $out['busqueda'] = mb_substr($busqueda, 0, 120);
         }
 
         return $out;
