@@ -732,13 +732,27 @@ final class InformePacienteTcpdf extends Fpdi
     private function incorporarAdjunto(): void
     {
         $ruta = $this->datos['adjunto_ruta'] ?? null;
+        $declarado = trim((string) ($this->datos['adjunto_nombre'] ?? ''));
+
         if (! is_string($ruta) || $ruta === '' || ! is_file($ruta)) {
+            if ($declarado !== '') {
+                $this->paginaAdjuntoNoDisponible('No se encontró el archivo PDF adjunto.');
+            }
+
             return;
         }
 
         try {
             $pageCount = $this->setSourceFile($ruta);
         } catch (Throwable) {
+            $this->paginaAdjuntoNoDisponible('No se pudo leer el PDF adjunto.');
+
+            return;
+        }
+
+        if ($pageCount < 1) {
+            $this->paginaAdjuntoNoDisponible('El PDF adjunto no tiene páginas.');
+
             return;
         }
 
@@ -802,6 +816,16 @@ final class InformePacienteTcpdf extends Fpdi
         $this->SetTextColor(0, 0, 0);
 
         $this->SetY($y + $h + 1.0);
+    }
+
+    private function paginaAdjuntoNoDisponible(string $mensaje): void
+    {
+        $this->AddPage('P', [self::PAGE_W, self::PAGE_H]);
+        $this->SetY(4.0);
+        $this->dibujarTituloAdjunto();
+        TcpdfFuenteArial::aplicar($this, '', 10);
+        $this->SetX(self::MARGEN);
+        $this->Cell($this->anchoUtil(), 6, $mensaje, 0, 1, 'C');
     }
 
     private function asegurarEspacio(float $necesarioMm): void
