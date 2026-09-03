@@ -26,6 +26,7 @@ final class InformePacienteConsulta
      *     footer: array<string, mixed>,
      *     grupos: list<array{idGrupos: int, nombreGrupo: string, renglones: list<array<string, mixed>>}>,
      *     adjunto_ruta: ?string,
+     *     adjunto_nombre: string,
      * }|null
      */
     public static function armar(Paciente $paciente): ?array
@@ -65,6 +66,7 @@ final class InformePacienteConsulta
             'footer' => self::footerDesdeEntorno($entorno),
             'grupos' => $grupos,
             'adjunto_ruta' => self::rutaAdjuntoPdf($paciente),
+            'adjunto_nombre' => trim((string) ($paciente->adjunto ?? '')),
         ];
     }
 
@@ -346,13 +348,6 @@ final class InformePacienteConsulta
 
     private static function rutaAdjuntoPdf(Paciente $paciente): ?string
     {
-        $nombre = PacienteAdjuntoStorage::nombreSeguro((string) ($paciente->adjunto ?? ''));
-        if ($nombre === null) {
-            return null;
-        }
-
-        $ruta = PacienteAdjuntoStorage::rutaAbsoluta($nombre);
-
-        return is_file($ruta) ? $ruta : null;
+        return PacienteAdjuntoStorage::rutaSiExiste((string) ($paciente->adjunto ?? ''));
     }
 }
