@@ -16,6 +16,8 @@ return [
     'portal_cliente' => [
         'mostrar_lista_precios' => false,
         'mostrar_estimacion_costos' => false,
+        'mostrar_saldo_cuenta_corriente' => false,
+        'mostrar_descuentos_obtenidos' => false,
     ],
 
     'tipodeterminaciones' => [

@@ -35,10 +35,12 @@
 
     @if ($encabezadoDescuento)
         <div class="mb-4 px-2 text-center text-sm leading-relaxed text-primary-800 sm:text-base">
-            <p class="font-bold">
-                Saldo Cuenta Corriente: $ {{ $encabezadoDescuento['saldoFormateado'] }}
-            </p>
-            @if (! empty($encabezadoDescuento['mostrarDetalleVolumen']))
+            @if (\App\Support\Cliente\PortalClienteConfig::mostrarSaldoCuentaCorriente())
+                <p class="font-bold">
+                    Saldo Cuenta Corriente: $ {{ $encabezadoDescuento['saldoFormateado'] }}
+                </p>
+            @endif
+            @if (\App\Support\Cliente\PortalClienteConfig::mostrarDescuentosObtenidos() && ! empty($encabezadoDescuento['mostrarDetalleVolumen']))
                 <p class="mt-1">
                     Descuentos obtenidos durante el mes: $ {{ $encabezadoDescuento['descuentosMesFormateado'] }}
                 </p>

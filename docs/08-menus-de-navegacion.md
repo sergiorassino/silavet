@@ -63,10 +63,12 @@ Orientación UI: **desktop-first**.
 - **Opciones del sidebar:** Inicio · Pacientes · Lista de Precios · Estimación de Costos.
   Visibilidad de Lista de Precios y Estimación: flags
   `tenant.portal_cliente.mostrar_lista_precios` /
-  `mostrar_estimacion_costos` (default `true`). Helper
+  `mostrar_estimacion_costos` (default `true`). Resumen financiero en Inicio
+  y Pacientes (saldo CC / descuentos del mes): `mostrar_saldo_cuenta_corriente` /
+  `mostrar_descuentos_obtenidos` (default `true`). Helper
   `App\Support\Cliente\PortalClienteConfig`. Solo afectan autogestión
   (`/cliente/…`); no el listado staff `listados.estimacion-costos`.
-  Epizoolab declara ambos en `false`.
+  Epizoolab declara los cuatro `mostrar_*` en `false`.
 - **Layout:** misma estética que el Menú de Laboratorio (`layouts.staff` + `sidebar-nav-cliente`).
 
 ---

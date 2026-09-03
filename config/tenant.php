@@ -23,12 +23,16 @@ return [
     | - permite_descarga_excel: Excel en listados del portal (si aplica).
     | - mostrar_lista_precios / mostrar_estimacion_costos: ítems del sidebar y rutas
     |   /cliente/lista-precios y /cliente/estimacion-costos. Default true.
-    |   epizoolab declara ambos en false. Helper: App\Support\Cliente\PortalClienteConfig.
+    | - mostrar_saldo_cuenta_corriente / mostrar_descuentos_obtenidos: resumen
+    |   financiero en Inicio y encabezado de Pacientes (autogestión). Default true.
+    |   epizoolab declara los cuatro mostrar_* en false. Helper: PortalClienteConfig.
     */
     'portal_cliente' => [
         'permite_descarga_excel' => true,
         'mostrar_lista_precios' => true,
         'mostrar_estimacion_costos' => true,
+        'mostrar_saldo_cuenta_corriente' => true,
+        'mostrar_descuentos_obtenidos' => true,
     ],
 
     /*
