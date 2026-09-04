@@ -6,6 +6,7 @@ use App\Models\Grupo;
 use App\Support\PermisosIaCatalog;
 use App\Support\UsuarioMenuPortal;
 use Illuminate\Support\Facades\RateLimiter;
+use Illuminate\Validation\ValidationException;
 use Livewire\Component;
 
 class GrupoForm extends Component
@@ -16,6 +17,9 @@ class GrupoForm extends Component
 
     public string $orden = '';
 
+    /** 1 = mostrar encabezado VALORES DE REFERENCIA en el PDF; 0 = no. */
+    public string $mostrarReferencias = '1';
+
     public function mount(?int $id = null): void
     {
         abort_unless(tienePermiso(PermisosIaCatalog::PARAMETROS), 403);
@@ -25,6 +29,9 @@ class GrupoForm extends Component
             $this->idGrupos = $grupo->idGrupos;
             $this->nombreGrupo = (string) $grupo->nombreGrupo;
             $this->orden = $grupo->orden !== null ? (string) $grupo->orden : '';
+            if (Grupo::tieneColumnaMostrarReferencias()) {
+                $this->mostrarReferencias = ((int) ($grupo->mostrarReferencias ?? 1)) === 1 ? '1' : '0';
+            }
         }
     }
 
@@ -33,6 +40,7 @@ class GrupoForm extends Component
         return [
             'nombreGrupo' => ['required', 'string', 'max:50'],
             'orden' => ['nullable', 'integer', 'min:0', 'max:9999'],
+            'mostrarReferencias' => ['required', 'in:0,1'],
         ];
     }
 
@@ -44,6 +52,8 @@ class GrupoForm extends Component
             'orden.integer' => 'El orden debe ser un número entero.',
             'orden.min' => 'El orden no puede ser negativo.',
             'orden.max' => 'El orden no puede superar 9999.',
+            'mostrarReferencias.required' => 'Indique si se muestra el encabezado de valores de referencia.',
+            'mostrarReferencias.in' => 'El valor debe ser Sí o No.',
         ];
     }
 
@@ -56,6 +66,14 @@ class GrupoForm extends Component
         $data['nombreGrupo'] = trim($data['nombreGrupo']);
         $orden = trim((string) ($data['orden'] ?? ''));
         $data['orden'] = $orden === '' ? null : (int) $orden;
+        $data['mostrarReferencias'] = (int) $data['mostrarReferencias'];
+
+        if (! Grupo::tieneColumnaMostrarReferencias()) {
+            $mensaje = 'No se puede guardar el grupo: falta la columna grupos.mostrarReferencias. '
+                .'Ejecute el SQL de database/sql/grupos_mostrar_referencias.sql.';
+            $this->dispatch('vl-swal-error', mensaje: $mensaje);
+            throw ValidationException::withMessages(['mostrarReferencias' => $mensaje]);
+        }
 
         if ($this->idGrupos) {
             $grupo = Grupo::findOrFail($this->idGrupos);
