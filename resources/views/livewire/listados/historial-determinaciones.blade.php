@@ -188,6 +188,15 @@
                         </tr>
                     @endforelse
                 </tbody>
+                @if ($registros->total() > 0)
+                    <tfoot class="bg-accent-50/60 border-t border-accent-200">
+                        <tr>
+                            <td colspan="8" class="vl-pacientes-td text-right font-semibold tabular-nums">
+                                Total: {{ $registros->total() }} {{ $registros->total() === 1 ? 'registro' : 'registros' }}
+                            </td>
+                        </tr>
+                    </tfoot>
+                @endif
             </table>
         </div>
 

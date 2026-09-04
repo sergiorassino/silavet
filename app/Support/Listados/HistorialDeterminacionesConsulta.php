@@ -147,10 +147,13 @@ SQL;
             ->leftJoin('especies as e', 'p.idEspecies', '=', 'e.idEspecies')
             ->leftJoin('grupos as g', 'r.idGrupos', '=', 'g.idGrupos')
             ->leftJoin('itemsinforme as i', 'r.idItems', '=', 'i.idItems')
-            ->where('p.tipoRegistro', Paciente::TIPO_PROTOCOLO)
-            ->where('r.mostrar', 1)
-            ->whereNotNull('r.valor')
-            ->whereRaw("TRIM(r.valor) <> ''")
+            // Protocolos 1 y 0/NULL (legacy). Excluye tesorería (2 y 3).
+            ->whereRaw('COALESCE(p.tipoRegistro, 0) NOT IN (?, ?)', [
+                Paciente::TIPO_INGRESO,
+                Paciente::TIPO_EGRESO,
+            ])
+            // `mostrar` es visibilidad del PDF (Ed.Inf.), no del historial.
+            // Títulos, líneas, valor fijo e imagen se excluyen por tipoItem.
             ->whereIn('r.tipoItem', [1, 4, 6, 7, 8, 9])
             ->when($idClientes !== null, fn ($q) => $q->where('p.idClientes', $idClientes))
             ->when($ctx->esCliente() && $ctx->idClientes, fn ($q) => $q->where('p.idClientes', $ctx->idClientes))

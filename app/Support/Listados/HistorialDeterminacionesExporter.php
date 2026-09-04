@@ -4,6 +4,7 @@ namespace App\Support\Listados;
 
 use Carbon\Carbon;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
+use PhpOffice\PhpSpreadsheet\Style\Alignment;
 use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 
@@ -35,6 +36,7 @@ final class HistorialDeterminacionesExporter
         $this->escribirEncabezados($hoja, self::ENCABEZADOS);
 
         $fila = 2;
+        $cantidad = 0;
         foreach ($filas as $registro) {
             $fecha = $registro->fechhoy !== ''
                 ? Carbon::parse($registro->fechhoy)->format('d/m/Y')
@@ -51,9 +53,18 @@ final class HistorialDeterminacionesExporter
                 (string) ($registro->valor ?? ''),
             ]);
             $fila++;
+            $cantidad++;
         }
 
         $this->estilizarEncabezado($hoja, count(self::ENCABEZADOS));
+
+        if ($cantidad > 0) {
+            $etiqueta = $cantidad === 1 ? 'registro' : 'registros';
+            $hoja->mergeCells([1, $fila, count(self::ENCABEZADOS), $fila]);
+            $hoja->setCellValue([1, $fila], 'Total: '.$cantidad.' '.$etiqueta);
+            $hoja->getStyle([1, $fila])->getFont()->setBold(true);
+            $hoja->getStyle([1, $fila])->getAlignment()->setHorizontal(Alignment::HORIZONTAL_RIGHT);
+        }
 
         return [
             'spreadsheet' => $spreadsheet,
