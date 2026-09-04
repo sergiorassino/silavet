@@ -247,7 +247,6 @@ final class InformeEnvioServicio
         }
 
         $lab = LabInstitucional::datos();
-        $protocolo = $contactos['protocolo'] !== '' ? $contactos['protocolo'] : '—';
         $nombre = $contactos['nombre'] !== '' ? $contactos['nombre'] : '—';
         $propietario = trim((string) ($paciente->propietario ?? ''));
 
@@ -255,7 +254,7 @@ final class InformeEnvioServicio
         $ref = OpaqueRouteToken::forInformePublico((int) $paciente->idPacientes);
         $urlInforme = route('protocolos.informe-publico', ['ref' => $ref]);
 
-        // Datos de firma: usar pie de mail si están cargados, si no los del laboratorio.
+        // Datos de firma: usar pie de mail si están cargados, si no los del laboratorio emisor.
         $entorno = self::entornoMail();
         $firmaNombre = $entorno !== null ? trim((string) ($entorno->nombrePieMail ?? '')) : '';
         $firmaDireccion = $entorno !== null ? trim((string) ($entorno->direccionPieMail ?? '')) : '';
@@ -271,7 +270,15 @@ final class InformeEnvioServicio
             $firmaTelefono = $lab['telefono'];
         }
 
-        $texto = "Hola, {$firmaNombre}\n";
+        // Saludo: laboratorio/persona de destino del WhatsApp (no el laboratorio emisor).
+        $saludoNombre = $destinatario === self::DEST_CLIENTE
+            ? $contactos['cliente_nombre']
+            : ($propietario !== '' ? $propietario : $contactos['nombre']);
+        if ($saludoNombre === '') {
+            $saludoNombre = '—';
+        }
+
+        $texto = "Hola, {$saludoNombre}\n";
         $texto .= "Ya se encuentran disponibles los resultados de los análisis de:\n";
         $texto .= "Paciente: {$nombre}";
         if ($propietario !== '') {

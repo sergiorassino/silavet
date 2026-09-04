@@ -2128,6 +2128,10 @@
         @apply whitespace-nowrap;
     }
 
+    .vl-grupos-col--refs {
+        @apply w-0 whitespace-nowrap text-center;
+    }
+
     .vl-grupos-col--acciones {
         @apply w-0 whitespace-nowrap text-center;
     }

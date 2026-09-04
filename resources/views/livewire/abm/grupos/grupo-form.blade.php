@@ -22,6 +22,18 @@
                 @error('orden') <p class="form-error">{{ $message }}</p> @enderror
             </div>
 
+            <div>
+                <label class="form-label mb-1" for="mostrarReferencias">Mostrar Encabezado Referencias *</label>
+                <select wire:model="mostrarReferencias" id="mostrarReferencias" class="form-input py-1.5 text-sm">
+                    <option value="1">Sí (mostrar encabezado)</option>
+                    <option value="0">No (ocultar encabezado)</option>
+                </select>
+                <p class="mt-1 text-xs text-neutral-500">
+                    Encabezado «VALORES DE REFERENCIA» del PDF. El grupo Observaciones nunca lo imprime, aunque esté en Sí.
+                </p>
+                @error('mostrarReferencias') <p class="form-error">{{ $message }}</p> @enderror
+            </div>
+
             <div class="flex flex-wrap gap-2 pt-1">
                 <button type="submit" class="btn-primary py-1.5 text-sm" wire:loading.attr="disabled">Guardar</button>
                 <a href="{{ route('admin.grupos.index') }}" class="btn-secondary py-1.5 text-sm">Cancelar</a>

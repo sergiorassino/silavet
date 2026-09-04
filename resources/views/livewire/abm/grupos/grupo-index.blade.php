@@ -10,7 +10,7 @@
         </div>
     </div>
 
-    <div class="vl-card mx-auto max-w-2xl overflow-hidden">
+    <div class="vl-card mx-auto max-w-4xl overflow-hidden">
         <div class="vl-toolbar border-b border-accent-200 px-3 py-2">
             <input wire:model.live.debounce.300ms="busqueda"
                    type="search"
@@ -18,12 +18,15 @@
                    class="form-input max-w-xs py-1.5 text-sm">
         </div>
 
-        <div class="flex justify-center overflow-x-auto px-2 py-1">
+        <div class="flex justify-center overflow-x-auto px-3 py-2 sm:px-4">
             <table class="vl-grupos-grid text-sm">
                 <thead class="bg-accent-50/80">
                     <tr>
                         <th class="vl-grupos-th vl-grupos-col--orden">Orden</th>
                         <th class="vl-grupos-th vl-grupos-col--nombre">Nombre del grupo</th>
+                        @if ($tieneMostrarReferencias)
+                            <th class="vl-grupos-th vl-grupos-col--refs" title="Encabezado VALORES DE REFERENCIA en el PDF">Mostrar Encabezado Referencias</th>
+                        @endif
                         <th class="vl-grupos-th vl-grupos-col--acciones">Acciones</th>
                     </tr>
                 </thead>
@@ -32,6 +35,9 @@
                         <tr class="vl-grupos-row" wire:key="grupo-{{ $grupo->idGrupos }}">
                             <td class="vl-grupos-td vl-grupos-col--orden tabular-nums">{{ $grupo->orden ?? '—' }}</td>
                             <td class="vl-grupos-td vl-grupos-col--nombre font-medium">{{ $grupo->nombreGrupo }}</td>
+                            @if ($tieneMostrarReferencias)
+                                <td class="vl-grupos-td vl-grupos-col--refs">{{ ((int) ($grupo->mostrarReferencias ?? 1)) === 1 ? 'Sí' : 'No' }}</td>
+                            @endif
                             <td class="vl-grupos-td vl-grupos-col--acciones">
                                 <div class="flex items-center justify-center gap-0.5">
                                     <a href="{{ route('admin.grupos.edit', $grupo->idGrupos) }}"
@@ -49,7 +55,7 @@
                                                         x-on:click="window.vlSwalConfirmar('¿Eliminar este grupo? Esta acción no se puede deshacer.', 'Eliminar grupo', { confirmButtonText: 'Sí, eliminar', icon: 'warning' }).then(ok => ok && $wire.eliminar({{ $grupo->idGrupos }}))">
                                         <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.75"
-                                                  d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                                                  d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1 1h-4a1 1 0 00-1 1v3M4 7h16"/>
                                         </svg>
                                     </x-vl-grid-icon-btn>
                                 </div>
@@ -57,7 +63,7 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="3" class="vl-grupos-td text-center text-neutral-500 py-4">
+                            <td colspan="{{ $tieneMostrarReferencias ? 4 : 3 }}" class="vl-grupos-td text-center text-neutral-500 py-4">
                                 No hay grupos registrados.
                             </td>
                         </tr>

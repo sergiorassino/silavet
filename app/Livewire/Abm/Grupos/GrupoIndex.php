@@ -69,7 +69,9 @@ class GrupoIndex extends Component
             ->orderBy('nombreGrupo')
             ->paginate(self::POR_PAGINA);
 
-        return view('livewire.abm.grupos.grupo-index', compact('grupos'))
+        $tieneMostrarReferencias = Grupo::tieneColumnaMostrarReferencias();
+
+        return view('livewire.abm.grupos.grupo-index', compact('grupos', 'tieneMostrarReferencias'))
             ->layout('layouts.staff', UsuarioMenuPortal::staffLayoutParams(labCtx()->idRoles));
     }
 

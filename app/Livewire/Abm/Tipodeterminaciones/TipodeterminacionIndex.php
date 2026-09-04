@@ -4,6 +4,7 @@ namespace App\Livewire\Abm\Tipodeterminaciones;
 
 use App\Models\Derivacion;
 use App\Models\Tipodeterminacion;
+use App\Support\OrdenAlfabeticoEspanol;
 use App\Support\PermisosIaCatalog;
 use App\Support\PrecioInput;
 use App\Support\Tipodeterminaciones\TipodeterminacionesGridConfig;
@@ -333,9 +334,9 @@ class TipodeterminacionIndex extends Component
 
     private function compararNombre(array $a, array $b): int
     {
-        return strnatcasecmp(
-            trim((string) $a['nombre']),
-            trim((string) $b['nombre'])
+        return OrdenAlfabeticoEspanol::comparar(
+            (string) $a['nombre'],
+            (string) $b['nombre']
         );
     }
 

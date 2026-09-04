@@ -24,7 +24,7 @@ final class InformePacienteConsulta
      *     header: array{nombre: string, direccion: string, telefono: string, email: string, logo_file: ?string, header_file: ?string},
      *     color_rgb: array{0: int, 1: int, 2: int},
      *     footer: array<string, mixed>,
-     *     grupos: list<array{idGrupos: int, nombreGrupo: string, renglones: list<array<string, mixed>>}>,
+     *     grupos: list<array{idGrupos: int, nombreGrupo: string, mostrarReferencias: int, renglones: list<array<string, mixed>>}>,
      *     adjunto_ruta: ?string,
      *     adjunto_nombre: string,
      * }|null
@@ -71,7 +71,7 @@ final class InformePacienteConsulta
     }
 
     /**
-     * @return list<array{idGrupos: int, nombreGrupo: string, renglones: list<array<string, mixed>>}>
+     * @return list<array{idGrupos: int, nombreGrupo: string, mostrarReferencias: int, renglones: list<array<string, mixed>>}>
      */
     private static function gruposConRenglones(Paciente $paciente, int $idEspecies): array
     {
@@ -106,7 +106,13 @@ final class InformePacienteConsulta
                 'i.refComun',
                 'g.nombreGrupo',
                 'g.orden as ordenGrupo',
-            ])
+            ]);
+
+        if (Schema::hasColumn('grupos', 'mostrarReferencias')) {
+            $query->addSelect('g.mostrarReferencias');
+        }
+
+        $query
             ->orderBy('g.orden')
             ->orderBy('g.idGrupos')
             ->orderBy('t.orden');
@@ -134,6 +140,7 @@ final class InformePacienteConsulta
                 $grupos[] = [
                     'idGrupos' => $idGrupos,
                     'nombreGrupo' => (string) $fila->nombreGrupo,
+                    'mostrarReferencias' => (int) ($fila->mostrarReferencias ?? 1),
                     'renglones' => [],
                 ];
             }

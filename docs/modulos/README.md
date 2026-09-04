@@ -24,6 +24,7 @@ en esta carpeta (si existe) y respetar las reglas de negocio ahí listadas.
 | Clientes resumen mensual (grid + PDF + Excel) | [clientes-resumen-mensual.md](clientes-resumen-mensual.md) |
 | Detalle de determinaciones (autogestión cliente) | [autogestion-detalle-determinaciones.md](autogestion-detalle-determinaciones.md) |
 | Hoja de ruta (hemograma) | [hoja-ruta-hemograma.md](hoja-ruta-hemograma.md) |
+| Gestión de grupos (informe PDF) | [grupos-informe.md](grupos-informe.md) |
 
 ## Plantilla
 

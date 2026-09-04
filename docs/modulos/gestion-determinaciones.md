@@ -44,8 +44,9 @@ Si falta `tipodeterminaciones.derivacion`: aviso visible y no se persiste el cen
 ## Flujo principal
 
 1. Carga todas las filas a memoria (`filas`); filtro local por orden/nombre.
-2. Orden de la grilla: por defecto alfabético por nombre (`asc`). Clic en cabeceras
-   **Orden** y **Nombre de la determinación** alterna `asc`/`desc` de esa columna.
+2. Orden de la grilla: por defecto alfabético español por nombre (`asc`): á/é/í/ó/ú
+   con su vocal, ñ después de n. Clic en cabeceras **Orden** y **Nombre de la
+   determinación** alterna `asc`/`desc` de esa columna.
 3. Edición inline con guardado automático al salir del campo (blur) o al
    cambiar un select; solo acción de fila: eliminar. Alta con valores en 0.
 4. Eliminar bloqueado si hay filas en `determinaciones` con ese tipo.
@@ -69,6 +70,7 @@ se preselecciona `derivacion` (modo catálogo); el select de esa pantalla sigue 
 | Componente | `app/Livewire/Abm/Tipodeterminaciones/TipodeterminacionIndex.php` |
 | Vista | `resources/views/livewire/abm/tipodeterminaciones/tipodeterminacion-index.blade.php` |
 | Config de grilla | `app/Support/Tipodeterminaciones/TipodeterminacionesGridConfig.php` |
+| Orden alfabético español | `app/Support/OrdenAlfabeticoEspanol.php` |
 | Modelo | `app/Models/Tipodeterminacion.php` |
 
 ## Qué no hacer / reglas de negocio
@@ -86,5 +88,5 @@ se preselecciona `derivacion` (modo catálogo); el select de esa pantalla sigue 
 - [ ] ¿Laboratorio SIV muestra RAPELA / EPIZOOLAB / DUCHENE / LAB. SIV según `derivacion`?
 - [ ] ¿Guard `Schema::hasColumn('tipodeterminaciones', 'derivacion')` con error visible si falta?
 - [ ] ¿Permiso 2?
-- [ ] ¿Default alfabético por nombre, y cabeceras Orden/Nombre reordenan?
+- [ ] ¿Default alfabético español por nombre (acentos con su vocal, ñ tras n), y cabeceras Orden/Nombre reordenan?
 - [ ] ¿Inputs guardan al blur y selects al change, sin botones guardar/descartar?

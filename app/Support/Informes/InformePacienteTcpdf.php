@@ -289,7 +289,10 @@ final class InformePacienteTcpdf extends Fpdi
             $this->asegurarEspacio(16);
             $this->dibujarTituloGrupo($nombreGrupo);
 
-            $mostrarRefs = ! in_array(mb_strtoupper($nombreGrupo), ['OBSERVACIONES', 'INFORME DE ECOGRAFÍA'], true);
+            $mostrarRefs = InformeGrupoReferencias::mostrarEncabezado(
+                $nombreGrupo,
+                (int) ($grupo['mostrarReferencias'] ?? 1)
+            );
             if ($mostrarRefs) {
                 TcpdfFuenteArial::aplicar($this, '', 7);
                 $etiqueta = 'VALORES DE REFERENCIA'.($rotuloRef !== '' ? ' '.$rotuloRef : '');

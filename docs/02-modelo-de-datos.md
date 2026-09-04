@@ -13,7 +13,7 @@
 | `especies`             | Especies animales (canino, felino, equino, etc.)         | `idEspecies`            |
 | `razas`                | Razas por especie                                        | `idRazas`               |
 | `tipodeterminaciones`  | Tipos de análisis / perfiles (hemograma, perfil hepático, etc.) | `idTipodeterminaciones` |
-| `grupos`               | Agrupación de ítems en informes                          | `idGrupos`              |
+| `grupos`               | Agrupación de ítems en informes (`mostrarReferencias` = encabezado VALORES DE REFERENCIA en el PDF) | `idGrupos`              |
 | `itemsinforme`         | Ítems analíticos del informe (parámetros, textos, refs. por especie) | `idItems` |
 | `renglonesxdeterminacion` | Plantilla de ítems por tipo de determinación        | `id`                    |
 | `derivaciones`         | Destinos de derivación externa                           | `idDerivaciones`        |

@@ -85,7 +85,14 @@ class InformePacienteTcpdfTest extends TestCase
             ],
             'color_rgb' => [103, 29, 143],
             'footer' => [],
-            'grupos' => [],
+            'grupos' => [
+                [
+                    'idGrupos' => 1,
+                    'nombreGrupo' => 'Hemograma',
+                    'mostrarReferencias' => 1,
+                    'renglones' => [],
+                ],
+            ],
             'adjunto_ruta' => null,
             'adjunto_nombre' => '',
         ], $extra);
