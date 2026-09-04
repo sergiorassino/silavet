@@ -1,4 +1,15 @@
     @if ($modalEnvioAbierto)
+        @php
+            $envioDestCliente = \App\Support\Envio\InformeEnvioConfig::permiteDestinatarioCliente();
+            $envioDestPaciente = \App\Support\Envio\InformeEnvioConfig::permiteDestinatarioPaciente();
+            $envioFormaMail = \App\Support\Envio\InformeEnvioConfig::permiteFormaMail();
+            $envioFormaWhatsapp = \App\Support\Envio\InformeEnvioConfig::permiteFormaWhatsapp();
+            $envioMostrarSelectDest = $envioDestCliente && $envioDestPaciente;
+            $envioMostrarSelectForma = $envioFormaMail && $envioFormaWhatsapp;
+            $envioGridContacto = ($envioFormaMail && $envioFormaWhatsapp)
+                ? 'grid-cols-[1fr_7.5rem]'
+                : 'grid-cols-1';
+        @endphp
         @teleport('body')
             <div class="fixed inset-0 z-[120] flex items-end justify-center p-4 sm:items-center"
                  wire:keydown.escape.window="cerrarModalEnvio">
@@ -20,94 +31,126 @@
 
                     <div class="min-h-0 flex-1 space-y-3 overflow-y-auto px-5 py-3">
                         <div class="vl-form--compact space-y-2">
-                            <section class="rounded-lg border border-accent-200 bg-accent-50/40 px-3 py-2">
-                                <div class="flex min-w-0 items-baseline gap-2">
-                                    <h4 class="shrink-0 text-[10px] font-bold uppercase tracking-[0.08em] text-primary-700">Cliente</h4>
-                                    <p class="min-w-0 truncate text-xs font-medium text-neutral-900" title="{{ $envioClienteNombre }}">{{ $envioClienteNombre }}</p>
-                                </div>
-                                <div class="mt-1.5 grid grid-cols-[1fr_7.5rem] gap-1.5">
-                                    <div class="vl-form-field">
-                                        <label class="sr-only" for="envioClienteEmail">Email del cliente</label>
-                                        <input wire:model.blur="envioClienteEmail"
-                                               id="envioClienteEmail"
-                                               type="text"
-                                               maxlength="500"
-                                               class="form-input"
-                                               placeholder="Email (; varios)"
-                                               autocomplete="off"
-                                               title="Varios emails separados por ;">
-                                        @error('envioClienteEmail') <p class="form-error">{{ $message }}</p> @enderror
+                            @if ($envioDestCliente)
+                                <section class="rounded-lg border border-accent-200 bg-accent-50/40 px-3 py-2">
+                                    <div class="flex min-w-0 items-baseline gap-2">
+                                        <h4 class="shrink-0 text-[10px] font-bold uppercase tracking-[0.08em] text-primary-700">Cliente</h4>
+                                        <p class="min-w-0 truncate text-xs font-medium text-neutral-900" title="{{ $envioClienteNombre }}">{{ $envioClienteNombre }}</p>
                                     </div>
-                                    <div class="vl-form-field">
-                                        <label class="sr-only" for="envioClienteWhatsapp">WhatsApp del cliente</label>
-                                        <input wire:model.blur="envioClienteWhatsapp"
-                                               id="envioClienteWhatsapp"
-                                               type="text"
-                                               maxlength="20"
-                                               class="form-input"
-                                               placeholder="WhatsApp"
-                                               autocomplete="off">
-                                        @error('envioClienteWhatsapp') <p class="form-error">{{ $message }}</p> @enderror
+                                    <div class="mt-1.5 grid {{ $envioGridContacto }} gap-1.5">
+                                        @if ($envioFormaMail)
+                                            <div class="vl-form-field">
+                                                <label class="sr-only" for="envioClienteEmail">Email del cliente</label>
+                                                <input wire:model.blur="envioClienteEmail"
+                                                       id="envioClienteEmail"
+                                                       type="text"
+                                                       maxlength="500"
+                                                       class="form-input"
+                                                       placeholder="Email (; varios)"
+                                                       autocomplete="off"
+                                                       title="Varios emails separados por ;">
+                                                @error('envioClienteEmail') <p class="form-error">{{ $message }}</p> @enderror
+                                            </div>
+                                        @endif
+                                        @if ($envioFormaWhatsapp)
+                                            <div class="vl-form-field">
+                                                <label class="sr-only" for="envioClienteWhatsapp">WhatsApp del cliente</label>
+                                                <input wire:model.blur="envioClienteWhatsapp"
+                                                       id="envioClienteWhatsapp"
+                                                       type="text"
+                                                       maxlength="20"
+                                                       class="form-input"
+                                                       placeholder="WhatsApp"
+                                                       autocomplete="off">
+                                                @error('envioClienteWhatsapp') <p class="form-error">{{ $message }}</p> @enderror
+                                            </div>
+                                        @endif
                                     </div>
-                                </div>
-                            </section>
+                                </section>
+                            @endif
 
-                            <section class="rounded-lg border border-accent-200 bg-accent-50/40 px-3 py-2">
-                                <div class="flex min-w-0 items-baseline gap-2">
-                                    <h4 class="shrink-0 text-[10px] font-bold uppercase tracking-[0.08em] text-primary-700">Paciente</h4>
-                                    <p class="min-w-0 truncate text-xs font-medium text-neutral-900" title="{{ $envioNombrePaciente }}">{{ $envioNombrePaciente }}</p>
-                                </div>
-                                <div class="mt-1.5 grid grid-cols-[1fr_7.5rem] gap-1.5">
-                                    <div class="vl-form-field">
-                                        <label class="sr-only" for="envioPacienteEmail">Email del paciente</label>
-                                        <input wire:model.blur="envioPacienteEmail"
-                                               id="envioPacienteEmail"
-                                               type="email"
-                                               maxlength="150"
-                                               class="form-input"
-                                               placeholder="Email"
-                                               autocomplete="off">
-                                        @error('envioPacienteEmail') <p class="form-error">{{ $message }}</p> @enderror
+                            @if ($envioDestPaciente)
+                                <section class="rounded-lg border border-accent-200 bg-accent-50/40 px-3 py-2">
+                                    <div class="flex min-w-0 items-baseline gap-2">
+                                        <h4 class="shrink-0 text-[10px] font-bold uppercase tracking-[0.08em] text-primary-700">Paciente</h4>
+                                        <p class="min-w-0 truncate text-xs font-medium text-neutral-900" title="{{ $envioNombrePaciente }}">{{ $envioNombrePaciente }}</p>
                                     </div>
-                                    <div class="vl-form-field">
-                                        <label class="sr-only" for="envioPacienteWhatsapp">WhatsApp del paciente</label>
-                                        <input wire:model.blur="envioPacienteWhatsapp"
-                                               id="envioPacienteWhatsapp"
-                                               type="text"
-                                               maxlength="20"
-                                               class="form-input"
-                                               placeholder="WhatsApp"
-                                               autocomplete="off">
-                                        @error('envioPacienteWhatsapp') <p class="form-error">{{ $message }}</p> @enderror
+                                    <div class="mt-1.5 grid {{ $envioGridContacto }} gap-1.5">
+                                        @if ($envioFormaMail)
+                                            <div class="vl-form-field">
+                                                <label class="sr-only" for="envioPacienteEmail">Email del paciente</label>
+                                                <input wire:model.blur="envioPacienteEmail"
+                                                       id="envioPacienteEmail"
+                                                       type="email"
+                                                       maxlength="150"
+                                                       class="form-input"
+                                                       placeholder="Email"
+                                                       autocomplete="off">
+                                                @error('envioPacienteEmail') <p class="form-error">{{ $message }}</p> @enderror
+                                            </div>
+                                        @endif
+                                        @if ($envioFormaWhatsapp)
+                                            <div class="vl-form-field">
+                                                <label class="sr-only" for="envioPacienteWhatsapp">WhatsApp del paciente</label>
+                                                <input wire:model.blur="envioPacienteWhatsapp"
+                                                       id="envioPacienteWhatsapp"
+                                                       type="text"
+                                                       maxlength="20"
+                                                       class="form-input"
+                                                       placeholder="WhatsApp"
+                                                       autocomplete="off">
+                                                @error('envioPacienteWhatsapp') <p class="form-error">{{ $message }}</p> @enderror
+                                            </div>
+                                        @endif
                                     </div>
-                                </div>
-                            </section>
+                                </section>
+                            @endif
                         </div>
 
-                        <div class="vl-form--compact grid gap-2 sm:grid-cols-2">
-                            <div class="vl-form-field">
-                                <label class="form-label" for="envioDestinatario">Destinatario</label>
-                                <select wire:model="envioDestinatario" id="envioDestinatario" class="form-select">
-                                    <option value="">Seleccionar</option>
-                                    <option value="cliente">Cliente</option>
-                                    <option value="paciente">Paciente</option>
-                                </select>
-                                @error('envioDestinatario') <p class="form-error">{{ $message }}</p> @enderror
+                        @if ($envioMostrarSelectDest || $envioMostrarSelectForma)
+                            <div class="vl-form--compact grid gap-2 {{ $envioMostrarSelectDest && $envioMostrarSelectForma ? 'sm:grid-cols-2' : '' }}">
+                                @if ($envioMostrarSelectDest)
+                                    <div class="vl-form-field">
+                                        <label class="form-label" for="envioDestinatario">Destinatario</label>
+                                        <select wire:model="envioDestinatario" id="envioDestinatario" class="form-select">
+                                            <option value="">Seleccionar</option>
+                                            @if ($envioDestCliente)
+                                                <option value="cliente">Cliente</option>
+                                            @endif
+                                            @if ($envioDestPaciente)
+                                                <option value="paciente">Paciente</option>
+                                            @endif
+                                        </select>
+                                        @error('envioDestinatario') <p class="form-error">{{ $message }}</p> @enderror
+                                    </div>
+                                @endif
+                                @if ($envioMostrarSelectForma)
+                                    <div class="vl-form-field">
+                                        <label class="form-label" for="envioForma">Forma de envío</label>
+                                        <select wire:model="envioForma" id="envioForma" class="form-select">
+                                            <option value="">Seleccionar</option>
+                                            @if ($envioFormaMail)
+                                                <option value="mail">Mail</option>
+                                            @endif
+                                            @if ($envioFormaWhatsapp)
+                                                <option value="whatsapp">WhatsApp</option>
+                                            @endif
+                                        </select>
+                                        @error('envioForma') <p class="form-error">{{ $message }}</p> @enderror
+                                    </div>
+                                @endif
                             </div>
-                            <div class="vl-form-field">
-                                <label class="form-label" for="envioForma">Forma de envío</label>
-                                <select wire:model="envioForma" id="envioForma" class="form-select">
-                                    <option value="">Seleccionar</option>
-                                    <option value="mail">Mail</option>
-                                    <option value="whatsapp">WhatsApp</option>
-                                </select>
-                                @error('envioForma') <p class="form-error">{{ $message }}</p> @enderror
-                            </div>
-                        </div>
+                        @endif
 
                         <p class="text-[11px] leading-snug text-neutral-500">
-                            Mail: usa la cuenta de Parámetros del Sistema.
-                            WhatsApp: abre WhatsApp Web.
+                            @if ($envioFormaMail && $envioFormaWhatsapp)
+                                Mail: usa la cuenta de Parámetros del Sistema.
+                                WhatsApp: abre WhatsApp Web.
+                            @elseif ($envioFormaMail)
+                                Mail: usa la cuenta de Parámetros del Sistema.
+                            @elseif ($envioFormaWhatsapp)
+                                WhatsApp: abre WhatsApp Web.
+                            @endif
                         </p>
                     </div>
 

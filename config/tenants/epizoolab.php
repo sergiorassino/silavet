@@ -5,6 +5,10 @@ return [
 
     'protocolos' => [
         'implementacion' => 'anual_consecutivo',
+        'orden_listado' => [
+            'fechhoy' => 'desc',
+            'nombreProtocolo' => 'desc',
+        ],
     ],
 
     'tesoreria' => [
@@ -22,5 +26,10 @@ return [
 
     'tipodeterminaciones' => [
         'derivacion' => 'catalogo',
+    ],
+
+    'envio_informes' => [
+        'destinatario_paciente' => false,
+        'forma_whatsapp' => false,
     ],
 ];
