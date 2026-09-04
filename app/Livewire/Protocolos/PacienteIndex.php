@@ -11,6 +11,7 @@ use App\Models\Renglon;
 use App\Support\CuentaCorriente\CuentaCorrienteConsulta;
 use App\Support\Cliente\PortalClienteConfig;
 use App\Support\EmailList;
+use App\Support\Envio\InformeEnvioConfig;
 use App\Support\Envio\InformeEnvioServicio;
 use App\Support\Facturacion\FacturacionAfipConfig;
 use App\Support\Facturacion\FacturacionAfipIndicadores;
@@ -467,8 +468,8 @@ class PacienteIndex extends Component
         $this->envioPacienteEmail = $contactos['paciente_email'];
         $this->envioPacienteWhatsapp = $contactos['paciente_whatsapp'];
 
-        $this->envioDestinatario = '';
-        $this->envioForma = '';
+        $this->envioDestinatario = InformeEnvioConfig::destinatarioUnico() ?? '';
+        $this->envioForma = InformeEnvioConfig::formaUnica() ?? '';
         $this->modalEnvioAbierto = true;
         $this->resetErrorBag();
     }
@@ -482,21 +483,37 @@ class PacienteIndex extends Component
 
     public function updatedEnvioClienteEmail(): void
     {
+        if (! InformeEnvioConfig::permiteDestinatarioCliente() || ! InformeEnvioConfig::permiteFormaMail()) {
+            return;
+        }
+
         $this->guardarContactoCliente();
     }
 
     public function updatedEnvioClienteWhatsapp(): void
     {
+        if (! InformeEnvioConfig::permiteDestinatarioCliente() || ! InformeEnvioConfig::permiteFormaWhatsapp()) {
+            return;
+        }
+
         $this->guardarContactoCliente();
     }
 
     public function updatedEnvioPacienteEmail(): void
     {
+        if (! InformeEnvioConfig::permiteDestinatarioPaciente() || ! InformeEnvioConfig::permiteFormaMail()) {
+            return;
+        }
+
         $this->guardarContactoPaciente();
     }
 
     public function updatedEnvioPacienteWhatsapp(): void
     {
+        if (! InformeEnvioConfig::permiteDestinatarioPaciente() || ! InformeEnvioConfig::permiteFormaWhatsapp()) {
+            return;
+        }
+
         $this->guardarContactoPaciente();
     }
 
@@ -508,24 +525,43 @@ class PacienteIndex extends Component
         $key = 'protocolos-enviar:'.$uid;
         abort_if(RateLimiter::tooManyAttempts($key, 20), 429);
 
-        $this->validate([
-            'envioClienteEmail' => ['nullable', 'string', 'max:'.EmailList::MAX_LENGTH, EmailList::rule()],
-            'envioClienteWhatsapp' => ['nullable', 'string', 'max:20'],
-            'envioPacienteEmail' => ['nullable', 'email', 'max:150'],
-            'envioPacienteWhatsapp' => ['nullable', 'string', 'max:20'],
-            'envioDestinatario' => ['required', 'in:cliente,paciente'],
-            'envioForma' => ['required', 'in:mail,whatsapp'],
-        ], [
-            'envioClienteEmail.max' => 'El email del cliente no puede superar '.EmailList::MAX_LENGTH.' caracteres.',
-            'envioClienteWhatsapp.max' => 'El WhatsApp del cliente no puede superar 20 caracteres.',
-            'envioPacienteEmail.email' => 'El email del paciente no es válido.',
-            'envioPacienteEmail.max' => 'El email del paciente no puede superar 150 caracteres.',
-            'envioPacienteWhatsapp.max' => 'El WhatsApp del paciente no puede superar 20 caracteres.',
+        $destinos = implode(',', InformeEnvioConfig::destinatariosHabilitados());
+        $formas = implode(',', InformeEnvioConfig::formasHabilitadas());
+
+        $reglas = [
+            'envioDestinatario' => ['required', 'in:'.$destinos],
+            'envioForma' => ['required', 'in:'.$formas],
+        ];
+        $mensajes = [
             'envioDestinatario.required' => 'Seleccione el destinatario.',
             'envioDestinatario.in' => 'Seleccione el destinatario.',
             'envioForma.required' => 'Seleccione la forma de envío.',
             'envioForma.in' => 'Seleccione la forma de envío.',
-        ]);
+        ];
+
+        if (InformeEnvioConfig::permiteDestinatarioCliente()) {
+            if (InformeEnvioConfig::permiteFormaMail()) {
+                $reglas['envioClienteEmail'] = ['nullable', 'string', 'max:'.EmailList::MAX_LENGTH, EmailList::rule()];
+                $mensajes['envioClienteEmail.max'] = 'El email del cliente no puede superar '.EmailList::MAX_LENGTH.' caracteres.';
+            }
+            if (InformeEnvioConfig::permiteFormaWhatsapp()) {
+                $reglas['envioClienteWhatsapp'] = ['nullable', 'string', 'max:20'];
+                $mensajes['envioClienteWhatsapp.max'] = 'El WhatsApp del cliente no puede superar 20 caracteres.';
+            }
+        }
+        if (InformeEnvioConfig::permiteDestinatarioPaciente()) {
+            if (InformeEnvioConfig::permiteFormaMail()) {
+                $reglas['envioPacienteEmail'] = ['nullable', 'email', 'max:150'];
+                $mensajes['envioPacienteEmail.email'] = 'El email del paciente no es válido.';
+                $mensajes['envioPacienteEmail.max'] = 'El email del paciente no puede superar 150 caracteres.';
+            }
+            if (InformeEnvioConfig::permiteFormaWhatsapp()) {
+                $reglas['envioPacienteWhatsapp'] = ['nullable', 'string', 'max:20'];
+                $mensajes['envioPacienteWhatsapp.max'] = 'El WhatsApp del paciente no puede superar 20 caracteres.';
+            }
+        }
+
+        $this->validate($reglas, $mensajes);
 
         if ($this->envioIdPaciente === null) {
             $this->dispatch('vl-swal-error', mensaje: 'No hay protocolo seleccionado.');
@@ -544,11 +580,21 @@ class PacienteIndex extends Component
         RateLimiter::hit($key, 60);
 
         // Usar valores del form (pueden no haber disparado blur aún).
-        $paciente->email = trim($this->envioPacienteEmail);
-        $paciente->whatsapp = trim($this->envioPacienteWhatsapp);
-        if ($paciente->cliente !== null) {
-            $paciente->cliente->email = EmailList::normalize($this->envioClienteEmail);
-            $paciente->cliente->whatsapp = trim($this->envioClienteWhatsapp);
+        if (InformeEnvioConfig::permiteDestinatarioPaciente()) {
+            if (InformeEnvioConfig::permiteFormaMail()) {
+                $paciente->email = trim($this->envioPacienteEmail);
+            }
+            if (InformeEnvioConfig::permiteFormaWhatsapp()) {
+                $paciente->whatsapp = trim($this->envioPacienteWhatsapp);
+            }
+        }
+        if ($paciente->cliente !== null && InformeEnvioConfig::permiteDestinatarioCliente()) {
+            if (InformeEnvioConfig::permiteFormaMail()) {
+                $paciente->cliente->email = EmailList::normalize($this->envioClienteEmail);
+            }
+            if (InformeEnvioConfig::permiteFormaWhatsapp()) {
+                $paciente->cliente->whatsapp = trim($this->envioClienteWhatsapp);
+            }
         }
 
         if ($this->envioForma === InformeEnvioServicio::FORMA_MAIL) {
@@ -1379,23 +1425,32 @@ class PacienteIndex extends Component
 
     private function guardarContactoCliente(): void
     {
-        if ($this->envioIdPaciente === null) {
+        if ($this->envioIdPaciente === null || ! InformeEnvioConfig::permiteDestinatarioCliente()) {
             return;
         }
 
-        $this->envioClienteEmail = EmailList::normalize($this->envioClienteEmail);
-        $this->envioClienteWhatsapp = trim($this->envioClienteWhatsapp);
-
-        $this->validateOnly('envioClienteEmail', [
-            'envioClienteEmail' => ['nullable', 'string', 'max:'.EmailList::MAX_LENGTH, EmailList::rule()],
-        ], [
-            'envioClienteEmail.max' => 'El email del cliente no puede superar '.EmailList::MAX_LENGTH.' caracteres.',
-        ]);
-        $this->validateOnly('envioClienteWhatsapp', [
-            'envioClienteWhatsapp' => ['nullable', 'string', 'max:20'],
-        ], [
-            'envioClienteWhatsapp.max' => 'El WhatsApp del cliente no puede superar 20 caracteres.',
-        ]);
+        $payload = [];
+        if (InformeEnvioConfig::permiteFormaMail()) {
+            $this->envioClienteEmail = EmailList::normalize($this->envioClienteEmail);
+            $this->validateOnly('envioClienteEmail', [
+                'envioClienteEmail' => ['nullable', 'string', 'max:'.EmailList::MAX_LENGTH, EmailList::rule()],
+            ], [
+                'envioClienteEmail.max' => 'El email del cliente no puede superar '.EmailList::MAX_LENGTH.' caracteres.',
+            ]);
+            $payload['email'] = $this->envioClienteEmail;
+        }
+        if (InformeEnvioConfig::permiteFormaWhatsapp()) {
+            $this->envioClienteWhatsapp = trim($this->envioClienteWhatsapp);
+            $this->validateOnly('envioClienteWhatsapp', [
+                'envioClienteWhatsapp' => ['nullable', 'string', 'max:20'],
+            ], [
+                'envioClienteWhatsapp.max' => 'El WhatsApp del cliente no puede superar 20 caracteres.',
+            ]);
+            $payload['whatsapp'] = $this->envioClienteWhatsapp;
+        }
+        if ($payload === []) {
+            return;
+        }
 
         $uid = labCtx()->idUsuarios ?? 0;
         $key = 'protocolos-envio-contacto:'.$uid;
@@ -1408,32 +1463,38 @@ class PacienteIndex extends Component
             return;
         }
 
-        $cliente->update([
-            'email' => $this->envioClienteEmail,
-            'whatsapp' => $this->envioClienteWhatsapp,
-        ]);
+        $cliente->update($payload);
     }
 
     private function guardarContactoPaciente(): void
     {
-        if ($this->envioIdPaciente === null) {
+        if ($this->envioIdPaciente === null || ! InformeEnvioConfig::permiteDestinatarioPaciente()) {
             return;
         }
 
-        $this->envioPacienteEmail = trim($this->envioPacienteEmail);
-        $this->envioPacienteWhatsapp = trim($this->envioPacienteWhatsapp);
-
-        $this->validateOnly('envioPacienteEmail', [
-            'envioPacienteEmail' => ['nullable', 'email', 'max:150'],
-        ], [
-            'envioPacienteEmail.email' => 'El email del paciente no es válido.',
-            'envioPacienteEmail.max' => 'El email del paciente no puede superar 150 caracteres.',
-        ]);
-        $this->validateOnly('envioPacienteWhatsapp', [
-            'envioPacienteWhatsapp' => ['nullable', 'string', 'max:20'],
-        ], [
-            'envioPacienteWhatsapp.max' => 'El WhatsApp del paciente no puede superar 20 caracteres.',
-        ]);
+        $payload = [];
+        if (InformeEnvioConfig::permiteFormaMail()) {
+            $this->envioPacienteEmail = trim($this->envioPacienteEmail);
+            $this->validateOnly('envioPacienteEmail', [
+                'envioPacienteEmail' => ['nullable', 'email', 'max:150'],
+            ], [
+                'envioPacienteEmail.email' => 'El email del paciente no es válido.',
+                'envioPacienteEmail.max' => 'El email del paciente no puede superar 150 caracteres.',
+            ]);
+            $payload['email'] = $this->envioPacienteEmail;
+        }
+        if (InformeEnvioConfig::permiteFormaWhatsapp()) {
+            $this->envioPacienteWhatsapp = trim($this->envioPacienteWhatsapp);
+            $this->validateOnly('envioPacienteWhatsapp', [
+                'envioPacienteWhatsapp' => ['nullable', 'string', 'max:20'],
+            ], [
+                'envioPacienteWhatsapp.max' => 'El WhatsApp del paciente no puede superar 20 caracteres.',
+            ]);
+            $payload['whatsapp'] = $this->envioPacienteWhatsapp;
+        }
+        if ($payload === []) {
+            return;
+        }
 
         $uid = labCtx()->idUsuarios ?? 0;
         $key = 'protocolos-envio-contacto:'.$uid;
@@ -1445,9 +1506,6 @@ class PacienteIndex extends Component
             return;
         }
 
-        $paciente->update([
-            'email' => $this->envioPacienteEmail,
-            'whatsapp' => $this->envioPacienteWhatsapp,
-        ]);
+        $paciente->update($payload);
     }
 }

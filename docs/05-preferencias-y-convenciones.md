@@ -91,6 +91,7 @@ a todos los módulos. Ver [06-reglas-de-seguridad.md](06-reglas-de-seguridad.md)
   Tesorería: [11-tesoreria-por-tenant.md](11-tesoreria-por-tenant.md),
   módulo [modulos/tesoreria.md](modulos/tesoreria.md).
   Listas de precios: [12-listas-de-precios-por-tenant.md](12-listas-de-precios-por-tenant.md).
+  Envío de informes: [modulos/envio-informes.md](modulos/envio-informes.md).
 - Preferir parametrización en BD (`entorno`, permisos) antes de ramas por tenant.
 - Overrides en `config/tenants/{slug}.php` solo para lo que no corresponda en BD.
 

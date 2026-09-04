@@ -132,6 +132,31 @@ return [
         'consecutivo_simple' => [
             'inicio' => 1,
         ],
+
+        /*
+        | Orden del listado de pacientes (PacienteIndex staff, autogestión y Excel).
+        | Vacío = orden histórico (día DESC, tipoRegistro, fechhoy, nombreProtocolo, id).
+        | Override por tenant, p. ej.:
+        |   'orden_listado' => ['fechhoy' => 'desc', 'nombreProtocolo' => 'desc'],
+        | Campos: fechhoy, nombreProtocolo. Dirección: asc | desc.
+        | No afecta cuenta corriente.
+        */
+        'orden_listado' => [],
+    ],
+
+    /*
+    | Envío de informes (modal Enviar en Gestión de Pacientes / Derivaciones).
+    | Destinatarios y canales visibles por tenant. Default: ambos destinos y ambas formas.
+    | Un lab declara false solo para lo que no usa (p. ej. epizoolab: solo cliente + mail).
+    | Si ambos destinos (o ambas formas) quedan en false, el helper cae a cliente / mail
+    | para no dejar el modal vacío. Helper: App\Support\Envio\InformeEnvioConfig.
+    | Doc: docs/modulos/envio-informes.md.
+    */
+    'envio_informes' => [
+        'destinatario_cliente' => true,
+        'destinatario_paciente' => true,
+        'forma_mail' => true,
+        'forma_whatsapp' => true,
     ],
 
     /*

@@ -105,6 +105,17 @@ Flag `activo` + `mostrar_citologias` (columna Líq.Punción / Cit.*, default
 oculto) + mapa de columnas/especiales → `idItems`. Default = catálogo NeoLab.
 Doc: [modulos/hoja-ruta-hemograma.md](modulos/hoja-ruta-hemograma.md).
 
+**Ejemplo implementado:** orden del listado de pacientes
+(`tenant.protocolos.orden_listado`). Vacío = orden histórico. Un lab puede
+fijar p. ej. `['fechhoy' => 'desc', 'nombreProtocolo' => 'desc']`. epizoolab:
+`fechhoy` DESC, luego `nombreProtocolo` DESC. No afecta cuenta corriente.
+
+**Ejemplo implementado:** envío de informes (`tenant.envio_informes`).
+Flags `destinatario_cliente` / `destinatario_paciente` y `forma_mail` /
+`forma_whatsapp` (default todos `true`). epizoolab apaga paciente y WhatsApp
+(solo Cliente por mail). Helper: `InformeEnvioConfig`.
+Doc: [modulos/envio-informes.md](modulos/envio-informes.md).
+
 ---
 
 ## 4. Identidad por tenant

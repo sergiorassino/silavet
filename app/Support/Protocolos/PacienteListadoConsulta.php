@@ -86,7 +86,7 @@ final class PacienteListadoConsulta
             ->when($filtroEstado === PacienteIndex::FILTRO_LISTOS, function ($q) {
                 $q->whereIn('pacientes.estado', ResultadosEstadosCatalog::estadosFinalizados());
             })
-            ->ordenListado();
+            ->tap(fn ($q) => PacienteListadoOrden::aplicar($q));
     }
 
     /**
