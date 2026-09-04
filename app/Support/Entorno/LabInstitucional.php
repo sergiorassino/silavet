@@ -14,6 +14,7 @@ final class LabInstitucional
     /**
      * @return array{
      *     nombre: string,
+     *     carpeta: string,
      *     direccion: string,
      *     telefono: string,
      *     email: string,
@@ -28,6 +29,7 @@ final class LabInstitucional
     {
         return once(function () {
             $nombre = trim((string) config('tenant.nombre', 'Laboratorio Veterinario'));
+            $carpeta = '';
             $direccion = '';
             $telefono = '';
             $email = '';
@@ -39,6 +41,9 @@ final class LabInstitucional
             if (Schema::hasTable('entorno')) {
                 $entorno = Entorno::query()->find(1);
                 if ($entorno !== null) {
+                    if (Schema::hasColumn('entorno', 'carpeta')) {
+                        $carpeta = trim((string) ($entorno->carpeta ?? ''));
+                    }
                     $direccion = trim((string) ($entorno->direLabo ?? ''));
                     $telefono = trim((string) ($entorno->teleLabo ?? ''));
                     $email = trim((string) ($entorno->emailLabo ?? ''));
@@ -68,6 +73,7 @@ final class LabInstitucional
 
             return [
                 'nombre' => $nombre,
+                'carpeta' => $carpeta,
                 'direccion' => $direccion,
                 'telefono' => $telefono,
                 'email' => $email,
@@ -78,6 +84,19 @@ final class LabInstitucional
                 'iniciales' => self::iniciales($nombre),
             ];
         });
+    }
+
+    /**
+     * Nombre corto de UI (sidebar / eyebrow): `entorno.carpeta` en mayúsculas.
+     * Si está vacío o falta la columna, usa `tenant.nombre`.
+     */
+    public static function carpeta(): string
+    {
+        $datos = self::datos();
+        $carpeta = trim((string) ($datos['carpeta'] ?? ''));
+        $valor = $carpeta !== '' ? $carpeta : $datos['nombre'];
+
+        return mb_strtoupper($valor);
     }
 
     public static function logoUrl(): ?string
