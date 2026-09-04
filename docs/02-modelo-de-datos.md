@@ -81,6 +81,7 @@ La tabla `entorno` almacena la configuración institucional en **un registro**
 | Campo / grupo        | Descripción                                              |
 |----------------------|----------------------------------------------------------|
 | `formulas`           | Fórmulas de cálculo (texto legacy)                       |
+| `carpeta`            | Nombre corto del laboratorio (UI: sidebar y eyebrow del dashboard, en mayúsculas). Equivale al slug de colegio en Sistemas Escolares. |
 | `nombreListaPrecio`  | Nombre de la lista de precios activa                     |
 | `listaPreciosPdf`    | Ruta del PDF de lista de precios (autogestión cliente)   |
 | `logo`, `fondo`      | Identidad visual. **`logo` guarda el nombre original del archivo** (`MiLogo.jpg`), no la ruta; el archivo en SILAVET está en `public/entorno/logos/{TENANT_SLUG}/`. Así convive con NeoLab. |

@@ -222,9 +222,9 @@
              :class="sidebarCollapsed ? 'is-collapsed' : ''">
             <a href="{{ $homeRoute }}"
                class="vl-sidebar-brand__link"
-               title="{{ config('tenant.nombre') }} — {{ $menuLabel }}">
+               title="{{ labCarpeta() }} — {{ $menuLabel }}">
                 <span x-show="!sidebarCollapsed" x-cloak class="vl-sidebar-brand__copy">
-                    <span class="vl-sidebar-brand__name">{{ config('tenant.nombre') }}</span>
+                    <span class="vl-sidebar-brand__name">{{ labCarpeta() }}</span>
                 </span>
             </a>
         </div>

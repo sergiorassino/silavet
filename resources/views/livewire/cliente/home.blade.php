@@ -9,7 +9,7 @@
     <div class="vl-hero vl-dash-hero">
         <div class="vl-hero-inner">
             <x-vl-hero-heading>
-                <p class="vl-eyebrow">{{ config('tenant.nombre') }}</p>
+                <p class="vl-eyebrow">{{ labCarpeta() }}</p>
                 <h1 class="font-bold">Autogestión</h1>
                 <p class="mt-1.5 max-w-xl text-sm text-white/80">
                     Hola, {{ $nombreUsuario }}.

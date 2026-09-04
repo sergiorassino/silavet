@@ -42,6 +42,16 @@ if (! function_exists('tienePermiso')) {
     }
 }
 
+if (! function_exists('labCarpeta')) {
+    /**
+     * Nombre corto del laboratorio (`entorno.carpeta`) para sidebar y cabeceras.
+     */
+    function labCarpeta(): string
+    {
+        return \App\Support\Entorno\LabInstitucional::carpeta();
+    }
+}
+
 if (! function_exists('labLogoUrl')) {
     function labLogoUrl(): ?string
     {
