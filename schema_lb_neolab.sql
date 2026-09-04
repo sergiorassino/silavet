@@ -391,7 +391,7 @@ CREATE TABLE IF NOT EXISTS `renglones` (
   `tipoItem` int(3) DEFAULT NULL,
   `idItems` int(11) DEFAULT NULL,
   `valor` text DEFAULT NULL,
-  `valor2` varchar(100) DEFAULT NULL,
+  `valor2` text DEFAULT NULL,
   `tipoHtml` int(3) DEFAULT NULL,
   `idAnalizador` varchar(20) DEFAULT NULL,
   `mostrar` int(1) DEFAULT 1,
