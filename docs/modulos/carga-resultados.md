@@ -106,7 +106,7 @@ fijas al scroll vertical y horizontal de la página.
 
 | Tabla | Rol |
 |-------|-----|
-| `renglones` | Fuente de verdad de valores cargados (`valor`, `valor2`, `idItems`, `tipoItem`, `mostrar`) |
+| `renglones` | Fuente de verdad de valores cargados (`valor`, `valor2`, `idItems`, `tipoItem`, `mostrar`). `valor` y `valor2` son `text`. El tope de validación al guardar es la longitud **real** de la columna (hasta aplicar la migración, un lab viejo puede seguir en `varchar(100)`). |
 | `itemsinforme` | Catálogo de campos (`idItems`, `actualiza`, `estiloNum`, `nombreItem`, `textos`, `mostrar`) |
 | `entorno.formulas` | Script JS legacy inyectado en el navegador como `window.formulas` |
 | `pacientes` | Especie (`idEspecies`), sexo (texto), estado del protocolo |
@@ -356,6 +356,8 @@ conteo manual).
   renglón en el informe PDF (`InformePacienteConsulta`). Auxiliares como
   Plaquetas (conteo manual) deben poder cargarse aunque no se impriman; en el
   form llevan la leyenda “No se muestra en el informe”.
+- **No** volver `renglones.valor2` a `varchar(100)`: truncaría observaciones
+  largas. Migración: `2026_09_04_000002_widen_renglones_valor2_to_text`.
 
 ## Checklist al modificar
 
@@ -372,3 +374,5 @@ conteo manual).
    del runner.
 10. ¿Ítems con `mostrar = 0` (p. ej. conteo manual de plaquetas) aparecen en
     carga con la leyenda “No se muestra en el informe” y **no** en el PDF?
+11. ¿`renglones.valor2` es `text` (migración `widen_renglones_valor2_to_text`)?
+    El tope de validación sigue la columna real de la BD.

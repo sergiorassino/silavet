@@ -5,11 +5,13 @@ namespace App\Support\Resultados;
 use App\Models\Paciente;
 use App\Models\Renglon;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Validation\ValidationException;
 
 /**
  * Persiste valores de carga sin transformar ni inventar datos.
  * Solo actualiza renglones del paciente y solo columnas explícitamente enviadas.
+ * El tope de `valor2` es la longitud real de la columna en la BD del lab.
  */
 class ResultadosGuardarServicio
 {
@@ -18,6 +20,9 @@ class ResultadosGuardarServicio
 
     /** Tipos cuyo `valor2` puede guardarse desde el formulario. */
     private const TIPOS_CON_VALOR2 = [4, 6, 9];
+
+    /** Fallback si no se puede leer el esquema (varchar(100) legacy). */
+    public const VALOR2_TOPE_DEFAULT = 100;
 
     /**
      * @param  array<string, string|null>  $valores  clave = idRenglones
@@ -101,7 +106,7 @@ class ResultadosGuardarServicio
             }
 
             $valor2 = (string) ($valorRaw ?? '');
-            if (mb_strlen($valor2) > 100) {
+            if (mb_strlen($valor2) > self::topeValor2()) {
                 throw ValidationException::withMessages([
                     'valores2' => "Valor2 demasiado largo en el renglón {$id}.",
                 ]);
@@ -126,6 +131,46 @@ class ResultadosGuardarServicio
                     ->update(['estado' => $estadoPaciente]);
             }
         });
+    }
+
+    /**
+     * Longitud máxima de `renglones.valor2` en este laboratorio.
+     * Tras la migración a TEXT es ~64 KB; si la columna sigue en varchar(100)
+     * (lab aún no migrado) el tope sigue en 100.
+     */
+    public static function topeValor2(): int
+    {
+        if (! Schema::hasTable('renglones') || ! Schema::hasColumn('renglones', 'valor2')) {
+            return self::VALOR2_TOPE_DEFAULT;
+        }
+
+        $col = collect(Schema::getColumns('renglones'))->firstWhere('name', 'valor2');
+
+        return self::topeValor2DesdeMeta(is_array($col) ? $col : null);
+    }
+
+    /**
+     * @param  array<string, mixed>|null  $col
+     */
+    public static function topeValor2DesdeMeta(?array $col): int
+    {
+        if ($col === null) {
+            return self::VALOR2_TOPE_DEFAULT;
+        }
+
+        if (isset($col['length']) && (int) $col['length'] > 0) {
+            return (int) $col['length'];
+        }
+
+        $type = strtolower((string) ($col['type'] ?? $col['type_name'] ?? ''));
+        if (preg_match('/varchar\((\d+)\)/', $type, $m) === 1) {
+            return (int) $m[1];
+        }
+        if (str_contains($type, 'text')) {
+            return 65535;
+        }
+
+        return self::VALOR2_TOPE_DEFAULT;
     }
 
     /**
