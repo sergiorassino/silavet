@@ -1,10 +1,10 @@
-<div class="vl-page vl-page--wide">
-    <div class="vl-hero mb-4">
+<div class="vl-page vl-page--wide vl-matriz-list-fill">
+    <div class="vl-hero vl-hero--compact shrink-0">
         <div class="vl-hero-inner flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <x-vl-hero-heading>
                 <p class="vl-eyebrow">Autogestión</p>
-                <h1 class="text-2xl font-bold sm:text-3xl">Pacientes</h1>
-                <p class="mt-2 text-sm text-white/80">
+                <h1 class="text-xl font-bold sm:text-2xl">Pacientes</h1>
+                <p class="mt-1 text-xs text-white/80 sm:text-sm">
                     @if ($vista === 'hoy')
                         @php
                             $fechaEfectiva = $this->fechaVistaEfectiva();
@@ -23,7 +23,7 @@
                     @endif
                 </p>
             </x-vl-hero-heading>
-            <div class="flex shrink-0 flex-col gap-2 sm:flex-row sm:items-center">
+            <div class="flex w-full shrink-0 flex-col gap-2 sm:w-auto sm:flex-row sm:items-center">
                 <a href="{{ $this->excelUrl }}"
                    class="btn-secondary shrink-0 border-white/40 bg-white/15 text-white hover:bg-white/25">
                     Exportar Excel
@@ -34,7 +34,7 @@
     </div>
 
     @if ($encabezadoDescuento)
-        <div class="mb-4 px-2 text-center text-sm leading-relaxed text-primary-800 sm:text-base">
+        <div class="mb-0 shrink-0 px-2 text-center text-sm leading-relaxed text-primary-800 sm:text-base">
             @if (\App\Support\Cliente\PortalClienteConfig::mostrarSaldoCuentaCorriente())
                 <p class="font-bold">
                     Saldo Cuenta Corriente: $ {{ $encabezadoDescuento['saldoFormateado'] }}
@@ -61,7 +61,7 @@
     @endif
 
     <div class="vl-card vl-pacientes-card">
-        <div class="vl-toolbar border-b border-accent-200 px-5 py-3 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div class="vl-toolbar shrink-0 border-b border-accent-200 px-3 py-3 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between sm:px-5">
             <input wire:model.live.debounce.300ms="busqueda"
                    type="search"
                    placeholder="Buscar por protocolo, paciente o tutor…"
@@ -80,7 +80,7 @@
                     </div>
                 @endif
                 @if ($vista === 'hoy')
-                    <div class="vl-pacientes-fecha-filtro inline-flex items-center gap-2 text-xs font-semibold text-neutral-600">
+                    <div class="vl-pacientes-fecha-filtro flex max-w-full flex-wrap items-center gap-2 text-xs font-semibold text-neutral-600">
                         <label for="fechaVista" class="whitespace-nowrap">Día</label>
                         <input wire:model.live="fechaVista"
                                id="fechaVista"
@@ -96,7 +96,7 @@
                         @endif
                     </div>
                 @elseif ($vista === 'historial')
-                    <div class="vl-pacientes-fecha-filtro inline-flex items-center gap-2 text-xs font-semibold text-neutral-600">
+                    <div class="vl-pacientes-fecha-filtro flex max-w-full flex-wrap items-center gap-2 text-xs font-semibold text-neutral-600">
                         <label for="pacCliFechaDesde" class="whitespace-nowrap">Desde</label>
                         <input wire:model.live="fechaDesde"
                                id="pacCliFechaDesde"
@@ -128,6 +128,7 @@
             </div>
         </div>
 
+        <div class="vl-pacientes-scroll">
         <table class="vl-pacientes-grid min-w-full text-xs">
                 <thead>
                     <tr>
@@ -274,6 +275,7 @@
                     @endforelse
                 </tbody>
             </table>
+        </div>
 
         @if ($pacientes->hasPages())
             <div class="vl-matriz-list-footer px-3 py-1.5 sm:px-4">

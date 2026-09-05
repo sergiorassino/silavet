@@ -1,4 +1,4 @@
-<div class="vl-page vl-page--wide"
+<div class="vl-page vl-page--wide vl-matriz-list-fill"
      x-data="{
         enfocarFila(id) {
             this.$nextTick(() => {
@@ -26,12 +26,12 @@
      }"
      x-init="@if ($focoIdPaciente) enfocarFila({{ (int) $focoIdPaciente }}) @endif"
      @derivaciones-enfocar-fila.window="enfocarFila($event.detail.id)">
-    <div class="vl-hero mb-4">
+    <div class="vl-hero vl-hero--compact shrink-0">
         <div class="vl-hero-inner flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <x-vl-hero-heading>
                 <p class="vl-eyebrow">Protocolos</p>
-                <h1 class="text-2xl font-bold sm:text-3xl">Gestión de Derivaciones</h1>
-                <p class="mt-2 text-sm text-white/80">
+                <h1 class="text-xl font-bold sm:text-2xl">Gestión de Derivaciones</h1>
+                <p class="mt-1 text-xs text-white/80 sm:text-sm">
                     @if ($incluirFinalizados)
                         @if (\App\Support\Resultados\ResultadosEstadosCatalog::usaFinalEnv())
                             Todas las determinaciones derivadas, incluidos Final y Final/Env.
@@ -57,7 +57,7 @@
     </div>
 
     <div class="vl-card vl-pacientes-card">
-        <div class="vl-toolbar border-b border-accent-200 px-5 py-3 flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+        <div class="vl-toolbar shrink-0 border-b border-accent-200 px-3 py-3 flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between sm:px-5">
             <input wire:model.live.debounce.300ms="busqueda"
                    type="search"
                    placeholder="Buscar por protocolo, paciente, tutor, cliente, determinación o centro…"
@@ -92,6 +92,7 @@
             </div>
         </div>
 
+        <div class="vl-pacientes-scroll">
         <table class="vl-pacientes-grid min-w-full text-xs">
                 <thead>
                     <tr>
@@ -333,6 +334,7 @@
                     @endforelse
                 </tbody>
             </table>
+        </div>
 
         @if ($registros->hasPages())
             <div class="vl-matriz-list-footer px-3 py-1.5 sm:px-4">

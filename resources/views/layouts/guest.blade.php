@@ -2,7 +2,7 @@
 <html lang="es" class="h-full" style="{{ \App\Support\Entorno\TemaFondoSistema::variablesCss() }}">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    @include('layouts.partials.meta-viewport')
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>{{ config('app.name') }} — Acceso</title>
     @include('layouts.partials.favicon')
