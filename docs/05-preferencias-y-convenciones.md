@@ -70,6 +70,7 @@ a todos los módulos. Ver [06-reglas-de-seguridad.md](06-reglas-de-seguridad.md)
 - Tailwind CSS 4 para estilos.
 - Clases del design system con prefijo `vl-*` (ver [04-identidad-visual.md](04-identidad-visual.md)).
 - Layout responsivo; portal de clientes **mobile-first**.
+- El documento **no** debe ensancharse por grillas: `overflow-x` en `html`/`body` + scroll de la tabla en un contenedor (`.vl-pacientes-scroll` / `overflow-x-auto`). Si la grilla estira la página, en celular el header se desplaza y el navegador trata el sitio como escritorio.
 - **Assets (igual que Sistemas Escolares):** si se modifica `resources/css/**` o
   `resources/js/**`, correr `npm run build` en la misma tarea e incluir
   `public/build/` en el commit/despliegue. Sin rebuild, producción no aplica el
@@ -79,7 +80,7 @@ a todos los módulos. Ver [06-reglas-de-seguridad.md](06-reglas-de-seguridad.md)
 
 - Listados paginados: 50 registros por página, paginación `vl-compact`.
 - Al cambiar filtros: `resetPage()`.
-- Grillas anchas: scroll horizontal, alineación a la izquierda.
+- Grillas anchas: scroll horizontal **dentro** de un contenedor (`.vl-pacientes-scroll` o `overflow-x-auto`), alineación a la izquierda. No ensanchar `html`/`body`.
 - Grillas angostas: clases `vl-grid-pocos-campos` y `vl-grid-angosta-wrap`.
 
 ---

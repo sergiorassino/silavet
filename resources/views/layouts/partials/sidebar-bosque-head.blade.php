@@ -48,9 +48,18 @@
     }
     .vl-main {
         width: 100%;
+        max-width: 100%;
         min-width: 0;
         transition: transform 200ms ease-in-out, width 200ms ease-in-out;
         transform: translateX(0);
+    }
+    .vl-main > main {
+        min-width: 0;
+        max-width: 100%;
+    }
+    #vl-shell {
+        max-width: 100%;
+        min-width: 0;
     }
     @media (min-width: 768px) {
         .vl-main {
