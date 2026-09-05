@@ -70,7 +70,7 @@ a todos los módulos. Ver [06-reglas-de-seguridad.md](06-reglas-de-seguridad.md)
 - Tailwind CSS 4 para estilos.
 - Clases del design system con prefijo `vl-*` (ver [04-identidad-visual.md](04-identidad-visual.md)).
 - Layout responsivo; portal de clientes **mobile-first**.
-- El documento **no** debe ensancharse por grillas: `overflow-x` en `html`/`body` + scroll de la tabla en un contenedor (`.vl-pacientes-scroll` / `overflow-x-auto`). Si la grilla estira la página, en celular el header se desplaza y el navegador trata el sitio como escritorio.
+- El documento **no** debe ensancharse por grillas: scroll **vertical** de la página (el hero se mueve, como Cuenta Corriente) y scroll **horizontal** solo en un contenedor (`.vl-pacientes-scroll` / `overflow-x-auto`). Si la grilla estira el documento, en celular el header se desplaza en X y el navegador trata el sitio como escritorio.
 - **Assets (igual que Sistemas Escolares):** si se modifica `resources/css/**` o
   `resources/js/**`, correr `npm run build` en la misma tarea e incluir
   `public/build/` en el commit/despliegue. Sin rebuild, producción no aplica el

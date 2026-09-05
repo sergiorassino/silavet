@@ -1263,8 +1263,8 @@
     }
 
     /*
-     * Scroll H+V en .vl-pacientes-scroll (no en el documento).
-     * El hero/toolbar quedan fijos en X; el thead sticky se ancla a la tabla.
+     * Como Cuenta Corriente: el documento scrollea en vertical (hero incluido).
+     * Solo el eje X queda en este wrapper, para que la grilla no arrastre el header.
      */
     .vl-pacientes-card {
         overflow: hidden;
@@ -1275,28 +1275,10 @@
     .vl-pacientes-scroll {
         max-width: 100%;
         min-width: 0;
-        overflow: auto;
-        overscroll-behavior: contain;
+        overflow-x: auto;
+        overflow-y: visible;
+        overscroll-behavior-x: contain;
         -webkit-overflow-scrolling: touch;
-    }
-
-    .vl-matriz-list-fill > .vl-hero {
-        flex-shrink: 0;
-        max-width: 100%;
-    }
-
-    .vl-matriz-list-fill > :not(.vl-pacientes-card):not(.vl-matriz-list-card) {
-        flex-shrink: 0;
-        min-width: 0;
-        max-width: 100%;
-    }
-
-    .vl-matriz-list-fill > .vl-pacientes-card {
-        @apply flex min-h-0 flex-1 flex-col overflow-hidden;
-    }
-
-    .vl-matriz-list-fill > .vl-pacientes-card > .vl-pacientes-scroll {
-        @apply min-h-0 flex-1;
     }
 
     .vl-pacientes-fecha-filtro {
@@ -1331,9 +1313,8 @@
     }
 
     .vl-pacientes-th {
-        position: sticky;
-        top: 0;
-        z-index: 10;
+        position: relative;
+        z-index: 1;
         @apply bg-accent-50 px-1 py-2 text-left text-[9px] font-bold uppercase tracking-[0.08em] text-neutral-600 whitespace-nowrap;
         border-top-width: 1px;
         /* El inferior lo dibuja ::after (sobrevive al scroll bajo sticky). */

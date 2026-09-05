@@ -1,4 +1,4 @@
-<div class="vl-page vl-page--wide vl-matriz-list-fill"
+<div class="vl-page vl-page--wide"
      x-data="{
         enfocarFila(id) {
             this.$nextTick(() => {
@@ -26,13 +26,13 @@
      }"
      x-init="@if ($focoIdPaciente) enfocarFila({{ (int) $focoIdPaciente }}) @endif"
      @pacientes-enfocar-fila.window="enfocarFila($event.detail.id)">
-    <div class="vl-hero vl-hero--compact shrink-0">
+    <div class="vl-hero mb-4">
         <div class="vl-hero-inner flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <x-vl-hero-heading>
                 <p class="vl-eyebrow">Protocolos</p>
-                <h1 class="text-xl font-bold sm:text-2xl">Pacientes</h1>
+                <h1 class="text-2xl font-bold sm:text-3xl">Pacientes</h1>
                 <x-vl-hero-usuario />
-                <p class="mt-1 text-xs text-white/80 sm:text-sm">
+                <p class="mt-1 text-sm text-white/80">
                     @if ($vista === 'hoy')
                         @php
                             $fechaEfectiva = $this->fechaVistaEfectiva();
@@ -80,7 +80,7 @@
     </div>
 
     <div class="vl-card vl-pacientes-card">
-        <div class="vl-toolbar shrink-0 border-b border-accent-200 px-3 py-3 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between sm:px-5">
+        <div class="vl-toolbar border-b border-accent-200 px-3 py-3 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between sm:px-5">
             <input wire:model.live.debounce.300ms="busqueda"
                    type="search"
                    placeholder="Buscar por protocolo, paciente, tutor o cliente…"
