@@ -1,10 +1,10 @@
-<div class="vl-page vl-page--wide vl-matriz-list-fill">
-    <div class="vl-hero vl-hero--compact shrink-0">
+<div class="vl-page vl-page--wide">
+    <div class="vl-hero mb-4">
         <div class="vl-hero-inner flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <x-vl-hero-heading>
                 <p class="vl-eyebrow">Autogestión</p>
-                <h1 class="text-xl font-bold sm:text-2xl">Pacientes</h1>
-                <p class="mt-1 text-xs text-white/80 sm:text-sm">
+                <h1 class="text-2xl font-bold sm:text-3xl">Pacientes</h1>
+                <p class="mt-2 text-sm text-white/80">
                     @if ($vista === 'hoy')
                         @php
                             $fechaEfectiva = $this->fechaVistaEfectiva();
@@ -34,7 +34,7 @@
     </div>
 
     @if ($encabezadoDescuento)
-        <div class="mb-0 shrink-0 px-2 text-center text-sm leading-relaxed text-primary-800 sm:text-base">
+        <div class="mb-4 px-2 text-center text-sm leading-relaxed text-primary-800 sm:text-base">
             @if (\App\Support\Cliente\PortalClienteConfig::mostrarSaldoCuentaCorriente())
                 <p class="font-bold">
                     Saldo Cuenta Corriente: $ {{ $encabezadoDescuento['saldoFormateado'] }}
@@ -61,7 +61,7 @@
     @endif
 
     <div class="vl-card vl-pacientes-card">
-        <div class="vl-toolbar shrink-0 border-b border-accent-200 px-3 py-3 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between sm:px-5">
+        <div class="vl-toolbar border-b border-accent-200 px-3 py-3 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between sm:px-5">
             <input wire:model.live.debounce.300ms="busqueda"
                    type="search"
                    placeholder="Buscar por protocolo, paciente o tutor…"
