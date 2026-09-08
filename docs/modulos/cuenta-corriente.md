@@ -37,6 +37,7 @@ Config `id_cuenta_cc` (solo variante `tesoreria_pacientes`):
 (excluye `tipoRegistro = 3`).
 
 **Detalle:** protocolos + pagos globales con saldo corrido por fila.
+Columnas: #, Especie, Raza, Fecha, Protocolo, Nombre, Propietario, Estado, Precio, Pagado, Saldo (sin `idPacientes` ni `idClientes`).
 
 **Archivos clave:**
 - `app/Support/CuentaCorriente/CuentaCorrienteConsulta.php`

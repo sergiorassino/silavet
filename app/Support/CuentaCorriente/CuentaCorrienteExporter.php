@@ -19,12 +19,10 @@ final class CuentaCorrienteExporter
     /** @var list<string> */
     public const ENCABEZADOS_DETALLE = [
         '#',
-        'Id Pacientes',
-        'Id Clientes',
-        'Id Especies',
-        'Id Razas',
-        'Fechhoy',
-        'Nombre Protocolo',
+        'Especie',
+        'Raza',
+        'Fecha',
+        'Protocolo',
         'Nombre',
         'Propietario',
         'Estado',
@@ -102,8 +100,6 @@ final class CuentaCorrienteExporter
 
             $this->escribirFila($hoja, $fila, [
                 $numero,
-                (string) ($protocolo->nombre ?? ''),
-                (int) ($protocolo->idClientes ?? 0),
                 (string) ($protocolo->especie ?? ''),
                 (string) ($protocolo->raza ?? ''),
                 $fecha,
@@ -131,16 +127,12 @@ final class CuentaCorrienteExporter
                 '',
                 '',
                 'Saldo anterior al '.\Carbon\Carbon::parse($desde)->format('d/m/Y'),
-                '',
-                '',
                 round($saldoAnterior, 2),
             ]);
             $fila++;
         }
 
         $this->escribirFila($hoja, $fila, [
-            '',
-            '',
             '',
             '',
             '',

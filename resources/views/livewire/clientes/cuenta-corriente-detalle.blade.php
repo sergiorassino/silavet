@@ -63,12 +63,10 @@
                 <thead class="bg-accent-50/80">
                     <tr>
                         <th class="vl-pacientes-th vl-pacientes-th--num">#</th>
-                        <th class="vl-pacientes-th">Id Pacientes</th>
-                        <th class="vl-pacientes-th vl-pacientes-th--num">Id Clientes</th>
-                        <th class="vl-pacientes-th">Id Especies</th>
-                        <th class="vl-pacientes-th">Id Razas</th>
-                        <th class="vl-pacientes-th">Fechhoy</th>
-                        <th class="vl-pacientes-th">Nombre Protocolo</th>
+                        <th class="vl-pacientes-th">Especie</th>
+                        <th class="vl-pacientes-th">Raza</th>
+                        <th class="vl-pacientes-th">Fecha</th>
+                        <th class="vl-pacientes-th">Protocolo</th>
                         <th class="vl-pacientes-th">Nombre</th>
                         <th class="vl-pacientes-th">Propietario</th>
                         <th class="vl-pacientes-th">Estado</th>
@@ -81,8 +79,6 @@
                     @forelse ($filas as $fila)
                         <tr class="vl-pacientes-row {{ $fila->esPagoGlobal ? 'vl-pacientes-row--pago-global' : 'hover:bg-accent-50/40' }}">
                             <td class="vl-pacientes-td vl-pacientes-td--num">{{ $loop->iteration }}</td>
-                            <td class="vl-pacientes-td">{{ $fila->nombre ?: '—' }}</td>
-                            <td class="vl-pacientes-td vl-pacientes-td--num">{{ $fila->idClientes ?: '—' }}</td>
                             <td class="vl-pacientes-td">{{ $fila->especie ?: '—' }}</td>
                             <td class="vl-pacientes-td">{{ $fila->raza ?: '—' }}</td>
                             <td class="vl-pacientes-td whitespace-nowrap tabular-nums">
@@ -124,14 +120,14 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="13" class="vl-pacientes-td text-center text-neutral-500 py-8">
+                            <td colspan="11" class="vl-pacientes-td text-center text-neutral-500 py-8">
                                 No hay protocolos en el período seleccionado.
                             </td>
                         </tr>
                     @endforelse
                     @if ($saldoAnterior !== null)
                         <tr class="bg-accent-50/60 font-semibold">
-                            <td colspan="12" class="vl-pacientes-td text-right">
+                            <td colspan="10" class="vl-pacientes-td text-right">
                                 Saldo anterior al {{ \Carbon\Carbon::parse($fechaDesde)->format('d/m/Y') }}
                             </td>
                             <td class="vl-pacientes-td vl-pacientes-td--num whitespace-nowrap tabular-nums">
@@ -143,7 +139,7 @@
                 @if ($filas->isNotEmpty() || $saldoAnterior !== null)
                     <tfoot class="bg-accent-50/60 border-t border-accent-200">
                         <tr>
-                            <td colspan="10" class="vl-pacientes-td text-right font-semibold">
+                            <td colspan="8" class="vl-pacientes-td text-right font-semibold">
                                 Total:
                             </td>
                             <td class="vl-pacientes-td vl-pacientes-td--num font-semibold whitespace-nowrap">
