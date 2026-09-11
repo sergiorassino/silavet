@@ -61,7 +61,7 @@ class InformeProtocoloMail extends Mailable
                 'contactos' => $this->contactos,
                 'lab' => LabInstitucional::datos(),
                 'pie' => [
-                    'nombre' => trim((string) ($this->entorno->nombrePieMail ?? '')),
+                    'nombre' => InformeEnvioServicio::firmaNombreCierre(),
                     'direccion' => trim((string) ($this->entorno->direccionPieMail ?? '')),
                     'telefono' => trim((string) ($this->entorno->telefonoPieMail ?? '')),
                     'email' => trim((string) ($this->entorno->emailPieMail ?? '')),
