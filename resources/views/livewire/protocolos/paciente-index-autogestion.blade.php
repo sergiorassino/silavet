@@ -67,18 +67,7 @@
                    placeholder="Buscar por protocolo, paciente o tutor…"
                    class="form-input max-w-xl w-full sm:flex-1">
             <div class="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center sm:gap-3 shrink-0">
-                @if ($this->filtroEstadoEfectivo() !== '')
-                    <div class="inline-flex items-center gap-2 rounded-full border border-primary-200 bg-primary-50 px-3 py-1 text-xs font-semibold text-primary-800">
-                        <span>{{ $this->etiquetaFiltroEstado() }}</span>
-                        <button type="button"
-                                wire:click="limpiarFiltroEstado"
-                                class="text-primary-600 hover:text-primary-800"
-                                title="Quitar filtro"
-                                aria-label="Quitar filtro de estado">
-                            ×
-                        </button>
-                    </div>
-                @endif
+                @include('livewire.protocolos.partials.paciente-filtro-estado', ['idFiltroEstado' => 'filtroEstadoCli'])
                 @if ($vista === 'hoy')
                     <div class="vl-pacientes-fecha-filtro flex max-w-full flex-wrap items-center gap-2 text-xs font-semibold text-neutral-600">
                         <label for="fechaVista" class="whitespace-nowrap">Día</label>

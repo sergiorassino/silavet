@@ -5,6 +5,7 @@ namespace Tests\Unit;
 use App\Livewire\Protocolos\PacienteIndex;
 use App\Support\Protocolos\PacienteListadoConsulta;
 use App\Support\Protocolos\PacienteListadoExporter;
+use App\Support\Resultados\ResultadosEstadosCatalog;
 use Tests\TestCase;
 
 class PacienteListadoExcelTest extends TestCase
@@ -27,6 +28,10 @@ class PacienteListadoExcelTest extends TestCase
         $this->assertSame(
             PacienteIndex::FILTRO_PENDIENTES,
             PacienteListadoConsulta::filtroEstadoEfectivo(PacienteIndex::FILTRO_PENDIENTES)
+        );
+        $this->assertSame(
+            ResultadosEstadosCatalog::SLUG_PARCIAL,
+            PacienteListadoConsulta::filtroEstadoEfectivo(ResultadosEstadosCatalog::SLUG_PARCIAL)
         );
         $this->assertSame('', PacienteListadoConsulta::filtroEstadoEfectivo('otro'));
     }

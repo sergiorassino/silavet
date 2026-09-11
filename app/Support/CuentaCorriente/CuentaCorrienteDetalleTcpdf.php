@@ -87,7 +87,7 @@ final class CuentaCorrienteDetalleTcpdf extends TCPDF
         $this->SetY($y);
 
         $w = $this->anchosColumnas();
-        $titulos = ['#', 'Paciente', 'Cliente', 'Especie', 'Raza', 'Fecha', 'Protocolo', 'Nombre', 'Propietario', 'Estado', 'Precio', 'Pagado', 'Saldo'];
+        $titulos = ['#', 'Especie', 'Raza', 'Fecha', 'Protocolo', 'Nombre', 'Propietario', 'Estado', 'Precio', 'Pagado', 'Saldo'];
         TcpdfFuenteArial::aplicar($this, 'B', 5.5);
         $this->SetFillColor(193, 215, 218);
         $this->SetTextColor(51, 51, 51);
@@ -106,18 +106,16 @@ final class CuentaCorrienteDetalleTcpdf extends TCPDF
         foreach ($filas as $fila) {
             $fecha = $fila->fechhoy !== '' ? Carbon::parse($fila->fechhoy)->format('d/m/Y') : '';
             $this->Cell($w[0], 3.5, (string) $numero, 1, 0, 'C');
-            $this->Cell($w[1], 3.5, $this->truncar((string) ($fila->nombre ?? ''), $maxChars[1]), 1, 0, 'L');
-            $this->Cell($w[2], 3.5, (string) ($fila->idClientes ?? ''), 1, 0, 'C');
-            $this->Cell($w[3], 3.5, $this->truncar((string) ($fila->especie ?? ''), $maxChars[3]), 1, 0, 'L');
-            $this->Cell($w[4], 3.5, $this->truncar((string) ($fila->raza ?? ''), $maxChars[4]), 1, 0, 'L');
-            $this->Cell($w[5], 3.5, $fecha, 1, 0, 'C');
-            $this->Cell($w[6], 3.5, $this->truncar((string) ($fila->nombreProtocolo ?? ''), $maxChars[6]), 1, 0, 'L');
-            $this->Cell($w[7], 3.5, $this->truncar((string) ($fila->nombre ?? ''), $maxChars[7]), 1, 0, 'L');
-            $this->Cell($w[8], 3.5, $this->truncar((string) ($fila->propietario ?? ''), $maxChars[8]), 1, 0, 'L');
-            $this->Cell($w[9], 3.5, $this->truncar((string) ($fila->estado ?? ''), $maxChars[9]), 1, 0, 'C');
-            $this->Cell($w[10], 3.5, CuentaCorrienteConsulta::formatearMoneda((float) ($fila->precio ?? 0)), 1, 0, 'R');
-            $this->Cell($w[11], 3.5, CuentaCorrienteConsulta::formatearMoneda((float) ($fila->pagado ?? 0)), 1, 0, 'R');
-            $this->Cell($w[12], 3.5, CuentaCorrienteConsulta::formatearMoneda((float) ($fila->saldo ?? 0)), 1, 1, 'R');
+            $this->Cell($w[1], 3.5, $this->truncar((string) ($fila->especie ?? ''), $maxChars[1]), 1, 0, 'L');
+            $this->Cell($w[2], 3.5, $this->truncar((string) ($fila->raza ?? ''), $maxChars[2]), 1, 0, 'L');
+            $this->Cell($w[3], 3.5, $fecha, 1, 0, 'C');
+            $this->Cell($w[4], 3.5, $this->truncar((string) ($fila->nombreProtocolo ?? ''), $maxChars[4]), 1, 0, 'L');
+            $this->Cell($w[5], 3.5, $this->truncar((string) ($fila->nombre ?? ''), $maxChars[5]), 1, 0, 'L');
+            $this->Cell($w[6], 3.5, $this->truncar((string) ($fila->propietario ?? ''), $maxChars[6]), 1, 0, 'L');
+            $this->Cell($w[7], 3.5, $this->truncar((string) ($fila->estado ?? ''), $maxChars[7]), 1, 0, 'C');
+            $this->Cell($w[8], 3.5, CuentaCorrienteConsulta::formatearMoneda((float) ($fila->precio ?? 0)), 1, 0, 'R');
+            $this->Cell($w[9], 3.5, CuentaCorrienteConsulta::formatearMoneda((float) ($fila->pagado ?? 0)), 1, 0, 'R');
+            $this->Cell($w[10], 3.5, CuentaCorrienteConsulta::formatearMoneda((float) ($fila->saldo ?? 0)), 1, 1, 'R');
             $numero++;
         }
 
@@ -125,19 +123,19 @@ final class CuentaCorrienteDetalleTcpdf extends TCPDF
         $fechaDesde = trim((string) ($this->datos['fecha_desde'] ?? ''));
         if ($saldoAnterior !== null && $fechaDesde !== '') {
             TcpdfFuenteArial::aplicar($this, 'B', 5);
-            $anchoEtiqueta = array_sum(array_slice($w, 0, 12));
+            $anchoEtiqueta = array_sum(array_slice($w, 0, 10));
             $this->Cell($anchoEtiqueta, 3.5, 'Saldo anterior al '.Carbon::parse($fechaDesde)->format('d/m/Y'), 1, 0, 'R', true);
-            $this->Cell($w[12], 3.5, CuentaCorrienteConsulta::formatearMoneda((float) $saldoAnterior), 1, 1, 'R', true);
+            $this->Cell($w[10], 3.5, CuentaCorrienteConsulta::formatearMoneda((float) $saldoAnterior), 1, 1, 'R', true);
             TcpdfFuenteArial::aplicar($this, '', 5);
         }
 
         $this->Ln(2);
         TcpdfFuenteArial::aplicar($this, 'B', 7);
-        $anchoEtiqueta = array_sum(array_slice($w, 0, 10));
+        $anchoEtiqueta = array_sum(array_slice($w, 0, 8));
         $this->Cell($anchoEtiqueta, 4, 'Total:', 0, 0, 'R');
-        $this->Cell($w[10], 4, CuentaCorrienteConsulta::formatearMoneda((float) ($this->datos['total_precio'] ?? 0)), 0, 0, 'R');
-        $this->Cell($w[11], 4, CuentaCorrienteConsulta::formatearMoneda((float) ($this->datos['total_pagado'] ?? 0)), 0, 0, 'R');
-        $this->Cell($w[12], 4, '', 0, 1, 'R');
+        $this->Cell($w[8], 4, CuentaCorrienteConsulta::formatearMoneda((float) ($this->datos['total_precio'] ?? 0)), 0, 0, 'R');
+        $this->Cell($w[9], 4, CuentaCorrienteConsulta::formatearMoneda((float) ($this->datos['total_pagado'] ?? 0)), 0, 0, 'R');
+        $this->Cell($w[10], 4, '', 0, 1, 'R');
     }
 
     /**
@@ -146,19 +144,17 @@ final class CuentaCorrienteDetalleTcpdf extends TCPDF
     private function anchosColumnas(): array
     {
         $anchoUtil = $this->getPageWidth() - (self::MARGEN * 2);
-        $wNum = 5.0;
-        $wIdCliente = 8.0;
-        $wFecha = 13.0;
-        $wProtocolo = 13.0;
-        $wEstado = 10.0;
-        $wImporte = 13.0;
-        $wEspecie = 10.0;
-        $wRaza = 9.0;
-        $wPaciente = 12.0;
-        $wNombre = 11.0;
-        $wPropietario = max(12.0, $anchoUtil - ($wNum + $wPaciente + $wIdCliente + $wEspecie + $wRaza + $wFecha + $wProtocolo + $wNombre + $wEstado + (3 * $wImporte)));
+        $wNum = 6.0;
+        $wFecha = 16.0;
+        $wProtocolo = 16.0;
+        $wEstado = 14.0;
+        $wImporte = 16.0;
+        $wEspecie = 16.0;
+        $wRaza = 18.0;
+        $wNombre = 22.0;
+        $wPropietario = max(18.0, $anchoUtil - ($wNum + $wEspecie + $wRaza + $wFecha + $wProtocolo + $wNombre + $wEstado + (3 * $wImporte)));
 
-        return [$wNum, $wPaciente, $wIdCliente, $wEspecie, $wRaza, $wFecha, $wProtocolo, $wNombre, $wPropietario, $wEstado, $wImporte, $wImporte, $wImporte];
+        return [$wNum, $wEspecie, $wRaza, $wFecha, $wProtocolo, $wNombre, $wPropietario, $wEstado, $wImporte, $wImporte, $wImporte];
     }
 
     /**

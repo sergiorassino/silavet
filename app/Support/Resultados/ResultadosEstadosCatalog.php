@@ -12,6 +12,22 @@ class ResultadosEstadosCatalog
 
     public const FINAL_ENV = 'Final/Env';
 
+    /** Slugs estables para query string / Livewire (evitan espacios y `/`). */
+    public const SLUG_EN_PROC = 'en-proc';
+
+    public const SLUG_PARCIAL = 'parcial';
+
+    public const SLUG_FINAL = 'final';
+
+    public const SLUG_FINAL_ENV = 'final-env';
+
+    private const SLUGS = [
+        self::EN_PROC => self::SLUG_EN_PROC,
+        self::PARCIAL => self::SLUG_PARCIAL,
+        self::FINAL => self::SLUG_FINAL,
+        self::FINAL_ENV => self::SLUG_FINAL_ENV,
+    ];
+
     private const COLOR_DASHBOARD_EN_PROC = '#94a3b8';
 
     private const COLOR_DASHBOARD_PARCIAL = '#f59e0b';
@@ -61,6 +77,49 @@ class ResultadosEstadosCatalog
     public static function esValido(string $estado): bool
     {
         return in_array($estado, self::valores(), true);
+    }
+
+    /**
+     * Opciones del filtro de listado según `estados_flujo` del tenant.
+     *
+     * @return list<array{slug: string, etiqueta: string}>
+     */
+    public static function opcionesFiltroListado(): array
+    {
+        $opciones = [];
+        foreach (self::valores() as $estado) {
+            $opciones[] = [
+                'slug' => self::SLUGS[$estado],
+                'etiqueta' => $estado,
+            ];
+        }
+
+        return $opciones;
+    }
+
+    /** @return list<string> */
+    public static function slugsFiltroListado(): array
+    {
+        return array_column(self::opcionesFiltroListado(), 'slug');
+    }
+
+    public static function slugDeEstado(?string $estado): ?string
+    {
+        $estado = trim((string) $estado);
+
+        return self::SLUGS[$estado] ?? null;
+    }
+
+    public static function estadoDesdeFiltroSlug(string $slug): ?string
+    {
+        $slug = trim($slug);
+        foreach (self::valores() as $estado) {
+            if (self::SLUGS[$estado] === $slug) {
+                return $estado;
+            }
+        }
+
+        return null;
     }
 
     public static function normalizar(?string $estado): string

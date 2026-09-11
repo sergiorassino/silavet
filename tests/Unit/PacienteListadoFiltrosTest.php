@@ -4,6 +4,7 @@ namespace Tests\Unit;
 
 use App\Livewire\Protocolos\PacienteIndex;
 use App\Support\Protocolos\PacienteListadoFiltros;
+use App\Support\Resultados\ResultadosEstadosCatalog;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Route;
 use Tests\TestCase;
@@ -78,6 +79,23 @@ class PacienteListadoFiltrosTest extends TestCase
     public function test_sanitizar_omite_busqueda_vacia(): void
     {
         $this->assertSame([], PacienteListadoFiltros::sanitizar(['busqueda' => '   ']));
+    }
+
+    public function test_sanitizar_conserva_filtro_estado_del_catalogo(): void
+    {
+        $this->assertSame(
+            ['filtroEstado' => ResultadosEstadosCatalog::SLUG_EN_PROC],
+            PacienteListadoFiltros::sanitizar([
+                'filtroEstado' => ResultadosEstadosCatalog::SLUG_EN_PROC,
+            ])
+        );
+    }
+
+    public function test_sanitizar_omite_filtro_estado_invalido(): void
+    {
+        $this->assertSame([], PacienteListadoFiltros::sanitizar([
+            'filtroEstado' => 'Final/Env',
+        ]));
     }
 
     public function test_combinar_la_query_pisa_la_sesion(): void

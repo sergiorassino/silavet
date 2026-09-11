@@ -1290,6 +1290,14 @@
         max-width: 100%;
     }
 
+    /* w-auto + chevron de @tailwindcss/forms: el texto no debe tapar la flecha. */
+    .vl-pacientes-fecha-filtro select.form-input,
+    .vl-pacientes-fecha-filtro select.form-select {
+        min-width: 6.75rem;
+        padding-right: 2.25rem;
+        flex-shrink: 0;
+    }
+
     /*
      * border-separate (no collapse): con sticky + border-collapse los bordes
      * del thead desaparecen al hacer scroll en Chromium.
