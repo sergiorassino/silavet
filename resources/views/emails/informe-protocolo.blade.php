@@ -48,6 +48,10 @@
                             En caso de dificultades, puede usar un lector de PDF como Adobe Acrobat Reader o Vista Previa (Mac).<br>
                             Ante cualquier consulta, responda a este correo o comuníquese con el laboratorio.
                         </p>
+                        <p style="margin:20px 0 0;font-size:15px;line-height:1.5;">
+                            Atte.<br>
+                            Saludos cordiales.
+                        </p>
                     </td>
                 </tr>
                 @if ($pie['nombre'] !== '' || $pie['direccion'] !== '' || $pie['telefono'] !== '' || $pie['email'] !== '')

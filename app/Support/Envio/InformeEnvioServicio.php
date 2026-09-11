@@ -234,6 +234,15 @@ final class InformeEnvioServicio
     }
 
     /**
+     * Nombre de cierre en mail y WhatsApp (después de «Saludos cordiales»):
+     * `entorno.carpeta` en mayúsculas sostenidas.
+     */
+    public static function firmaNombreCierre(): string
+    {
+        return LabInstitucional::carpeta();
+    }
+
+    /**
      * @return array{ok: true, url: string}|array{ok: false, error: string}
      */
     public static function urlWhatsappWeb(Paciente $paciente, string $destinatario): array
@@ -254,15 +263,12 @@ final class InformeEnvioServicio
         $ref = OpaqueRouteToken::forInformePublico((int) $paciente->idPacientes);
         $urlInforme = route('protocolos.informe-publico', ['ref' => $ref]);
 
-        // Datos de firma: usar pie de mail si están cargados, si no los del laboratorio emisor.
+        // Datos de firma: nombre = entorno.carpeta en mayúsculas (no el identificador del tenant).
         $entorno = self::entornoMail();
-        $firmaNombre = $entorno !== null ? trim((string) ($entorno->nombrePieMail ?? '')) : '';
+        $firmaNombre = self::firmaNombreCierre();
         $firmaDireccion = $entorno !== null ? trim((string) ($entorno->direccionPieMail ?? '')) : '';
         $firmaTelefono = $entorno !== null ? trim((string) ($entorno->telefonoPieMail ?? '')) : '';
 
-        if ($firmaNombre === '') {
-            $firmaNombre = $lab['nombre'];
-        }
         if ($firmaDireccion === '') {
             $firmaDireccion = $lab['direccion'];
         }
@@ -282,7 +288,7 @@ final class InformeEnvioServicio
         $texto .= "Ya se encuentran disponibles los resultados de los análisis de:\n";
         $texto .= "Paciente: {$nombre}";
         if ($propietario !== '') {
-            $texto .= ", Propietario: {$propietario}";
+            $texto .= ", Tutor: {$propietario}";
         }
         $texto .= "\n\n";
         $texto .= "Puede visualizarlos haciendo click en el siguiente link "

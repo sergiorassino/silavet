@@ -49,7 +49,8 @@ Staff con `PermisosIaCatalog::PROTOCOLOS`. Autogestión no abre este modal.
 |-------|--------|-----|
 | `clientes` | `email`, `whatsapp` | Destino cliente (email admite varios `;` / `,`) |
 | `pacientes` | `email`, `whatsapp` | Destino paciente/propietario |
-| `entorno` | `ctaEnvioMail`, `passEnvioMail`, `fromMail`, pie | SMTP y firma |
+| `entorno` | `ctaEnvioMail`, `passEnvioMail`, `fromMail`, pie | SMTP y datos de contacto en firma |
+| `entorno` | `carpeta` | Nombre de cierre (mail y WhatsApp) después de «Saludos cordiales», en mayúsculas. No usar `tenant.nombre` / slug. |
 
 No hay columnas nuevas: la parametrización es de config, no de BD.
 
@@ -60,7 +61,8 @@ No hay columnas nuevas: la parametrización es de config, no de BD.
    correspondiente: mail → `email`, WhatsApp → `whatsapp`).
 3. Destinatario + forma (si hay más de una opción).
 4. Mail: genera PDF TCPDF y envía SMTP. WhatsApp: abre WhatsApp Web con link
-   público opaco del informe.
+   público opaco del informe. En el texto de WhatsApp el campo se etiqueta
+   **Tutor** (no «Propietario»).
 
 ## Fuente de verdad
 
@@ -85,6 +87,8 @@ un destino o canal deshabilitado aunque se manipule el request.
   `whatsapp` al guardar el email (y viceversa).
 - No mostrar el combo Destinatario/Forma si hay una sola opción: va preelegida.
 - SMTP sigue en `entorno`; este flag solo controla qué opciones aparecen.
+- Firma de cierre (mail y WhatsApp): `LabInstitucional::carpeta()` (`entorno.carpeta` en
+  mayúsculas). No usar `TENANT_SLUG`, `tenant.nombre` ni `nombrePieMail` en esa línea.
 
 ## Checklist al modificar
 
@@ -92,3 +96,4 @@ un destino o canal deshabilitado aunque se manipule el request.
 - [ ] ¿epizoolab sigue solo cliente + mail?
 - [ ] ¿La validación de `confirmarEnvio` usa `InformeEnvioConfig` (no `in:` fijo)?
 - [ ] ¿Un lab nuevo solo declara lo que **apaga**?
+- [ ] ¿El cierre «Saludos cordiales» usa `entorno.carpeta` en mayúsculas (mail y WhatsApp)?
