@@ -123,8 +123,8 @@ final class PacienteListadoFiltros
             }
         }
 
-        $filtroEstado = trim((string) ($filtros['filtroEstado'] ?? ''));
-        if (in_array($filtroEstado, [PacienteIndex::FILTRO_PENDIENTES, PacienteIndex::FILTRO_LISTOS], true)) {
+        $filtroEstado = PacienteListadoConsulta::filtroEstadoEfectivo((string) ($filtros['filtroEstado'] ?? ''));
+        if ($filtroEstado !== '') {
             $out['filtroEstado'] = $filtroEstado;
         }
 

@@ -86,6 +86,7 @@
                    placeholder="Buscar por protocolo, paciente, tutor o cliente…"
                    class="form-input max-w-xl w-full sm:flex-1">
             <div class="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center sm:gap-3 shrink-0">
+                @include('livewire.protocolos.partials.paciente-filtro-estado', ['idFiltroEstado' => 'filtroEstado'])
                 @if ($vista === 'hoy')
                     <div class="vl-pacientes-fecha-filtro flex max-w-full flex-wrap items-center gap-2 text-xs font-semibold text-neutral-600">
                         <label for="fechaVista" class="whitespace-nowrap">Día</label>

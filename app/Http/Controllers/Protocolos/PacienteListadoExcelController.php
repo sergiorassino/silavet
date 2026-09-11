@@ -13,6 +13,7 @@ use App\Support\Tesoreria\TesoreriaConfig;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Validation\Rule;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class PacienteListadoExcelController extends Controller
@@ -38,7 +39,7 @@ class PacienteListadoExcelController extends Controller
             'fechaVista' => ['nullable', 'date_format:Y-m-d'],
             'fechaDesde' => ['nullable', 'date_format:Y-m-d'],
             'fechaHasta' => ['nullable', 'date_format:Y-m-d'],
-            'filtroEstado' => ['nullable', 'in:'.PacienteIndex::FILTRO_PENDIENTES.','.PacienteIndex::FILTRO_LISTOS],
+            'filtroEstado' => ['nullable', Rule::in(PacienteListadoConsulta::filtrosEstadoPermitidos())],
             'busqueda' => ['nullable', 'string', 'max:120'],
         ]);
 

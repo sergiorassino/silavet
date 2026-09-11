@@ -2,6 +2,7 @@
 
 namespace Tests\Unit;
 
+use App\Support\Protocolos\PacienteListadoConsulta;
 use App\Support\Resultados\ResultadosEstadosCatalog;
 use Illuminate\Support\Facades\Config;
 use Tests\TestCase;
@@ -57,5 +58,32 @@ class ResultadosEstadosCatalogTest extends TestCase
 
         $this->assertTrue(ResultadosEstadosCatalog::usaFinalEnv());
         $this->assertCount(4, ResultadosEstadosCatalog::valores());
+    }
+
+    public function test_opciones_filtro_listado_respetan_flujo_del_tenant(): void
+    {
+        Config::set('tenant.protocolos.estados_flujo', 4);
+
+        $this->assertSame(
+            [
+                ['slug' => 'en-proc', 'etiqueta' => 'En Proc.'],
+                ['slug' => 'parcial', 'etiqueta' => 'Parcial'],
+                ['slug' => 'final', 'etiqueta' => 'Final'],
+                ['slug' => 'final-env', 'etiqueta' => 'Final/Env'],
+            ],
+            ResultadosEstadosCatalog::opcionesFiltroListado()
+        );
+        $this->assertSame('Parcial', ResultadosEstadosCatalog::estadoDesdeFiltroSlug('parcial'));
+        $this->assertSame('en-proc', ResultadosEstadosCatalog::slugDeEstado('En Proc.'));
+
+        Config::set('tenant.protocolos.estados_flujo', 3);
+
+        $this->assertSame(
+            ['en-proc', 'parcial', 'final'],
+            ResultadosEstadosCatalog::slugsFiltroListado()
+        );
+        $this->assertNull(ResultadosEstadosCatalog::estadoDesdeFiltroSlug('final-env'));
+        $this->assertSame('', PacienteListadoConsulta::filtroEstadoEfectivo('final-env'));
+        $this->assertSame('parcial', PacienteListadoConsulta::filtroEstadoEfectivo('parcial'));
     }
 }

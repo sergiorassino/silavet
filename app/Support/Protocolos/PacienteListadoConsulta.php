@@ -34,6 +34,7 @@ final class PacienteListadoConsulta
             : PacienteIndex::VISTA_HOY;
         $term = trim((string) ($filtros['busqueda'] ?? ''));
         $filtroEstado = self::filtroEstadoEfectivo((string) ($filtros['filtroEstado'] ?? ''));
+        $estadoCatalogo = ResultadosEstadosCatalog::estadoDesdeFiltroSlug($filtroEstado);
 
         $with = ['cliente', 'especie', 'raza', 'medioDePago'];
         if (Schema::hasTable('notificaciones')) {
@@ -86,6 +87,9 @@ final class PacienteListadoConsulta
             ->when($filtroEstado === PacienteIndex::FILTRO_LISTOS, function ($q) {
                 $q->whereIn('pacientes.estado', ResultadosEstadosCatalog::estadosFinalizados());
             })
+            ->when($estadoCatalogo !== null, function ($q) use ($estadoCatalogo) {
+                self::aplicarFiltroEstadoCatalogo($q, $estadoCatalogo);
+            })
             ->tap(fn ($q) => PacienteListadoOrden::aplicar($q));
     }
 
@@ -116,13 +120,42 @@ final class PacienteListadoConsulta
         $query->where('pacientes.tipoRegistro', Paciente::TIPO_PROTOCOLO);
     }
 
+    /**
+     * @return list<string>
+     */
+    public static function filtrosEstadoPermitidos(): array
+    {
+        return array_merge(
+            [PacienteIndex::FILTRO_PENDIENTES, PacienteIndex::FILTRO_LISTOS],
+            ResultadosEstadosCatalog::slugsFiltroListado()
+        );
+    }
+
     public static function filtroEstadoEfectivo(string $filtro): string
     {
         $filtro = trim($filtro);
 
-        return in_array($filtro, [PacienteIndex::FILTRO_PENDIENTES, PacienteIndex::FILTRO_LISTOS], true)
-            ? $filtro
-            : '';
+        return in_array($filtro, self::filtrosEstadoPermitidos(), true) ? $filtro : '';
+    }
+
+    /**
+     * En Proc. incluye estado vacío/nulo (la grilla lo muestra igual).
+     *
+     * @param  Builder<Paciente>  $query
+     */
+    private static function aplicarFiltroEstadoCatalogo($query, string $estado): void
+    {
+        if ($estado === ResultadosEstadosCatalog::EN_PROC) {
+            $query->where(function ($inner) use ($estado) {
+                $inner->where('pacientes.estado', $estado)
+                    ->orWhereNull('pacientes.estado')
+                    ->orWhere('pacientes.estado', '');
+            });
+
+            return;
+        }
+
+        $query->where('pacientes.estado', $estado);
     }
 
     public static function fechaVistaEfectiva(string $fecha): string

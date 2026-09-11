@@ -64,8 +64,8 @@ class PacienteIndex extends Component
     public string $vista = self::VISTA_HOY;
 
     /**
-     * Filtro de estado desde el dashboard de autogestión:
-     * '' | pendientes (En Proc./Parcial) | listos (Final / Final/Env).
+     * Filtro de estado: '' | pendientes | listos | slug del catálogo del tenant
+     * (en-proc, parcial, final, final-env según `estados_flujo`).
      */
     #[Url(as: 'filtroEstado', history: true)]
     public string $filtroEstado = '';
@@ -221,12 +221,6 @@ class PacienteIndex extends Component
         $this->resetPage();
     }
 
-    public function limpiarFiltroEstado(): void
-    {
-        $this->filtroEstado = '';
-        $this->resetPage();
-    }
-
     /**
      * Query params a propagar al salir del listado (editar, determinaciones, etc.).
      *
@@ -329,20 +323,7 @@ class PacienteIndex extends Component
 
     public function filtroEstadoEfectivo(): string
     {
-        $filtro = trim($this->filtroEstado);
-
-        return in_array($filtro, [self::FILTRO_PENDIENTES, self::FILTRO_LISTOS], true)
-            ? $filtro
-            : '';
-    }
-
-    public function etiquetaFiltroEstado(): string
-    {
-        return match ($this->filtroEstadoEfectivo()) {
-            self::FILTRO_PENDIENTES => 'Pendientes de resultado',
-            self::FILTRO_LISTOS => 'Informes listos',
-            default => '',
-        };
+        return PacienteListadoConsulta::filtroEstadoEfectivo($this->filtroEstado);
     }
 
     public function fechaVistaEfectiva(): string
