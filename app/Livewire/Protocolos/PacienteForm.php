@@ -68,7 +68,11 @@ class PacienteForm extends Component
 
     public string $edad = '';
 
-    public string $observaciones = '';
+    /**
+     * Nota privada del laboratorio (`pacientes.obsPriv`).
+     * No es `pacientes.observaciones` (texto de pie del informe / icono Observaciones).
+     */
+    public string $obsPriv = '';
 
     public int $listaPreciosPaciente = ListaPreciosConfig::DEFAULT;
 
@@ -115,7 +119,9 @@ class PacienteForm extends Component
             $this->idRazas = $paciente->idRazas ?: null;
             $this->sexo = (string) $paciente->sexo;
             $this->edad = (string) $paciente->edad;
-            $this->observaciones = (string) ($paciente->observaciones ?? '');
+            $this->obsPriv = self::tieneColumnaObsPriv()
+                ? (string) ($paciente->obsPriv ?? '')
+                : '';
             $this->listaPreciosPaciente = ListaPreciosConfig::normalizar(
                 $paciente->getAttribute(ListaPreciosConfig::COLUMNA_PACIENTE)
             );
@@ -212,7 +218,7 @@ class PacienteForm extends Component
             'idRazas' => ['nullable', 'integer', 'exists:razas,idRazas'],
             'sexo' => ['nullable', 'string', 'max:100', Rule::in(SexoCatalog::opciones()->all())],
             'edad' => ['nullable', 'string', 'max:50'],
-            'observaciones' => ['nullable', 'string'],
+            'obsPriv' => ['nullable', 'string'],
             'listaPreciosPaciente' => ListaPreciosConfig::mostrarSelectorPaciente()
                 ? ['required', 'integer', 'in:1,2,3']
                 : ['nullable'],
@@ -307,8 +313,18 @@ class PacienteForm extends Component
             'whatsapp' => trim((string) ($data['whatsapp'] ?? '')),
             'sexo' => trim((string) ($data['sexo'] ?? '')),
             'edad' => trim((string) ($data['edad'] ?? '')),
-            'observaciones' => trim((string) ($data['observaciones'] ?? '')),
         ];
+
+        $obsPriv = trim((string) ($data['obsPriv'] ?? ''));
+        if ($obsPriv !== '' && ! self::tieneColumnaObsPriv()) {
+            $mensaje = 'No se puede guardar la observación privada: falta la columna pacientes.obsPriv en este laboratorio. '
+                .'Ejecute la migración (php artisan lb:migrate-legacy --force) o el SQL de database/sql/pacientes_obs_priv.sql.';
+            $this->dispatch('vl-swal-error', mensaje: $mensaje);
+            throw ValidationException::withMessages(['obsPriv' => $mensaje]);
+        }
+        if (self::tieneColumnaObsPriv()) {
+            $payload['obsPriv'] = $obsPriv;
+        }
 
         if (self::tieneColumnaDni()) {
             $payload['dni'] = $dni;
@@ -558,6 +574,11 @@ class PacienteForm extends Component
         return Schema::hasColumn('pacientes', 'cuit');
     }
 
+    protected static function tieneColumnaObsPriv(): bool
+    {
+        return Schema::hasColumn('pacientes', 'obsPriv');
+    }
+
     protected function actualizarPreviewProtocolo(): void
     {
         if ($this->fechhoy === '' || ProtocoloNumero::dejaNombreProtocoloVacio()) {
@@ -636,6 +657,7 @@ class PacienteForm extends Component
             'puedeEliminar' => $puedeEliminar,
             'mostrarListaPrecios' => ListaPreciosConfig::mostrarSelectorPaciente(),
             'tieneColumnaListaPrecios' => ListaPreciosConfig::tieneColumnaPaciente(),
+            'tieneColumnaObsPriv' => self::tieneColumnaObsPriv(),
             'opcionesListaPrecios' => ListaPreciosConfig::opciones(),
             'urlVolver' => $this->urlVolver($this->listadoFiltros, $this->idPacientes),
         ])->layout('layouts.staff', UsuarioMenuPortal::staffLayoutParams(labCtx()->idRoles));

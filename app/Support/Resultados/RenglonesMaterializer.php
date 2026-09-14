@@ -95,7 +95,7 @@ class RenglonesMaterializer
                 'valor' => $this->valorInicial($tipoItem, $item),
                 'valor2' => '',
                 'tipoHtml' => null,
-                'idAnalizador' => (string) ($item->idAnalizador ?? ''),
+                'idAnalizador' => trim((string) ($item->idAnalizador ?? '')),
                 'mostrar' => (int) ($item->mostrar ?? 1) === 1 ? 1 : 0,
             ];
         }

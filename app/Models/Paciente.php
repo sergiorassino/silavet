@@ -70,6 +70,7 @@ class Paciente extends Model
         'adjunto',
         'observaciones',
         'obsInterna',
+        'obsPriv',
         'clinica',
     ];
 

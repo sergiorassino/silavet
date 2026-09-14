@@ -57,7 +57,7 @@ final class InformePacienteConsulta
                 'raza' => trim((string) ($paciente->raza?->nombre ?? '')),
                 'cliente' => trim((string) ($paciente->cliente?->nombre ?? '')),
                 'medico_solicitante' => trim((string) ($paciente->medicoSolicitante?->apenom ?? '')),
-                'observaciones' => trim((string) ($paciente->observaciones ?? '')),
+                'observaciones' => trim((string) ($paciente->observaciones ?? '')), // pie del informe; nunca obsPriv/obsInterna
                 'idEspecies' => $idEspecies,
                 'rotulo_ref' => self::rotuloReferencia($idEspecies),
             ],

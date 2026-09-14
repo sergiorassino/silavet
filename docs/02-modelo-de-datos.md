@@ -54,6 +54,15 @@ reactivos ─N:M─► tipodeterminaciones (reactivoxdeterminacion)
 > humano sino el **protocolo de laboratorio** (caso analítico) asociado a un
 > animal, propietario y cliente veterinario.
 
+Notas en `pacientes` (no confundir):
+
+| Columna | Dónde se carga | Dónde aparece |
+|---------|----------------|---------------|
+| `observaciones` | Icono **Observaciones** del listado | Pie del informe PDF. El alta/edición **no** la lee ni la escribe. |
+| `obsPriv` | Alta y edición del protocolo | Solo uso interno del laboratorio. **No** se imprime en el informe ni en el portal. |
+
+SQL aditivo: `database/sql/pacientes_obs_priv.sql`.
+
 ### Relaciones operativas
 
 ```
