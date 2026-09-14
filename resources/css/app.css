@@ -1816,8 +1816,27 @@
         @apply min-w-[8rem] max-w-[16rem];
     }
 
+    /*
+     * Scroll horizontal de la grilla: el overflow vive en este wrapper.
+     * No usar justify-center acá — al desbordar, flex centra recortando
+     * las columnas de la izquierda y el scroll no llega a esos campos.
+     * El inner (.vl-prot-det-scroll) ocupa al menos el 100% y crece con
+     * la tabla: si entra, queda centrada; si no, el scroll cubre todo.
+     */
     .vl-prot-det-wrap {
-        @apply flex justify-center overflow-x-auto px-5 py-4;
+        @apply overflow-x-auto px-5 py-4;
+        min-width: 0;
+        max-width: 100%;
+        -webkit-overflow-scrolling: touch;
+        overscroll-behavior-x: contain;
+        touch-action: pan-x pan-y;
+    }
+
+    .vl-prot-det-scroll {
+        display: flex;
+        justify-content: center;
+        min-width: 100%;
+        width: max-content;
     }
 
     .vl-prot-det-header {
@@ -1841,7 +1860,8 @@
     }
 
     .vl-prot-det-grid {
-        @apply w-auto mx-auto border-collapse;
+        @apply w-auto border-collapse;
+        flex-shrink: 0;
     }
 
     .vl-prot-det-grid .vl-determinaciones-th,
