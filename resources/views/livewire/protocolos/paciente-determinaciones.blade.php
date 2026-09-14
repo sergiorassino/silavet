@@ -60,7 +60,7 @@
             }
             el.focus({ preventScroll: true });
             el.select();
-            el.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+            el.scrollIntoView({ block: 'nearest', inline: 'nearest', behavior: 'smooth' });
         },
         caretAlInicio(el) {
             const start = el.selectionStart ?? 0;
@@ -141,7 +141,7 @@
                     } catch (e) {
                         // ignore
                     }
-                    el.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+                    el.scrollIntoView({ block: 'nearest', inline: 'nearest', behavior: 'smooth' });
                     this._focusTipoPendiente = false;
                     return;
                 }
@@ -191,7 +191,7 @@
         </div>
     </div>
 
-    <div class="vl-card overflow-hidden">
+    <div class="vl-card min-w-0 overflow-hidden">
         <div class="vl-toolbar border-b border-accent-200 px-5 py-3 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <div class="flex flex-1 items-center gap-2 min-w-0">
                 <label for="busqueda-rapida-det" class="text-xs font-semibold text-neutral-600 whitespace-nowrap">Búsqueda Rápida:</label>
@@ -227,6 +227,7 @@
         </p>
 
         <div class="vl-prot-det-wrap" @keydown="navegarCampos($event)">
+            <div class="vl-prot-det-scroll">
             <table class="vl-determinaciones-grid vl-prot-det-grid text-sm">
                 <thead class="bg-accent-50/80">
                     <tr>
@@ -464,6 +465,7 @@
                     </tfoot>
                 @endif
             </table>
+            </div>
         </div>
     </div>
 </div>

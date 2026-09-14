@@ -7,7 +7,7 @@
         </div>
     </div>
 
-    <div class="vl-card overflow-hidden">
+    <div class="vl-card min-w-0 overflow-hidden">
         <div class="vl-toolbar border-b border-accent-200 px-5 py-3 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <div class="flex flex-1 items-center gap-2 min-w-0">
                 <label for="busqueda-rapida-det-cli" class="text-xs font-semibold text-neutral-600 whitespace-nowrap">Búsqueda Rápida:</label>
@@ -32,6 +32,7 @@
         </div>
 
         <div class="vl-prot-det-wrap">
+            <div class="vl-prot-det-scroll">
             <table class="vl-determinaciones-grid vl-prot-det-grid text-sm">
                 <thead class="bg-accent-50/80">
                     <tr>
@@ -69,6 +70,7 @@
                     </tr>
                 </tfoot>
             </table>
+            </div>
         </div>
 
         <p class="border-t border-accent-200 px-5 py-3 text-sm font-semibold text-neutral-800">
