@@ -259,8 +259,11 @@ es solo `Normal.`, se conserva el manual.
 Modal: elegir equipo + archivo reciente o upload → `AutoanalizadorImportador`
 escribe valores en `renglones` → redirect a la misma pantalla. Cruce:
 código del CSV (trim) = `renglones.idAnalizador` (también con trim; el legado
-a veces deja `"CAIII "` y el Metrolab exporta `CAIII`). Detalle de drivers
-y overrides: `config/tenants/{slug}.php` → `autoanalizadores` +
+a veces deja `"CAIII "` y el Metrolab exporta `CAIII`). Metrolab CM 250 / Wiener
+CM 160: el mismo protocolo puede ocupar **varias filas** (p. ej. glucosa aparte
+y el perfil en otra); el driver une todos los pares y, si un código se repite,
+gana la última aparición. Detalle de drivers y overrides:
+`config/tenants/{slug}.php` → `autoanalizadores` +
 `App\Support\Autoanalizadores\*`.
 
 Operación por teclado en el modal: foco al abrir en **Elegir archivo…**; **Tab** cicla
@@ -364,6 +367,9 @@ conteo manual).
   `CAIII ` vs CSV `CAIII`) deja el renglón sin importar y el resto sí. El
   importador recorta ambos lados; conviene limpiar datos con
   `database/sql/trim_id_analizador.sql`.
+- **No** devolver solo la primera fila del Metrolab/Wiener: un protocolo suele
+  aparecer dos veces (glucosa `GLUL` en una fila y el resto del perfil en otra).
+  Hay que unir todas las apariciones.
 
 ## Checklist al modificar
 

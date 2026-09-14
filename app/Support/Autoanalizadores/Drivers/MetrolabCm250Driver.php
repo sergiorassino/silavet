@@ -12,6 +12,9 @@ use RuntimeException;
  * - Col 0: protocolo como `="NNNN"` (o el número plano).
  * - Hasta 20 pares determinación/valor en cols 8/9, 11/12, … 65/66
  *   (cada tres columnas: código, valor, unidad).
+ * - El mismo protocolo puede aparecer en varias filas (p. ej. glucosa aparte
+ *   y el resto del perfil). Se unen todos los pares; si un código se repite,
+ *   gana la última aparición.
  *
  * El redondeo por código (GOTL/GPTL/… enteros con miles, CRELc 1 decimal, etc.)
  * lo aplica el perfil del lab vía overrides.
@@ -45,6 +48,9 @@ class MetrolabCm250Driver implements AutoanalizadorDriver
         // Legado: compara contra ="número" (export Excel).
         $protocoloExcel = '="'.$protocolo.'"';
 
+        /** @var array<string, string> $valores */
+        $valores = [];
+
         try {
             // Sin omitir encabezado: el export no lo trae.
             while (($datos = fgetcsv($handle, 1000000, self::DELIMITADOR)) !== false) {
@@ -57,15 +63,15 @@ class MetrolabCm250Driver implements AutoanalizadorDriver
                     continue;
                 }
 
-                $valores = $this->extraerPares($datos);
-
-                return $valores === [] ? null : $valores;
+                foreach ($this->extraerPares($datos) as $codigo => $valor) {
+                    $valores[$codigo] = $valor;
+                }
             }
         } finally {
             fclose($handle);
         }
 
-        return null;
+        return $valores === [] ? null : $valores;
     }
 
     private function protocoloCoincide(string $idFila, string $protocolo, string $protocoloExcel): bool
