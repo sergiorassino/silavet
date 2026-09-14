@@ -220,6 +220,7 @@ class ItemsinformeCatalog
                 'tipo' => 'text',
                 'columna' => 'idAnalizador',
                 'max' => 20,
+                'hint' => 'Debe coincidir con el código del CSV del aparato (p. ej. CAIII). Los espacios al inicio o al final se recortan al guardar y al importar.',
             ],
         ];
     }

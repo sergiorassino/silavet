@@ -329,7 +329,7 @@
                         </div>
 
                         <div>
-                            <label for="vl-aa-aparato" class="mb-1 block text-sm font-medium text-neutral-700">Aparato</label>
+                            <label for="vl-aa-aparato" class="mb-1 block text-sm font-medium text-neutral-700">Equipo</label>
                             <div class="vl-select-field">
                                 <select id="vl-aa-aparato"
                                         data-vl-aa-campo="aparato"

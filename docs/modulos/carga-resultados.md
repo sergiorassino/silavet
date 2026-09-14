@@ -256,13 +256,15 @@ es solo `Normal.`, se conserva el manual.
 
 ### E. Autoanalizadores (si hay aparatos activos)
 
-Modal: elegir aparato + archivo reciente o upload → `AutoanalizadorImportador`
-escribe valores en `renglones` → redirect a la misma pantalla. Detalle de drivers
+Modal: elegir equipo + archivo reciente o upload → `AutoanalizadorImportador`
+escribe valores en `renglones` → redirect a la misma pantalla. Cruce:
+código del CSV (trim) = `renglones.idAnalizador` (también con trim; el legado
+a veces deja `"CAIII "` y el Metrolab exporta `CAIII`). Detalle de drivers
 y overrides: `config/tenants/{slug}.php` → `autoanalizadores` +
 `App\Support\Autoanalizadores\*`.
 
 Operación por teclado en el modal: foco al abrir en **Elegir archivo…**; **Tab** cicla
-controles; **Enter** / **↑↓** entre upload → aparato → archivo → Importar;
+controles; **Enter** / **↑↓** entre upload → equipo → archivo → Importar;
 **←→** cambian opción en los selects; **Enter**/**Espacio** en “Elegir archivo…”
 abre el file picker; **Esc** cierra. Tras subir, mensaje inline (sin Swal) y foco
 en el select de archivo.
@@ -358,6 +360,10 @@ conteo manual).
   form llevan la leyenda “No se muestra en el informe”.
 - **No** volver `renglones.valor2` a `varchar(100)`: truncaría observaciones
   largas. Migración: `2026_09_04_000002_widen_renglones_valor2_to_text`.
+- **No** comparar `idAnalizador` sin `trim`: un espacio invisible (p. ej. Calcio
+  `CAIII ` vs CSV `CAIII`) deja el renglón sin importar y el resto sí. El
+  importador recorta ambos lados; conviene limpiar datos con
+  `database/sql/trim_id_analizador.sql`.
 
 ## Checklist al modificar
 

@@ -44,6 +44,14 @@ class PacienteTipoRegistroAltaTest extends TestCase
         $this->assertSame(Paciente::TIPO_EGRESO, (int) $egreso->tipoRegistro);
     }
 
+    public function test_fillable_distingue_observaciones_de_informe_y_obs_priv(): void
+    {
+        $fillable = (new Paciente)->getFillable();
+
+        $this->assertContains('observaciones', $fillable);
+        $this->assertContains('obsPriv', $fillable);
+    }
+
     private function fireCreating(Paciente $paciente): void
     {
         $method = new ReflectionMethod(Paciente::class, 'fireModelEvent');

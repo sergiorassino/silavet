@@ -278,12 +278,21 @@
             </div>
 
             <div class="vl-form-field vl-form-span-full">
-                <label class="form-label" for="observaciones">Observaciones</label>
-                <textarea wire:model="observaciones"
-                          id="observaciones"
+                <label class="form-label" for="obsPriv">Observación privada</label>
+                <textarea wire:model="obsPriv"
+                          id="obsPriv"
                           rows="3"
                           class="form-input"></textarea>
-                @error('observaciones') <p class="form-error">{{ $message }}</p> @enderror
+                <p class="mt-1 text-[11px] text-neutral-500">
+                    Uso interno del laboratorio. No se imprime en el informe.
+                </p>
+                @unless ($tieneColumnaObsPriv)
+                    <p class="mt-1 text-[11px] text-amber-800">
+                        Falta la columna <strong>pacientes.obsPriv</strong> en esta base.
+                        Hay que aplicar la migración antes de poder guardar este campo.
+                    </p>
+                @endunless
+                @error('obsPriv') <p class="form-error">{{ $message }}</p> @enderror
             </div>
         </div>
     </form>

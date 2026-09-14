@@ -203,7 +203,7 @@ class PacienteResultados extends Component
             'aparatoSeleccionado' => ['required', 'string', 'max:80'],
             'archivoSeleccionado' => ['required', 'string', 'max:255'],
         ], [
-            'aparatoSeleccionado.required' => 'Seleccione el aparato.',
+            'aparatoSeleccionado.required' => 'Seleccione el equipo.',
             'archivoSeleccionado.required' => 'Seleccione un archivo CSV.',
         ]);
 

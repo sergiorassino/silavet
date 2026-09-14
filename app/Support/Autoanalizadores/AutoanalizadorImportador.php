@@ -26,7 +26,7 @@ final class AutoanalizadorImportador
     {
         $aparato = AutoanalizadorConfig::aparato($claveAparato);
         if ($aparato === null) {
-            throw new RuntimeException('Aparato no configurado o inactivo para este laboratorio.');
+            throw new RuntimeException('Equipo no configurado o inactivo para este laboratorio.');
         }
 
         $protocolo = trim((string) ($paciente->nombreProtocolo ?? ''));
@@ -46,7 +46,7 @@ final class AutoanalizadorImportador
             throw new RuntimeException('Aparentemente el archivo seleccionado no es del equipo indicado.');
         }
 
-        $valores = $this->formatter->formatear($crudos, $aparato['overrides']);
+        $valores = $this->clavesTrim($this->formatter->formatear($crudos, $aparato['overrides']));
         if ($valores === []) {
             throw new RuntimeException('No hay valores para importar.');
         }
@@ -58,9 +58,16 @@ final class AutoanalizadorImportador
             ->where('idPacientes', $paciente->idPacientes)
             ->where(function ($q) use ($codigos, $columnas): void {
                 foreach ($columnas as $col) {
+                    if (! in_array($col, ['idAnalizador', 'idAnalizador2', 'idAnalizador3'], true)) {
+                        continue;
+                    }
                     $q->orWhere(function ($q2) use ($col, $codigos): void {
                         $q2->where($col, '!=', '')
-                            ->whereIn($col, $codigos);
+                            ->where(function ($q3) use ($col, $codigos): void {
+                                // TRIM: legado a veces deja "CAIII " y el CSV trae "CAIII".
+                                $q3->whereIn($col, $codigos)
+                                    ->orWhereIn(DB::raw('TRIM(`'.$col.'`)'), $codigos);
+                            });
                     });
                 }
             })
@@ -116,12 +123,30 @@ final class AutoanalizadorImportador
     private function codigoCoincidente(Renglon $renglon, array $columnas, array $valores): ?string
     {
         foreach ($columnas as $col) {
-            $codigo = (string) ($renglon->{$col} ?? '');
+            $codigo = trim((string) ($renglon->{$col} ?? ''));
             if ($codigo !== '' && array_key_exists($codigo, $valores)) {
                 return $codigo;
             }
         }
 
         return null;
+    }
+
+    /**
+     * @param  array<string, string>  $valores
+     * @return array<string, string>
+     */
+    private function clavesTrim(array $valores): array
+    {
+        $salida = [];
+        foreach ($valores as $codigo => $valor) {
+            $clave = trim((string) $codigo);
+            if ($clave === '') {
+                continue;
+            }
+            $salida[$clave] = $valor;
+        }
+
+        return $salida;
     }
 }

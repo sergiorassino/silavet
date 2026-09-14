@@ -339,6 +339,13 @@
                     </div>
 
                     <div class="min-h-0 flex-1 space-y-4 overflow-y-auto px-5 py-4">
+                        <p class="rounded-lg bg-neutral-700 px-3 py-2.5 text-[12px] leading-relaxed text-white">
+                            En caso de tener problemas para subir un pdf generado por algún otro sistema, se puede probar reparar online aquí:
+                            <a href="https://www.ilovepdf.com/es/reparar-pdf"
+                               target="_blank"
+                               rel="noopener noreferrer"
+                               class="break-all font-medium underline decoration-white/70 underline-offset-2 hover:decoration-white">https://www.ilovepdf.com/es/reparar-pdf</a>
+                        </p>
                         @if ($adjuntoNombreActual !== '')
                             <div class="rounded-lg border border-emerald-200 bg-emerald-50/70 px-3 py-2.5">
                                 <p class="text-[10px] font-bold uppercase tracking-[0.08em] text-emerald-800">Archivo actual</p>
