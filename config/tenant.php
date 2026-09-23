@@ -25,7 +25,9 @@ return [
     |   /cliente/lista-precios y /cliente/estimacion-costos. Default true.
     | - mostrar_saldo_cuenta_corriente / mostrar_descuentos_obtenidos: resumen
     |   financiero en Inicio y encabezado de Pacientes (autogestión). Default true.
-    |   epizoolab declara los cuatro mostrar_* en false. Helper: PortalClienteConfig.
+    |   epizoolab declara los cuatro mostrar_* en false.
+    |   labvetciudad declara mostrar_saldo_cuenta_corriente en false.
+    |   Helper: PortalClienteConfig.
     */
     'portal_cliente' => [
         'permite_descarga_excel' => true,

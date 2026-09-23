@@ -69,6 +69,7 @@ Orientación UI: **desktop-first**.
   `App\Support\Cliente\PortalClienteConfig`. Solo afectan autogestión
   (`/cliente/…`); no el listado staff `listados.estimacion-costos`.
   Epizoolab declara los cuatro `mostrar_*` en `false`.
+  Labvetciudad declara `mostrar_saldo_cuenta_corriente` en `false`.
 - **Layout:** misma estética que el Menú de Laboratorio (`layouts.staff` + `sidebar-nav-cliente`).
 
 ---

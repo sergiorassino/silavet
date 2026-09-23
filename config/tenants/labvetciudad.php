@@ -12,6 +12,10 @@ return [
         'implementacion' => 'tesoreria_pacientes',
     ],
 
+    'portal_cliente' => [
+        'mostrar_saldo_cuenta_corriente' => false,
+    ],
+
     'tipodeterminaciones' => [
         'derivacion' => 'catalogo',
     ],
