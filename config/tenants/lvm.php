@@ -6,7 +6,7 @@ return [
     'facturacion_afip' => [
         'habilitado' => true,
         'modo' => 'paciente',
-        'simular' => true,
+        'simular' => false,
     ],
 
     'tesoreria' => [

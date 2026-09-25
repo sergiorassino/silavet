@@ -4,6 +4,7 @@ namespace App\Support\Informes;
 
 use App\Support\Pdf\TcpdfFuenteArial;
 use App\Support\Pdf\TcpdfLogoInstitucional;
+use App\Support\Pdf\TcpdfTextoSuperindice;
 use App\Support\Resultados\ImagenOrientacionExif;
 use Illuminate\Http\Response;
 use setasign\Fpdi\Tcpdf\Fpdi;
@@ -371,10 +372,10 @@ final class InformePacienteTcpdf extends Fpdi
         // ln=0 en todas: TCPDF con maxh+valign M y celda corta/vacía (p. ej. ref)
         // deja Y a mitad de fila; el avance real lo fuerza SetY($y+$h).
         TcpdfFuenteArial::aplicar($this, '', 9);
-        $this->MultiCell($wNombre, 4.5, $nombre, 0, 'L', false, 0, $x, $y, true, 0, false, true, $h, 'T');
-        $this->MultiCell($wValor, 4.5, $textoValor, 0, 'L', false, 0, $x + $wNombre, $y, true, 0, false, true, $h, 'T');
+        $this->multiCellTexto($wNombre, 4.5, $nombre, 'L', 0, $x, $y, $h);
+        $this->multiCellTexto($wValor, 4.5, $textoValor, 'L', 0, $x + $wNombre, $y, $h);
         TcpdfFuenteArial::aplicar($this, '', 6.5);
-        $this->MultiCell($wRef, 3.2, $ref, 0, 'R', false, 0, $x + $wNombre + $wValor, $y, true, 0, false, true, $h, 'T');
+        $this->multiCellTexto($wRef, 3.2, $ref, 'R', 0, $x + $wNombre + $wValor, $y, $h);
         $this->SetY($y + $h);
     }
 
@@ -409,11 +410,11 @@ final class InformePacienteTcpdf extends Fpdi
         $y = $this->GetY();
 
         TcpdfFuenteArial::aplicar($this, '', 9);
-        $this->MultiCell($wNombre, 4.5, $nombre, 0, 'L', false, 0, $x, $y, true, 0, false, true, $h, 'T');
-        $this->MultiCell($wV1, 4.5, $v1, 0, 'L', false, 0, $x + $wNombre, $y, true, 0, false, true, $h, 'T');
-        $this->MultiCell($wV2, 4.5, $v2, 0, 'L', false, 0, $x + $wNombre + $wV1, $y, true, 0, false, true, $h, 'T');
+        $this->multiCellTexto($wNombre, 4.5, $nombre, 'L', 0, $x, $y, $h);
+        $this->multiCellTexto($wV1, 4.5, $v1, 'L', 0, $x + $wNombre, $y, $h);
+        $this->multiCellTexto($wV2, 4.5, $v2, 'L', 0, $x + $wNombre + $wV1, $y, $h);
         TcpdfFuenteArial::aplicar($this, '', 6.5);
-        $this->MultiCell($wRef, 3.2, $ref, 0, 'R', false, 0, $x + $wNombre + $wV1 + $wV2, $y, true, 0, false, true, $h, 'T');
+        $this->multiCellTexto($wRef, 3.2, $ref, 'R', 0, $x + $wNombre + $wV1 + $wV2, $y, $h);
         $this->SetY($y + $h);
     }
 
@@ -431,7 +432,7 @@ final class InformePacienteTcpdf extends Fpdi
 
         $this->asegurarEspacio(7);
         TcpdfFuenteArial::aplicar($this, '', 8);
-        $this->MultiCell($this->anchoUtil(), 4, $texto, 0, 'L', false, 1);
+        $this->multiCellTexto($this->anchoUtil(), 4, $texto, 'L');
         $this->Ln(0.5);
     }
 
@@ -470,7 +471,7 @@ final class InformePacienteTcpdf extends Fpdi
         $this->asegurarEspacio(9);
         $this->Ln(1);
         TcpdfFuenteArial::aplicar($this, '', 9);
-        $this->MultiCell($this->anchoUtil(), 5, $nombre, 0, 'L', false, 1);
+        $this->multiCellTexto($this->anchoUtil(), 5, $nombre, 'L');
         $this->Ln(1);
     }
 
@@ -494,8 +495,8 @@ final class InformePacienteTcpdf extends Fpdi
         $y = $this->GetY();
 
         TcpdfFuenteArial::aplicar($this, '', 9);
-        $this->MultiCell($wNombre, self::ALTO_LINEA, $nombre, 0, 'L', false, 0, $x, $y, true, 0, false, true, $h, 'T');
-        $this->MultiCell($wValor, self::ALTO_LINEA, $valor, 0, 'L', false, 0, $x + $wNombre, $y, true, 0, false, true, $h, 'T');
+        $this->multiCellTexto($wNombre, self::ALTO_LINEA, $nombre, 'L', 0, $x, $y, $h);
+        $this->multiCellTexto($wValor, self::ALTO_LINEA, $valor, 'L', 0, $x + $wNombre, $y, $h);
         $this->SetY($y + $h);
     }
 
@@ -574,7 +575,7 @@ final class InformePacienteTcpdf extends Fpdi
             if ($obs !== '') {
                 $this->asegurarEspacio(10);
                 TcpdfFuenteArial::aplicar($this, '', 8);
-                $this->MultiCell($this->anchoUtil(), 4, $obs, 0, 'J', false, 1);
+                $this->multiCellTexto($this->anchoUtil(), 4, $obs, 'J');
                 $this->Ln(2);
             }
         }
@@ -589,7 +590,7 @@ final class InformePacienteTcpdf extends Fpdi
 
         $this->asegurarEspacio(14);
         TcpdfFuenteArial::aplicar($this, '', 8);
-        $this->MultiCell($this->anchoUtil(), 4, 'Observaciones:  '.$obs, 0, 'L', false, 1);
+        $this->multiCellTexto($this->anchoUtil(), 4, 'Observaciones:  '.$obs, 'L');
         $this->Ln(2);
     }
 
@@ -652,9 +653,9 @@ final class InformePacienteTcpdf extends Fpdi
             $x = self::MARGEN + ($i * $anchoCol);
             TcpdfFuenteArial::aplicar($this, '', 6);
             $this->SetXY($x, $yTexto);
-            $this->MultiCell($anchoCol, 3.2, trim((string) $col['t1']), 0, 'C', false, 1);
+            $this->multiCellTexto($anchoCol, 3.2, trim((string) $col['t1']), 'C');
             $this->SetX($x);
-            $this->MultiCell($anchoCol, 3.2, trim((string) $col['t2']), 0, 'C', false, 1);
+            $this->multiCellTexto($anchoCol, 3.2, trim((string) $col['t2']), 'C');
         }
 
         // Barra inferior gruesa debajo del bloque de firmas (legacy).
@@ -846,6 +847,40 @@ final class InformePacienteTcpdf extends Fpdi
         return self::PAGE_W - (2 * self::MARGEN);
     }
 
+    /**
+     * Igual que MultiCell. Si hay superíndice o subíndice, lo dibuja en HTML
+     * para no depender de glifos que Arial no trae.
+     */
+    private function multiCellTexto(
+        float $ancho,
+        float $altoLinea,
+        string $texto,
+        string $alineacion,
+        int $ln = 1,
+        ?float $x = null,
+        ?float $y = null,
+        float $maxh = 0,
+    ): void {
+        $html = TcpdfTextoSuperindice::htmlSiHaceFalta($texto);
+        $this->MultiCell(
+            $ancho,
+            $altoLinea,
+            $html ?? $texto,
+            0,
+            $alineacion,
+            false,
+            $ln,
+            $x,
+            $y,
+            true,
+            0,
+            $html !== null,
+            true,
+            $maxh,
+            'T',
+        );
+    }
+
     private function alturaMultiCell(float $ancho, string $texto, float $fontSize = 9): float
     {
         if ($texto === '') {
@@ -853,7 +888,7 @@ final class InformePacienteTcpdf extends Fpdi
         }
 
         TcpdfFuenteArial::aplicar($this, '', $fontSize);
-        $lineas = max(1, $this->getNumLines($texto, $ancho));
+        $lineas = max(1, $this->getNumLines(TcpdfTextoSuperindice::paraMedir($texto), $ancho));
 
         return max(self::ALTO_FILA, $lineas * self::ALTO_LINEA);
     }
