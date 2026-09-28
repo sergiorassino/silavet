@@ -38,7 +38,6 @@ class CuentaCorrienteMovimientosDetallePdfController extends Controller
         $cliente = Cliente::query()->findOrFail($id);
         $filas = CuentaCorrienteMovimientosConsulta::movimientosCliente($id, $desde, $hasta);
         $resumen = CuentaCorrienteMovimientosConsulta::resumenMovimientos($filas);
-        $saldoAnterior = CuentaCorrienteMovimientosConsulta::saldoAnteriorAFecha($id, $desde);
 
         $pdf = CuentaCorrienteMovimientosDetalleTcpdf::generar([
             'header' => LabEntornoPdf::datosHeader(),
@@ -46,8 +45,6 @@ class CuentaCorrienteMovimientosDetallePdfController extends Controller
             'periodo_texto' => CuentaCorrienteMovimientosConsulta::etiquetaPeriodo($desde, $hasta),
             'filas' => $filas->all(),
             'total_monto' => $resumen['total_monto'],
-            'saldo_anterior' => $saldoAnterior,
-            'fecha_desde' => $desde,
         ]);
 
         return CuentaCorrienteMovimientosDetalleTcpdf::respuestaHttp($pdf, 'cuenta-corriente-detalle.pdf');

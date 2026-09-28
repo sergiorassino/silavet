@@ -76,7 +76,6 @@ final class CuentaCorrienteMovimientosExporter
         string $clienteNombre,
         string $desde,
         string $hasta,
-        ?float $saldoAnterior = null,
     ): array {
         $spreadsheet = new Spreadsheet;
         $hoja = $spreadsheet->getActiveSheet();
@@ -107,34 +106,12 @@ final class CuentaCorrienteMovimientosExporter
             $numero++;
         }
 
-        if ($saldoAnterior !== null && trim($desde) !== '') {
-            $this->escribirFila($hoja, $fila, [
-                '',
-                '',
-                '',
-                'Saldo anterior al '.Carbon::parse($desde)->format('d/m/Y'),
-                round($saldoAnterior, 2),
-                '',
-            ]);
-            $fila++;
-        }
-
         $this->escribirFila($hoja, $fila, [
             '',
             '',
             '',
             'Total período:',
             round($totalMonto, 2),
-            '',
-        ]);
-        $fila++;
-
-        $this->escribirFila($hoja, $fila, [
-            '',
-            '',
-            '',
-            'TOTAL A LA FECHA:',
-            CuentaCorrienteMovimientosConsulta::totalALaFecha($saldoAnterior, $totalMonto),
             '',
         ]);
         $this->estilizarEncabezado($hoja, count(self::ENCABEZADOS_DETALLE));
