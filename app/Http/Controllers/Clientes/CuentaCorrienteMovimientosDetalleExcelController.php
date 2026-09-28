@@ -37,9 +37,8 @@ class CuentaCorrienteMovimientosDetalleExcelController extends Controller
 
         $cliente = Cliente::query()->findOrFail($id);
         $filas = CuentaCorrienteMovimientosConsulta::movimientosCliente($id, $desde, $hasta);
-        $saldoAnterior = CuentaCorrienteMovimientosConsulta::saldoAnteriorAFecha($id, $desde);
 
-        if ($filas->isEmpty() && $saldoAnterior === null) {
+        if ($filas->isEmpty()) {
             abort(404);
         }
 
@@ -48,7 +47,6 @@ class CuentaCorrienteMovimientosDetalleExcelController extends Controller
             (string) $cliente->nombre,
             $desde,
             $hasta,
-            $saldoAnterior,
         );
 
         return response()->streamDownload(

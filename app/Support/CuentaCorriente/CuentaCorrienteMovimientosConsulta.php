@@ -84,28 +84,8 @@ final class CuentaCorrienteMovimientosConsulta
     }
 
     /**
-     * Saldo CC acumulado de todos los movimientos anteriores a `$fechaDesde`.
-     * Devuelve null si no hay fecha de inicio (sin filtro de inicio).
-     */
-    public static function saldoAnteriorAFecha(int $idClientes, ?string $fechaDesde): ?float
-    {
-        $desde = trim((string) $fechaDesde);
-        if ($desde === '') {
-            return null;
-        }
-
-        $fechaCorte = Carbon::parse($desde)->toDateString();
-
-        return round((float) DB::table('movimientos')
-            ->where('idClientes', $idClientes)
-            ->where('idCuentas', self::idCuentaCc())
-            ->whereDate('fechhora', '<', $fechaCorte)
-            ->sum('monto'), 2);
-    }
-
-    /**
      * Movimientos de cuenta corriente del cliente en el período.
-     * Solo `idCuentas = id_cuenta_cc` (mismo criterio que saldo / saldo anterior).
+     * Solo `idCuentas = id_cuenta_cc` (mismo criterio que el saldo).
      * Orden `fechhora` DESC.
      *
      * @return Collection<int, object{
@@ -163,15 +143,6 @@ final class CuentaCorrienteMovimientosConsulta
             'total_monto' => round($filas->sum(fn ($f) => (float) $f->monto), 2),
             'cantidad' => $filas->count(),
         ];
-    }
-
-    /**
-     * Saldo acumulado a la fecha de corte del período: saldo anterior + total del período.
-     * Si no hay fecha desde, el saldo anterior se toma como 0.
-     */
-    public static function totalALaFecha(?float $saldoAnterior, float $totalPeriodo): float
-    {
-        return round(($saldoAnterior ?? 0.0) + $totalPeriodo, 2);
     }
 
     public static function etiquetaPeriodo(?string $fechaDesde, ?string $fechaHasta): string

@@ -84,19 +84,8 @@
                             </td>
                         </tr>
                     @endforelse
-                    @if ($saldoAnterior !== null)
-                        <tr class="bg-accent-50/60 font-semibold">
-                            <td colspan="4" class="vl-pacientes-td text-right">
-                                Saldo anterior al {{ \Carbon\Carbon::parse($fechaDesde)->format('d/m/Y') }}
-                            </td>
-                            <td class="vl-pacientes-td vl-pacientes-td--num whitespace-nowrap tabular-nums">
-                                {{ \App\Support\CuentaCorriente\CuentaCorrienteMovimientosConsulta::formatearMoneda($saldoAnterior) }}
-                            </td>
-                            <td class="vl-pacientes-td"></td>
-                        </tr>
-                    @endif
                 </tbody>
-                @if ($filas->isNotEmpty() || $saldoAnterior !== null)
+                @if ($filas->isNotEmpty())
                     <tfoot class="bg-accent-50/60 border-t border-accent-200">
                         <tr>
                             <td colspan="4" class="vl-pacientes-td text-right font-semibold">
@@ -104,15 +93,6 @@
                             </td>
                             <td class="vl-pacientes-td vl-pacientes-td--num font-semibold whitespace-nowrap tabular-nums">
                                 {{ \App\Support\CuentaCorriente\CuentaCorrienteMovimientosConsulta::formatearMoneda((float) $resumen['total_monto']) }}
-                            </td>
-                            <td class="vl-pacientes-td"></td>
-                        </tr>
-                        <tr>
-                            <td colspan="4" class="vl-pacientes-td text-right font-semibold">
-                                TOTAL A LA FECHA:
-                            </td>
-                            <td class="vl-pacientes-td vl-pacientes-td--num font-semibold whitespace-nowrap tabular-nums">
-                                {{ \App\Support\CuentaCorriente\CuentaCorrienteMovimientosConsulta::formatearMoneda($totalALaFecha) }}
                             </td>
                             <td class="vl-pacientes-td"></td>
                         </tr>
