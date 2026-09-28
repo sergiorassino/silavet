@@ -40,14 +40,19 @@
         <div class="vl-toolbar border-b border-accent-200 px-5 py-4 flex flex-wrap items-end gap-4">
             <div>
                 <label class="block text-xs font-semibold uppercase tracking-wide text-neutral-500 mb-1">Desde</label>
+                {{-- El input date avisa el año a medias (202 → 0202). Solo se envía un año 19xx/20xx. --}}
                 <input type="date"
-                       wire:model.live="fechaDesde"
+                       value="{{ $fechaDesde }}"
+                       x-on:change="const v = $event.target.value; if (v === '' || /^(?:19|20)\d{2}-\d{2}-\d{2}$/.test(v)) $wire.set('fechaDesde', v)"
+                       x-on:blur="const v = $event.target.value; if (v === '' || /^(?:19|20)\d{2}-\d{2}-\d{2}$/.test(v)) { $wire.set('fechaDesde', v) } else { $event.target.value = $wire.fechaDesde }"
                        class="form-input tabular-nums">
             </div>
             <div>
                 <label class="block text-xs font-semibold uppercase tracking-wide text-neutral-500 mb-1">Hasta</label>
                 <input type="date"
-                       wire:model.live="fechaHasta"
+                       value="{{ $fechaHasta }}"
+                       x-on:change="const v = $event.target.value; if (v === '' || /^(?:19|20)\d{2}-\d{2}-\d{2}$/.test(v)) $wire.set('fechaHasta', v)"
+                       x-on:blur="const v = $event.target.value; if (v === '' || /^(?:19|20)\d{2}-\d{2}-\d{2}$/.test(v)) { $wire.set('fechaHasta', v) } else { $event.target.value = $wire.fechaHasta }"
                        class="form-input tabular-nums">
             </div>
             <p class="text-sm text-neutral-600 pb-1">

@@ -38,6 +38,9 @@ Config `id_cuenta_cc` (solo variante `tesoreria_pacientes`):
 
 **Detalle:** protocolos + pagos globales con saldo corrido por fila.
 Columnas: #, Especie, Raza, Fecha, Protocolo, Nombre, Propietario, Estado, Precio, Pagado, Saldo (sin `idPacientes` ni `idClientes`).
+Los filtros Desde/Hasta sincronizan la fecha solo con un año `19xx`/`20xx`
+(o vacío): `wire:model.live` en un `input type="date"` manda el año a medias
+(`202` → `0202`) y en producción esa respuesta puede pisar la fecha final.
 
 **Archivos clave:**
 - `app/Support/CuentaCorriente/CuentaCorrienteConsulta.php`
@@ -62,7 +65,11 @@ Columnas: #, Especie, Raza, Fecha, Protocolo, Nombre, Propietario, Estado, Preci
 (neoLab/LVM no la tienen; epizoolab sí).
 
 **Detalle por cliente:** solo movimientos de la cuenta CC (`idCuentas =
-id_cuenta_cc`), orden `fechhora` DESC; filtrable por Desde/Hasta. El saldo del
+id_cuenta_cc`), orden `fechhora` DESC; filtrable por Desde/Hasta. Los inputs
+de fecha no usan `wire:model.live`: el navegador dispara el cambio con el año
+a medias (`202` → `0202-09-22`) y en producción esa respuesta puede llegar
+después y dejar el período en `22/09/0202`. Solo se sincroniza un año
+`19xx`/`20xx`, o vacío. El saldo del
 encabezado («Saldo total al día de hoy») es el saldo de toda la cuenta CC, sin
 el filtro de fechas. Pie de tabla (también en PDF y Excel): solo **Total
 período** (suma de montos del rango). No se muestra saldo anterior ni total a
