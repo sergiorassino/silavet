@@ -6,6 +6,7 @@ use App\Models\Derivacion;
 use App\Models\Determinacion;
 use App\Models\Paciente;
 use App\Models\Tipodeterminacion;
+use App\Support\OrdenAlfabeticoEspanol;
 use App\Support\PermisosIaCatalog;
 use App\Support\PrecioInput;
 use App\Support\Precios\DescuentoDeterminacionResolver;
@@ -379,7 +380,7 @@ class PacienteDeterminaciones extends Component
                     return true;
                 }
 
-                return str_contains(mb_strtolower((string) $tipo->nombre), $term);
+                return OrdenAlfabeticoEspanol::contiene((string) $tipo->nombre, $term);
             })
             ->map(fn (Tipodeterminacion $tipo) => [
                 'id' => (int) $tipo->idTipodeterminaciones,

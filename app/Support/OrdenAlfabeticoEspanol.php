@@ -36,13 +36,32 @@ final class OrdenAlfabeticoEspanol
 
     public static function plegar(string $texto): string
     {
+        return str_replace('ñ', self::MARCA_ENIE, self::plegarAcentos($texto));
+    }
+
+    /**
+     * Minúsculas y vocales acentuadas (y ç) como su letra base.
+     * La ñ se conserva: es letra propia, no un acento.
+     */
+    public static function plegarAcentos(string $texto): string
+    {
         $texto = mb_strtolower($texto, 'UTF-8');
-        $texto = str_replace('ñ', self::MARCA_ENIE, $texto);
 
         return str_replace(
             array_keys(self::PLIEGUE_ACENTOS),
             array_values(self::PLIEGUE_ACENTOS),
             $texto
         );
+    }
+
+    /** Búsqueda: el texto contiene la cadena aunque falten los acentos. */
+    public static function contiene(string $texto, string $busqueda): bool
+    {
+        $busqueda = self::plegarAcentos(trim($busqueda));
+        if ($busqueda === '') {
+            return true;
+        }
+
+        return str_contains(self::plegarAcentos($texto), $busqueda);
     }
 }

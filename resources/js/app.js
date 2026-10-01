@@ -8,6 +8,18 @@ window.Swal = Swal;
 window.vlAbrirUrl = vlAbrirUrl;
 instalarVisorPwa();
 
+/** Minúsculas y vocales acentuadas como su letra base. La ñ se conserva. */
+function vlPlegarAcentos(texto) {
+    return String(texto || '')
+        .toLowerCase()
+        .replace(/[áàäâ]/g, 'a')
+        .replace(/[éèëê]/g, 'e')
+        .replace(/[íìïî]/g, 'i')
+        .replace(/[óòöô]/g, 'o')
+        .replace(/[úùüû]/g, 'u')
+        .replace(/ç/g, 'c');
+}
+
 function vlNormalizarHtmlEditor(html) {
     const limpio = String(html || '')
         .replace(/<div><br><\/div>/gi, '')
@@ -293,12 +305,12 @@ document.addEventListener('alpine:init', () => {
         indice: -1,
 
         get filtrados() {
-            const term = this.consulta.trim().toLowerCase();
+            const term = vlPlegarAcentos(this.consulta.trim());
             if (term === '') {
                 return this.opciones;
             }
 
-            return this.opciones.filter((o) => String(o.nombre || '').toLowerCase().includes(term));
+            return this.opciones.filter((o) => vlPlegarAcentos(o.nombre).includes(term));
         },
 
         init() {

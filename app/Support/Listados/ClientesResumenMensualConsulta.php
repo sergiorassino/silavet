@@ -15,7 +15,8 @@ use Illuminate\Support\Facades\Schema;
  * Listado «Clientes resumen mensual» (blank ScriptCase pacientesIVA).
  *
  * IVA: Precio con IVA = pacientes.neto (≥ 0); Neto s/IVA = round(neto / 1.21, 2);
- * IVA = round(neto − s/IVA, 2). El recuadro de descuento usa pacientes.precio.
+ * IVA = round(neto − s/IVA, 2). El recuadro de descuento aplica clientes.descuento
+ * sobre el total de neto sin IVA y después calcula el IVA 21 % de ese neto.
  */
 final class ClientesResumenMensualConsulta
 {
@@ -110,7 +111,7 @@ final class ClientesResumenMensualConsulta
             ->get()
             ->map(fn (Paciente $paciente) => self::mapearFila($paciente));
 
-        return self::acumular($filas);
+        return self::acumular($filas, self::infoClienteFiltro($filtros)['pct']);
     }
 
     /**
@@ -126,7 +127,7 @@ final class ClientesResumenMensualConsulta
      *     sum_cd_con_iva: float
      * }
      */
-    public static function acumular(iterable $filas): array
+    public static function acumular(iterable $filas, float $porcentajeDescuento = 0.0): array
     {
         $t = [
             'cantidad' => 0,
@@ -155,6 +156,13 @@ final class ClientesResumenMensualConsulta
                 continue;
             }
             $t[$k] = round((float) $v, 2);
+        }
+
+        if ($porcentajeDescuento > 0) {
+            $cd = self::desgloseDescuentoSobreTotalNeto($t['sum_sin_iva'], $porcentajeDescuento);
+            $t['sum_cd_sin_iva'] = $cd['sin_iva'];
+            $t['sum_cd_iva'] = $cd['iva'];
+            $t['sum_cd_con_iva'] = $cd['con_iva'];
         }
 
         return $t;
@@ -264,7 +272,28 @@ final class ClientesResumenMensualConsulta
     }
 
     /**
-     * @param  array{sin_iva: float, iva: float, con_iva: float}  $desglose
+     * Recuadro verde, sobre el total de neto sin IVA ya redondeado:
+     * descuento = round(neto × %, 2); neto con descuento = neto − descuento;
+     * IVA = round(neto con descuento × 0,21, 2); precio con IVA = suma.
+     *
+     * @return array{sin_iva: float, iva: float, con_iva: float}
+     */
+    public static function desgloseDescuentoSobreTotalNeto(float $sumSinIva, float $porcentaje): array
+    {
+        $base = round(max(0, $sumSinIva), 2);
+        $descuento = round($base * (max(0, $porcentaje) / 100), 2);
+        $sin = round($base - $descuento, 2);
+        $iva = round($sin * (self::FACTOR_IVA - 1), 2);
+
+        return [
+            'sin_iva' => $sin,
+            'iva' => $iva,
+            'con_iva' => round($sin + $iva, 2),
+        ];
+    }
+
+    /**
+     * @return array{sin_iva: float, iva: float, con_iva: float}
      */
     public static function desgloseIva(float $importeConIva): array
     {
