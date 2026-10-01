@@ -64,7 +64,7 @@ Pagos globales (`Paciente::esPagoGlobal()`): **404** — no se cargan determinac
 
 ## Flujo principal
 
-1. **Agregar** (F2 / Insert / botón): una sola `filaNueva`; combobox de tipos disponibles (excluye ya cargados).
+1. **Agregar** (F2 / Insert / botón): una sola `filaNueva`; combobox de tipos disponibles (excluye ya cargados). El filtro del combobox y la búsqueda rápida ignoran acentos (`á/é/í/ó/ú/ü` y `ç`): escribir «basico» encuentra «Básico». La `ñ` sigue siendo letra distinta.
 2. **Elegir tipo:** resuelve neto + descuento + precio. En modo **catálogo** preselecciona `tipodeterminaciones.derivacion` si es un centro válido (si es `0` o inválido, “Seleccione”). El select **sigue editable**. Si el centro predeterminado implica envío, completa `fechaEnvioDeriv` = hoy (igual que al elegir a mano). Modo **Sí/No:** sigue en “No” (no usa `destino` como centro).
 3. **Usuario** puede ajustar neto/descuento, cambiar derivación y fechas.
 4. **Confirmar:** valida → `INSERT determinaciones` → `RenglonesMaterializer::asegurarParaDeterminacion` → actualiza totales → abre otra fila nueva.
@@ -139,5 +139,6 @@ Detalle: [`docs/modulos/stock-reactivos.md`](stock-reactivos.md).
 - [ ] ¿Descuentos `cliente_porcentaje` y `perfiles_volumen_mes_anterior` intactos?
 - [ ] ¿El neto al elegir tipo usa `resolverPrecioListaParaPaciente` (no siempre lista 1)?
 - [ ] ¿Guards `Schema::hasColumn` para `neto` y fechas de derivación?
+- [ ] ¿El filtro del combobox y la búsqueda rápida encuentran el nombre sin exigir el acento (`OrdenAlfabeticoEspanol::contiene` / `vlPlegarAcentos`)?
 - [ ] ¿Permiso 3 + alcance `labCtx` / no pago global?
 - [ ] ¿Tenant nuevo necesita override de `derivacion`, `precios.descuento` o `precios.lista`?

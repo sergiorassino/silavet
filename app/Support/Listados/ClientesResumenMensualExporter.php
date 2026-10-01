@@ -105,7 +105,7 @@ final class ClientesResumenMensualExporter
     private function escribirBloques(Worksheet $hoja, array $filas, int $fila, array $info): int
     {
         $bloques = ClientesResumenMensualConsulta::bloquesAgrupados($filas);
-        $totales = ClientesResumenMensualConsulta::acumular($filas);
+        $totales = ClientesResumenMensualConsulta::acumular($filas, (float) ($info['pct'] ?? 0));
 
         foreach ($bloques as $bloque) {
             if ($bloque['tipo'] === 'grupo') {

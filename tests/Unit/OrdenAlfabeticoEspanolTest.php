@@ -39,4 +39,15 @@ class OrdenAlfabeticoEspanolTest extends TestCase
         $this->assertSame(0, OrdenAlfabeticoEspanol::comparar('urea', 'UREA'));
         $this->assertLessThan(0, OrdenAlfabeticoEspanol::comparar('ácido', 'Zoo'));
     }
+
+    public function test_busqueda_ignora_acentos_y_conserva_enie(): void
+    {
+        $this->assertTrue(OrdenAlfabeticoEspanol::contiene('Perfil Básico', 'basico'));
+        $this->assertTrue(OrdenAlfabeticoEspanol::contiene('Ácido biliar', 'acido'));
+        $this->assertTrue(OrdenAlfabeticoEspanol::contiene('Ácido biliar', 'ÁCIDO'));
+        $this->assertTrue(OrdenAlfabeticoEspanol::contiene('Niño', 'niño'));
+        $this->assertFalse(OrdenAlfabeticoEspanol::contiene('Niño', 'nino'));
+        $this->assertFalse(OrdenAlfabeticoEspanol::contiene('Urea', 'urico'));
+        $this->assertTrue(OrdenAlfabeticoEspanol::contiene('Urea', ''));
+    }
 }

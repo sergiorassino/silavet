@@ -23,8 +23,8 @@ Ninguna. Igual en todos los tenants.
 
 | Tabla | Rol |
 |-------|-----|
-| `pacientes` | Una fila por protocolo. Fecha `fechhoy`. **Precio con IVA** = `neto` (nunca negativo). **Pagado** = `pagado`. Recuadro de descuento = `precio`. Se excluye `tipoRegistro = 2` (ingresos de tesorería). |
-| `clientes` | Nombre del grupo; `descuento` solo para el recuadro verde si hay un cliente filtrado |
+| `pacientes` | Una fila por protocolo. Fecha `fechhoy`. **Precio con IVA** = `neto` (nunca negativo). **Pagado** = `pagado`. Se excluye `tipoRegistro = 2` (ingresos de tesorería). |
+| `clientes` | Nombre del grupo; `descuento` es el % del recuadro verde si hay un cliente filtrado |
 | `mediodepago` | `nombreMedioPago`; si falta, «Sin medio» |
 | `determinaciones` + `tipodeterminaciones` | Mini-tabla: solo `td.nombre`, orden `td.orden`, `td.nombre` |
 
@@ -38,7 +38,7 @@ Ninguna. Igual en todos los tenants.
 ## Fuente de verdad
 
 - IVA: `con_iva = max(neto, 0)`; `sin_iva = round(con_iva / 1.21, 2)`; `iva = round(con_iva − sin_iva, 2)`. Los totales suman esos redondeos **por fila** (no el desglose del total).
-- Recuadro verde (`N% descuento`): solo con **un** cliente filtrado y `clientes.descuento > 0`. Usa el mismo desglose sobre `pacientes.precio` (importe con descuento).
+- Recuadro verde (`N% descuento`): solo con **un** cliente filtrado y `clientes.descuento > 0`. Se calcula sobre el **total** de neto sin IVA (la suma ya redondeada de la grilla): descuento = round(total × % / 100, 2); neto con descuento = total − descuento; IVA = round(neto con descuento × 0,21, 2); precio con IVA = neto con descuento + IVA. No usa `pacientes.precio`.
 - Fecha: `pacientes.fechhoy` inclusive (`whereDate`).
 - No usar `renglones` ni recalcular IVA desde las líneas de determinación.
 
@@ -67,7 +67,7 @@ Ninguna. Igual en todos los tenants.
 ## Checklist al modificar
 
 - [ ] Fechas inclusive; default 1° del mes / hoy; intercambio si desde > hasta
-- [ ] IVA 21 % por fila sobre `neto`; recuadro de descuento sobre `precio`
+- [ ] IVA 21 % por fila sobre `neto`; recuadro: % del cliente sobre el total de neto sin IVA, IVA 21 % de ese neto, precio con IVA = suma
 - [ ] `tipoRegistro <> 2`; alcance `labCtx()` si el usuario es cliente
 - [ ] Rate-limit en PDF/Excel; exporta el filtro completo
 - [ ] Icono de menú único (`clientes-resumen-mensual`)

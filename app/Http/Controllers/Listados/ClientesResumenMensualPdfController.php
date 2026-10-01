@@ -24,8 +24,8 @@ class ClientesResumenMensualPdfController extends Controller
 
         $filtros = $this->filtrosValidados($request);
         $filas = ClientesResumenMensualConsulta::listado($filtros);
-        $totales = ClientesResumenMensualConsulta::acumular($filas);
         $infoCliente = ClientesResumenMensualConsulta::infoClienteFiltro($filtros);
+        $totales = ClientesResumenMensualConsulta::acumular($filas, $infoCliente['pct']);
 
         $pdf = ClientesResumenMensualTcpdf::generar([
             'header' => LabInstitucional::datosParaPdf(),
