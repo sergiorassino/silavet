@@ -5,15 +5,36 @@
                 <p class="vl-eyebrow">Parámetros Generales</p>
                 <h1 class="text-xl font-bold sm:text-2xl">Parámetros del Sistema</h1>
                 <p class="mt-1 max-w-3xl text-xs text-white/80 sm:text-sm">
-                    Configuración institucional del laboratorio: identidad visual, encabezado/pie del informe, contacto, firmas, envío de mail y etiquetas de tubos.
+                    Configuración institucional del laboratorio: identidad visual, encabezado/pie del informe, contacto, firmas, envío de mail, etiquetas de tubos y ficha fiscal ARCA.
                 </p>
             </x-vl-hero-heading>
         </div>
     </div>
 
     <form wire:submit.prevent="save" class="vl-card mx-auto w-full max-w-4xl p-4">
+        <nav class="mb-4 flex gap-1 border-b border-neutral-200" aria-label="Secciones de parámetros">
+            <button type="button"
+                    wire:click="$set('solapa', 'laboratorio')"
+                    @class([
+                        '-mb-px border-b-2 px-3 py-2 text-sm font-medium',
+                        'border-primary-600 text-primary-800' => $solapa === 'laboratorio',
+                        'border-transparent text-neutral-500 hover:text-neutral-800' => $solapa !== 'laboratorio',
+                    ])>
+                Laboratorio
+            </button>
+            <button type="button"
+                    wire:click="$set('solapa', 'arca')"
+                    @class([
+                        '-mb-px border-b-2 px-3 py-2 text-sm font-medium',
+                        'border-primary-600 text-primary-800' => $solapa === 'arca',
+                        'border-transparent text-neutral-500 hover:text-neutral-800' => $solapa !== 'arca',
+                    ])>
+                Configuración Arca
+            </button>
+        </nav>
         <div class="grid gap-6">
 
+            @if ($solapa === 'laboratorio')
             {{-- General --}}
             <section>
                 <h2 class="mb-3 text-sm font-semibold uppercase tracking-wide text-neutral-500">General</h2>
@@ -443,18 +464,164 @@
                 </section>
             @endif
 
-            @if ($tieneCampoAfipFormato)
-                <section>
-                    <h2 class="mb-3 text-sm font-semibold uppercase tracking-wide text-neutral-500">Facturación AFIP</h2>
-                    <div class="max-w-md">
-                        <label class="form-label mb-1" for="afipFormatoImpresion">Formato de impresión</label>
-                        <select wire:model="afipFormatoImpresion" id="afipFormatoImpresion" class="form-input py-1.5 text-sm">
-                            <option value="A4">Hoja A4</option>
-                            <option value="termica80">Impresora térmica 80 mm</option>
-                        </select>
-                        <p class="mt-1 text-xs text-neutral-500">Aplica a facturas, notas de crédito y comandas.</p>
-                        @error('afipFormatoImpresion') <p class="form-error">{{ $message }}</p> @enderror
+            @endif
+
+            @if ($solapa === 'arca')
+                <section class="grid gap-4">
+                    <div>
+                        <h2 class="text-sm font-semibold uppercase tracking-wide text-neutral-500">Configuración Arca</h2>
+                        <p class="mt-1 text-xs text-neutral-500">
+                            Ficha fiscal del laboratorio: un CUIT, un punto de venta y los certificados con los que se factura.
+                            Quién puede emitir sigue en el permiso AFIP de cada usuario.
+                        </p>
                     </div>
+
+                    @unless ($tieneCamposAfipEmisor)
+                        <p class="text-xs font-medium text-amber-700">
+                            Faltan las columnas de ARCA en <code class="font-mono">entorno</code>. Ejecutá
+                            <code class="font-mono">php artisan migrate</code> o
+                            <code class="font-mono">database/sql/entorno_configuracion_arca.sql</code>.
+                        </p>
+                    @endunless
+
+                    @if ($tieneCampoAfipFormato)
+                        <div class="max-w-md">
+                            <label class="form-label mb-1" for="afipFormatoImpresion">Formato de impresión</label>
+                            <select wire:model="afipFormatoImpresion" id="afipFormatoImpresion" class="form-input py-1.5 text-sm">
+                                <option value="A4">Hoja A4</option>
+                                <option value="termica80">Impresora térmica 80 mm</option>
+                            </select>
+                            <p class="mt-1 text-xs text-neutral-500">Aplica a facturas, notas de crédito y comandas.</p>
+                            @error('afipFormatoImpresion') <p class="form-error">{{ $message }}</p> @enderror
+                        </div>
+                    @endif
+
+                    @if ($tieneCamposAfipEmisor)
+                        <div class="grid gap-4 sm:grid-cols-2">
+                            <div>
+                                <label class="form-label mb-1" for="afipCuit">CUIT</label>
+                                <input wire:model.live="afipCuit" id="afipCuit" type="text" maxlength="13" inputmode="numeric"
+                                       class="form-input py-1.5 text-sm tabular-nums" placeholder="99-99999999-9">
+                                @error('afipCuit') <p class="form-error">{{ $message }}</p> @enderror
+                            </div>
+                            <div>
+                                <label class="form-label mb-1" for="afipRazonSocial">Razón social</label>
+                                <input wire:model="afipRazonSocial" id="afipRazonSocial" type="text" maxlength="100" class="form-input py-1.5 text-sm">
+                                @error('afipRazonSocial') <p class="form-error">{{ $message }}</p> @enderror
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="form-label mb-1" for="afipDomicComerc">Domicilio comercial</label>
+                            <input wire:model="afipDomicComerc" id="afipDomicComerc" type="text" maxlength="50" class="form-input py-1.5 text-sm">
+                            @error('afipDomicComerc') <p class="form-error">{{ $message }}</p> @enderror
+                        </div>
+
+                        <div class="grid gap-4 sm:grid-cols-2">
+                            <div>
+                                <label class="form-label mb-1" for="afipCondIva">Condición IVA</label>
+                                <input wire:model="afipCondIva" id="afipCondIva" type="text" maxlength="30" class="form-input py-1.5 text-sm" placeholder="IVA Responsable Inscripto">
+                                @error('afipCondIva') <p class="form-error">{{ $message }}</p> @enderror
+                            </div>
+                            <div>
+                                <label class="form-label mb-1" for="afipIngresosBrutos">Ingresos brutos</label>
+                                <input wire:model="afipIngresosBrutos" id="afipIngresosBrutos" type="text" maxlength="30" class="form-input py-1.5 text-sm">
+                                @error('afipIngresosBrutos') <p class="form-error">{{ $message }}</p> @enderror
+                            </div>
+                        </div>
+
+                        <div class="grid gap-4 sm:grid-cols-3">
+                            <div>
+                                <label class="form-label mb-1" for="afipInicioActiv">Inicio de actividades</label>
+                                <input wire:model="afipInicioActiv" id="afipInicioActiv" type="date" class="form-input py-1.5 text-sm">
+                                @error('afipInicioActiv') <p class="form-error">{{ $message }}</p> @enderror
+                            </div>
+                            <div>
+                                <label class="form-label mb-1" for="afipPtoVta">Punto de venta</label>
+                                <input wire:model="afipPtoVta" id="afipPtoVta" type="number" min="0" max="99999" class="form-input py-1.5 text-sm">
+                                @error('afipPtoVta') <p class="form-error">{{ $message }}</p> @enderror
+                            </div>
+                            <div>
+                                <label class="form-label mb-1" for="afipConcepto">Concepto</label>
+                                <select wire:model="afipConcepto" id="afipConcepto" class="form-input py-1.5 text-sm">
+                                    <option value="1">1 — Productos</option>
+                                    <option value="2">2 — Servicios</option>
+                                    <option value="3">3 — Productos y servicios</option>
+                                </select>
+                                @error('afipConcepto') <p class="form-error">{{ $message }}</p> @enderror
+                            </div>
+                        </div>
+
+                        <div class="grid gap-4 sm:grid-cols-2">
+                            <div>
+                                <label class="form-label mb-1" for="afipKeyUpload">Clave privada (key)</label>
+                                @if ($afipKeyActual !== '')
+                                    <div class="mb-2 rounded border {{ $afipKeyEnDisco ? 'border-neutral-200 bg-neutral-50' : 'border-amber-200 bg-amber-50' }} px-3 py-2 text-xs">
+                                        <div class="flex items-start justify-between gap-2">
+                                            <div class="min-w-0">
+                                                <p class="font-medium text-neutral-800">Archivo actual: {{ $afipKeyActual }}</p>
+                                                @if ($afipKeyEnDisco)
+                                                    <p class="mt-0.5 text-neutral-500">En disco: afipSE/cert/entorno/</p>
+                                                @else
+                                                    <p class="mt-0.5 text-amber-800">No se encontró en afipSE/cert/entorno/. Volvé a subirlo o borralo.</p>
+                                                @endif
+                                            </div>
+                                            <button type="button"
+                                                    class="btn-secondary shrink-0 py-1 text-xs text-red-700"
+                                                    wire:loading.attr="disabled"
+                                                    wire:target="eliminarCertificadoArca('key')"
+                                                    x-on:click="window.vlSwalConfirmar('¿Borrar la clave privada del laboratorio?', 'Borrar clave ARCA', { confirmButtonText: 'Sí, borrar', icon: 'warning' }).then(ok => ok && $wire.eliminarCertificadoArca('key'))">
+                                                Borrar
+                                            </button>
+                                        </div>
+                                    </div>
+                                @else
+                                    <p class="mb-2 text-xs text-neutral-500">Todavía no hay una clave cargada.</p>
+                                @endif
+                                <input wire:model="afipKeyUpload" id="afipKeyUpload" type="file" accept=".key,.pem,application/x-pem-file"
+                                       class="form-input py-1.5 text-sm file:mr-2 file:rounded file:border-0 file:bg-primary-50 file:px-2 file:py-1 file:text-xs file:font-medium file:text-primary-700">
+                                <p class="mt-1 text-xs text-neutral-500">Archivo .key o .pem. Máx. {{ \App\Support\Afip\AfipCertificadosStorage::MAX_KB }} KB.</p>
+                                <div wire:loading wire:target="afipKeyUpload" class="mt-1 text-xs text-primary-600">Subiendo clave…</div>
+                                @error('afipKeyUpload') <p class="form-error">{{ $message }}</p> @enderror
+                            </div>
+                            <div>
+                                <label class="form-label mb-1" for="afipCrtUpload">Certificado (crt)</label>
+                                @if ($afipCrtActual !== '')
+                                    <div class="mb-2 rounded border {{ $afipCrtEnDisco ? 'border-neutral-200 bg-neutral-50' : 'border-amber-200 bg-amber-50' }} px-3 py-2 text-xs">
+                                        <div class="flex items-start justify-between gap-2">
+                                            <div class="min-w-0">
+                                                <p class="font-medium text-neutral-800">Archivo actual: {{ $afipCrtActual }}</p>
+                                                @if ($afipCrtEnDisco)
+                                                    <p class="mt-0.5 text-neutral-500">En disco: afipSE/cert/entorno/</p>
+                                                @else
+                                                    <p class="mt-0.5 text-amber-800">No se encontró en afipSE/cert/entorno/. Volvé a subirlo o borralo.</p>
+                                                @endif
+                                                @if ($afipCrtVencimiento !== '')
+                                                    <p class="mt-0.5 {{ $afipCrtVencimiento < now()->toDateString() ? 'font-medium text-red-700' : 'text-neutral-600' }}">
+                                                        Vence el {{ \Illuminate\Support\Carbon::parse($afipCrtVencimiento)->format('d/m/Y') }}
+                                                    </p>
+                                                @endif
+                                            </div>
+                                            <button type="button"
+                                                    class="btn-secondary shrink-0 py-1 text-xs text-red-700"
+                                                    wire:loading.attr="disabled"
+                                                    wire:target="eliminarCertificadoArca('crt')"
+                                                    x-on:click="window.vlSwalConfirmar('¿Borrar el certificado del laboratorio?', 'Borrar certificado ARCA', { confirmButtonText: 'Sí, borrar', icon: 'warning' }).then(ok => ok && $wire.eliminarCertificadoArca('crt'))">
+                                                Borrar
+                                            </button>
+                                        </div>
+                                    </div>
+                                @else
+                                    <p class="mb-2 text-xs text-neutral-500">Todavía no hay un certificado cargado.</p>
+                                @endif
+                                <input wire:model="afipCrtUpload" id="afipCrtUpload" type="file" accept=".crt,.cer,.pem,application/x-x509-ca-cert,application/pkix-cert"
+                                       class="form-input py-1.5 text-sm file:mr-2 file:rounded file:border-0 file:bg-primary-50 file:px-2 file:py-1 file:text-xs file:font-medium file:text-primary-700">
+                                <p class="mt-1 text-xs text-neutral-500">Archivo .crt, .cer o .pem. Máx. {{ \App\Support\Afip\AfipCertificadosStorage::MAX_KB }} KB. El vencimiento se lee del certificado.</p>
+                                <div wire:loading wire:target="afipCrtUpload" class="mt-1 text-xs text-primary-600">Subiendo certificado…</div>
+                                @error('afipCrtUpload') <p class="form-error">{{ $message }}</p> @enderror
+                            </div>
+                        </div>
+                    @endif
                 </section>
             @endif
 

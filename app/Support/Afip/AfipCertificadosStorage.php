@@ -140,6 +140,120 @@ final class AfipCertificadosStorage
     }
 
     /**
+     * Certificados del laboratorio (un CUIT): afipSE/cert/entorno/{nombre}.
+     */
+    public static function directorioLaboratorio(): string
+    {
+        return base_path('afipSE'.DIRECTORY_SEPARATOR.'cert'.DIRECTORY_SEPARATOR.'entorno');
+    }
+
+    public static function rutaAbsolutaLaboratorio(string $nombre): ?string
+    {
+        $seguro = self::nombreSeguro($nombre);
+        if ($seguro === null) {
+            return null;
+        }
+
+        return self::directorioLaboratorio().DIRECTORY_SEPARATOR.$seguro;
+    }
+
+    public static function existeLaboratorio(string $nombre): bool
+    {
+        $ruta = self::rutaAbsolutaLaboratorio($nombre);
+        if ($ruta === null) {
+            return false;
+        }
+
+        $real = realpath($ruta);
+        $dir = realpath(self::directorioLaboratorio());
+        if ($real === false || $dir === false || ! is_file($real)) {
+            return false;
+        }
+
+        return self::rutaEstaDentro($real, $dir);
+    }
+
+    public static function guardarLaboratorio(
+        UploadedFile|TemporaryUploadedFile $archivo,
+        string $tipo,
+        string $campoError,
+    ): string {
+        $extensiones = $tipo === self::TIPO_KEY ? self::EXT_KEY : self::EXT_CRT;
+        $extension = strtolower($archivo->getClientOriginalExtension() ?: '');
+        if (! self::extensionPermitida($extension, $extensiones)) {
+            throw ValidationException::withMessages([
+                $campoError => $tipo === self::TIPO_KEY
+                    ? 'La clave privada debe ser un archivo .key o .pem.'
+                    : 'El certificado debe ser un archivo .crt, .cer o .pem.',
+            ]);
+        }
+
+        $nombre = self::nombreDesdeUpload($archivo, $tipo, $campoError);
+        $dir = self::directorioLaboratorio();
+        File::ensureDirectoryExists($dir);
+        self::assertDirectorioLaboratorio($dir);
+
+        $destino = $dir.DIRECTORY_SEPARATOR.$nombre;
+        $origen = $archivo->getRealPath();
+        if ($origen === false || ! is_file($origen)) {
+            throw ValidationException::withMessages([
+                $campoError => 'No se pudo leer el archivo temporal subido.',
+            ]);
+        }
+
+        if (! File::copy($origen, $destino) || ! is_file($destino)) {
+            throw ValidationException::withMessages([
+                $campoError => 'No se pudo guardar el certificado en afipSE/cert/entorno. Verifique permisos de escritura.',
+            ]);
+        }
+
+        @chmod($destino, 0600);
+
+        return $nombre;
+    }
+
+    public static function eliminarLaboratorio(string $nombre): bool
+    {
+        $seguro = self::nombreSeguro($nombre);
+        if ($seguro === null || ! self::existeLaboratorio($seguro)) {
+            return false;
+        }
+
+        $ruta = self::rutaAbsolutaLaboratorio($seguro);
+
+        return $ruta !== null && File::delete($ruta);
+    }
+
+    public static function eliminarObsoletoLaboratorio(string $nombreAnterior, string $nombreNuevo): void
+    {
+        $anterior = self::nombreSeguro($nombreAnterior);
+        $nuevo = self::nombreSeguro($nombreNuevo);
+        if ($anterior === null || $anterior === $nuevo) {
+            return;
+        }
+
+        self::eliminarLaboratorio($anterior);
+    }
+
+    public static function invalidarTicketsLaboratorio(): void
+    {
+        $dir = self::directorioLaboratorio();
+        if (! is_dir($dir)) {
+            return;
+        }
+
+        foreach (File::files($dir) as $archivo) {
+            $nombre = strtolower($archivo->getFilename());
+            if (str_starts_with($nombre, 'ta') && str_ends_with($nombre, '.xml')) {
+                File::delete($archivo->getPathname());
+            }
+            if (str_starts_with($nombre, 'tra') && str_ends_with($nombre, '.xml')) {
+                File::delete($archivo->getPathname());
+            }
+        }
+    }
+
+    /**
      * Borra un certificado de la carpeta del usuario. No toca TA/TRA ni nombres inseguros.
      */
     public static function eliminar(int $idUsuarios, string $nombre): bool
@@ -263,7 +377,7 @@ final class AfipCertificadosStorage
         return "-----BEGIN CERTIFICATE-----\n".$encoded."-----END CERTIFICATE-----\n";
     }
 
-    private static function nombreDesdeUpload(UploadedFile|TemporaryUploadedFile $archivo, string $tipo): string
+    private static function nombreDesdeUpload(UploadedFile|TemporaryUploadedFile $archivo, string $tipo, string $campoError = ''): string
     {
         $original = $archivo->getClientOriginalName();
         $base = pathinfo($original, PATHINFO_FILENAME);
@@ -282,12 +396,33 @@ final class AfipCertificadosStorage
 
         $seguro = self::nombreSeguro($nombre);
         if ($seguro === null) {
+            $campo = $campoError !== ''
+                ? $campoError
+                : ($tipo === self::TIPO_KEY ? 'keyUpload' : 'crtUpload');
             throw ValidationException::withMessages([
-                $tipo === self::TIPO_KEY ? 'keyUpload' : 'crtUpload' => 'El nombre del archivo no es válido.',
+                $campo => 'El nombre del archivo no es válido.',
             ]);
         }
 
         return $seguro;
+    }
+
+    private static function assertDirectorioLaboratorio(string $dir): void
+    {
+        $root = realpath(base_path('afipSE'.DIRECTORY_SEPARATOR.'cert'));
+        $realDir = realpath($dir);
+        if ($root === false || $realDir === false) {
+            throw new RuntimeException('No se pudo resolver la carpeta de certificados AFIP.');
+        }
+
+        if (! self::rutaEstaDentro($realDir, $root) && $realDir !== $root) {
+            throw new RuntimeException('La carpeta de certificados no pertenece a afipSE/cert.');
+        }
+
+        $esperado = realpath(self::directorioLaboratorio());
+        if ($esperado === false || $realDir !== $esperado) {
+            throw new RuntimeException('La carpeta de certificados no coincide con el laboratorio.');
+        }
     }
 
     private static function assertDirectorioDelUsuario(string $dir, int $idUsuarios): void

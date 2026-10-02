@@ -7,6 +7,7 @@ use App\Models\Rol;
 use App\Models\Usuario;
 use App\Support\Afip\AfipCertificadosStorage;
 use App\Support\CuitInput;
+use App\Support\Facturacion\FacturacionAfipConfig;
 use App\Support\PermisosIaCatalog;
 use App\Support\UsuarioMenuPortal;
 use Illuminate\Http\UploadedFile;
@@ -101,7 +102,7 @@ class UsuarioForm extends Component
 
     public function rules(): array
     {
-        $afip = $this->permisoAfip;
+        $afip = $this->muestraConfiguracionAfip();
 
         return [
             'apenom' => ['required', 'string', 'max:150'],
@@ -127,24 +128,7 @@ class UsuarioForm extends Component
                 },
             ],
             'permisoAfip' => ['boolean'],
-            'cuit' => [
-                $afip ? 'required' : 'nullable',
-                'string',
-                'max:'.CuitInput::FORMATTED_LENGTH,
-                function (string $attribute, mixed $value, \Closure $fail) use ($afip): void {
-                    $digits = CuitInput::normalize((string) $value);
-                    if ($digits === '') {
-                        if ($afip) {
-                            $fail('El CUIT es obligatorio cuando el permiso AFIP está habilitado.');
-                        }
-
-                        return;
-                    }
-                    if (strlen($digits) !== CuitInput::DIGITS_LENGTH) {
-                        $fail('El CUIT debe tener 11 dígitos (formato 99-99999999-9).');
-                    }
-                },
-            ],
+            'cuit' => $this->reglasCuit($afip),
             'razonSocial' => [$afip ? 'required' : 'nullable', 'string', 'max:100'],
             'domicComerc' => ['nullable', 'string', 'max:50'],
             'condIva' => ['nullable', 'string', 'max:30'],
@@ -357,6 +341,9 @@ class UsuarioForm extends Component
         $maxKbCert = AfipCertificadosStorage::MAX_KB;
         [$crtVencimientoTexto, $crtVencido, $crtVencimientoDesdeArchivo] = $this->datosVencimientoParaVista($id, $crtEnDisco);
 
+        $muestraConfigAfip = $this->muestraConfiguracionAfip();
+        $esResponsableInscripto = FacturacionAfipConfig::esResponsableInscripto();
+
         return view('livewire.abm.usuarios.usuario-form', compact(
             'titulo',
             'roles',
@@ -367,8 +354,44 @@ class UsuarioForm extends Component
             'crtVencimientoTexto',
             'crtVencido',
             'crtVencimientoDesdeArchivo',
+            'muestraConfigAfip',
+            'esResponsableInscripto',
         ))
             ->layout('layouts.staff', UsuarioMenuPortal::staffLayoutParams(labCtx()->idRoles));
+    }
+
+    private function muestraConfiguracionAfip(): bool
+    {
+        return $this->permisoAfip && ! FacturacionAfipConfig::esResponsableInscripto();
+    }
+
+    /**
+     * @return list<mixed>
+     */
+    private function reglasCuit(bool $obligatorio): array
+    {
+        if (FacturacionAfipConfig::esResponsableInscripto()) {
+            return ['nullable', 'string'];
+        }
+
+        return [
+            $obligatorio ? 'required' : 'nullable',
+            'string',
+            'max:'.CuitInput::FORMATTED_LENGTH,
+            function (string $attribute, mixed $value, \Closure $fail) use ($obligatorio): void {
+                $digits = CuitInput::normalize((string) $value);
+                if ($digits === '') {
+                    if ($obligatorio) {
+                        $fail('El CUIT es obligatorio cuando el permiso AFIP está habilitado.');
+                    }
+
+                    return;
+                }
+                if (strlen($digits) !== CuitInput::DIGITS_LENGTH) {
+                    $fail('El CUIT debe tener 11 dígitos (formato 99-99999999-9).');
+                }
+            },
+        ];
     }
 
     private function cargarCamposAfip(Usuario $usuario): void

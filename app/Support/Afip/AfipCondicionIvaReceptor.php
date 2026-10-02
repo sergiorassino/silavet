@@ -26,6 +26,7 @@ final class AfipCondicionIvaReceptor
     public static function etiquetaDesdeId(int $id): string
     {
         return match ($id) {
+            1 => 'IVA RESPONSABLE INSCRIPTO',
             4 => 'IVA SUJETO EXENTO',
             5 => 'IVA CONSUMIDOR FINAL',
             6 => 'IVA RESPONSABLE MONOTRIBUTO',

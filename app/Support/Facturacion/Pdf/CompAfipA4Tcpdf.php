@@ -3,6 +3,7 @@
 namespace App\Support\Facturacion\Pdf;
 
 use App\Support\Afip\AfipCondicionIvaReceptor;
+use App\Support\Facturacion\FacturacionIva;
 use App\Support\Pdf\TcpdfFuenteArial;
 use TCPDF;
 
@@ -84,7 +85,7 @@ final class CompAfipA4Tcpdf extends TCPDF
 
         $this->SetXY(120, 48);
         $tituloDoc = match ($cbteTipo) {
-            12 => 'NOTA DE CRÉDITO:  ',
+            3, 8, 12, 13 => 'NOTA DE CRÉDITO:  ',
             15 => 'RECIBO:  ',
             default => 'FACTURA:  ',
         };
@@ -163,9 +164,25 @@ final class CompAfipA4Tcpdf extends TCPDF
         $this->SetTextColor(0, 0, 0);
         $this->SetX(30);
         $importeFmt = number_format($importe, 2, ',', '.');
+        $discrimina = ! empty($d['discrimina_iva']);
+        $lineaFmt = $discrimina
+            ? number_format((float) ($d['imp_neto'] ?? 0), 2, ',', '.')
+            : $importeFmt;
         $this->Cell(110, 5, (string) ($d['conceptoFacturado'] ?? ''), 0, 0, 'L');
-        $this->Cell(20, 5, $importeFmt, 0, 0, 'R');
-        $this->Cell(20, 5, $importeFmt, 0, 1, 'R');
+        $this->Cell(20, 5, $lineaFmt, 0, 0, 'R');
+        $this->Cell(20, 5, $lineaFmt, 0, 1, 'R');
+
+        if ($discrimina) {
+            $alicuota = FacturacionIva::etiquetaAlicuota((float) ($d['alicuota_iva'] ?? 0));
+            $ivaFmt = number_format((float) ($d['imp_iva'] ?? 0), 2, ',', '.');
+            $this->SetXY(30, 184);
+            TcpdfFuenteArial::aplicar($this, '', 8);
+            $this->Cell(110, 5, 'Neto gravado', 0, 0, 'L');
+            $this->Cell(40, 5, $lineaFmt, 0, 1, 'R');
+            $this->SetX(30);
+            $this->Cell(110, 5, 'IVA '.$alicuota.'%', 0, 0, 'L');
+            $this->Cell(40, 5, $ivaFmt, 0, 1, 'R');
+        }
 
         $this->SetXY(30, 200);
         $this->SetFillColor(0, 0, 0);

@@ -30,6 +30,12 @@ final class FacturacionAfipConfig
 
     public const CBTE_COMANDA = 888;
 
+    /** Factura C, sin IVA discriminado. Es el régimen de los laboratorios que ya facturan. */
+    public const REGIMEN_MONOTRIBUTO = 'monotributo';
+
+    /** Factura A o B según el receptor, con IVA discriminado. */
+    public const REGIMEN_RESPONSABLE_INSCRIPTO = 'responsable_inscripto';
+
     /**
      * @return array<string, mixed>
      */
@@ -48,9 +54,22 @@ final class FacturacionAfipConfig
             $modo = self::MODO_PACIENTE;
         }
 
+        $regimen = (string) ($cfg['regimen'] ?? self::REGIMEN_MONOTRIBUTO);
+        if (! in_array($regimen, [self::REGIMEN_MONOTRIBUTO, self::REGIMEN_RESPONSABLE_INSCRIPTO], true)) {
+            $regimen = self::REGIMEN_MONOTRIBUTO;
+        }
+
+        $precioIncluyeIva = true;
+        if (array_key_exists('precio_incluye_iva', $cfg)) {
+            $precioIncluyeIva = (bool) $cfg['precio_incluye_iva'];
+        }
+
         return array_merge($cfg, [
             'habilitado' => ! empty($cfg['habilitado']),
             'modo' => $modo,
+            'regimen' => $regimen,
+            'alicuota_iva' => (float) ($cfg['alicuota_iva'] ?? 21),
+            'precio_incluye_iva' => $precioIncluyeIva,
             'simular' => $simular,
             'produccion' => ! empty($cfg['produccion']),
             'cbte_tipo' => (int) ($cfg['cbte_tipo'] ?? 11),
@@ -99,6 +118,31 @@ final class FacturacionAfipConfig
     public static function esModoMovimientoCaja(): bool
     {
         return self::modo() === self::MODO_MOVIMIENTO_CAJA;
+    }
+
+    public static function regimen(): string
+    {
+        return (string) self::config()['regimen'];
+    }
+
+    public static function esResponsableInscripto(): bool
+    {
+        return self::regimen() === self::REGIMEN_RESPONSABLE_INSCRIPTO;
+    }
+
+    public static function esMonotributo(): bool
+    {
+        return ! self::esResponsableInscripto();
+    }
+
+    public static function alicuotaIva(): float
+    {
+        return (float) self::config()['alicuota_iva'];
+    }
+
+    public static function precioIncluyeIva(): bool
+    {
+        return (bool) self::config()['precio_incluye_iva'];
     }
 
     /**

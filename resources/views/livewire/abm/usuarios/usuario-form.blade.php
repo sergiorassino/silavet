@@ -55,12 +55,16 @@
             <div class="rounded-lg border border-accent-200 bg-accent-50/40 px-4 py-3">
                 <label class="inline-flex items-center gap-2 text-sm font-medium text-neutral-800">
                     <input wire:model.live="permisoAfip" type="checkbox" class="rounded border-accent-300 text-primary-700 focus:ring-primary-500">
-                    Permiso AFIP (configuración de facturación)
+                    Permiso AFIP
                 </label>
-                <p class="mt-1 text-xs text-neutral-500">Al habilitarlo se muestran los datos del emisor AFIP para este usuario.</p>
+                @if ($esResponsableInscripto)
+                    <p class="mt-1 text-xs text-neutral-500">Habilita a este usuario a emitir. El CUIT, el punto de venta y los certificados están en Parámetros del Sistema, solapa Configuración Arca.</p>
+                @else
+                    <p class="mt-1 text-xs text-neutral-500">Al habilitarlo se muestran los datos del emisor AFIP para este usuario.</p>
+                @endif
             </div>
 
-            @if ($permisoAfip)
+            @if ($muestraConfigAfip)
                 <div class="grid gap-4 rounded-lg border border-primary-200 bg-primary-50/30 p-4">
                     <h2 class="text-sm font-semibold text-primary-800">Configuración AFIP</h2>
 

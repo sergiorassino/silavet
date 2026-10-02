@@ -56,10 +56,21 @@ final class CompAfipPdfDatos
         $lab = LabInstitucional::datos();
         $cfg = FacturacionAfipConfig::config();
         $esConsumidorFinal = $comp->esConsumidorFinalSinIdentificar();
+        $cbteTipo = (int) $comp->CbteTipo;
+        $discriminaIva = FacturacionIva::discriminaIva($cbteTipo) && $comp->impNeto !== null;
+        $condIvaDefault = FacturacionAfipConfig::esResponsableInscripto()
+            ? 'IVA Responsable Inscripto'
+            : 'Responsable Monotributo';
+        $condIvaVacia = $condIvaEmisor === ''
+            || ($condIvaEmisor === '0' && FacturacionAfipConfig::esResponsableInscripto());
 
         return [
-            'CbteTipo' => (int) $comp->CbteTipo,
-            'letra' => self::letra((int) $comp->CbteTipo),
+            'CbteTipo' => $cbteTipo,
+            'letra' => self::letra($cbteTipo),
+            'discrimina_iva' => $discriminaIva,
+            'imp_neto' => $discriminaIva ? (float) $comp->impNeto : null,
+            'imp_iva' => $discriminaIva ? (float) $comp->impIva : null,
+            'alicuota_iva' => $discriminaIva ? (float) $comp->alicuotaIva : null,
             'titulo' => $comp->etiquetaTipo(),
             'es_comanda' => $comp->esComanda(),
             'cuit' => (string) $comp->cuit,
@@ -70,7 +81,7 @@ final class CompAfipPdfDatos
             'domicComerc' => (string) $comp->domicComerc,
             'ingresosBrutos' => $ingresosBrutos,
             'inicioActiv' => $inicioActiv,
-            'condIvaEmisor' => $condIvaEmisor !== '' ? $condIvaEmisor : 'Responsable Monotributo',
+            'condIvaEmisor' => $condIvaVacia ? $condIvaDefault : $condIvaEmisor,
             'fechaComprobante' => $fecha ? $fecha->format('d/m/Y') : '',
             'fecha_ymd' => $fechaYmd,
             'fecha_iso' => $fechaIso,
@@ -96,6 +107,8 @@ final class CompAfipPdfDatos
     {
         return match ($cbteTipo) {
             888 => 'X',
+            1, 2, 3, 4 => 'A',
+            6, 7, 8, 9 => 'B',
             11, 12, 15 => 'C',
             default => 'C',
         };

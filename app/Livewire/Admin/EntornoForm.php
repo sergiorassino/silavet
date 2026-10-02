@@ -3,6 +3,8 @@
 namespace App\Livewire\Admin;
 
 use App\Models\Entorno;
+use App\Support\Afip\AfipCertificadosStorage;
+use App\Support\CuitInput;
 use App\Support\Entorno\EntornoArchivos;
 use App\Support\PermisosIaCatalog;
 use App\Support\UsuarioMenuPortal;
@@ -127,6 +129,41 @@ class EntornoForm extends Component
 
     public bool $tieneCampoAfipFormato = false;
 
+    /** laboratorio | arca */
+    public string $solapa = 'laboratorio';
+
+    public bool $tieneCamposAfipEmisor = false;
+
+    public string $afipCuit = '';
+
+    public string $afipRazonSocial = '';
+
+    public string $afipDomicComerc = '';
+
+    public string $afipCondIva = '';
+
+    public string $afipIngresosBrutos = '';
+
+    public string $afipInicioActiv = '';
+
+    public string $afipPtoVta = '0';
+
+    public string $afipConcepto = '2';
+
+    public string $afipKeyActual = '';
+
+    public string $afipCrtActual = '';
+
+    public string $afipCrtVencimiento = '';
+
+    public bool $afipKeyEnDisco = false;
+
+    public bool $afipCrtEnDisco = false;
+
+    public $afipKeyUpload = null;
+
+    public $afipCrtUpload = null;
+
     public function mount(): void
     {
         abort_unless(tienePermiso(PermisosIaCatalog::PARAMETROS), 403);
@@ -161,6 +198,12 @@ class EntornoForm extends Component
         $this->cargarCamposHeaderFooter($entorno);
         $this->cargarCamposEtiquetas($entorno);
         $this->cargarCampoAfipFormato($entorno);
+        $this->cargarCamposAfipEmisor($entorno);
+    }
+
+    public function updatedAfipCuit(string $value): void
+    {
+        $this->afipCuit = CuitInput::format($value);
     }
 
     private function cargarCampoColorFondoSistema(Entorno $entorno): void
@@ -192,6 +235,71 @@ class EntornoForm extends Component
 
         $this->headerInformeActual = $this->cargarRutaArchivo($entorno, 'headerInforme');
         $this->footerInformeActual = $this->cargarRutaArchivo($entorno, 'footerInforme');
+    }
+
+    /**
+     * @return list<string>
+     */
+    private function columnasAfipEmisor(): array
+    {
+        return [
+            'afipCuit',
+            'afipRazonSocial',
+            'afipDomicComerc',
+            'afipCondIva',
+            'afipIngresosBrutos',
+            'afipInicioActiv',
+            'afipPtoVta',
+            'afipConcepto',
+            'afipKey',
+            'afipCrt',
+            'afipCrtVencimiento',
+        ];
+    }
+
+    private function columnasAfipEmisorCompletas(): bool
+    {
+        foreach ($this->columnasAfipEmisor() as $columna) {
+            if (! Schema::hasColumn('entorno', $columna)) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    private function cargarCamposAfipEmisor(Entorno $entorno): void
+    {
+        $this->tieneCamposAfipEmisor = $this->columnasAfipEmisorCompletas();
+        if (! $this->tieneCamposAfipEmisor) {
+            return;
+        }
+
+        $this->afipCuit = CuitInput::format((string) ($entorno->afipCuit ?? ''));
+        $this->afipRazonSocial = trim((string) ($entorno->afipRazonSocial ?? ''));
+        $this->afipDomicComerc = trim((string) ($entorno->afipDomicComerc ?? ''));
+        $this->afipCondIva = trim((string) ($entorno->afipCondIva ?? ''));
+        $this->afipIngresosBrutos = trim((string) ($entorno->afipIngresosBrutos ?? ''));
+        $inicio = trim((string) ($entorno->afipInicioActiv ?? ''));
+        $this->afipInicioActiv = strlen($inicio) >= 10 ? substr($inicio, 0, 10) : '';
+        $this->afipPtoVta = (string) (int) ($entorno->afipPtoVta ?? 0);
+        $concepto = (int) ($entorno->afipConcepto ?? 2);
+        $this->afipConcepto = in_array($concepto, [1, 2, 3], true) ? (string) $concepto : '2';
+        $this->afipKeyActual = $this->nombreCertificado((string) ($entorno->afipKey ?? ''));
+        $this->afipCrtActual = $this->nombreCertificado((string) ($entorno->afipCrt ?? ''));
+        $vencimiento = trim((string) ($entorno->afipCrtVencimiento ?? ''));
+        $this->afipCrtVencimiento = strlen($vencimiento) >= 10 ? substr($vencimiento, 0, 10) : '';
+        $this->afipKeyEnDisco = $this->afipKeyActual !== ''
+            && AfipCertificadosStorage::existeLaboratorio($this->afipKeyActual);
+        $this->afipCrtEnDisco = $this->afipCrtActual !== ''
+            && AfipCertificadosStorage::existeLaboratorio($this->afipCrtActual);
+    }
+
+    private function nombreCertificado(string $nombre): string
+    {
+        $nombre = trim($nombre);
+
+        return ($nombre === '' || $nombre === '0') ? '' : $nombre;
     }
 
     private function cargarCampoAfipFormato(Entorno $entorno): void
@@ -386,6 +494,23 @@ class EntornoForm extends Component
             $rules['colorFondoSistema'] = ['required', 'regex:/^#[0-9A-Fa-f]{6}$/'];
         }
 
+        if ($this->tieneCamposAfipEmisor) {
+            $rules['afipCuit'] = ['nullable', 'string', function (string $attribute, mixed $value, \Closure $fail): void {
+                if ((string) $value !== '' && ! CuitInput::isComplete((string) $value)) {
+                    $fail('El CUIT del laboratorio debe tener 11 dígitos.');
+                }
+            }];
+            $rules['afipRazonSocial'] = ['nullable', 'string', 'max:100'];
+            $rules['afipDomicComerc'] = ['nullable', 'string', 'max:50'];
+            $rules['afipCondIva'] = ['nullable', 'string', 'max:30'];
+            $rules['afipIngresosBrutos'] = ['nullable', 'string', 'max:30'];
+            $rules['afipInicioActiv'] = ['nullable', 'date'];
+            $rules['afipPtoVta'] = ['required', 'integer', 'min:0', 'max:99999'];
+            $rules['afipConcepto'] = ['required', 'integer', 'in:1,2,3'];
+            $rules['afipKeyUpload'] = ['nullable', 'file', 'max:'.AfipCertificadosStorage::MAX_KB];
+            $rules['afipCrtUpload'] = ['nullable', 'file', 'max:'.AfipCertificadosStorage::MAX_KB];
+        }
+
         return $rules;
     }
 
@@ -428,6 +553,7 @@ class EntornoForm extends Component
         $this->tieneCampoColorFondoSistema = Schema::hasColumn('entorno', 'colorFondoSistema');
         $this->tieneCamposHeaderFooter = Schema::hasColumn('entorno', 'headerInforme')
             && Schema::hasColumn('entorno', 'footerInforme');
+        $this->tieneCamposAfipEmisor = $this->columnasAfipEmisorCompletas();
 
         if (
             (! $this->tieneCamposHeaderFooter)
@@ -441,7 +567,18 @@ class EntornoForm extends Component
             return;
         }
 
-        $data = $this->validate();
+        try {
+            $data = $this->validate();
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            foreach (array_keys($e->errors()) as $campo) {
+                if (str_starts_with($campo, 'afip')) {
+                    $this->solapa = 'arca';
+                    break;
+                }
+            }
+
+            throw $e;
+        }
         $entorno = Entorno::query()->orderBy('id')->first();
         abort_if($entorno === null, 404);
 
@@ -488,6 +625,70 @@ class EntornoForm extends Component
 
         if ($this->tieneCampoAfipFormato) {
             $payload['afipFormatoImpresion'] = (string) $data['afipFormatoImpresion'];
+        }
+
+        if (($this->afipKeyUpload !== null || $this->afipCrtUpload !== null) && ! $this->tieneCamposAfipEmisor) {
+            $this->dispatch(
+                'vl-swal-error',
+                mensaje: 'Faltan las columnas de ARCA en entorno. Ejecute php artisan migrate o database/sql/entorno_configuracion_arca.sql.'
+            );
+
+            return;
+        }
+
+        if ($this->tieneCamposAfipEmisor) {
+            $inicio = trim((string) ($data['afipInicioActiv'] ?? ''));
+            $payload['afipCuit'] = CuitInput::normalize((string) ($data['afipCuit'] ?? ''));
+            $payload['afipRazonSocial'] = mb_substr(trim((string) ($data['afipRazonSocial'] ?? '')), 0, 100);
+            $payload['afipDomicComerc'] = mb_substr(trim((string) ($data['afipDomicComerc'] ?? '')), 0, 50);
+            $payload['afipCondIva'] = mb_substr(trim((string) ($data['afipCondIva'] ?? '')), 0, 30);
+            $payload['afipIngresosBrutos'] = mb_substr(trim((string) ($data['afipIngresosBrutos'] ?? '')), 0, 30);
+            $payload['afipInicioActiv'] = $inicio !== '' ? $inicio : null;
+            $payload['afipPtoVta'] = (int) ($data['afipPtoVta'] ?? 0);
+            $payload['afipConcepto'] = (int) ($data['afipConcepto'] ?? 2);
+
+            if ($this->afipKeyUpload !== null) {
+                $extensionKey = strtolower($this->afipKeyUpload->getClientOriginalExtension() ?: '');
+                if (! AfipCertificadosStorage::extensionPermitida($extensionKey, AfipCertificadosStorage::EXT_KEY)) {
+                    throw \Illuminate\Validation\ValidationException::withMessages([
+                        'afipKeyUpload' => 'La clave privada debe ser un archivo .key o .pem.',
+                    ]);
+                }
+            }
+            if ($this->afipCrtUpload !== null) {
+                $extensionCrt = strtolower($this->afipCrtUpload->getClientOriginalExtension() ?: '');
+                if (! AfipCertificadosStorage::extensionPermitida($extensionCrt, AfipCertificadosStorage::EXT_CRT)) {
+                    throw \Illuminate\Validation\ValidationException::withMessages([
+                        'afipCrtUpload' => 'El certificado debe ser un archivo .crt, .cer o .pem.',
+                    ]);
+                }
+            }
+
+            if ($this->afipKeyUpload !== null) {
+                $nombreKey = AfipCertificadosStorage::guardarLaboratorio(
+                    $this->afipKeyUpload,
+                    AfipCertificadosStorage::TIPO_KEY,
+                    'afipKeyUpload'
+                );
+                AfipCertificadosStorage::eliminarObsoletoLaboratorio($this->afipKeyActual, $nombreKey);
+                AfipCertificadosStorage::invalidarTicketsLaboratorio();
+                $payload['afipKey'] = $nombreKey;
+                $this->afipKeyUpload = null;
+            }
+
+            if ($this->afipCrtUpload !== null) {
+                $vencimiento = AfipCertificadosStorage::vencimientoDesdeUpload($this->afipCrtUpload);
+                $nombreCrt = AfipCertificadosStorage::guardarLaboratorio(
+                    $this->afipCrtUpload,
+                    AfipCertificadosStorage::TIPO_CRT,
+                    'afipCrtUpload'
+                );
+                AfipCertificadosStorage::eliminarObsoletoLaboratorio($this->afipCrtActual, $nombreCrt);
+                AfipCertificadosStorage::invalidarTicketsLaboratorio();
+                $payload['afipCrt'] = $nombreCrt;
+                $payload['afipCrtVencimiento'] = $vencimiento;
+                $this->afipCrtUpload = null;
+            }
         }
 
         if ($this->tieneCampoColorFondoSistema) {
@@ -570,6 +771,7 @@ class EntornoForm extends Component
         $this->cargarCamposHeaderFooter($entorno);
         $this->cargarCamposEtiquetas($entorno);
         $this->cargarCampoAfipFormato($entorno);
+        $this->cargarCamposAfipEmisor($entorno);
         $this->cargarCampoColorFondoSistema($entorno);
 
         if ($passNueva !== '') {
@@ -585,6 +787,47 @@ class EntornoForm extends Component
 
         RateLimiter::hit($key, 60);
         $this->dispatch('vl-swal-exito', mensaje: 'Parámetros del sistema actualizados correctamente.');
+    }
+
+    public function eliminarCertificadoArca(string $tipo): void
+    {
+        abort_unless(tienePermiso(PermisosIaCatalog::PARAMETROS), 403);
+        abort_unless(in_array($tipo, [AfipCertificadosStorage::TIPO_KEY, AfipCertificadosStorage::TIPO_CRT], true), 404);
+
+        $key = 'entorno-arca-cert:'.auth()->id();
+        abort_if(RateLimiter::tooManyAttempts($key, 20), 429);
+
+        if (! $this->columnasAfipEmisorCompletas()) {
+            $this->dispatch(
+                'vl-swal-error',
+                mensaje: 'Faltan las columnas de ARCA en entorno. Ejecute php artisan migrate o database/sql/entorno_configuracion_arca.sql.'
+            );
+
+            return;
+        }
+
+        $entorno = Entorno::query()->orderBy('id')->first();
+        abort_if($entorno === null, 404);
+
+        $campo = $tipo === AfipCertificadosStorage::TIPO_KEY ? 'afipKey' : 'afipCrt';
+        $nombre = $this->nombreCertificado((string) ($entorno->{$campo} ?? ''));
+        if ($nombre !== '') {
+            AfipCertificadosStorage::eliminarLaboratorio($nombre);
+        }
+
+        $payload = [$campo => ''];
+        if ($tipo === AfipCertificadosStorage::TIPO_CRT) {
+            $payload['afipCrtVencimiento'] = null;
+        }
+
+        $entorno->update($payload);
+        AfipCertificadosStorage::invalidarTicketsLaboratorio();
+        $entorno->refresh();
+        $this->cargarCamposAfipEmisor($entorno);
+
+        RateLimiter::hit($key, 60);
+        $etiqueta = $tipo === AfipCertificadosStorage::TIPO_KEY ? 'clave privada' : 'certificado';
+        $this->dispatch('vl-swal-exito', mensaje: 'Se borró la '.$etiqueta.' del laboratorio.');
     }
 
     public function quitarLogo(): void

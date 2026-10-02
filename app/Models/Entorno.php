@@ -60,5 +60,16 @@ class Entorno extends Model
         'e_MaxLargoLinea3',
         'e_Borde',
         'afipFormatoImpresion',
+        'afipCuit',
+        'afipRazonSocial',
+        'afipDomicComerc',
+        'afipCondIva',
+        'afipIngresosBrutos',
+        'afipInicioActiv',
+        'afipPtoVta',
+        'afipConcepto',
+        'afipKey',
+        'afipCrt',
+        'afipCrtVencimiento',
     ];
 }

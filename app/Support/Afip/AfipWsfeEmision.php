@@ -98,19 +98,16 @@ final class AfipWsfeEmision
                 'FchServDesde' => (string) $comprobante['fch_serv_desde'],
                 'FchServHasta' => (string) $comprobante['fch_serv_hasta'],
                 'FchVtoPago' => (string) $comprobante['fecha_yyyymmdd'],
-                'ImpTotal' => $importe,
-                'ImpTotConc' => 0.00,
-                'ImpNeto' => $importe,
-                'ImpOpEx' => 0.00,
-                'ImpIVA' => 0.00,
-                'ImpTrib' => 0.00,
+            ] + self::importesDetalle($importe, $comprobante) + [
                 'MonId' => 'PES',
                 'MonCotiz' => 1.000,
                 'CondicionIVAReceptorId' => (int) $comprobante['condicion_iva_receptor_id'],
             ];
 
             $notaCreditoTipo = (int) ($config['nota_credito_tipo'] ?? 0);
-            if ($tipoCmp === $notaCreditoTipo && $notaCreditoTipo > 0) {
+            $esNotaCredito = ($notaCreditoTipo > 0 && $tipoCmp === $notaCreditoTipo)
+                || in_array($tipoCmp, [3, 8, 13], true);
+            if ($esNotaCredito) {
                 $nroAsoc = (int) ($comprobante['cbte_asoc_nro'] ?? 0);
                 if ($nroAsoc <= 0) {
                     throw new RuntimeException('Falta el comprobante asociado para la nota de crédito.');
@@ -270,12 +267,7 @@ final class AfipWsfeEmision
                     'FchServDesde' => (string) ($comprobante['fch_serv_desde'] ?? ''),
                     'FchServHasta' => (string) ($comprobante['fch_serv_hasta'] ?? ''),
                     'FchVtoPago' => (string) ($comprobante['fecha_yyyymmdd'] ?? ''),
-                    'ImpTotal' => $importe,
-                    'ImpTotConc' => 0.00,
-                    'ImpNeto' => $importe,
-                    'ImpOpEx' => 0.00,
-                    'ImpIVA' => 0.00,
-                    'ImpTrib' => 0.00,
+                ] + self::importesDetalle($importe, $comprobante) + [
                     'MonId' => 'PES',
                     'MonCotiz' => 1.000,
                     'CondicionIVAReceptorId' => (int) ($comprobante['condicion_iva_receptor_id'] ?? 5),
@@ -344,6 +336,52 @@ final class AfipWsfeEmision
         }
 
         return $resultados;
+    }
+
+    /**
+     * Sin clave imp_iva el comprobante sale como hasta ahora: neto = total e IVA 0.
+     * Con imp_iva (responsable inscripto) se informa AlicIva.
+     *
+     * @param  array<string, mixed>  $comprobante
+     * @return array<string, mixed>
+     */
+    private static function importesDetalle(float $importe, array $comprobante): array
+    {
+        if (! array_key_exists('imp_iva', $comprobante)) {
+            return [
+                'ImpTotal' => $importe,
+                'ImpTotConc' => 0.00,
+                'ImpNeto' => $importe,
+                'ImpOpEx' => 0.00,
+                'ImpIVA' => 0.00,
+                'ImpTrib' => 0.00,
+            ];
+        }
+
+        $impIva = round((float) $comprobante['imp_iva'], 2);
+        $impNeto = round((float) ($comprobante['imp_neto'] ?? $importe), 2);
+        $impTotal = round((float) ($comprobante['imp_total'] ?? ($impNeto + $impIva)), 2);
+        $bloque = [
+            'ImpTotal' => $impTotal,
+            'ImpTotConc' => 0.00,
+            'ImpNeto' => $impNeto,
+            'ImpOpEx' => 0.00,
+            'ImpIVA' => $impIva,
+            'ImpTrib' => 0.00,
+        ];
+
+        $alicId = (int) ($comprobante['alic_iva_id'] ?? 0);
+        if ($alicId > 0) {
+            $bloque['Iva'] = [
+                'AlicIva' => [[
+                    'Id' => $alicId,
+                    'BaseImp' => $impNeto,
+                    'Importe' => $impIva,
+                ]],
+            ];
+        }
+
+        return $bloque;
     }
 
     private static function observacionesDetalle(object $detalle): string
