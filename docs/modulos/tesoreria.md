@@ -248,6 +248,7 @@ Rate limits típicos: save ~30/min; delete caja ~10/min por usuario.
 ### AFIP (relacionado, no es el núcleo)
 
 - Config: `tenant.facturacion_afip` (`modo`: `paciente` | `movimiento` | `movimiento_caja`). labvetciudad y lvm: `simular => false` (en el servidor llama a WSAA/WSFE; hace falta certificado en `afipSE/cert/{idUsuarios}/`, cargado desde Gestión de Usuarios). En local sigue simulando vía `simular_local`. El resto de tenants mantiene CAE simulado. La fecha de vencimiento del `.crt` se persiste en `usuarios.crtVencimiento` al cargarlo.
+- **Régimen** (`facturacion_afip.regimen`): default `monotributo` (Factura C, sin IVA). `responsable_inscripto` discrimina IVA y elige Factura A o B según el receptor. NeoLab está en responsable inscripto. Las columnas de IVA entran con `php artisan migrate`; cambiar de régimen después es solo la declaración del tenant. Detalle: [facturacion-afip.md](facturacion-afip.md).
 - **`modo = movimiento`** (ej. alqu): icono en `MovimientoIndex` sobre **ingresos** en `pacientes`; emite contra ese `idPacientes` (receptor = cliente del ingreso).
 - **`modo = movimiento_caja`** (labvetciudad): icono en `MovimientosCajaIndex` sobre **ingresos** en tabla `movimientos`; comprobantes en `compafip.idMovimientos`. Al emitir factura/comanda el usuario elige receptor: **cliente**, **paciente** o **consumidor final**; en pantalla se muestra el DNI (y CUIT del cliente si existe) y se puede cargar el DNI faltante (`clientes.dni` / `pacientes.dni`) antes de emitir. Nota de crédito y comanda igual que la variante NeoLab. Emisor = usuario logueado (certificados en gestión de usuarios).
 - **`modo = paciente`** (lvm, neolab, civetfranca): icono AFIP en listado de protocolos.
@@ -350,7 +351,7 @@ icono en `MovimientoIndex` o en protocolos según modo).
 - [ ] Con `pago_global => true` (y `tesoreria_movimientos`): ¿botón en Pacientes **y** Cuenta Corriente? ¿Labs sin el flag siguen sin el botón?
 - [ ] Con `mostrar_modulo => false`: ¿sin grupo Tesorería en el menú y 404 en `tesoreria.*`?
 - [ ] Con `tesoreria_pacientes`: ¿sin botón «Pago global» en `PacienteIndex` (aunque el flag esté en true)?
-- [ ] Si AFIP: ¿`facturacion_afip.modo` correcto (`movimiento` → `pacientes.idPacientes`; `movimiento_caja` → `movimientos.id` + `compafip.idMovimientos`)?
+- [ ] Si AFIP: ¿`facturacion_afip.modo` correcto (`movimiento` → `pacientes.idPacientes`; `movimiento_caja` → `movimientos.id` + `compafip.idMovimientos`)? ¿`regimen` en `monotributo` salvo NeoLab (`responsable_inscripto`) y el laboratorio que se declare aparte?
 - [ ] Columna Pagado: ¿solo con `columna_pagado => true`? ¿AFIP `modo = paciente` sigue mostrando el icono sin imponer Pagado?
 - [ ] ¿Hero: `Usuario:` + `apenom` de sesión (no un saludo) en ambas variantes?
 - [ ] ¿Permiso 6 + rate limits + paginación 50 + `vlSwal*`?

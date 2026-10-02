@@ -7,6 +7,9 @@ return [
         'habilitado' => true,
         'modo' => 'paciente',
         'simular' => true,
+        'regimen' => 'responsable_inscripto',
+        'alicuota_iva' => 21,
+        'precio_incluye_iva' => true,
     ],
 
     'tesoreria' => [

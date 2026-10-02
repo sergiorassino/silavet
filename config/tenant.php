@@ -237,6 +237,22 @@ return [
         'condicion_venta_consumidor_final' => 'Contado / Transferencia Bancaria',
         'condicion_venta_identificado' => 'Cuenta Corriente',
         'condicion_iva_receptor_id' => 5,
+        /**
+         * monotributo: Factura C, sin IVA (comportamiento actual).
+         * responsable_inscripto: Factura A (receptor RI con CUIT) o B (resto), con IVA.
+         * En responsable inscripto no se usa usuarios.CbteTipo: la letra la define el receptor.
+         *
+         * @var 'monotributo'|'responsable_inscripto'
+         */
+        'regimen' => 'monotributo',
+        /** Alícuota % solo si regimen = responsable_inscripto. 21 = código AFIP 5. */
+        'alicuota_iva' => 21,
+        /**
+         * true: el precio del protocolo/movimiento es el total (IVA incluido).
+         * false: ese precio es neto y la factura suma el IVA.
+         * Solo aplica a responsable_inscripto.
+         */
+        'precio_incluye_iva' => true,
     ],
 
     /*

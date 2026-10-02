@@ -27,6 +27,9 @@ class CompAfip extends Model
         'domicComerc',
         'razonSocialCliente',
         'importe',
+        'impNeto',
+        'impIva',
+        'alicuotaIva',
         'FechServDesde',
         'FechServHasta',
         'fechaComprobante',
@@ -47,6 +50,9 @@ class CompAfip extends Model
             'Concepto' => 'integer',
             'DocTipo' => 'integer',
             'importe' => 'float',
+            'impNeto' => 'float',
+            'impIva' => 'float',
+            'alicuotaIva' => 'float',
             'FechServDesde' => 'date',
             'FechServHasta' => 'date',
             'fechaComprobante' => 'date',
@@ -66,6 +72,13 @@ class CompAfip extends Model
     public static function tieneColumnaMovimientos(): bool
     {
         return Schema::hasColumn('compafip', 'idMovimientos');
+    }
+
+    public static function tieneColumnasIva(): bool
+    {
+        return Schema::hasColumn('compafip', 'impNeto')
+            && Schema::hasColumn('compafip', 'impIva')
+            && Schema::hasColumn('compafip', 'alicuotaIva');
     }
 
     public function movimiento(): BelongsTo
@@ -91,9 +104,13 @@ class CompAfip extends Model
 
     public function esNotaCredito(): bool
     {
+        $tipo = (int) $this->CbteTipo;
         $nc = (int) FacturacionAfipConfig::config()['nota_credito_tipo'];
+        if ($nc > 0 && $tipo === $nc) {
+            return true;
+        }
 
-        return $nc > 0 && (int) $this->CbteTipo === $nc;
+        return in_array($tipo, [3, 8, 13], true);
     }
 
     public function esFactura(): bool
@@ -104,8 +121,13 @@ class CompAfip extends Model
     public function etiquetaTipo(): string
     {
         return match ((int) $this->CbteTipo) {
+            1 => 'Factura A',
+            3 => 'Nota de crédito A',
+            6 => 'Factura B',
+            8 => 'Nota de crédito B',
             11 => 'Factura C',
             12 => 'Nota de crédito C',
+            13 => 'Nota de crédito C',
             15 => 'Recibo C',
             888 => 'Comanda',
             default => $this->esComanda()

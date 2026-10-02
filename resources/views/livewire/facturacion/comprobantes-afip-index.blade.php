@@ -133,6 +133,150 @@
             </div>
         @endif
 
+        @if ($esModoPaciente ?? false)
+            @php
+                $docsEleccion = $docsEleccion ?? [];
+            @endphp
+            <div class="mb-4">
+                <p class="form-label mb-2">Facturar a</p>
+                <div class="flex flex-col gap-3">
+                    <div class="flex flex-col gap-2 rounded-lg border border-accent-200 px-3 py-2 sm:flex-row sm:flex-wrap sm:items-end">
+                        <label class="inline-flex min-w-[7rem] items-center gap-2 pb-1 text-sm font-medium">
+                            <input type="radio"
+                                   wire:model.live="tipoReceptor"
+                                   value="cliente"
+                                   @disabled(! $puedeReceptorCliente)
+                                   class="rounded border-neutral-300 text-primary-600 focus:ring-primary-500 disabled:opacity-40">
+                            <span @class(['text-neutral-400' => ! $puedeReceptorCliente])>Cliente</span>
+                        </label>
+                        @if ($puedeReceptorCliente)
+                            <span class="pb-1 text-sm text-neutral-700">{{ $docsEleccion['clienteNombre'] ?? '' }}</span>
+                            <div>
+                                <label class="form-label mb-1" for="cuitClienteEdit">CUIT</label>
+                                <input id="cuitClienteEdit"
+                                       type="text"
+                                       wire:model.live="cuitClienteEdit"
+                                       inputmode="numeric"
+                                       maxlength="13"
+                                       placeholder="99-99999999-9"
+                                       class="form-input w-40 py-1 text-sm tabular-nums">
+                            </div>
+                            <div>
+                                <label class="form-label mb-1" for="dniClienteEditModo">DNI</label>
+                                <input id="dniClienteEditModo"
+                                       type="text"
+                                       wire:model.live.debounce.300ms="dniClienteEdit"
+                                       inputmode="numeric"
+                                       maxlength="8"
+                                       class="form-input w-28 py-1 text-sm tabular-nums">
+                            </div>
+                            <button type="button"
+                                    wire:click="guardarDatosCliente"
+                                    wire:loading.attr="disabled"
+                                    class="btn-secondary py-1 text-xs">
+                                Guardar
+                            </button>
+                            @error('cuitClienteEdit')
+                                <span class="text-xs text-red-600">{{ $message }}</span>
+                            @enderror
+                            @error('dniClienteEdit')
+                                <span class="text-xs text-red-600">{{ $message }}</span>
+                            @enderror
+                        @endif
+                    </div>
+                    <div class="flex flex-col gap-2 rounded-lg border border-accent-200 px-3 py-2 sm:flex-row sm:flex-wrap sm:items-end">
+                        <label class="inline-flex min-w-[7rem] items-center gap-2 pb-1 text-sm font-medium">
+                            <input type="radio"
+                                   wire:model.live="tipoReceptor"
+                                   value="paciente"
+                                   @disabled(! $puedeReceptorPaciente)
+                                   class="rounded border-neutral-300 text-primary-600 focus:ring-primary-500 disabled:opacity-40">
+                            <span @class(['text-neutral-400' => ! $puedeReceptorPaciente])>Paciente</span>
+                        </label>
+                        @if ($puedeReceptorPaciente)
+                            <span class="pb-1 text-sm text-neutral-700">{{ $docsEleccion['pacienteNombre'] ?? '' }}</span>
+                            <div>
+                                <label class="form-label mb-1" for="cuitPacienteEdit">CUIT</label>
+                                <input id="cuitPacienteEdit"
+                                       type="text"
+                                       wire:model.live="cuitPacienteEdit"
+                                       inputmode="numeric"
+                                       maxlength="13"
+                                       placeholder="99-99999999-9"
+                                       class="form-input w-40 py-1 text-sm tabular-nums">
+                            </div>
+                            <div>
+                                <label class="form-label mb-1" for="dniPacienteEditModo">DNI</label>
+                                <input id="dniPacienteEditModo"
+                                       type="text"
+                                       wire:model.live.debounce.300ms="dniPacienteEdit"
+                                       inputmode="numeric"
+                                       maxlength="8"
+                                       class="form-input w-28 py-1 text-sm tabular-nums">
+                            </div>
+                            <button type="button"
+                                    wire:click="guardarDatosPaciente"
+                                    wire:loading.attr="disabled"
+                                    class="btn-secondary py-1 text-xs">
+                                Guardar
+                            </button>
+                            @error('cuitPacienteEdit')
+                                <span class="text-xs text-red-600">{{ $message }}</span>
+                            @enderror
+                            @error('dniPacienteEdit')
+                                <span class="text-xs text-red-600">{{ $message }}</span>
+                            @enderror
+                        @endif
+                    </div>
+                </div>
+                <p class="mt-2 text-xs text-neutral-500">
+                    Aplica a factura y comanda. CUIT y DNI se guardan en el cliente o en el protocolo. La nota de crédito replica el receptor de la factura elegida.
+                </p>
+            </div>
+        @endif
+
+        @if ($esResponsableInscripto ?? false)
+            <div class="mb-4 rounded-lg border border-accent-200 px-3 py-3">
+                <label class="form-label mb-1" for="condicionIvaReceptorId">Condición IVA del receptor</label>
+                <select id="condicionIvaReceptorId"
+                        wire:model.live="condicionIvaReceptorId"
+                        class="form-input py-1.5 text-sm max-w-xs">
+                    @if ((int) $condicionIvaReceptorId === 0)
+                        <option value="0">— Seleccionar —</option>
+                    @endif
+                    @foreach ($condicionesIva as $idCondicion => $etiquetaCondicion)
+                        <option value="{{ $idCondicion }}">{{ $etiquetaCondicion }}</option>
+                    @endforeach
+                </select>
+                @if ($ivaPreviewError)
+                    <p class="mt-2 text-sm text-red-700">{{ $ivaPreviewError }}</p>
+                @elseif (is_array($ivaPreview))
+                    <p class="mt-2 text-sm text-neutral-700">
+                        @if (($ivaPreview['letra'] ?? '') !== '')
+                            Se emite <strong>Factura {{ $ivaPreview['letra'] }}</strong>.
+                        @else
+                            Elija la condición del receptor para definir si la factura es A o B.
+                        @endif
+                        Neto $ {{ number_format((float) $ivaPreview['neto'], 2, ',', '.') }}
+                        · IVA {{ \App\Support\Facturacion\FacturacionIva::etiquetaAlicuota((float) $ivaPreview['alicuota']) }}%
+                        $ {{ number_format((float) $ivaPreview['iva'], 2, ',', '.') }}
+                        · Total $ {{ number_format((float) $ivaPreview['total'], 2, ',', '.') }}
+                    </p>
+                    <p class="mt-1 text-xs text-neutral-500">
+                        @if ($precioIncluyeIva)
+                            El precio del registro incluye IVA: el cliente paga el mismo importe.
+                        @else
+                            El precio del registro es neto: el total de la factura suma el IVA.
+                        @endif
+                        Factura A solo si el receptor es responsable inscripto y tiene CUIT.
+                        @if (! ($receptorEsCuit ?? false))
+                            El receptor elegido no tiene CUIT. Factura A no se puede emitir así.
+                        @endif
+                    </p>
+                @endif
+            </div>
+        @endif
+
         <div class="flex flex-wrap items-end gap-3">
             <button type="button"
                     wire:click="emitirFactura"

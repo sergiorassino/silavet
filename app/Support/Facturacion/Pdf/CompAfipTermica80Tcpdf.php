@@ -3,6 +3,7 @@
 namespace App\Support\Facturacion\Pdf;
 
 use App\Support\Afip\AfipCondicionIvaReceptor;
+use App\Support\Facturacion\FacturacionIva;
 use App\Support\Pdf\TcpdfFuenteArial;
 use TCPDF;
 
@@ -75,10 +76,11 @@ final class CompAfipTermica80Tcpdf extends TCPDF
             $this->SetY($logoH - 7);
         }
 
+        $letra = (string) ($d['letra'] ?? 'C');
         $tipo = match ($cbteTipo) {
-            12 => 'NOTA DE CRÉDITO C',
+            3, 8, 12, 13 => 'NOTA DE CRÉDITO '.$letra,
             15 => 'RECIBO C',
-            default => 'FACTURA C',
+            default => 'FACTURA '.$letra,
         };
 
         $y = $this->GetY();
@@ -121,14 +123,32 @@ final class CompAfipTermica80Tcpdf extends TCPDF
         $this->Cell(16, 5, 'Total', 0, 1, 'R');
         TcpdfFuenteArial::aplicar($this, '', 7);
 
+        $discrimina = ! empty($d['discrimina_iva']);
+        $lineaFmt = $discrimina
+            ? number_format((float) ($d['imp_neto'] ?? 0), 2, ',', '.')
+            : $importeFmt;
+
         $concepto = trim((string) ($d['conceptoFacturado'] ?? ''));
         $yIni = $this->GetY();
         $this->MultiCell(40, 4, $concepto, 0, 'L', false, 0, $x, $yIni);
         $yDesc = $this->GetY();
         $this->SetXY($x + 40, $yIni);
-        $this->Cell(16, 4, $importeFmt, 0, 0, 'R');
-        $this->Cell(16, 4, $importeFmt, 0, 0, 'R');
+        $this->Cell(16, 4, $lineaFmt, 0, 0, 'R');
+        $this->Cell(16, 4, $lineaFmt, 0, 0, 'R');
         $this->SetY(max($yDesc, $yIni + 4) + 1);
+
+        if ($discrimina) {
+            $alicuota = FacturacionIva::etiquetaAlicuota((float) ($d['alicuota_iva'] ?? 0));
+            $ivaFmt = number_format((float) ($d['imp_iva'] ?? 0), 2, ',', '.');
+            $this->SetX($x);
+            TcpdfFuenteArial::aplicar($this, '', 7);
+            $this->Cell(40, 4, 'Neto gravado', 0, 0, 'L');
+            $this->Cell(32, 4, $lineaFmt, 0, 1, 'R');
+            $this->SetX($x);
+            $this->Cell(40, 4, 'IVA '.$alicuota.'%', 0, 0, 'L');
+            $this->Cell(32, 4, $ivaFmt, 0, 1, 'R');
+        }
+
         $this->Line(4, $this->GetY(), 76, $this->GetY());
 
         $this->Ln(1);

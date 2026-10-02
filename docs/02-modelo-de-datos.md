@@ -100,6 +100,7 @@ La tabla `entorno` almacena la configuración institucional en **un registro**
 | `colorFondoSistema`  | Color base de la UI (`#RRGGBB`); fondo, hero y sidebar conservan degradé |
 | `texto*footer*`, `firmaIzq` / `firmaCentro` / `firmaDer` | Pie de informe y firmas. Las tres firmas guardan **solo el nombre original** del archivo, en `public/entorno/firmas/{TENANT_SLUG}/`. |
 | `*Mail`              | Configuración SMTP para envío de informes                |
+| `afipCuit`, `afipRazonSocial`, `afipDomicComerc`, `afipCondIva`, `afipIngresosBrutos`, `afipInicioActiv`, `afipPtoVta`, `afipConcepto`, `afipKey`, `afipCrt`, `afipCrtVencimiento` | Ficha fiscal ARCA del laboratorio. Los certificados se guardan en `afipSE/cert/entorno/`; en la tabla queda el nombre del archivo. |
 
 Equivalente funcional de la tabla `ento` en Sistemas Escolares.
 

@@ -18,6 +18,7 @@ en esta carpeta (si existe) y respetar las reglas de negocio ahí listadas.
 | Valores de referencia (rangovalores) | [valores-referencia.md](valores-referencia.md) |
 | Stock de reactivos e insumos | [stock-reactivos.md](stock-reactivos.md) |
 | Tesorería (variantes por tenant) | [tesoreria.md](tesoreria.md) |
+| Facturación AFIP (monotributo / responsable inscripto) | [facturacion-afip.md](facturacion-afip.md) |
 | Cuenta corriente de clientes | [cuenta-corriente.md](cuenta-corriente.md) |
 | Resumen cliente entre fechas (PDF) | [resumen-cliente-entre-fechas.md](resumen-cliente-entre-fechas.md) |
 | Determinaciones por cliente (listado + Excel) | [determinaciones-por-cliente.md](determinaciones-por-cliente.md) |

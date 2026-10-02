@@ -20,7 +20,12 @@ final class FacturacionAfipService
     /**
      * @return array{comp: CompAfip, mensaje: string}
      */
-    public function emitirFactura(int $idPacientes, ?Usuario $emisor = null): array
+    public function emitirFactura(
+        int $idPacientes,
+        ?Usuario $emisor = null,
+        ?int $condicionIvaReceptorId = null,
+        ?string $tipoReceptor = null
+    ): array
     {
         $this->assertTenantHabilitado();
         $emisor = $this->resolverEmisor($emisor);
@@ -28,14 +33,14 @@ final class FacturacionAfipService
         $this->assertPuedeEmitirFactura($paciente);
 
         $importe = $this->importeAFacturar($paciente);
-        $receptor = $this->armReceptor($paciente, $emisor, $importe);
+        $receptor = $this->armReceptor($paciente, $emisor, $importe, $tipoReceptor);
         $cfg = FacturacionAfipConfig::paraEmision($emisor);
         $fecha = Carbon::now();
         $fechaYmd = $fecha->format('Ymd');
 
         $cfg['doc_tipo'] = $receptor['doc_tipo'];
 
-        $emision = AfipWsfeEmision::emitirRecibo($cfg, [
+        $payloadAfip = [
             'cuit' => preg_replace('/\D/', '', (string) $emisor->cuit) ?? '',
             'pto_vta' => (int) $emisor->PtoVta,
             'doc_nro' => (int) $receptor['doc_nro'],
@@ -45,22 +50,57 @@ final class FacturacionAfipService
             'fch_serv_hasta' => $fechaYmd,
             'condicion_iva_receptor_id' => $receptor['condicion_iva_id'],
             'tipo_cbte' => (int) $cfg['cbte_tipo'],
-        ]);
+        ];
+        $cbteTipo = (int) $cfg['cbte_tipo'];
+        $importeComprobante = $importe;
+        $iva = null;
 
-        $comp = $this->persistir($paciente, $emisor, $receptor, [
-            'CbteTipo' => (int) $cfg['cbte_tipo'],
+        if (FacturacionAfipConfig::esResponsableInscripto()) {
+            if ((int) $paciente->tipoRegistro === Paciente::TIPO_PROTOCOLO
+                && $tipoReceptor !== FacturacionAfipConfig::RECEPTOR_CLIENTE) {
+                $receptor = $this->receptorProtocoloConCuitDeCliente(
+                    $paciente,
+                    $receptor,
+                    (int) $condicionIvaReceptorId,
+                    $tipoReceptor === null
+                );
+            }
+            $ajustado = $this->emisionResponsableInscripto($payloadAfip, $receptor, $importe, $condicionIvaReceptorId);
+            $payloadAfip = $ajustado['payload'];
+            $receptor = $ajustado['receptor'];
+            $cbteTipo = $ajustado['cbte_tipo'];
+            $importeComprobante = $ajustado['importe'];
+            $iva = $ajustado['iva'];
+        }
+
+        $emision = AfipWsfeEmision::emitirRecibo($cfg, $payloadAfip);
+
+        $extra = [
+            'CbteTipo' => $cbteTipo,
             'Concepto' => (int) $cfg['concepto'],
-            'importe' => $importe,
+            'importe' => $importeComprobante,
             'fecha' => $fecha,
             'CbteHasta' => (int) $emision['cbte_hasta'],
             'conceptoFacturado' => 'Servicios de laboratorio',
             'CAE' => (string) $emision['cae'],
             'CAEFchVto' => $this->parseFechaAfip((string) $emision['cae_fch_vto']),
-        ]);
+        ];
+        if ($iva !== null) {
+            $extra['impNeto'] = $iva['neto'];
+            $extra['impIva'] = $iva['iva'];
+            $extra['alicuotaIva'] = $iva['alicuota'];
+        }
+
+        $comp = $this->persistir($paciente, $emisor, $receptor, $extra);
+
+        $mensaje = 'Factura emitida correctamente';
+        if ($iva !== null) {
+            $mensaje = 'Factura '.FacturacionIva::letra($cbteTipo).' emitida correctamente';
+        }
 
         return [
             'comp' => $comp,
-            'mensaje' => 'Factura emitida correctamente'
+            'mensaje' => $mensaje
                 .(! empty($cfg['simular']) ? ' (simulación AFIP).' : '.'),
         ];
     }
@@ -106,7 +146,7 @@ final class FacturacionAfipService
 
         $cfg['doc_tipo'] = (int) $factura->DocTipo;
 
-        $emision = AfipWsfeEmision::emitirRecibo($cfg, [
+        $payloadAfip = [
             'cuit' => preg_replace('/\D/', '', (string) $emisor->cuit) ?? '',
             'pto_vta' => (int) $emisor->PtoVta,
             'doc_nro' => (int) preg_replace('/\D/', '', (string) $factura->DocNro),
@@ -120,7 +160,23 @@ final class FacturacionAfipService
             'cbte_asoc_tipo' => (int) $factura->CbteTipo,
             'cbte_asoc_pto_vta' => (int) $factura->PtoVta,
             'motivo_nc' => 'Anulación de comprobante',
-        ]);
+        ];
+        $ivaNc = null;
+
+        if (FacturacionAfipConfig::esResponsableInscripto()
+            && FacturacionIva::discriminaIva((int) $factura->CbteTipo)) {
+            $ivaNc = $this->ivaGuardadoEnFactura($factura);
+            $ncTipo = FacturacionIva::tipoNotaCredito((int) $factura->CbteTipo);
+            $importe = $ivaNc['total'];
+            $payloadAfip['importe'] = $importe;
+            $payloadAfip['imp_neto'] = $ivaNc['neto'];
+            $payloadAfip['imp_iva'] = $ivaNc['iva'];
+            $payloadAfip['imp_total'] = $ivaNc['total'];
+            $payloadAfip['alic_iva_id'] = $ivaNc['alic_id'];
+            $payloadAfip['tipo_cbte'] = $ncTipo;
+        }
+
+        $emision = AfipWsfeEmision::emitirRecibo($cfg, $payloadAfip);
 
         $receptor = [
             'doc_tipo' => (int) $factura->DocTipo,
@@ -139,6 +195,11 @@ final class FacturacionAfipService
             'CAE' => (string) $emision['cae'],
             'CAEFchVto' => $this->parseFechaAfip((string) $emision['cae_fch_vto']),
         ];
+        if ($ivaNc !== null) {
+            $payload['impNeto'] = $ivaNc['neto'];
+            $payload['impIva'] = $ivaNc['iva'];
+            $payload['alicuotaIva'] = $ivaNc['alicuota'];
+        }
         if (CompAfip::tieneColumnaAsoc()) {
             $payload['idCompAfipAsoc'] = (int) $factura->id;
         }
@@ -155,13 +216,13 @@ final class FacturacionAfipService
     /**
      * @return array{comp: CompAfip, mensaje: string}
      */
-    public function emitirComanda(int $idPacientes, ?Usuario $emisor = null): array
+    public function emitirComanda(int $idPacientes, ?Usuario $emisor = null, ?string $tipoReceptor = null): array
     {
         $this->assertTenantHabilitado();
         $emisor = $this->resolverEmisor($emisor);
         $paciente = $this->cargarPacienteFacturable($idPacientes);
         $importe = $this->importeAFacturar($paciente);
-        $receptor = $this->armReceptor($paciente, $emisor, $importe);
+        $receptor = $this->armReceptor($paciente, $emisor, $importe, $tipoReceptor);
         // Comanda interna: no discrimina condición IVA del receptor.
         $receptor['condicion_iva_id'] = 0;
         $cfg = FacturacionAfipConfig::paraEmision($emisor);
@@ -340,7 +401,12 @@ final class FacturacionAfipService
     /**
      * @return array{comp: CompAfip, mensaje: string}
      */
-    public function emitirFacturaCaja(int $idMovimientos, string $tipoReceptor, ?Usuario $emisor = null): array
+    public function emitirFacturaCaja(
+        int $idMovimientos,
+        string $tipoReceptor,
+        ?Usuario $emisor = null,
+        ?int $condicionIvaReceptorId = null
+    ): array
     {
         $this->assertTenantHabilitado();
         $this->assertColumnaMovimientosCompAfip();
@@ -356,7 +422,7 @@ final class FacturacionAfipService
 
         $cfg['doc_tipo'] = $receptor['doc_tipo'];
 
-        $emision = AfipWsfeEmision::emitirRecibo($cfg, [
+        $payloadAfip = [
             'cuit' => preg_replace('/\D/', '', (string) $emisor->cuit) ?? '',
             'pto_vta' => (int) $emisor->PtoVta,
             'doc_nro' => (int) $receptor['doc_nro'],
@@ -366,24 +432,50 @@ final class FacturacionAfipService
             'fch_serv_hasta' => $fechaYmd,
             'condicion_iva_receptor_id' => $receptor['condicion_iva_id'],
             'tipo_cbte' => (int) $cfg['cbte_tipo'],
-        ]);
+        ];
+        $cbteTipo = (int) $cfg['cbte_tipo'];
+        $importeComprobante = $importe;
+        $iva = null;
+
+        if (FacturacionAfipConfig::esResponsableInscripto()) {
+            $ajustado = $this->emisionResponsableInscripto($payloadAfip, $receptor, $importe, $condicionIvaReceptorId);
+            $payloadAfip = $ajustado['payload'];
+            $receptor = $ajustado['receptor'];
+            $cbteTipo = $ajustado['cbte_tipo'];
+            $importeComprobante = $ajustado['importe'];
+            $iva = $ajustado['iva'];
+        }
+
+        $emision = AfipWsfeEmision::emitirRecibo($cfg, $payloadAfip);
 
         $paciente = $this->pacienteOpcionalDesdeMovimiento($movimiento);
 
-        $comp = $this->persistir($paciente, $emisor, $receptor, [
-            'CbteTipo' => (int) $cfg['cbte_tipo'],
+        $extra = [
+            'CbteTipo' => $cbteTipo,
             'Concepto' => (int) $cfg['concepto'],
-            'importe' => $importe,
+            'importe' => $importeComprobante,
             'fecha' => $fecha,
             'CbteHasta' => (int) $emision['cbte_hasta'],
             'conceptoFacturado' => 'Servicios de laboratorio',
             'CAE' => (string) $emision['cae'],
             'CAEFchVto' => $this->parseFechaAfip((string) $emision['cae_fch_vto']),
-        ], $movimiento);
+        ];
+        if ($iva !== null) {
+            $extra['impNeto'] = $iva['neto'];
+            $extra['impIva'] = $iva['iva'];
+            $extra['alicuotaIva'] = $iva['alicuota'];
+        }
+
+        $comp = $this->persistir($paciente, $emisor, $receptor, $extra, $movimiento);
+
+        $mensaje = 'Factura emitida correctamente';
+        if ($iva !== null) {
+            $mensaje = 'Factura '.FacturacionIva::letra($cbteTipo).' emitida correctamente';
+        }
 
         return [
             'comp' => $comp,
-            'mensaje' => 'Factura emitida correctamente'
+            'mensaje' => $mensaje
                 .(! empty($cfg['simular']) ? ' (simulación AFIP).' : '.'),
         ];
     }
@@ -649,33 +741,65 @@ final class FacturacionAfipService
     /**
      * @return array{doc_tipo: int, doc_nro: string, razon_social: string, condicion_iva_id: int}
      */
-    private function armReceptor(Paciente $paciente, Usuario $emisor, float $importe): array
-    {
-        $cfg = FacturacionAfipConfig::config();
-        $tipo = (int) $paciente->tipoRegistro;
-        $condicionDefault = (int) ($emisor->CondicionIVAReceptorId ?: $cfg['condicion_iva_receptor_id']);
-
-        // Protocolo real → DNI/CUIT del paciente (columna pacientes.dni) o consumidor final (DocTipo 99).
-        if ($tipo === Paciente::TIPO_PROTOCOLO) {
-            if (! Schema::hasColumn('pacientes', 'dni')) {
-                throw new RuntimeException(
-                    'Falta la columna pacientes.dni en este laboratorio. Ejecute la migración o el SQL de database/sql/pacientes_dni.sql.'
-                );
-            }
-
-            $doc = $this->docNormalizado((string) ($paciente->dni ?? ''));
-            if ($doc === '') {
-                $this->assertPuedeFacturarConsumidorFinal($importe, $cfg);
-
-                return $this->receptorConsumidorFinal($cfg, $condicionDefault);
-            }
-
-            $nombre = trim((string) ($paciente->propietario ?: $paciente->nombre));
-
-            return $this->receptorConDocumento($cfg, $doc, $nombre, $condicionDefault);
+    private function armReceptor(
+        Paciente $paciente,
+        Usuario $emisor,
+        float $importe,
+        ?string $tipoReceptor = null
+    ): array {
+        if ($tipoReceptor === FacturacionAfipConfig::RECEPTOR_CLIENTE) {
+            return $this->receptorDesdeCliente($paciente, $emisor, $importe);
         }
 
-        // Pago global / ingreso (modo movimiento o pago global) → cliente o consumidor final.
+        if ($tipoReceptor === FacturacionAfipConfig::RECEPTOR_PACIENTE) {
+            return $this->receptorDesdePaciente($paciente, $emisor, $importe);
+        }
+
+        $tipo = (int) $paciente->tipoRegistro;
+        if ($tipo === Paciente::TIPO_PROTOCOLO) {
+            return $this->receptorDesdePaciente($paciente, $emisor, $importe);
+        }
+
+        return $this->receptorDesdeCliente($paciente, $emisor, $importe);
+    }
+
+    /**
+     * @return array{doc_tipo: int, doc_nro: string, razon_social: string, condicion_iva_id: int}
+     */
+    private function receptorDesdePaciente(Paciente $paciente, Usuario $emisor, float $importe): array
+    {
+        $cfg = FacturacionAfipConfig::config();
+        $condicionDefault = (int) ($emisor->CondicionIVAReceptorId ?: $cfg['condicion_iva_receptor_id']);
+
+        if (! Schema::hasColumn('pacientes', 'dni')) {
+            throw new RuntimeException(
+                'Falta la columna pacientes.dni en este laboratorio. Ejecute la migración o el SQL de database/sql/pacientes_dni.sql.'
+            );
+        }
+
+        $doc = $this->docNormalizado((string) ($paciente->dni ?? ''));
+        if ($doc === '') {
+            $doc = $this->cuitDeProtocolo($paciente);
+        }
+        if ($doc === '') {
+            $this->assertPuedeFacturarConsumidorFinal($importe, $cfg);
+
+            return $this->receptorConsumidorFinal($cfg, $condicionDefault);
+        }
+
+        $nombre = trim((string) ($paciente->propietario ?: $paciente->nombre));
+
+        return $this->receptorConDocumento($cfg, $doc, $nombre, $condicionDefault);
+    }
+
+    /**
+     * @return array{doc_tipo: int, doc_nro: string, razon_social: string, condicion_iva_id: int}
+     */
+    private function receptorDesdeCliente(Paciente $paciente, Usuario $emisor, float $importe): array
+    {
+        $cfg = FacturacionAfipConfig::config();
+        $condicionDefault = (int) ($emisor->CondicionIVAReceptorId ?: $cfg['condicion_iva_receptor_id']);
+
         $cliente = $paciente->cliente;
         if (! $cliente instanceof Cliente) {
             throw new RuntimeException('El registro no tiene cliente asociado.');
@@ -796,6 +920,12 @@ final class FacturacionAfipService
             'CAEFchVto' => $extra['CAEFchVto'] ?? null,
         ];
 
+        if (array_key_exists('impNeto', $extra)) {
+            $payload['impNeto'] = round((float) $extra['impNeto'], 2);
+            $payload['impIva'] = round((float) ($extra['impIva'] ?? 0), 2);
+            $payload['alicuotaIva'] = round((float) ($extra['alicuotaIva'] ?? 0), 2);
+        }
+
         if (CompAfip::tieneColumnaAsoc() && isset($extra['idCompAfipAsoc'])) {
             $payload['idCompAfipAsoc'] = (int) $extra['idCompAfipAsoc'];
         }
@@ -815,6 +945,186 @@ final class FacturacionAfipService
             ->max('CbteHasta');
 
         return max(1, $ultimo + 1);
+    }
+
+    private function cuitDeProtocolo(Paciente $paciente): string
+    {
+        if (Schema::hasColumn('pacientes', 'cuit')) {
+            $cuit = $this->docNormalizado((string) ($paciente->cuit ?? ''));
+            if (strlen($cuit) === 11) {
+                return $cuit;
+            }
+        }
+
+        $dni = $this->docNormalizado((string) ($paciente->dni ?? ''));
+
+        return strlen($dni) === 11 ? $dni : '';
+    }
+
+    /**
+     * Factura A de un protocolo: usa pacientes.cuit. Si no hay, el CUIT del cliente.
+     * El monotributo no pasa por acá.
+     *
+     * @param  array{doc_tipo: int, doc_nro: string, razon_social: string, condicion_iva_id: int}  $receptor
+     * @return array{doc_tipo: int, doc_nro: string, razon_social: string, condicion_iva_id: int}
+     */
+    private function receptorProtocoloConCuitDeCliente(
+        Paciente $paciente,
+        array $receptor,
+        int $condicionId,
+        bool $usarCuitCliente = true
+    ): array
+    {
+        if ($condicionId !== FacturacionIva::CONDICION_RI) {
+            return $receptor;
+        }
+
+        $cfg = FacturacionAfipConfig::config();
+        $doc = preg_replace('/\D/', '', (string) $receptor['doc_nro']) ?? '';
+        $esCuit = (int) $receptor['doc_tipo'] === (int) $cfg['doc_tipo_cuit'] && strlen($doc) === 11;
+        if ($esCuit) {
+            return $receptor;
+        }
+
+        $cuitProtocolo = $this->cuitDeProtocolo($paciente);
+        if ($cuitProtocolo !== '') {
+            $nombre = trim((string) ($paciente->propietario ?: $paciente->nombre));
+
+            return $this->receptorConDocumento($cfg, $cuitProtocolo, $nombre, $condicionId);
+        }
+
+        if (! $usarCuitCliente) {
+            return $receptor;
+        }
+
+        $cliente = $paciente->cliente;
+        if (! $cliente instanceof Cliente) {
+            $paciente->load('cliente:idClientes,nombre,cuit,dni');
+            $cliente = $paciente->cliente;
+        }
+        if (! $cliente instanceof Cliente) {
+            return $receptor;
+        }
+
+        $cuit = $this->docNormalizado((string) ($cliente->cuit ?? ''));
+        if (strlen($cuit) !== 11) {
+            $cuit = $this->docNormalizado((string) ($cliente->dni ?? ''));
+        }
+        if (strlen($cuit) !== 11) {
+            return $receptor;
+        }
+
+        return $this->receptorConDocumento(
+            $cfg,
+            $cuit,
+            trim((string) $cliente->nombre) ?: 'Cliente',
+            $condicionId
+        );
+    }
+
+    private function emisionResponsableInscripto(
+        array $payloadAfip,
+        array $receptor,
+        float $importeBase,
+        ?int $condicionIvaReceptorId
+    ): array {
+        $this->assertColumnasIvaCompafip();
+        $receptor = $this->condicionReceptorResponsableInscripto($receptor, (int) $condicionIvaReceptorId);
+        $iva = FacturacionIva::desglosar($importeBase);
+        $cbteTipo = FacturacionIva::tipoFactura((int) $receptor['condicion_iva_id']);
+        $payloadAfip['importe'] = $iva['total'];
+        $payloadAfip['imp_neto'] = $iva['neto'];
+        $payloadAfip['imp_iva'] = $iva['iva'];
+        $payloadAfip['imp_total'] = $iva['total'];
+        $payloadAfip['alic_iva_id'] = $iva['alic_id'];
+        $payloadAfip['tipo_cbte'] = $cbteTipo;
+        $payloadAfip['condicion_iva_receptor_id'] = $receptor['condicion_iva_id'];
+
+        return [
+            'payload' => $payloadAfip,
+            'receptor' => $receptor,
+            'cbte_tipo' => $cbteTipo,
+            'importe' => $iva['total'],
+            'iva' => $iva,
+        ];
+    }
+
+    /**
+     * @param  array{doc_tipo: int, doc_nro: string, razon_social: string, condicion_iva_id: int}  $receptor
+     * @return array{doc_tipo: int, doc_nro: string, razon_social: string, condicion_iva_id: int}
+     */
+    private function condicionReceptorResponsableInscripto(array $receptor, int $condicionId): array
+    {
+        $permitidas = [
+            FacturacionIva::CONDICION_RI,
+            FacturacionIva::CONDICION_EXENTO,
+            FacturacionIva::CONDICION_CONSUMIDOR_FINAL,
+            FacturacionIva::CONDICION_MONOTRIBUTO,
+        ];
+        if (! in_array($condicionId, $permitidas, true)) {
+            throw new RuntimeException('Indique la condición frente al IVA del receptor.');
+        }
+
+        $cfg = FacturacionAfipConfig::config();
+        $doc = preg_replace('/\D/', '', (string) $receptor['doc_nro']) ?? '';
+        $esConsumidorFinal = (int) $receptor['doc_tipo'] === (int) $cfg['doc_tipo_consumidor_final']
+            || $doc === ''
+            || $doc === '0';
+        $esCuit = (int) $receptor['doc_tipo'] === (int) $cfg['doc_tipo_cuit'] && strlen($doc) === 11;
+
+        if ($esConsumidorFinal && $condicionId !== FacturacionIva::CONDICION_CONSUMIDOR_FINAL) {
+            throw new RuntimeException('Consumidor final sin identificar solo admite la condición Consumidor final.');
+        }
+
+        if ($condicionId === FacturacionIva::CONDICION_RI && ! $esCuit) {
+            throw new RuntimeException('Factura A (responsable inscripto) exige CUIT del receptor.');
+        }
+
+        $receptor['condicion_iva_id'] = $condicionId;
+
+        return $receptor;
+    }
+
+    /**
+     * @return array{neto: float, iva: float, total: float, alicuota: float, alic_id: int}
+     */
+    private function ivaGuardadoEnFactura(CompAfip $factura): array
+    {
+        $this->assertColumnasIvaCompafip();
+
+        $neto = round((float) ($factura->impNeto ?? 0), 2);
+        $iva = round((float) ($factura->impIva ?? 0), 2);
+        $alicuota = round((float) ($factura->alicuotaIva ?? 0), 2);
+        $total = round((float) $factura->importe, 2);
+
+        if ($neto <= 0) {
+            throw new RuntimeException(
+                'La factura no tiene neto e IVA guardados. No se puede emitir la nota de crédito.'
+            );
+        }
+
+        if (abs(($neto + $iva) - $total) > 0.02) {
+            throw new RuntimeException(
+                'El neto y el IVA guardados no cierran con el total de la factura. No se puede emitir la nota de crédito.'
+            );
+        }
+
+        return [
+            'neto' => $neto,
+            'iva' => $iva,
+            'total' => $total,
+            'alicuota' => $alicuota,
+            'alic_id' => FacturacionIva::idAlicuota($alicuota),
+        ];
+    }
+
+    private function assertColumnasIvaCompafip(): void
+    {
+        if (! CompAfip::tieneColumnasIva()) {
+            throw new RuntimeException(
+                'Faltan las columnas de IVA en compafip (impNeto, impIva, alicuotaIva). Ejecute php artisan migrate.'
+            );
+        }
     }
 
     private function parseFechaAfip(string $ymd): ?string
