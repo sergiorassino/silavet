@@ -86,7 +86,7 @@
                                         class="form-input py-1.5 text-sm">
                                     <option value="">— Seleccione —</option>
                                     @foreach ($items as $item)
-                                        <option value="{{ $item->idItems }}">{{ $item->nombreItem }}</option>
+                                        <option value="{{ $item->idItems }}">{{ $item->nombreItem }} ({{ $item->idItems }})</option>
                                     @endforeach
                                 </select>
                                 @error('formIdItems') <p class="form-error">{{ $message }}</p> @enderror
@@ -211,7 +211,7 @@
                                         </button>
                                     </td>
                                     <td colspan="4" class="vl-rango-grupo-th">
-                                        {{ $filasGrupo[0]['nombreItem'] }}
+                                        {{ $filasGrupo[0]['nombreItem'] }} ({{ $idItemsGrupo }})
                                     </td>
                                 </tr>
                                 {{-- Filas del grupo --}}

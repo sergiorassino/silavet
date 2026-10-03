@@ -9,6 +9,8 @@
  * vlCargaResultados llama a ese runner; window.formulas queda como el script
  * de entorno sin envolver. Al entrar al form se llama con aplicarHemograma:false
  * (sí aplica estilos fuera de rango; no escribe leyendas).
+ * __vlAplicarEstilosFueraDeRango pinta el rojo sin formulas() ni Serie Roja/Blanca
+ * (campos con actualiza = 0).
  */
 export function instalarHemogramaAuto(config) {
     /**
@@ -306,6 +308,14 @@ export function instalarHemogramaAuto(config) {
         escribirDestino(items.serie_roja, armarSerieRoja());
         escribirDestino(items.serie_blanca, armarSerieBlanca());
     }
+
+    window.__vlAplicarEstilosFueraDeRango = function () {
+        try {
+            aplicarEstilosFueraDeRango();
+        } catch (e) {
+            console.error('[hemograma-auto] estilos error:', e);
+        }
+    };
 
     window.__vlAplicarHemogramaAuto = function () {
         try {

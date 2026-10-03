@@ -30,6 +30,9 @@ Al guardar el form:
 Si el ítem+especie ya tiene filas, los sexos se pre-marcan y los valores se precarga
 del primer registro, para facilitar la reedición.
 
+En el encabezado de cada ítem de la grilla y en el selector del formulario, el
+nombre se muestra seguido de su `idItems` entre paréntesis.
+
 ## Modalidades / variantes
 
 No hay variantes por tenant. El módulo está disponible para cualquier lab con

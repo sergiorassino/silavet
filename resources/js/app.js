@@ -799,6 +799,10 @@ document.addEventListener('alpine:init', () => {
             if (typeof window.formatearNumero === 'function') {
                 window.formatearNumero(idItems, estiloNum);
             }
+            // Rango sí; formulas() y Serie Roja/Blanca no (actualiza = 0).
+            if (typeof window.__vlAplicarEstilosFueraDeRango === 'function') {
+                window.__vlAplicarEstilosFueraDeRango();
+            }
         },
 
         reemplazarComa(idItems, estiloNum) {

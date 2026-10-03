@@ -174,6 +174,7 @@ IDs DOM: el operador edita `#idItems`; el diferencial absoluto vive en `#idItems
 |---------|:------------:|:---------------------:|:-----------------:|
 | Arranque del form | sí | sí | **no** |
 | `@change` de campo que dispara cálculo (`formatearYCalcular`) | sí | sí | sí (si tenant activo) |
+| `@change` de campo que no dispara cálculo (`formatearSolo`, `actualiza = 0`) | **no** | sí (`__vlAplicarEstilosFueraDeRango`) | **no** |
 | Tipo 4 (select/input plaquetas) | **no** | sí | sí (`__vlAplicarHemogramaAuto`) |
 | Guardar (F9 / F10) | sí | sí | **no** (leyendas ya al editar) |
 
@@ -347,6 +348,8 @@ conteo manual).
   entorno debe seguir siendo la función global pura; el runner encadena después.
 - **No** volver a poner un `change` delegado en `#vl-form-carga` que llame
   siempre a `formulas()` (duplica corridas y rompe `actualiza = 0` / destinos).
+  El coloreo fuera de rango de `actualiza = 0` va solo por
+  `__vlAplicarEstilosFueraDeRango` (sin `formulas()` ni Serie Roja/Blanca).
 - **No** llamar a `formulas()` desde el change del tipo 4 (select plaquetas):
   sobrescribe la opción del operador.
 - **No** clasificar el diferencial leyendo el % (`#idItems`): los rangos están
