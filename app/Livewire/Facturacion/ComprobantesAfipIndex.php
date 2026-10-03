@@ -900,6 +900,9 @@ class ComprobantesAfipIndex extends Component
             'comprobantes' => $comprobantes,
             'facturasAnulables' => $facturasAnulables,
             'emisorOk' => $emisorOk,
+            'mensajeEmisor' => $emisorOk
+                ? ''
+                : FacturacionAfipConfig::mensajeEmisorNoDisponible(labCtx()->usuario()),
             'simulando' => $simulando,
             'esModoCaja' => FacturacionAfipConfig::esModoMovimientoCaja(),
             'esModoPaciente' => FacturacionAfipConfig::esModoPaciente(),

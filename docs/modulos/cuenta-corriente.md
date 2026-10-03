@@ -118,6 +118,10 @@ El ítem de menú sidebar es único (`clientes.cuenta-corriente.index`).
 - Columna saldo corrido por protocolo: solo se calcula con `tesoreria_movimientos`
   (`mapaSaldoAcumuladoPorProtocolo`). Con `tesoreria_pacientes`, se pasa `[]`
   y la columna muestra 0 por fila (la CC no vive en `pacientes`).
+- Si el tenant declara `portal_cliente.mostrar_saldo_cuenta_corriente => false`,
+  no se muestra el saldo de Inicio, el del encabezado de Pacientes ni la columna
+  **Saldo** (y no se calcula el mapa). Hoy: labvetciudad, neolab y epizoolab.
+  Precios, descuento y pagado del protocolo siguen visibles.
 
 ## Staff: columna Pagado (opt-in por tenant)
 

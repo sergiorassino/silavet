@@ -27,7 +27,15 @@ final class CompAfipPdfDatos
         $inicioActiv = null;
         $condIvaEmisor = '';
         $ingresosBrutos = (string) ($comp->cuit ?? '');
-        if ($emisor !== null) {
+        if (FacturacionAfipConfig::esResponsableInscripto()) {
+            $ingresosBrutos = '';
+            $leyenda = FacturacionAfipConfig::leyendaEmisor();
+            $condIvaEmisor = $leyenda['cond_iva'];
+            $ingresosBrutos = $leyenda['ingresos_brutos'];
+            $inicioActiv = $leyenda['inicio_activ'] !== ''
+                ? Carbon::parse($leyenda['inicio_activ'])->format('d/m/Y')
+                : null;
+        } elseif ($emisor !== null) {
             $inicioActiv = $emisor->inicioActiv
                 ? Carbon::parse($emisor->inicioActiv)->format('d/m/Y')
                 : null;

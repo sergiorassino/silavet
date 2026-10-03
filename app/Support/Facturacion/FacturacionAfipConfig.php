@@ -2,9 +2,11 @@
 
 namespace App\Support\Facturacion;
 
+use App\Models\Entorno;
 use App\Models\Usuario;
 use App\Support\Afip\AfipCertificadosStorage;
 use Illuminate\Support\Facades\Schema;
+use RuntimeException;
 
 /**
  * Configuración de facturación AFIP por tenant + emisor (usuario).
@@ -170,6 +172,23 @@ final class FacturacionAfipConfig
     public static function paraEmision(Usuario $emisor): array
     {
         $cfg = self::config();
+
+        if (self::esResponsableInscripto()) {
+            $ficha = self::exigirFichaEmisor();
+
+            return array_merge($cfg, [
+                'cert_laboratorio' => true,
+                'cert_usuario_id' => '0',
+                'cert_key' => $ficha['key'],
+                'cert_crt' => $ficha['crt'],
+                'cbte_tipo' => (int) $cfg['cbte_tipo'],
+                'nota_credito_tipo' => (int) $cfg['nota_credito_tipo'],
+                'cbte_tipo_asociado' => (int) $cfg['cbte_tipo'],
+                'concepto' => $ficha['concepto'],
+                'doc_tipo' => (int) $cfg['doc_tipo_dni'],
+            ]);
+        }
+
         $id = (int) $emisor->idUsuarios;
         $key = trim((string) ($emisor->key ?? ''));
         $crt = trim((string) ($emisor->crt ?? ''));
@@ -190,10 +209,174 @@ final class FacturacionAfipConfig
         ]);
     }
 
+    /**
+     * Ficha fiscal del laboratorio. No lee usuarios.
+     *
+     * @return array{
+     *     cuit: string,
+     *     pto_vta: int,
+     *     razon_social: string,
+     *     domicilio: string,
+     *     cond_iva: string,
+     *     ingresos_brutos: string,
+     *     inicio_activ: string,
+     *     concepto: int,
+     *     key: string,
+     *     crt: string
+     * }
+     */
+    public static function exigirFichaEmisor(): array
+    {
+        $faltan = self::faltantesFichaEmisor();
+        if ($faltan !== []) {
+            throw new RuntimeException(
+                'No se puede facturar como responsable inscripto. Faltan en Parámetros del Sistema, solapa Configuración Arca: '
+                .implode(', ', $faltan).'.'
+            );
+        }
+
+        $entorno = Entorno::query()->orderBy('id')->first();
+        if ($entorno === null) {
+            throw new RuntimeException(
+                'No se puede facturar como responsable inscripto. Falta el registro de parámetros del laboratorio.'
+            );
+        }
+
+        $cuit = preg_replace('/\D/', '', (string) ($entorno->afipCuit ?? '')) ?? '';
+
+        return [
+            'cuit' => $cuit,
+            'pto_vta' => (int) $entorno->afipPtoVta,
+            'razon_social' => trim((string) $entorno->afipRazonSocial),
+            'domicilio' => trim((string) $entorno->afipDomicComerc),
+            'cond_iva' => self::textoEntorno((string) ($entorno->afipCondIva ?? '')),
+            'ingresos_brutos' => self::textoEntorno((string) ($entorno->afipIngresosBrutos ?? '')),
+            'inicio_activ' => self::textoEntorno((string) ($entorno->afipInicioActiv ?? '')),
+            'concepto' => (int) $entorno->afipConcepto,
+            'key' => self::textoEntorno((string) ($entorno->afipKey ?? '')),
+            'crt' => self::textoEntorno((string) ($entorno->afipCrt ?? '')),
+        ];
+    }
+
+    /**
+     * @return list<string>
+     */
+    public static function faltantesFichaEmisor(): array
+    {
+        if (! Schema::hasTable('entorno')) {
+            return ['la tabla entorno'];
+        }
+
+        foreach ([
+            'afipCuit',
+            'afipRazonSocial',
+            'afipDomicComerc',
+            'afipPtoVta',
+            'afipConcepto',
+            'afipKey',
+            'afipCrt',
+        ] as $columna) {
+            if (! Schema::hasColumn('entorno', $columna)) {
+                return ['las columnas de ARCA en entorno (php artisan migrate)'];
+            }
+        }
+
+        $entorno = Entorno::query()->orderBy('id')->first();
+        if ($entorno === null) {
+            return ['el registro de parámetros del laboratorio'];
+        }
+
+        $faltan = [];
+        $cuit = preg_replace('/\D/', '', (string) ($entorno->afipCuit ?? '')) ?? '';
+        if (strlen($cuit) !== 11) {
+            $faltan[] = 'CUIT';
+        }
+        if (self::textoEntorno((string) ($entorno->afipRazonSocial ?? '')) === '') {
+            $faltan[] = 'razón social';
+        }
+        if (self::textoEntorno((string) ($entorno->afipDomicComerc ?? '')) === '') {
+            $faltan[] = 'domicilio comercial';
+        }
+        if ((int) ($entorno->afipPtoVta ?? 0) <= 0) {
+            $faltan[] = 'punto de venta';
+        }
+        if (! in_array((int) ($entorno->afipConcepto ?? 0), [1, 2, 3], true)) {
+            $faltan[] = 'concepto';
+        }
+
+        if (empty(self::config()['simular'])) {
+            $key = self::textoEntorno((string) ($entorno->afipKey ?? ''));
+            $crt = self::textoEntorno((string) ($entorno->afipCrt ?? ''));
+            if ($key === '' || ! AfipCertificadosStorage::existeLaboratorio($key)) {
+                $faltan[] = 'clave privada';
+            }
+            if ($crt === '' || ! AfipCertificadosStorage::existeLaboratorio($crt)) {
+                $faltan[] = 'certificado';
+            }
+        }
+
+        return $faltan;
+    }
+
+    /**
+     * Textos del emisor para el PDF. Vacío si la ficha no está cargada: no usa el usuario.
+     *
+     * @return array{cond_iva: string, ingresos_brutos: string, inicio_activ: string}
+     */
+    public static function leyendaEmisor(): array
+    {
+        $vacio = ['cond_iva' => '', 'ingresos_brutos' => '', 'inicio_activ' => ''];
+        if (! Schema::hasTable('entorno')) {
+            return $vacio;
+        }
+
+        foreach (['afipCondIva', 'afipIngresosBrutos', 'afipInicioActiv'] as $columna) {
+            if (! Schema::hasColumn('entorno', $columna)) {
+                return $vacio;
+            }
+        }
+
+        $entorno = Entorno::query()->orderBy('id')->first();
+        if ($entorno === null) {
+            return $vacio;
+        }
+
+        return [
+            'cond_iva' => self::textoEntorno((string) ($entorno->afipCondIva ?? '')),
+            'ingresos_brutos' => self::textoEntorno((string) ($entorno->afipIngresosBrutos ?? '')),
+            'inicio_activ' => self::textoEntorno((string) ($entorno->afipInicioActiv ?? '')),
+        ];
+    }
+
+    public static function mensajeEmisorNoDisponible(?Usuario $emisor): string
+    {
+        if ($emisor === null || (int) $emisor->permisoAfip !== 1) {
+            return 'El usuario actual no tiene permiso AFIP.';
+        }
+
+        if (! self::esResponsableInscripto()) {
+            $id = (int) ($emisor->idUsuarios ?? 0);
+
+            return 'El usuario actual no puede emitir: falta CUIT, punto de venta o certificados en afipSE/cert/'.$id.'/.';
+        }
+
+        $faltan = self::faltantesFichaEmisor();
+        if ($faltan === []) {
+            return '';
+        }
+
+        return 'No se puede facturar como responsable inscripto. Faltan en Parámetros del Sistema, solapa Configuración Arca: '
+            .implode(', ', $faltan).'.';
+    }
+
     public static function emisorPuedeFacturar(?Usuario $emisor): bool
     {
         if ($emisor === null || (int) $emisor->permisoAfip !== 1) {
             return false;
+        }
+
+        if (self::esResponsableInscripto()) {
+            return self::faltantesFichaEmisor() === [];
         }
 
         $cuit = preg_replace('/\D/', '', (string) ($emisor->cuit ?? '')) ?? '';
@@ -226,5 +409,12 @@ final class FacturacionAfipConfig
         $valor = trim((string) (\App\Models\Entorno::query()->orderBy('id')->value('afipFormatoImpresion') ?? ''));
 
         return $valor === self::FORMATO_TERMICA80 ? self::FORMATO_TERMICA80 : self::FORMATO_A4;
+    }
+
+    private static function textoEntorno(string $valor): string
+    {
+        $valor = trim($valor);
+
+        return ($valor === '' || $valor === '0') ? '' : $valor;
     }
 }

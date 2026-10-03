@@ -117,6 +117,9 @@
             </div>
         </div>
 
+        @php
+            $mostrarSaldoCc = \App\Support\Cliente\PortalClienteConfig::mostrarSaldoCuentaCorriente();
+        @endphp
         <div class="vl-pacientes-scroll">
         <table class="vl-pacientes-grid min-w-full text-xs">
                 <thead>
@@ -137,15 +140,21 @@
                         <th class="vl-pacientes-th vl-pacientes-th--num" title="Descuento">Desc.</th>
                         <th class="vl-pacientes-th vl-pacientes-th--num" title="Precio con descuento">Precio c/desc</th>
                         <th class="vl-pacientes-th vl-pacientes-th--num">Pagado</th>
-                        <th class="vl-pacientes-th vl-pacientes-th--num" title="Saldo acumulado del cliente tras este movimiento">Saldo</th>
-                        <th class="vl-pacientes-th vl-pacientes-th--icon" title="Asistente IA">IA</th>
+                        @if ($mostrarSaldoCc)
+                            <th class="vl-pacientes-th vl-pacientes-th--num" title="Saldo acumulado del cliente tras este movimiento">Saldo</th>
+                        @endif
+                        @if ($mostrarColumnaIa)
+                            <th class="vl-pacientes-th vl-pacientes-th--icon" title="Asistente IA">IA</th>
+                        @endif
                     </tr>
                 </thead>
                 <tbody>
                     @forelse ($pacientes as $paciente)
-                        @php
-                            $saldoFila = $saldosAcumulados[(int) $paciente->idPacientes] ?? 0.0;
-                        @endphp
+                        @if ($mostrarSaldoCc)
+                            @php
+                                $saldoFila = $saldosAcumulados[(int) $paciente->idPacientes] ?? 0.0;
+                            @endphp
+                        @endif
                         @if ($paciente->esPagoGlobal())
                             <tr class="vl-pacientes-row {{ $paciente->filaClaseCss() }}" wire:key="pac-cli-{{ $paciente->idPacientes }}">
                                 <td class="vl-pacientes-td text-center tabular-nums">
@@ -168,10 +177,14 @@
                                 <td class="vl-pacientes-td vl-pacientes-td--num whitespace-nowrap">{{ $paciente->descuentoFormateado() }}</td>
                                 <td class="vl-pacientes-td vl-pacientes-td--num whitespace-nowrap">{{ $paciente->precioConDescuentoFormateado() }}</td>
                                 <td class="vl-pacientes-td vl-pacientes-td--num whitespace-nowrap font-semibold">{{ $paciente->importePagadoMovimientoFormateado() }}</td>
-                                <td class="vl-pacientes-td vl-pacientes-td--num whitespace-nowrap font-semibold tabular-nums">
-                                    {{ \App\Support\CuentaCorriente\CuentaCorrienteConsulta::formatearMoneda((float) $saldoFila) }}
-                                </td>
-                                <td class="vl-pacientes-td vl-pacientes-td--icon"></td>
+                                @if ($mostrarSaldoCc)
+                                    <td class="vl-pacientes-td vl-pacientes-td--num whitespace-nowrap font-semibold tabular-nums">
+                                        {{ \App\Support\CuentaCorriente\CuentaCorrienteConsulta::formatearMoneda((float) $saldoFila) }}
+                                    </td>
+                                @endif
+                                @if ($mostrarColumnaIa)
+                                    <td class="vl-pacientes-td vl-pacientes-td--icon"></td>
+                                @endif
                             </tr>
                         @else
                             <tr class="vl-pacientes-row {{ $paciente->filaClaseCss() }}" wire:key="pac-cli-{{ $paciente->idPacientes }}">
@@ -224,26 +237,30 @@
                                 <td class="vl-pacientes-td vl-pacientes-td--num whitespace-nowrap">{{ $paciente->descuentoFormateado() }}</td>
                                 <td class="vl-pacientes-td vl-pacientes-td--num whitespace-nowrap">{{ $paciente->precioConDescuentoFormateado() }}</td>
                                 <td class="vl-pacientes-td vl-pacientes-td--num whitespace-nowrap">{{ $paciente->pagadoFormateado() }}</td>
-                                <td class="vl-pacientes-td vl-pacientes-td--num whitespace-nowrap font-semibold tabular-nums">
-                                    {{ \App\Support\CuentaCorriente\CuentaCorrienteConsulta::formatearMoneda((float) $saldoFila) }}
-                                </td>
-                                <td class="vl-pacientes-td vl-pacientes-td--icon">
-                                    <x-vl-grid-icon-btn
-                                        title="Asistente IA"
-                                        variant="neutral"
-                                        wire:click="abrirModalIa({{ $paciente->idPacientes }})"
-                                    >
-                                        <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.75"
-                                                  d="M4 5a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1H5a1 1 0 01-1-1V5zm10 0a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1h-4a1 1 0 01-1-1V5zM4 15a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1H5a1 1 0 01-1-1v-4zm10 0a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1h-4a1 1 0 01-1-1v-4z"/>
-                                        </svg>
-                                    </x-vl-grid-icon-btn>
-                                </td>
+                                @if ($mostrarSaldoCc)
+                                    <td class="vl-pacientes-td vl-pacientes-td--num whitespace-nowrap font-semibold tabular-nums">
+                                        {{ \App\Support\CuentaCorriente\CuentaCorrienteConsulta::formatearMoneda((float) $saldoFila) }}
+                                    </td>
+                                @endif
+                                @if ($mostrarColumnaIa)
+                                    <td class="vl-pacientes-td vl-pacientes-td--icon">
+                                        <x-vl-grid-icon-btn
+                                            title="Asistente IA"
+                                            variant="neutral"
+                                            wire:click="abrirModalIa({{ $paciente->idPacientes }})"
+                                        >
+                                            <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.75"
+                                                      d="M4 5a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1H5a1 1 0 01-1-1V5zm10 0a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1h-4a1 1 0 01-1-1V5zM4 15a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1H5a1 1 0 01-1-1v-4zm10 0a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1h-4a1 1 0 01-1-1v-4z"/>
+                                            </svg>
+                                        </x-vl-grid-icon-btn>
+                                    </td>
+                                @endif
                             </tr>
                         @endif
                     @empty
                         <tr>
-                            <td colspan="18" class="vl-pacientes-td text-center text-neutral-500 py-10">
+                            <td colspan="{{ 16 + ($mostrarSaldoCc ? 1 : 0) + ($mostrarColumnaIa ? 1 : 0) }}" class="vl-pacientes-td text-center text-neutral-500 py-10">
                                 @if ($vista === 'hoy')
                                     @php
                                         $fechaEfectiva = $this->fechaVistaEfectiva();

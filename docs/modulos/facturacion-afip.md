@@ -60,7 +60,7 @@ del laboratorio (un CUIT para todos):
 Entran con `php artisan migrate` (`2026_10_01_000002_add_entorno_configuracion_arca`).
 SQL manual: `database/sql/entorno_configuracion_arca.sql`.
 
-El permiso para emitir (`usuarios.permisoAfip`) sigue en cada usuario. En responsable inscripto el formulario de usuarios muestra solo ese checkbox: CUIT, punto de venta y certificados no se editan ahí. En monotributo esos campos siguen en el usuario. La emisión todavía lee CUIT, punto de venta y certificados del usuario. Esta ficha es el lugar donde se cargan; no reemplaza al usuario hasta que se conecte.
+El permiso para emitir (`usuarios.permisoAfip`) sigue en cada usuario. En responsable inscripto el formulario de usuarios muestra solo ese checkbox. La emisión de ese régimen lee CUIT, razón social, domicilio, punto de venta, concepto y certificados **solo** de esta ficha. Si falta un dato, avisa y no emite. No completa con los campos AFIP del usuario. En monotributo esos campos siguen en el usuario y la emisión los usa como hasta ahora.
 
 ## Qué no cambia en monotributo
 
@@ -69,7 +69,7 @@ La letra C, el CAE, el QR, los certificados y el PDF de un solo importe. En modo
 ## Qué no hacer
 
 1. No emitir Factura C con IVA, ni Factura A/B con `ImpIVA = 0`, salvo alícuota 0 configurada a propósito.
-2. No usar `usuarios.CbteTipo` para forzar la letra cuando el régimen es responsable inscripto.
+2. No usar datos AFIP de `usuarios` (CUIT, punto de venta, certificados, `CbteTipo`) cuando el régimen es responsable inscripto. Si falta la ficha de Arca, no hay reemplazo.
 3. No anular una Factura A con la nota de crédito C del monotributo: la nota tiene que ser del mismo tipo (A→3, B→8).
 4. No declarar `responsable_inscripto` sin haber corrido `php artisan migrate` en esa base. La alícuota y `precio_incluye_iva` se confirman con el contador y se escriben en el tenant.
 5. No recalcular el IVA de una nota de crédito: se copian neto, IVA y alícuota de la factura.
