@@ -39,10 +39,11 @@ final class FacturacionAfipService
         $fechaYmd = $fecha->format('Ymd');
 
         $cfg['doc_tipo'] = $receptor['doc_tipo'];
+        $identidad = $this->identidadFiscal($emisor);
 
         $payloadAfip = [
-            'cuit' => preg_replace('/\D/', '', (string) $emisor->cuit) ?? '',
-            'pto_vta' => (int) $emisor->PtoVta,
+            'cuit' => $identidad['cuit'],
+            'pto_vta' => $identidad['pto_vta'],
             'doc_nro' => (int) $receptor['doc_nro'],
             'importe' => $importe,
             'fecha_yyyymmdd' => $fechaYmd,
@@ -145,10 +146,11 @@ final class FacturacionAfipService
         $fechaYmd = $fecha->format('Ymd');
 
         $cfg['doc_tipo'] = (int) $factura->DocTipo;
+        $identidad = $this->identidadFiscal($emisor);
 
         $payloadAfip = [
-            'cuit' => preg_replace('/\D/', '', (string) $emisor->cuit) ?? '',
-            'pto_vta' => (int) $emisor->PtoVta,
+            'cuit' => $identidad['cuit'],
+            'pto_vta' => $identidad['pto_vta'],
             'doc_nro' => (int) preg_replace('/\D/', '', (string) $factura->DocNro),
             'importe' => $importe,
             'fecha_yyyymmdd' => $fechaYmd,
@@ -421,10 +423,11 @@ final class FacturacionAfipService
         $fechaYmd = $fecha->format('Ymd');
 
         $cfg['doc_tipo'] = $receptor['doc_tipo'];
+        $identidad = $this->identidadFiscal($emisor);
 
         $payloadAfip = [
-            'cuit' => preg_replace('/\D/', '', (string) $emisor->cuit) ?? '',
-            'pto_vta' => (int) $emisor->PtoVta,
+            'cuit' => $identidad['cuit'],
+            'pto_vta' => $identidad['pto_vta'],
             'doc_nro' => (int) $receptor['doc_nro'],
             'importe' => $importe,
             'fecha_yyyymmdd' => $fechaYmd,
@@ -547,6 +550,17 @@ final class FacturacionAfipService
     private function resolverEmisor(?Usuario $emisor): Usuario
     {
         $emisor ??= labCtx()->usuario();
+        if ($emisor === null || (int) $emisor->permisoAfip !== 1) {
+            throw new RuntimeException('El usuario no tiene permiso AFIP.');
+        }
+
+        if (FacturacionAfipConfig::esResponsableInscripto()) {
+            FacturacionAfipConfig::exigirFichaEmisor();
+
+            /** @var Usuario $emisor */
+            return $emisor;
+        }
+
         if (! FacturacionAfipConfig::emisorPuedeFacturar($emisor)) {
             throw new RuntimeException(
                 'El usuario no tiene permiso AFIP o faltan datos/certificados del emisor.'
@@ -555,6 +569,33 @@ final class FacturacionAfipService
 
         /** @var Usuario $emisor */
         return $emisor;
+    }
+
+    /**
+     * Identidad que se manda a AFIP y se guarda en el comprobante.
+     * En responsable inscripto sale solo de entorno. No completa con el usuario.
+     *
+     * @return array{cuit: string, pto_vta: int, razon_social: string, domicilio: string}
+     */
+    private function identidadFiscal(Usuario $emisor): array
+    {
+        if (FacturacionAfipConfig::esResponsableInscripto()) {
+            $ficha = FacturacionAfipConfig::exigirFichaEmisor();
+
+            return [
+                'cuit' => $ficha['cuit'],
+                'pto_vta' => $ficha['pto_vta'],
+                'razon_social' => $ficha['razon_social'],
+                'domicilio' => $ficha['domicilio'],
+            ];
+        }
+
+        return [
+            'cuit' => preg_replace('/\D/', '', (string) $emisor->cuit) ?? '',
+            'pto_vta' => (int) $emisor->PtoVta,
+            'razon_social' => trim((string) $emisor->razonSocial),
+            'domicilio' => trim((string) $emisor->domicComerc),
+        ];
     }
 
     private function cargarPacienteFacturable(int $idPacientes): Paciente
@@ -898,16 +939,18 @@ final class FacturacionAfipService
             ? (string) $paciente->idPacientes
             : '0';
 
+        $identidad = $this->identidadFiscal($emisor);
+
         $payload = [
             'idPacientes' => $idPacientes,
-            'cuit' => preg_replace('/\D/', '', (string) $emisor->cuit) ?? '',
-            'PtoVta' => (int) $emisor->PtoVta,
+            'cuit' => $identidad['cuit'],
+            'PtoVta' => $identidad['pto_vta'],
             'CbteTipo' => (int) $extra['CbteTipo'],
             'Concepto' => (int) $extra['Concepto'],
             'DocTipo' => (int) $receptor['doc_tipo'],
             'DocNro' => (string) $receptor['doc_nro'],
-            'razonSocial' => mb_substr(trim((string) $emisor->razonSocial), 0, 100) ?: '0',
-            'domicComerc' => mb_substr(trim((string) $emisor->domicComerc), 0, 50) ?: '0',
+            'razonSocial' => mb_substr($identidad['razon_social'], 0, 100),
+            'domicComerc' => mb_substr($identidad['domicilio'], 0, 50),
             'razonSocialCliente' => $receptor['razon_social'],
             'importe' => round((float) $extra['importe'], 2),
             'FechServDesde' => $fecha->toDateString(),

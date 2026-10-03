@@ -29,7 +29,8 @@ final class PortalClienteConfig
     }
 
     /**
-     * Resumen «Saldo Cuenta Corriente» en Inicio y Pacientes (autogestión).
+     * Saldo de cuenta corriente en autogestión: resumen de Inicio, encabezado
+     * de Pacientes y columna «Saldo» del listado.
      * Default true. Solo se oculta si el tenant declara `mostrar_saldo_cuenta_corriente => false`.
      */
     public static function mostrarSaldoCuentaCorriente(): bool

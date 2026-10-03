@@ -26,7 +26,8 @@ return [
     | - mostrar_saldo_cuenta_corriente / mostrar_descuentos_obtenidos: resumen
     |   financiero en Inicio y encabezado de Pacientes (autogestión). Default true.
     |   epizoolab declara los cuatro mostrar_* en false.
-    |   labvetciudad declara mostrar_saldo_cuenta_corriente en false.
+    |   labvetciudad y neolab declaran mostrar_saldo_cuenta_corriente en false
+    |   (encabezado y columna Saldo del listado de Pacientes).
     |   Helper: PortalClienteConfig.
     */
     'portal_cliente' => [
@@ -159,6 +160,16 @@ return [
         'destinatario_paciente' => true,
         'forma_mail' => true,
         'forma_whatsapp' => true,
+    ],
+
+    /*
+    | Columna «IA» (Asistente IA) en el listado de pacientes.
+    | Aplica al Menú de Laboratorio y a la autogestión (Menú de Clientes).
+    | Default true. Un lab que no la usa declara false en config/tenants/{slug}.php.
+    | Helper: App\Support\Protocolos\AsistenteIaConfig.
+    */
+    'asistente_ia' => [
+        'mostrar_columna' => true,
     ],
 
     /*

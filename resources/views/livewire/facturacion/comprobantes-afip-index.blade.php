@@ -19,8 +19,7 @@
 
     @unless ($emisorOk)
         <div class="vl-card mb-3 border border-amber-300 bg-amber-50 px-4 py-3 text-sm text-amber-900">
-            El usuario actual no puede emitir: falta permiso AFIP, CUIT, punto de venta o certificados en
-            <code class="text-xs">afipSE/cert/{{ (int) (labCtx()->idUsuarios ?? 0) }}/</code>.
+            {{ $mensajeEmisor }}
         </div>
     @endunless
 

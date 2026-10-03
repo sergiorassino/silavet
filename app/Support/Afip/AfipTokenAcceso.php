@@ -31,10 +31,16 @@ final class AfipTokenAcceso
             $service = 'wsfe';
         }
 
-        $id = (int) $config['cert_usuario_id'];
-        $base = AfipCertificadosStorage::directorio($id);
-        $cert = AfipCertificadosStorage::rutaAbsoluta($id, (string) ($config['cert_crt'] ?? ''));
-        $privateKey = AfipCertificadosStorage::rutaAbsoluta($id, (string) ($config['cert_key'] ?? ''));
+        if (! empty($config['cert_laboratorio'])) {
+            $base = AfipCertificadosStorage::directorioLaboratorio();
+            $cert = AfipCertificadosStorage::rutaAbsolutaLaboratorio((string) ($config['cert_crt'] ?? ''));
+            $privateKey = AfipCertificadosStorage::rutaAbsolutaLaboratorio((string) ($config['cert_key'] ?? ''));
+        } else {
+            $id = (int) $config['cert_usuario_id'];
+            $base = AfipCertificadosStorage::directorio($id);
+            $cert = AfipCertificadosStorage::rutaAbsoluta($id, (string) ($config['cert_crt'] ?? ''));
+            $privateKey = AfipCertificadosStorage::rutaAbsoluta($id, (string) ($config['cert_key'] ?? ''));
+        }
         $tra = $service === 'wsfe'
             ? $base.DIRECTORY_SEPARATOR.'TRA.xml'
             : $base.DIRECTORY_SEPARATOR.'TRA_'.$service.'.xml';

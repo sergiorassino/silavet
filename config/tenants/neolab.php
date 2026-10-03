@@ -19,6 +19,11 @@ return [
 
     'portal_cliente' => [
         'permite_descarga_excel' => true,
+        'mostrar_saldo_cuenta_corriente' => false,
+    ],
+
+    'asistente_ia' => [
+        'mostrar_columna' => false,
     ],
 
     'roles' => [

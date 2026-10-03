@@ -116,6 +116,11 @@ Flags `destinatario_cliente` / `destinatario_paciente` y `forma_mail` /
 (solo Cliente por mail). Helper: `InformeEnvioConfig`.
 Doc: [modulos/envio-informes.md](modulos/envio-informes.md).
 
+**Ejemplo implementado:** columna Asistente IA del listado de pacientes
+(`tenant.asistente_ia.mostrar_columna`). Default `true`. El mismo flag oculta
+la columna en el Menú de Laboratorio y en la autogestión. neolab: `false`.
+Helper: `AsistenteIaConfig`.
+
 ---
 
 ## 4. Identidad por tenant

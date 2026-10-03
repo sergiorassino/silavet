@@ -18,6 +18,7 @@ use App\Support\Facturacion\FacturacionAfipIndicadores;
 use App\Support\PermisosIaCatalog;
 use App\Support\Precios\DescuentoDeterminacionResolver;
 use App\Support\Precios\ListaPreciosConfig;
+use App\Support\Protocolos\AsistenteIaConfig;
 use App\Support\Protocolos\DiagnosticoIaPromptBuilder;
 use App\Support\Protocolos\HojaRutaHemogramaConfig;
 use App\Support\Protocolos\PacienteAdjuntoStorage;
@@ -1056,6 +1057,7 @@ class PacienteIndex extends Component
 
     public function abrirModalIa(int $id): void
     {
+        abort_unless(AsistenteIaConfig::mostrarColumna(), 403);
         abort_unless(tienePermiso(PermisosIaCatalog::PROTOCOLOS), 403);
 
         $paciente = $this->pacienteGestionable($id);
@@ -1093,6 +1095,7 @@ class PacienteIndex extends Component
 
     public function guardarClinicaIa(): void
     {
+        abort_unless(AsistenteIaConfig::mostrarColumna(), 403);
         abort_unless(tienePermiso(PermisosIaCatalog::PROTOCOLOS), 403);
 
         $uid = labCtx()->idUsuarios ?? 0;
@@ -1129,6 +1132,7 @@ class PacienteIndex extends Component
 
     public function consultarChatGpt(): void
     {
+        abort_unless(AsistenteIaConfig::mostrarColumna(), 403);
         abort_unless(tienePermiso(PermisosIaCatalog::PROTOCOLOS), 403);
 
         $uid = labCtx()->idUsuarios ?? 0;
@@ -1258,7 +1262,7 @@ class PacienteIndex extends Component
             $idCliente = (int) $ctx->idClientes;
             // Para tesoreria_pacientes no existe el mapa de saldo por protocolo;
             // el saldo total se muestra vía facade en encabezadoDescuento.
-            if (! TesoreriaConfig::usaPacientes()) {
+            if (! TesoreriaConfig::usaPacientes() && PortalClienteConfig::mostrarSaldoCuentaCorriente()) {
                 $saldosAcumulados = CuentaCorrienteConsulta::mapaSaldoAcumuladoPorProtocolo($idCliente);
             }
             if (PortalClienteConfig::mostrarResumenFinanciero()) {
@@ -1277,6 +1281,8 @@ class PacienteIndex extends Component
         $mostrarColumnaAfip = ! $autogestion
             && FacturacionAfipConfig::enListadoPacientes()
             && tienePermiso(PermisosIaCatalog::FACTURACION);
+
+        $mostrarColumnaIa = AsistenteIaConfig::mostrarColumna();
 
         $pagoGlobalVista = $this->datosVistaPagoGlobal(! $autogestion);
         $pagadoProtocoloVista = $this->datosVistaPagadoProtocolo($mostrarColumnaPagado);
@@ -1297,6 +1303,7 @@ class PacienteIndex extends Component
             'mostrarCadete' => $mostrarCadete,
             'mostrarColumnaPagado' => $mostrarColumnaPagado,
             'mostrarColumnaAfip' => $mostrarColumnaAfip,
+            'mostrarColumnaIa' => $mostrarColumnaIa,
             'mostrarPagoGlobal' => $pagoGlobalVista['mostrarPagoGlobal'],
             'mostrarHojaRutaHemograma' => ! $autogestion
                 && $this->vista === self::VISTA_HOY

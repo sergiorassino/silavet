@@ -171,7 +171,9 @@
                         <th class="vl-pacientes-th vl-pacientes-th--icon" title="Adjunto">Adj.</th>
                         <th class="vl-pacientes-th vl-pacientes-th--icon" title="Notificaciones">NOTI</th>
                         <th class="vl-pacientes-th vl-pacientes-th--icon" title="Enviar informe">ENV.</th>
-                        <th class="vl-pacientes-th vl-pacientes-th--icon" title="Asistente IA">IA</th>
+                        @if ($mostrarColumnaIa)
+                            <th class="vl-pacientes-th vl-pacientes-th--icon" title="Asistente IA">IA</th>
+                        @endif
                         @if ($mostrarColumnaAfip)
                             <th class="vl-pacientes-th vl-pacientes-th--icon" title="Comprobantes AFIP">AFIP</th>
                         @endif
@@ -238,7 +240,9 @@
                                 <td class="vl-pacientes-td vl-pacientes-td--icon"></td>
                                 <td class="vl-pacientes-td vl-pacientes-td--icon"></td>
                                 <td class="vl-pacientes-td vl-pacientes-td--icon"></td>
-                                <td class="vl-pacientes-td vl-pacientes-td--icon"></td>
+                                @if ($mostrarColumnaIa)
+                                    <td class="vl-pacientes-td vl-pacientes-td--icon"></td>
+                                @endif
                                 @if ($mostrarColumnaAfip)
                                     <td class="vl-pacientes-td vl-pacientes-td--icon">
                                         @php
@@ -473,18 +477,20 @@
                                         </svg>
                                     </x-vl-grid-icon-btn>
                                 </td>
-                                <td class="vl-pacientes-td vl-pacientes-td--icon">
-                                    <x-vl-grid-icon-btn
-                                        title="Asistente IA"
-                                        variant="neutral"
-                                        wire:click="abrirModalIa({{ $paciente->idPacientes }})"
-                                    >
-                                        <svg class="h-[26px] w-[26px]" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.75"
-                                                  d="M4 5a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1H5a1 1 0 01-1-1V5zm10 0a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1h-4a1 1 0 01-1-1V5zM4 15a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1H5a1 1 0 01-1-1v-4zm10 0a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1h-4a1 1 0 01-1-1v-4z"/>
-                                        </svg>
-                                    </x-vl-grid-icon-btn>
-                                </td>
+                                @if ($mostrarColumnaIa)
+                                    <td class="vl-pacientes-td vl-pacientes-td--icon">
+                                        <x-vl-grid-icon-btn
+                                            title="Asistente IA"
+                                            variant="neutral"
+                                            wire:click="abrirModalIa({{ $paciente->idPacientes }})"
+                                        >
+                                            <svg class="h-[26px] w-[26px]" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.75"
+                                                      d="M4 5a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1H5a1 1 0 01-1-1V5zm10 0a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1h-4a1 1 0 01-1-1V5zM4 15a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1H5a1 1 0 01-1-1v-4zm10 0a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1h-4a1 1 0 01-1-1v-4z"/>
+                                            </svg>
+                                        </x-vl-grid-icon-btn>
+                                    </td>
+                                @endif
                                 @if ($mostrarColumnaAfip)
                                     <td class="vl-pacientes-td vl-pacientes-td--icon">
                                         @php
@@ -516,7 +522,7 @@
                         @endif
                     @empty
                         <tr>
-                            <td colspan="{{ ($mostrarCadete ? 24 : 23) + ($mostrarColumnaPagado ? 1 : 0) + ($mostrarColumnaAfip ? 1 : 0) + ($mostrarListaPrecios ? 1 : 0) }}" class="vl-pacientes-td text-center text-neutral-500 py-10">
+                            <td colspan="{{ ($mostrarCadete ? 23 : 22) + ($mostrarColumnaPagado ? 1 : 0) + ($mostrarColumnaAfip ? 1 : 0) + ($mostrarListaPrecios ? 1 : 0) + ($mostrarColumnaIa ? 1 : 0) }}" class="vl-pacientes-td text-center text-neutral-500 py-10">
                                 @if ($vista === 'hoy')
                                     @php
                                         $fechaEfectiva = $this->fechaVistaEfectiva();

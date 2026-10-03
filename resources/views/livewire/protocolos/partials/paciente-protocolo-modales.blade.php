@@ -477,7 +477,7 @@
         @endteleport
     @endif
 
-    @if ($modalIaAbierto)
+    @if ($modalIaAbierto && \App\Support\Protocolos\AsistenteIaConfig::mostrarColumna())
         @teleport('body')
             <div class="fixed inset-0 z-[120] flex items-end justify-center p-4 sm:items-center"
                  wire:keydown.escape.window="cerrarModalIa">
