@@ -118,7 +118,8 @@
         </div>
 
         @php
-            $mostrarSaldoCc = \App\Support\Cliente\PortalClienteConfig::mostrarSaldoCuentaCorriente();
+            $mostrarImportes = \App\Support\Cliente\PortalClienteConfig::mostrarColumnasImportes();
+            $mostrarSaldoCc = \App\Support\Cliente\PortalClienteConfig::mostrarColumnaSaldoListado();
         @endphp
         <div class="vl-pacientes-scroll">
         <table class="vl-pacientes-grid min-w-full text-xs">
@@ -136,10 +137,12 @@
                         <th class="vl-pacientes-th">Sexo</th>
                         <th class="vl-pacientes-th">Edad</th>
                         <th class="vl-pacientes-th vl-pacientes-th--estado" title="Estado">ESTADO</th>
-                        <th class="vl-pacientes-th vl-pacientes-th--num" title="Precio de lista">Precio Lista</th>
-                        <th class="vl-pacientes-th vl-pacientes-th--num" title="Descuento">Desc.</th>
-                        <th class="vl-pacientes-th vl-pacientes-th--num" title="Precio con descuento">Precio c/desc</th>
-                        <th class="vl-pacientes-th vl-pacientes-th--num">Pagado</th>
+                        @if ($mostrarImportes)
+                            <th class="vl-pacientes-th vl-pacientes-th--num" title="Precio de lista">Precio Lista</th>
+                            <th class="vl-pacientes-th vl-pacientes-th--num" title="Descuento">Desc.</th>
+                            <th class="vl-pacientes-th vl-pacientes-th--num" title="Precio con descuento">Precio c/desc</th>
+                            <th class="vl-pacientes-th vl-pacientes-th--num">Pagado</th>
+                        @endif
                         @if ($mostrarSaldoCc)
                             <th class="vl-pacientes-th vl-pacientes-th--num" title="Saldo acumulado del cliente tras este movimiento">Saldo</th>
                         @endif
@@ -173,10 +176,12 @@
                                 <td class="vl-pacientes-td">—</td>
                                 <td class="vl-pacientes-td">—</td>
                                 <td class="vl-pacientes-td vl-pacientes-td--estado">Pago</td>
-                                <td class="vl-pacientes-td vl-pacientes-td--num whitespace-nowrap">{{ $paciente->precioListaFormateado() }}</td>
-                                <td class="vl-pacientes-td vl-pacientes-td--num whitespace-nowrap">{{ $paciente->descuentoFormateado() }}</td>
-                                <td class="vl-pacientes-td vl-pacientes-td--num whitespace-nowrap">{{ $paciente->precioConDescuentoFormateado() }}</td>
-                                <td class="vl-pacientes-td vl-pacientes-td--num whitespace-nowrap font-semibold">{{ $paciente->importePagadoMovimientoFormateado() }}</td>
+                                @if ($mostrarImportes)
+                                    <td class="vl-pacientes-td vl-pacientes-td--num whitespace-nowrap">{{ $paciente->precioListaFormateado() }}</td>
+                                    <td class="vl-pacientes-td vl-pacientes-td--num whitespace-nowrap">{{ $paciente->descuentoFormateado() }}</td>
+                                    <td class="vl-pacientes-td vl-pacientes-td--num whitespace-nowrap">{{ $paciente->precioConDescuentoFormateado() }}</td>
+                                    <td class="vl-pacientes-td vl-pacientes-td--num whitespace-nowrap font-semibold">{{ $paciente->importePagadoMovimientoFormateado() }}</td>
+                                @endif
                                 @if ($mostrarSaldoCc)
                                     <td class="vl-pacientes-td vl-pacientes-td--num whitespace-nowrap font-semibold tabular-nums">
                                         {{ \App\Support\CuentaCorriente\CuentaCorrienteConsulta::formatearMoneda((float) $saldoFila) }}
@@ -233,10 +238,12 @@
                                 <td class="vl-pacientes-td vl-pacientes-td--estado">
                                     {{ $paciente->estado ?: \App\Support\Resultados\ResultadosEstadosCatalog::EN_PROC }}
                                 </td>
-                                <td class="vl-pacientes-td vl-pacientes-td--num whitespace-nowrap">{{ $paciente->precioListaFormateado() }}</td>
-                                <td class="vl-pacientes-td vl-pacientes-td--num whitespace-nowrap">{{ $paciente->descuentoFormateado() }}</td>
-                                <td class="vl-pacientes-td vl-pacientes-td--num whitespace-nowrap">{{ $paciente->precioConDescuentoFormateado() }}</td>
-                                <td class="vl-pacientes-td vl-pacientes-td--num whitespace-nowrap">{{ $paciente->pagadoFormateado() }}</td>
+                                @if ($mostrarImportes)
+                                    <td class="vl-pacientes-td vl-pacientes-td--num whitespace-nowrap">{{ $paciente->precioListaFormateado() }}</td>
+                                    <td class="vl-pacientes-td vl-pacientes-td--num whitespace-nowrap">{{ $paciente->descuentoFormateado() }}</td>
+                                    <td class="vl-pacientes-td vl-pacientes-td--num whitespace-nowrap">{{ $paciente->precioConDescuentoFormateado() }}</td>
+                                    <td class="vl-pacientes-td vl-pacientes-td--num whitespace-nowrap">{{ $paciente->pagadoFormateado() }}</td>
+                                @endif
                                 @if ($mostrarSaldoCc)
                                     <td class="vl-pacientes-td vl-pacientes-td--num whitespace-nowrap font-semibold tabular-nums">
                                         {{ \App\Support\CuentaCorriente\CuentaCorrienteConsulta::formatearMoneda((float) $saldoFila) }}
@@ -260,7 +267,7 @@
                         @endif
                     @empty
                         <tr>
-                            <td colspan="{{ 16 + ($mostrarSaldoCc ? 1 : 0) + ($mostrarColumnaIa ? 1 : 0) }}" class="vl-pacientes-td text-center text-neutral-500 py-10">
+                            <td colspan="{{ 12 + ($mostrarImportes ? 4 : 0) + ($mostrarSaldoCc ? 1 : 0) + ($mostrarColumnaIa ? 1 : 0) }}" class="vl-pacientes-td text-center text-neutral-500 py-10">
                                 @if ($vista === 'hoy')
                                     @php
                                         $fechaEfectiva = $this->fechaVistaEfectiva();

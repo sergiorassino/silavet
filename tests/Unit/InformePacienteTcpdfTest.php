@@ -40,6 +40,62 @@ class InformePacienteTcpdfTest extends TestCase
         $this->assertSame(3, $pdf->getNumPages());
     }
 
+    public function test_filas_habituales_y_texto_corto_siguen_en_una_pagina(): void
+    {
+        $pdf = InformePacienteTcpdf::generar($this->datosInforme([
+            'grupos' => [[
+                'idGrupos' => 1,
+                'nombreGrupo' => 'Hemograma',
+                'mostrarReferencias' => 1,
+                'renglones' => [
+                    [
+                        'tipoItem' => 1,
+                        'nombreItem' => 'Hemoglobina',
+                        'valor' => '12,5',
+                        'unidadMedida' => 'g/dL',
+                        'referencia' => '12 - 18',
+                    ],
+                    [
+                        'tipoItem' => 9,
+                        'nombreItem' => 'Linfocitos',
+                        'valor' => '30',
+                        'unidadMedida' => '%',
+                        'valor2' => '1,2',
+                        'unidadMedida2' => '10^9/L',
+                        'referencia' => '1 - 4',
+                    ],
+                    [
+                        'tipoItem' => 8,
+                        'nombreItem' => 'Comentario',
+                        'valor' => "Texto breve de control.\nSegunda linea.",
+                    ],
+                ],
+            ]],
+        ]));
+
+        $this->assertSame(1, $pdf->getNumPages());
+    }
+
+    public function test_texto_largo_que_entra_en_la_hoja_siguiente_no_se_reparte(): void
+    {
+        $pdf = InformePacienteTcpdf::generar($this->informeConTextoLargo($this->textoDeLineas(45)));
+
+        $this->assertSame(3, $pdf->getNumPages());
+    }
+
+    public function test_texto_largo_que_no_entra_en_una_hoja_sigue_en_las_siguientes(): void
+    {
+        $queEntra = InformePacienteTcpdf::generar($this->informeConTextoLargo($this->textoDeLineas(45)));
+        $lineas = InformePacienteTcpdf::generar($this->informeConTextoLargo($this->textoDeLineas(220)));
+        $parrafo = InformePacienteTcpdf::generar($this->informeConTextoLargo(
+            trim(str_repeat('informe citologico detallado ', 500))
+        ));
+
+        $this->assertGreaterThan($queEntra->getNumPages(), $lineas->getNumPages());
+        $this->assertGreaterThanOrEqual(4, $lineas->getNumPages());
+        $this->assertGreaterThanOrEqual(4, $parrafo->getNumPages());
+    }
+
     public function test_adjunto_declarado_pero_ausente_agrega_pagina_de_aviso(): void
     {
         $pdf = InformePacienteTcpdf::generar($this->datosInforme([
@@ -96,6 +152,35 @@ class InformePacienteTcpdfTest extends TestCase
             'adjunto_ruta' => null,
             'adjunto_nombre' => '',
         ], $extra);
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function informeConTextoLargo(string $valor): array
+    {
+        return $this->datosInforme([
+            'grupos' => [[
+                'idGrupos' => 1,
+                'nombreGrupo' => 'Citologia',
+                'mostrarReferencias' => 0,
+                'renglones' => [[
+                    'tipoItem' => 8,
+                    'nombreItem' => 'Informe',
+                    'valor' => $valor,
+                ]],
+            ]],
+        ]);
+    }
+
+    private function textoDeLineas(int $lineas): string
+    {
+        $filas = [];
+        for ($i = 1; $i <= $lineas; $i++) {
+            $filas[] = 'Linea '.str_pad((string) $i, 4, '0', STR_PAD_LEFT);
+        }
+
+        return implode("\n", $filas);
     }
 
     private function pdfTemporalDePrueba(int $paginas): string

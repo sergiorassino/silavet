@@ -24,6 +24,8 @@ final class PacienteListadoExporter
      *     mostrarColumnaPagado?: bool,
      *     mostrarCadete?: bool,
      *     saldosAcumulados?: array<int, float>,
+     *     mostrarColumnasImportes?: bool,
+     *     mostrarSaldo?: bool,
      *     vista?: string,
      *     fechaVista?: string,
      *     fechaDesde?: string,
@@ -80,7 +82,7 @@ final class PacienteListadoExporter
     public function encabezados(array $opciones): array
     {
         if (! empty($opciones['autogestion'])) {
-            return [
+            $encabezados = [
                 '#',
                 'Fecha',
                 'Protocolo',
@@ -91,12 +93,19 @@ final class PacienteListadoExporter
                 'Sexo',
                 'Edad',
                 'Estado',
-                'Precio Lista',
-                'Desc.',
-                'Precio c/desc',
-                'Pagado',
-                'Saldo',
             ];
+
+            if ($this->autogestionMuestraImportes($opciones)) {
+                $encabezados[] = 'Precio Lista';
+                $encabezados[] = 'Desc.';
+                $encabezados[] = 'Precio c/desc';
+                $encabezados[] = 'Pagado';
+            }
+            if ($this->autogestionMuestraSaldo($opciones)) {
+                $encabezados[] = 'Saldo';
+            }
+
+            return $encabezados;
         }
 
         $encabezados = [
@@ -158,7 +167,7 @@ final class PacienteListadoExporter
                 : ResultadosEstadosCatalog::EN_PROC);
 
         if ($autogestion) {
-            return [
+            $valores = [
                 $numero,
                 $fecha,
                 $protocolo,
@@ -169,12 +178,19 @@ final class PacienteListadoExporter
                 $sexo,
                 $edad,
                 $estado,
-                $esPago ? '' : round($paciente->precioLista(), 2),
-                $esPago ? '' : round($paciente->descuentoImporte(), 2),
-                $esPago ? '' : round($paciente->precioConDescuentoImporte(), 2),
-                round((float) ($paciente->pagado ?? 0), 2),
-                round((float) ($saldos[(int) $paciente->idPacientes] ?? 0), 2),
             ];
+
+            if ($this->autogestionMuestraImportes($opciones)) {
+                $valores[] = $esPago ? '' : round($paciente->precioLista(), 2);
+                $valores[] = $esPago ? '' : round($paciente->descuentoImporte(), 2);
+                $valores[] = $esPago ? '' : round($paciente->precioConDescuentoImporte(), 2);
+                $valores[] = round((float) ($paciente->pagado ?? 0), 2);
+            }
+            if ($this->autogestionMuestraSaldo($opciones)) {
+                $valores[] = round((float) ($saldos[(int) $paciente->idPacientes] ?? 0), 2);
+            }
+
+            return $valores;
         }
 
         $precio = $esPago
@@ -210,6 +226,32 @@ final class PacienteListadoExporter
         $valores[] = $esPago ? '' : $estado;
 
         return $valores;
+    }
+
+    /**
+     * Precio Lista, Descuento, Precio c/descuento y Pagado. Default true.
+     *
+     * @param  array<string, mixed>  $opciones
+     */
+    private function autogestionMuestraImportes(array $opciones): bool
+    {
+        return ! array_key_exists('mostrarColumnasImportes', $opciones)
+            || (bool) $opciones['mostrarColumnasImportes'];
+    }
+
+    /**
+     * Columna Saldo. Queda oculta si los importes están apagados o si el flag de saldo es false.
+     *
+     * @param  array<string, mixed>  $opciones
+     */
+    private function autogestionMuestraSaldo(array $opciones): bool
+    {
+        if (! $this->autogestionMuestraImportes($opciones)) {
+            return false;
+        }
+
+        return ! array_key_exists('mostrarSaldo', $opciones)
+            || (bool) $opciones['mostrarSaldo'];
     }
 
     /**

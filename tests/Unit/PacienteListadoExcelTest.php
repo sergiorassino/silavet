@@ -70,6 +70,34 @@ class PacienteListadoExcelTest extends TestCase
         );
     }
 
+    public function test_encabezados_autogestion_sin_importes(): void
+    {
+        $exporter = new PacienteListadoExporter;
+
+        $this->assertSame(
+            ['#', 'Fecha', 'Protocolo', 'Nombre', 'Tutor', 'Especie', 'Raza', 'Sexo', 'Edad', 'Estado'],
+            $exporter->encabezados([
+                'autogestion' => true,
+                'mostrarColumnasImportes' => false,
+                'mostrarSaldo' => true,
+            ])
+        );
+    }
+
+    public function test_encabezados_autogestion_sin_saldo(): void
+    {
+        $exporter = new PacienteListadoExporter;
+
+        $this->assertSame(
+            ['#', 'Fecha', 'Protocolo', 'Nombre', 'Tutor', 'Especie', 'Raza', 'Sexo', 'Edad', 'Estado', 'Precio Lista', 'Desc.', 'Precio c/desc', 'Pagado'],
+            $exporter->encabezados([
+                'autogestion' => true,
+                'mostrarColumnasImportes' => true,
+                'mostrarSaldo' => false,
+            ])
+        );
+    }
+
     public function test_nombre_archivo_historial_con_rango(): void
     {
         $exporter = new PacienteListadoExporter;

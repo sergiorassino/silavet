@@ -476,6 +476,10 @@ final class InformePacienteTcpdf extends Fpdi
     }
 
     /**
+     * tipoItem 8. Si el bloque entra en una hoja (en la actual o, con el salto
+     * que ya existía, en la siguiente), se dibuja igual que antes. Solo si el
+     * texto es más alto que una hoja se reparte, sin tocar el resto de los ítems.
+     *
      * @param  array<string, mixed>  $r
      */
     private function dibujarTextoLargo(array $r): void
@@ -490,7 +494,50 @@ final class InformePacienteTcpdf extends Fpdi
             $this->alturaMultiCell($wNombre, $nombre, 9),
             $this->alturaMultiCell($wValor, $valor, 9)
         );
-        $this->asegurarEspacio($h + 0.5);
+
+        if ($h <= $this->altoMaximoTextoLargoEnUnaHoja()) {
+            $this->asegurarEspacio($h + 0.5);
+            $this->pintarTextoLargo($wNombre, $wValor, $nombre, $valor, $h);
+
+            return;
+        }
+
+        $this->dibujarTextoLargoPaginado($nombre, $valor, $wNombre, $wValor);
+    }
+
+    /**
+     * Alto que cabe bajo el membrete de una hoja de continuación, hasta el borde
+     * físico. Coincide con lo que el bloque único ya podía mostrar sin recortar.
+     */
+    private function altoMaximoTextoLargoEnUnaHoja(): float
+    {
+        return self::PAGE_H - $this->yTrasMembrete();
+    }
+
+    /**
+     * Y del cuerpo tras dibujarMembrete() en una hoja que no es la primera.
+     * Tiene que coincidir con ese método: la 1.ª hoja suma los datos del paciente.
+     */
+    private function yTrasMembrete(): float
+    {
+        $header = (array) ($this->datos['header'] ?? []);
+        $headerFile = is_string($header['header_file'] ?? null) ? $header['header_file'] : null;
+        if ($headerFile !== null && is_file($headerFile)) {
+            $alto = $this->altoImagenEscalada($headerFile, $this->anchoUtil(), 50.0);
+
+            return self::MARGEN + $alto + 3.0 + 5.0;
+        }
+
+        return self::LINEA_MEMBRETE_Y + 5.0;
+    }
+
+    private function pintarTextoLargo(
+        float $wNombre,
+        float $wValor,
+        string $nombre,
+        string $valor,
+        float $h,
+    ): void {
         $x = self::MARGEN;
         $y = $this->GetY();
 
@@ -498,6 +545,118 @@ final class InformePacienteTcpdf extends Fpdi
         $this->multiCellTexto($wNombre, self::ALTO_LINEA, $nombre, 'L', 0, $x, $y, $h);
         $this->multiCellTexto($wValor, self::ALTO_LINEA, $valor, 'L', 0, $x + $wNombre, $y, $h);
         $this->SetY($y + $h);
+    }
+
+    private function dibujarTextoLargoPaginado(string $nombre, string $valor, float $wNombre, float $wValor): void
+    {
+        $valor = str_replace(["\r\n", "\r"], "\n", $valor);
+        $hNombre = $this->alturaMultiCell($wNombre, $nombre, 9);
+        $resto = $valor;
+
+        while ($resto !== '') {
+            $minimo = max($hNombre, self::ALTO_FILA);
+            if ($this->limiteContenidoY() - $this->GetY() < $minimo) {
+                $this->nuevaPaginaConEncabezado();
+            }
+
+            $espacio = $this->limiteContenidoY() - $this->GetY();
+            $lineas = max(1, (int) floor(max($espacio, self::ALTO_LINEA) / self::ALTO_LINEA));
+            [$trozo, $siguiente] = $this->partirTextoQueCabe($resto, $wValor, $lineas);
+            $h = max($hNombre, $this->alturaMultiCell($wValor, $trozo, 9));
+            while ($lineas > 1 && $h > $espacio) {
+                $lineas--;
+                [$trozo, $siguiente] = $this->partirTextoQueCabe($resto, $wValor, $lineas);
+                $h = max($hNombre, $this->alturaMultiCell($wValor, $trozo, 9));
+            }
+
+            $this->pintarTextoLargo($wNombre, $wValor, $nombre, $trozo, $h);
+            if ($siguiente === '' || $siguiente === $resto) {
+                $resto = $siguiente === '' ? '' : mb_substr($resto, max(1, mb_strlen($trozo)));
+            } else {
+                $resto = $siguiente;
+            }
+        }
+    }
+
+    /**
+     * @return array{0: string, 1: string} trozo que entra en $maxLineas, y el resto
+     */
+    private function partirTextoQueCabe(string $texto, float $ancho, int $maxLineas): array
+    {
+        $maxLineas = max(1, $maxLineas);
+        if ($this->lineasDe($texto, $ancho) <= $maxLineas) {
+            return [$texto, ''];
+        }
+
+        $len = mb_strlen($texto);
+        $lo = 1;
+        $hi = $len - 1;
+        $mejor = 1;
+        while ($lo <= $hi) {
+            $mid = intdiv($lo + $hi, 2);
+            if ($this->lineasDe(mb_substr($texto, 0, $mid), $ancho) <= $maxLineas) {
+                $mejor = $mid;
+                $lo = $mid + 1;
+            } else {
+                $hi = $mid - 1;
+            }
+        }
+
+        $corte = $this->corteSinPartirPalabra($texto, $mejor);
+        $trozo = mb_substr($texto, 0, $corte);
+        $resto = mb_substr($texto, $corte);
+        if (preg_match('/[ \t]$/u', $trozo) === 1) {
+            $trozo = rtrim($trozo, " \t");
+            $resto = ltrim($resto, " \t");
+        }
+        if ($resto !== '' && str_starts_with($resto, "\n") && ! str_ends_with($trozo, "\n")) {
+            $resto = substr($resto, 1);
+        }
+        if ($trozo === '') {
+            $trozo = mb_substr($texto, 0, $mejor);
+            $resto = mb_substr($texto, $mejor);
+        }
+
+        return [$trozo, $resto];
+    }
+
+    private function corteSinPartirPalabra(string $texto, int $mejor): int
+    {
+        $len = mb_strlen($texto);
+        if ($mejor >= $len || $mejor < 1) {
+            return $mejor;
+        }
+
+        $ultimo = mb_substr($texto, $mejor - 1, 1);
+        $siguiente = mb_substr($texto, $mejor, 1);
+        if (preg_match('/\s/u', $ultimo) === 1 || preg_match('/\s/u', $siguiente) === 1) {
+            return $mejor;
+        }
+
+        $prefijo = mb_substr($texto, 0, $mejor);
+        if (preg_match('/^.*\s/us', $prefijo, $m) !== 1) {
+            return $mejor;
+        }
+
+        $candidato = mb_strlen($m[0]);
+
+        return $candidato >= 1 ? $candidato : $mejor;
+    }
+
+    private function lineasDe(string $texto, float $ancho): int
+    {
+        if ($texto === '') {
+            return 1;
+        }
+
+        TcpdfFuenteArial::aplicar($this, '', 9);
+
+        return max(1, $this->getNumLines(TcpdfTextoSuperindice::paraMedir($texto), $ancho));
+    }
+
+    private function limiteContenidoY(): float
+    {
+        return self::PAGE_H - self::MARGEN_INFERIOR;
     }
 
     private function dibujarLineaSeparadora(): void

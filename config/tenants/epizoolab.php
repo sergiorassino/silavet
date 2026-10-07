@@ -22,6 +22,7 @@ return [
         'mostrar_estimacion_costos' => false,
         'mostrar_saldo_cuenta_corriente' => false,
         'mostrar_descuentos_obtenidos' => false,
+        'mostrar_columnas_importes' => false,
     ],
 
     'tipodeterminaciones' => [
