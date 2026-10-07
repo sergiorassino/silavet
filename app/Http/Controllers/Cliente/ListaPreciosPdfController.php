@@ -34,10 +34,20 @@ class ListaPreciosPdfController extends Controller
             abort(404, 'No hay lista de precios disponible.');
         }
 
-        return response()->file($path, [
+        $respuesta = response()->file($path, [
             'Content-Type' => 'application/pdf',
             'Content-Disposition' => 'inline; filename="lista-precios.pdf"',
-            'Cache-Control' => 'private, no-store',
         ]);
+
+        // response()->file() marca el archivo como público y agrega Last-Modified.
+        // Eso permite que el visor PDF del navegador reutilice una versión anterior.
+        $respuesta->headers->remove('Last-Modified');
+        $respuesta->headers->remove('ETag');
+        $respuesta->setPrivate();
+        $respuesta->headers->set('Cache-Control', 'private, no-store, no-cache, must-revalidate, max-age=0');
+        $respuesta->headers->set('Pragma', 'no-cache');
+        $respuesta->headers->set('Expires', '0');
+
+        return $respuesta;
     }
 }

@@ -135,7 +135,9 @@ Route::middleware(['auth', 'lab.context'])->group(function () {
             ->middleware(['throttle:20,1', 'no-store'])
             ->where('ref', '[A-Za-z0-9_-]+')
             ->name('cliente.pacientes.determinaciones.pdf');
-        Route::get('/lista-precios', ListaPrecios::class)->name('cliente.lista-precios');
+        Route::get('/lista-precios', ListaPrecios::class)
+            ->middleware('no-store')
+            ->name('cliente.lista-precios');
         Route::get('/lista-precios/pdf', ListaPreciosPdfController::class)
             ->middleware(['throttle:20,1', 'no-store'])
             ->name('cliente.lista-precios.pdf');
