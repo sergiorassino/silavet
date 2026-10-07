@@ -939,7 +939,7 @@ class EntornoForm extends Component
         $footerInformePreviewUrl = $this->previewTemporal($this->footerInformeUpload);
 
         return view('livewire.admin.entorno-form', [
-            'listaPreciosUrl' => EntornoArchivos::urlPublica($this->listaPreciosPdfActual),
+            'listaPreciosUrl' => $this->urlListaPreciosSinCache(),
             'logoPreviewUrl' => $logoPreviewUrl,
             'logoUrl' => EntornoArchivos::urlPublica($this->logoActual, cacheBust: true),
             'headerInformePreviewUrl' => $headerInformePreviewUrl,
@@ -951,6 +951,20 @@ class EntornoForm extends Component
             'firmaDerUrl' => EntornoArchivos::urlPublica($this->firmaDerActual),
             'acceptImagen' => EntornoArchivos::acceptInputImagen(),
         ])->layout('layouts.staff', UsuarioMenuPortal::staffLayoutParams(labCtx()->idRoles));
+    }
+
+    /**
+     * El PDF se guarda siempre como lista-precios.pdf. Sin query distinto,
+     * el navegador abre la versión que ya tenía en caché.
+     */
+    private function urlListaPreciosSinCache(): ?string
+    {
+        $url = EntornoArchivos::urlPublica($this->listaPreciosPdfActual, cacheBust: true);
+        if ($url === null || $url === '') {
+            return null;
+        }
+
+        return $url.(str_contains($url, '?') ? '&' : '?').'t='.hrtime(true);
     }
 
     private function previewTemporal(mixed $upload): ?string

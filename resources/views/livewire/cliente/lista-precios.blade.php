@@ -19,6 +19,7 @@
                     La lista de precios está disponible en PDF. Podés abrirla en una pestaña nueva.
                 </p>
                 <a href="{{ $pdfUrl }}"
+                   id="vl-lista-precios-abrir"
                    target="_blank"
                    rel="noopener noreferrer"
                    class="btn-primary shrink-0 inline-flex items-center justify-center gap-2">
@@ -30,10 +31,29 @@
             </div>
             <div class="mt-5 overflow-hidden rounded-xl border border-accent-200 bg-neutral-50">
                 <iframe
+                    id="vl-lista-precios-frame"
                     src="{{ $pdfUrl }}"
                     title="Lista de precios PDF"
                     class="h-[70vh] w-full"
                 ></iframe>
+                <script>
+                    (function () {
+                        var base = @json($pdfUrl);
+                        var link = document.getElementById('vl-lista-precios-abrir');
+                        var frame = document.getElementById('vl-lista-precios-frame');
+                        if (!base || !link || !frame) {
+                            return;
+                        }
+                        window.addEventListener('pageshow', function (ev) {
+                            if (!ev.persisted) {
+                                return;
+                            }
+                            var url = base + (base.indexOf('?') === -1 ? '?' : '&') + 't=' + Date.now();
+                            link.href = url;
+                            frame.src = url;
+                        });
+                    })();
+                </script>
             </div>
         @else
             <p class="py-8 text-center text-sm text-neutral-500">

@@ -600,6 +600,7 @@ async function vlAbrirVisorPwa(url) {
     try {
         const res = await fetch(url, {
             credentials: 'include',
+            cache: 'no-store',
             redirect: 'follow',
             signal,
         });
