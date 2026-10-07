@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Protocolos;
 
 use App\Http\Controllers\Controller;
 use App\Livewire\Protocolos\PacienteIndex;
+use App\Support\Cliente\PortalClienteConfig;
 use App\Support\CuentaCorriente\CuentaCorrienteConsulta;
 use App\Support\PermisosIaCatalog;
 use App\Support\Precios\ListaPreciosConfig;
@@ -54,6 +55,9 @@ class PacienteListadoExcelController extends Controller
 
         $filas = PacienteListadoConsulta::query($filtros)->get();
 
+        $mostrarImportes = ! $autogestion || PortalClienteConfig::mostrarColumnasImportes();
+        $mostrarSaldo = $autogestion && PortalClienteConfig::mostrarColumnaSaldoListado();
+
         $opciones = [
             'autogestion' => $autogestion,
             'mostrarListaPrecios' => ! $autogestion && ListaPreciosConfig::mostrarColumnaListadoPacientes(),
@@ -63,6 +67,8 @@ class PacienteListadoExcelController extends Controller
             'mostrarCadete' => ! $autogestion
                 && TesoreriaConfig::usaPacientes()
                 && Schema::hasColumn('pacientes', 'cadete'),
+            'mostrarColumnasImportes' => $mostrarImportes,
+            'mostrarSaldo' => $mostrarSaldo,
             'saldosAcumulados' => [],
             'vista' => $filtros['vista'],
             'fechaVista' => $filtros['fechaVista'],
@@ -71,7 +77,7 @@ class PacienteListadoExcelController extends Controller
             'busqueda' => $filtros['busqueda'],
         ];
 
-        if ($autogestion && $ctx->idClientes && ! TesoreriaConfig::usaPacientes()) {
+        if ($mostrarSaldo && $ctx->idClientes && ! TesoreriaConfig::usaPacientes()) {
             $opciones['saldosAcumulados'] = CuentaCorrienteConsulta::mapaSaldoAcumuladoPorProtocolo(
                 (int) $ctx->idClientes
             );

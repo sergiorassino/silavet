@@ -121,7 +121,11 @@ El ítem de menú sidebar es único (`clientes.cuenta-corriente.index`).
 - Si el tenant declara `portal_cliente.mostrar_saldo_cuenta_corriente => false`,
   no se muestra el saldo de Inicio, el del encabezado de Pacientes ni la columna
   **Saldo** (y no se calcula el mapa). Hoy: labvetciudad, neolab y epizoolab.
-  Precios, descuento y pagado del protocolo siguen visibles.
+- Si el tenant declara `portal_cliente.mostrar_columnas_importes => false`,
+  el listado de Pacientes de autogestión (y su Excel) oculta Precio Lista,
+  Descuento, Precio c/descuento, Pagado y Saldo. El listado staff no cambia.
+  Hoy: epizoolab. En el resto, precios, descuento y pagado del protocolo siguen
+  visibles.
 
 ## Staff: columna Pagado (opt-in por tenant)
 

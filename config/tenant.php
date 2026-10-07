@@ -25,9 +25,12 @@ return [
     |   /cliente/lista-precios y /cliente/estimacion-costos. Default true.
     | - mostrar_saldo_cuenta_corriente / mostrar_descuentos_obtenidos: resumen
     |   financiero en Inicio y encabezado de Pacientes (autogestión). Default true.
-    |   epizoolab declara los cuatro mostrar_* en false.
+    |   epizoolab declara los cuatro mostrar_* de menú/resumen en false.
     |   labvetciudad y neolab declaran mostrar_saldo_cuenta_corriente en false
     |   (encabezado y columna Saldo del listado de Pacientes).
+    | - mostrar_columnas_importes: columnas Precio Lista, Descuento, Precio c/descuento,
+    |   Pagado y Saldo del listado de Pacientes en autogestión (y el Excel de ese
+    |   listado). Default true. No afecta el listado staff. epizoolab: false.
     |   Helper: PortalClienteConfig.
     */
     'portal_cliente' => [
@@ -36,6 +39,7 @@ return [
         'mostrar_estimacion_costos' => true,
         'mostrar_saldo_cuenta_corriente' => true,
         'mostrar_descuentos_obtenidos' => true,
+        'mostrar_columnas_importes' => true,
     ],
 
     /*

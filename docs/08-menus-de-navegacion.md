@@ -69,7 +69,10 @@ Orientación UI: **desktop-first**.
   la columna **Saldo** del listado de Pacientes. Helper
   `App\Support\Cliente\PortalClienteConfig`. Solo afectan autogestión
   (`/cliente/…`); no el listado staff `listados.estimacion-costos`.
-  Epizoolab declara los cuatro `mostrar_*` en `false`.
+  Epizoolab declara los cuatro `mostrar_*` de menú y resumen en `false`, y
+  `mostrar_columnas_importes` en `false` (oculta Precio Lista, Descuento,
+  Precio c/descuento, Pagado y Saldo en el listado de Pacientes de autogestión
+  y en su Excel; el listado staff no cambia).
   Labvetciudad y NeoLab declaran `mostrar_saldo_cuenta_corriente` en `false`.
 - **Layout:** misma estética que el Menú de Laboratorio (`layouts.staff` + `sidebar-nav-cliente`).
 

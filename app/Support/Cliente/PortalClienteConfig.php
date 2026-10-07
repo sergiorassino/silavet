@@ -51,4 +51,23 @@ final class PortalClienteConfig
     {
         return self::mostrarSaldoCuentaCorriente() || self::mostrarDescuentosObtenidos();
     }
+
+    /**
+     * Columnas de importes del listado de Pacientes en autogestión:
+     * Precio Lista, Descuento, Precio c/descuento, Pagado y Saldo.
+     * Default true. El listado staff no usa este flag.
+     * La columna Saldo además exige `mostrarSaldoCuentaCorriente()`.
+     */
+    public static function mostrarColumnasImportes(): bool
+    {
+        return (bool) config('tenant.portal_cliente.mostrar_columnas_importes', true);
+    }
+
+    /**
+     * Columna Saldo del listado de Pacientes en autogestión.
+     */
+    public static function mostrarColumnaSaldoListado(): bool
+    {
+        return self::mostrarColumnasImportes() && self::mostrarSaldoCuentaCorriente();
+    }
 }

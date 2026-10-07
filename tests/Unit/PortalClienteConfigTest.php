@@ -73,6 +73,46 @@ class PortalClienteConfigTest extends TestCase
         $this->assertFalse(PortalClienteConfig::mostrarResumenFinanciero());
     }
 
+    public function test_columnas_importes_true_por_defecto(): void
+    {
+        config([
+            'tenant.portal_cliente.mostrar_columnas_importes' => true,
+            'tenant.portal_cliente.mostrar_saldo_cuenta_corriente' => true,
+        ]);
+
+        $this->assertTrue(PortalClienteConfig::mostrarColumnasImportes());
+        $this->assertTrue(PortalClienteConfig::mostrarColumnaSaldoListado());
+    }
+
+    public function test_columnas_importes_false_oculta_saldo_del_listado(): void
+    {
+        config([
+            'tenant.portal_cliente.mostrar_columnas_importes' => false,
+            'tenant.portal_cliente.mostrar_saldo_cuenta_corriente' => true,
+        ]);
+
+        $this->assertFalse(PortalClienteConfig::mostrarColumnasImportes());
+        $this->assertFalse(PortalClienteConfig::mostrarColumnaSaldoListado());
+    }
+
+    public function test_columna_saldo_exige_ambos_flags(): void
+    {
+        config([
+            'tenant.portal_cliente.mostrar_columnas_importes' => true,
+            'tenant.portal_cliente.mostrar_saldo_cuenta_corriente' => false,
+        ]);
+
+        $this->assertTrue(PortalClienteConfig::mostrarColumnasImportes());
+        $this->assertFalse(PortalClienteConfig::mostrarColumnaSaldoListado());
+    }
+
+    public function test_epizoolab_oculta_columnas_de_importes(): void
+    {
+        $override = require base_path('config/tenants/epizoolab.php');
+
+        $this->assertFalse($override['portal_cliente']['mostrar_columnas_importes']);
+    }
+
     public function test_resumen_financiero_true_si_al_menos_un_flag_esta_on(): void
     {
         config([

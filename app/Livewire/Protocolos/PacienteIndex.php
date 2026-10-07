@@ -1262,7 +1262,7 @@ class PacienteIndex extends Component
             $idCliente = (int) $ctx->idClientes;
             // Para tesoreria_pacientes no existe el mapa de saldo por protocolo;
             // el saldo total se muestra vía facade en encabezadoDescuento.
-            if (! TesoreriaConfig::usaPacientes() && PortalClienteConfig::mostrarSaldoCuentaCorriente()) {
+            if (! TesoreriaConfig::usaPacientes() && PortalClienteConfig::mostrarColumnaSaldoListado()) {
                 $saldosAcumulados = CuentaCorrienteConsulta::mapaSaldoAcumuladoPorProtocolo($idCliente);
             }
             if (PortalClienteConfig::mostrarResumenFinanciero()) {
