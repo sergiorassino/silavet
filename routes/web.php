@@ -118,7 +118,7 @@ Route::post('/logout', function () {
 })->middleware('auth')->name('logout');
 
 Route::middleware(['auth', 'lab.context'])->group(function () {
-    Route::prefix('cliente')->middleware('menu.portal:cliente')->group(function () {
+    Route::prefix('cliente')->middleware(['menu.portal:cliente', 'no-store'])->group(function () {
         Route::get('/', ClienteHome::class)->name('cliente.home');
         Route::get('/pacientes', PacienteIndex::class)->name('cliente.pacientes');
         Route::get('/pacientes/excel', PacienteListadoExcelController::class)
@@ -135,12 +135,23 @@ Route::middleware(['auth', 'lab.context'])->group(function () {
             ->middleware(['throttle:20,1', 'no-store'])
             ->where('ref', '[A-Za-z0-9_-]+')
             ->name('cliente.pacientes.determinaciones.pdf');
-        Route::get('/lista-precios', ListaPrecios::class)
-            ->middleware('no-store')
+        Route::get('/lista-precios/ver/{marca}', ListaPrecios::class)
+            ->where('marca', '[0-9-]+')
             ->name('cliente.lista-precios');
-        Route::get('/lista-precios/pdf', ListaPreciosPdfController::class)
-            ->middleware(['throttle:20,1', 'no-store'])
+        Route::get('/lista-precios', function () {
+            return redirect()
+                ->route('cliente.lista-precios', ['marca' => labListaPreciosMarca()])
+                ->header('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
+                ->header('Pragma', 'no-cache')
+                ->header('Expires', '0');
+        })->name('cliente.lista-precios.entrada');
+        Route::get('/lista-precios/pdf/{marca}', ListaPreciosPdfController::class)
+            ->middleware('throttle:20,1')
+            ->where('marca', '[A-Za-z0-9\-]+')
             ->name('cliente.lista-precios.pdf');
+        Route::get('/lista-precios/pdf', ListaPreciosPdfController::class)
+            ->middleware('throttle:20,1')
+            ->name('cliente.lista-precios.pdf.estable');
         Route::get('/estimacion-costos', EstimacionCostos::class)->name('cliente.estimacion-costos');
     });
 

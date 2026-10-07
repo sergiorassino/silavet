@@ -2,17 +2,16 @@
 
 namespace App\Livewire\Cliente;
 
-use App\Models\Entorno;
 use App\Support\Cliente\PortalClienteConfig;
-use App\Support\Entorno\EntornoArchivos;
 use App\Support\UsuarioMenuPortal;
-use Illuminate\Support\Facades\Schema;
 use Livewire\Component;
 
 class ListaPrecios extends Component
 {
-    public function mount(): void
+    public function mount(string $marca = ''): void
     {
+        unset($marca);
+
         abort_unless(labCtx()->esCliente(), 403);
         abort_unless(PortalClienteConfig::mostrarListaPrecios(), 404);
     }
@@ -28,8 +27,7 @@ class ListaPrecios extends Component
     }
 
     /**
-     * URL nueva en cada apertura. El archivo en disco se llama siempre
-     * lista-precios.pdf; sin un query distinto el navegador muestra el PDF viejo.
+     * El token va en el path. Chrome reutiliza el PDF anterior si solo cambia ?v=.
      */
     private function urlPdfSinCache(): ?string
     {
@@ -37,15 +35,8 @@ class ListaPrecios extends Component
             return null;
         }
 
-        $marca = (string) hrtime(true);
-        if (Schema::hasTable('entorno')) {
-            $entorno = Entorno::query()->find(1);
-            $abs = EntornoArchivos::rutaAbsoluta($entorno?->listaPreciosPdf ?? null);
-            if ($abs !== null && is_file($abs)) {
-                $marca = ((int) filemtime($abs)).'-'.((int) filesize($abs)).'-'.$marca;
-            }
-        }
-
-        return route('cliente.lista-precios.pdf', ['v' => $marca]);
+        return route('cliente.lista-precios.pdf', [
+            'marca' => labListaPreciosMarca().'-'.hrtime(true),
+        ]);
     }
 }

@@ -30,27 +30,91 @@
                 </a>
             </div>
             <div class="mt-5 overflow-hidden rounded-xl border border-accent-200 bg-neutral-50">
+                <p id="vl-lista-precios-estado" class="px-4 py-3 text-sm text-neutral-500">Cargando lista de precios…</p>
                 <iframe
                     id="vl-lista-precios-frame"
-                    src="{{ $pdfUrl }}"
                     title="Lista de precios PDF"
                     class="h-[70vh] w-full"
                 ></iframe>
                 <script>
                     (function () {
-                        var base = @json($pdfUrl);
-                        var link = document.getElementById('vl-lista-precios-abrir');
+                        var url = @json($pdfUrl);
                         var frame = document.getElementById('vl-lista-precios-frame');
-                        if (!base || !link || !frame) {
-                            return;
+                        var link = document.getElementById('vl-lista-precios-abrir');
+                        var estado = document.getElementById('vl-lista-precios-estado');
+                        var blobUrl = null;
+
+                        function esPwa() {
+                            return window.matchMedia('(display-mode: standalone)').matches
+                                || window.matchMedia('(display-mode: fullscreen)').matches
+                                || window.navigator.standalone === true;
                         }
+
+                        function cargar() {
+                            var destino = url + (url.indexOf('?') === -1 ? '?' : '&') + 't=' + Date.now();
+
+                            return fetch(destino, {
+                                cache: 'no-store',
+                                credentials: 'same-origin'
+                            }).then(function (res) {
+                                var tipo = (res.headers.get('Content-Type') || '').toLowerCase();
+                                if (!res.ok || tipo.indexOf('pdf') === -1) {
+                                    throw new Error('HTTP ' + res.status);
+                                }
+
+                                return res.blob();
+                            }).then(function (blob) {
+                                var pdf = blob.type && blob.type.indexOf('pdf') !== -1
+                                    ? blob
+                                    : new Blob([blob], { type: 'application/pdf' });
+
+                                if (blobUrl) {
+                                    URL.revokeObjectURL(blobUrl);
+                                }
+
+                                blobUrl = URL.createObjectURL(pdf);
+                                frame.src = blobUrl;
+
+                                if (estado) {
+                                    estado.hidden = true;
+                                }
+
+                                return blobUrl;
+                            });
+                        }
+
+                        if (link) {
+                            link.addEventListener('click', function (ev) {
+                                if (esPwa()) {
+                                    return;
+                                }
+
+                                ev.preventDefault();
+                                ev.stopPropagation();
+
+                                var listo = blobUrl ? Promise.resolve(blobUrl) : cargar();
+                                listo.then(function (abierta) {
+                                    window.open(abierta, '_blank', 'noopener,noreferrer');
+                                }).catch(function () {
+                                    window.open(url, '_blank', 'noopener,noreferrer');
+                                });
+                            }, true);
+                        }
+
+                        function mostrar() {
+                            cargar().catch(function () {
+                                if (estado) {
+                                    estado.hidden = false;
+                                    estado.textContent = 'No se pudo cargar la lista de precios. Intente de nuevo.';
+                                }
+                            });
+                        }
+
+                        mostrar();
                         window.addEventListener('pageshow', function (ev) {
-                            if (!ev.persisted) {
-                                return;
+                            if (ev.persisted) {
+                                mostrar();
                             }
-                            var url = base + (base.indexOf('?') === -1 ? '?' : '&') + 't=' + Date.now();
-                            link.href = url;
-                            frame.src = url;
                         });
                     })();
                 </script>

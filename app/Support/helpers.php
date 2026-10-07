@@ -73,6 +73,25 @@ if (! function_exists('labListaPreciosUrl')) {
     }
 }
 
+if (! function_exists('labListaPreciosMarca')) {
+    /**
+     * Cambia cuando se reemplaza el PDF. Va en la ruta (no en ?v=):
+     * el visor de Chrome ignora la query y reabre el archivo anterior.
+     */
+    function labListaPreciosMarca(): string
+    {
+        if (\Illuminate\Support\Facades\Schema::hasTable('entorno')) {
+            $entorno = \App\Models\Entorno::query()->find(1);
+            $abs = \App\Support\Entorno\EntornoArchivos::rutaAbsoluta($entorno?->listaPreciosPdf ?? null);
+            if ($abs !== null && is_file($abs)) {
+                return (string) ((int) filemtime($abs)).'-'.((int) filesize($abs));
+            }
+        }
+
+        return (string) time();
+    }
+}
+
 if (! function_exists('tenantFacturacionAfipHabilitada')) {
     function tenantFacturacionAfipHabilitada(): bool
     {

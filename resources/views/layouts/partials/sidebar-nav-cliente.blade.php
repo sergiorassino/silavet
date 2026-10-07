@@ -13,7 +13,7 @@
 </a>
 
 @if (\App\Support\Cliente\PortalClienteConfig::mostrarListaPrecios())
-<a href="{{ route('cliente.lista-precios') }}"
+<a href="{{ route('cliente.lista-precios', ['marca' => labListaPreciosMarca()]) }}"
    class="vl-sidebar-link {{ request()->routeIs('cliente.lista-precios*') ? 'is-active' : '' }}"
    title="Lista de Precios (v1.0)">
     <x-vl-sidebar-icon name="lista-precios" class="h-5 w-5 shrink-0 opacity-80" />

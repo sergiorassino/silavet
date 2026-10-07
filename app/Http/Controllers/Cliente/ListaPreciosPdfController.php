@@ -34,19 +34,24 @@ class ListaPreciosPdfController extends Controller
             abort(404, 'No hay lista de precios disponible.');
         }
 
+        $marca = preg_replace('/[^A-Za-z0-9\-]/', '', (string) $request->route('marca', ''));
+        $nombre = 'lista-precios'.($marca !== '' ? '-'.$marca : '').'.pdf';
+
         $respuesta = response()->file($path, [
             'Content-Type' => 'application/pdf',
-            'Content-Disposition' => 'inline; filename="lista-precios.pdf"',
+            'Content-Disposition' => 'inline; filename="'.$nombre.'"',
+            'Accept-Ranges' => 'none',
         ]);
 
-        // response()->file() marca el archivo como público y agrega Last-Modified.
-        // Eso permite que el visor PDF del navegador reutilice una versión anterior.
+        // El visor PDF de Chrome guarda el archivo por la URL y por rangos,
+        // aunque la respuesta diga no-store. Sin Last-Modified no hay 304.
         $respuesta->headers->remove('Last-Modified');
         $respuesta->headers->remove('ETag');
         $respuesta->setPrivate();
         $respuesta->headers->set('Cache-Control', 'private, no-store, no-cache, must-revalidate, max-age=0');
         $respuesta->headers->set('Pragma', 'no-cache');
         $respuesta->headers->set('Expires', '0');
+        $respuesta->headers->set('Accept-Ranges', 'none');
 
         return $respuesta;
     }
