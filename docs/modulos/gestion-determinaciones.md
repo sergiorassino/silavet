@@ -48,7 +48,9 @@ Si falta `tipodeterminaciones.derivacion`: aviso visible y no se persiste el cen
    con su vocal, ñ después de n. Clic en cabeceras **Orden** y **Nombre de la
    determinación** alterna `asc`/`desc` de esa columna.
 3. Edición inline con guardado automático al salir del campo (blur) o al
-   cambiar un select; solo acción de fila: eliminar. Alta con valores en 0.
+   cambiar un select; solo acción de fila: eliminar. Alta con nombre vacío
+   y el resto de valores en 0. El nombre sigue siendo obligatorio al guardar
+   un campo de una fila ya existente.
 4. Eliminar bloqueado si hay filas en `determinaciones` con ese tipo.
 
 ## Fuente de verdad

@@ -159,7 +159,7 @@ class TipodeterminacionIndex extends Component
 
         $data = [
             'orden' => $maxOrden + 1,
-            'nombre' => 'Nueva determinación',
+            'nombre' => '',
             'precio' => 0,
             'filaDesde' => 0,
             'filasCant' => 0,
