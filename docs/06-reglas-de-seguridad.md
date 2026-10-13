@@ -20,6 +20,8 @@
 - Todo ABM debe tener **chequeo de alcance por contexto** y/o permisos:
   - Personal de laboratorio: según `tienePermiso(N)`.
   - Usuario cliente: **filtrar siempre** por `labCtx()->idClientes`.
+  - Tutor (`/loginTutor`): **filtrar siempre** por el DNI de sesión, `tipoRegistro` de
+    protocolo y estado `Final` o `Final/Env`. No usa el guard de `usuarios`.
   - En operaciones por ID (editar/eliminar/ver informe), **volver a consultar** el
     registro con el mismo filtro (no confiar en IDs del cliente).
 - Verificar permisos con cadena `0/1` de `usuarios.permisos_ia` contra catálogo
@@ -113,6 +115,7 @@ Las URLs visibles **no deben** incluir:
 | Caso | Patrón |
 |------|--------|
 | PDF/informe en portal clientes | `OpaqueRouteToken` cifrado con `APP_KEY` |
+| PDF/informe en autogestión del tutor | `OpaqueRouteToken` (`tutor.informe-paciente`), atado al DNI de sesión |
 | Detalle de determinaciones (autogestión) | `OpaqueRouteToken` (`cliente.paciente-determinaciones`) |
 | Enlaces internos ABM (staff) | `{id}` tras `auth` + permisos |
 | Archivo de descarga | Nombre sin IDs internos |

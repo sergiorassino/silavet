@@ -12,7 +12,7 @@
 </head>
 @php
     /** En desktop el menú usa rail colapsado salvo el panel de inicio; hover/focus lo expanden (modo dinámico). */
-    $isSidebarPeekMode = ! request()->routeIs('dashboard', 'admin.dashboard', 'cliente.home');
+    $isSidebarPeekMode = ! request()->routeIs('dashboard', 'admin.dashboard', 'cliente.home', 'tutor.pacientes');
 @endphp
 <body class="h-full antialiased text-neutral-800 vl-app-surface">
 
@@ -237,7 +237,7 @@
         </nav>
 
         @include('layouts.partials.staff-sidebar-controls')
-        @include('layouts.partials.staff-sidebar-footer')
+        @include($sidebarFooter ?? 'layouts.partials.staff-sidebar-footer')
     </aside>
 
     <div class="vl-main flex min-h-screen flex-col"

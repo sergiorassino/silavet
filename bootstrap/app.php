@@ -4,6 +4,7 @@ use App\Http\Middleware\CheckPermiso;
 use App\Http\Middleware\EnsureLabContext;
 use App\Http\Middleware\EnsureMenuPortal;
 use App\Http\Middleware\EnsureTesoreriaModuloVisible;
+use App\Http\Middleware\EnsureTutorContext;
 use App\Http\Middleware\ForceHttpsBehindProxy;
 use App\Http\Middleware\LimpiarSesionEnPaginaLogin;
 use App\Http\Middleware\NoStoreResponse;
@@ -55,6 +56,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'login.limpiar-sesion' => LimpiarSesionEnPaginaLogin::class,
             'no-store' => NoStoreResponse::class,
             'tesoreria.modulo' => EnsureTesoreriaModuloVisible::class,
+            'tutor.context' => EnsureTutorContext::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {

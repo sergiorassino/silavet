@@ -36,7 +36,7 @@ final class CerrarSesionAplicacion
         }
 
         foreach (array_keys($request->session()->all()) as $key) {
-            if (str_starts_with($key, 'login_') || str_starts_with($key, 'lab.')) {
+            if (str_starts_with($key, 'login_') || str_starts_with($key, 'lab.') || str_starts_with($key, 'tutor.')) {
                 return true;
             }
         }

@@ -30,6 +30,9 @@ final class OpaqueRouteToken
     /** Informe público (WhatsApp / links sin login). */
     public const PURPOSE_INFORME_PUBLICO = 'protocolos.informe-publico';
 
+    /** Informe del portal del tutor (sesión por DNI, sin id de usuario). */
+    public const PURPOSE_INFORME_TUTOR = 'tutor.informe-paciente';
+
     /** Vigencia del token autenticado (segundos). */
     private const TTL_SEGUNDOS = 7200;
 
@@ -284,6 +287,41 @@ final class OpaqueRouteToken
         }
 
         return ['id' => $id];
+    }
+
+    public static function forInformeTutor(int $idPacientes, string $dni): string
+    {
+        return self::encodePayload(self::PURPOSE_INFORME_TUTOR, [
+            'id' => $idPacientes,
+            'h' => hash('sha256', $dni),
+            't' => time(),
+            'n' => bin2hex(random_bytes(4)),
+        ]);
+    }
+
+    /**
+     * @return array{id: int, h: string}|null
+     */
+    public static function decodeInformeTutor(string $ref): ?array
+    {
+        $data = self::decodePayload($ref, self::PURPOSE_INFORME_TUTOR);
+        if ($data === null) {
+            return null;
+        }
+
+        $id = (int) ($data['id'] ?? 0);
+        $h = (string) ($data['h'] ?? '');
+        $t = (int) ($data['t'] ?? 0);
+
+        if ($id <= 0 || $h === '' || $t <= 0) {
+            return null;
+        }
+
+        if ((time() - $t) > self::TTL_SEGUNDOS) {
+            return null;
+        }
+
+        return ['id' => $id, 'h' => $h];
     }
 
     /**

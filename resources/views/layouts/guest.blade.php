@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     @include('layouts.partials.meta-viewport')
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>{{ config('app.name') }} — Acceso</title>
+    <title>{{ $documentTitle ?? config('app.name').' — Acceso' }}</title>
     @include('layouts.partials.favicon')
     <script>
         (function () {
@@ -58,13 +58,13 @@
             <div class="vl-auth-brand__copy mx-auto w-full text-center md:text-left">
                 <p class="vl-auth-brand__kicker font-semibold uppercase text-white/65">{{ config('app.name') }}</p>
                 <h1 class="vl-auth-brand__title font-bold leading-tight tracking-tight">
-                    {{ config('tenant.login.titulo_staff', 'Portal del personal') }}
+                    {{ $brandTitle ?? config('tenant.login.titulo_staff', 'Portal del personal') }}
                 </h1>
                 <p class="vl-auth-brand__lead leading-relaxed text-white/80">
-                    Acceso para personal del laboratorio veterinario.
+                    {{ $brandLead ?? 'Acceso para personal del laboratorio veterinario.' }}
                 </p>
                 <p class="vl-auth-brand__note leading-relaxed text-white/70">
-                    Ingrese con su usuario y contraseña para gestionar protocolos, clientes e informes.
+                    {{ $brandNote ?? 'Ingrese con su usuario y contraseña para gestionar protocolos, clientes e informes.' }}
                 </p>
             </div>
         </div>
