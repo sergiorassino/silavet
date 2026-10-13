@@ -12,9 +12,12 @@ Evita confusiones entre roles operativos, administración y clientes veterinario
 | **Menú de Laboratorio** | Operaciones analíticas: protocolos, resultados, informes, parametrización operativa | `layouts.staff` + nav laboratorio | `/login` · `menu.portal:laboratorio` |
 | **Menú de Administración** | Facturación AFIP, cobranza, stock de reactivos, usuarios, parámetros financieros | `layouts.staff` + nav administración | Mismo login · `menu.portal:administracion` |
 | **Menú de Clientes** | Autogestión: pacientes propios, lista de precios, estimación de costos | `layouts.staff` + `sidebar-nav-cliente` | Mismo `/login` · `menu.portal:cliente` |
+| **Autogestión del tutor** | Estudios finalizados de las mascotas del propietario | `layouts.staff` + `sidebar-nav-tutor` | `/loginTutor` · sesión `tutor.dni` (no es usuario) |
 
-**Cantidad de sidebars previstos:** 3 layouts. Laboratorio y Administración comparten
-login pero middleware `menu.portal` separa rutas sensibles.
+**Cantidad de sidebars previstos:** 3 layouts de archivo (`guest` aparte). Laboratorio,
+Administración y Clientes comparten `layouts.staff`. El tutor reutiliza ese layout
+con su propio menú y entra solo por `/loginTutor`. Laboratorio y Administración
+comparten `/login`; el middleware `menu.portal` separa sus rutas.
 
 ---
 
@@ -75,6 +78,17 @@ Orientación UI: **desktop-first**.
   y en su Excel; el listado staff no cambia).
   Labvetciudad y NeoLab declaran `mostrar_saldo_cuenta_corriente` en `false`.
 - **Layout:** misma estética que el Menú de Laboratorio (`layouts.staff` + `sidebar-nav-cliente`).
+
+---
+
+## 3.1 Autogestión del tutor
+
+- **Audiencia:** propietario de la mascota (`pacientes.propietario` / `pacientes.dni`).
+- **Login:** `/loginTutor` (la URL termina en `loginTutor`). Solo el DNI del tutor. No comparte `/login`.
+- **Después del ingreso:** grilla de pacientes propios en estado `Final` o `Final/Env`,
+  solo datos del paciente e informe PDF. Sin columna de estado, precios, determinaciones ni IA.
+- **Rutas:** prefijo `/tutor/…` · middleware `tutor.context`.
+- **Detalle:** [modulos/autogestion-tutor.md](modulos/autogestion-tutor.md).
 
 ---
 

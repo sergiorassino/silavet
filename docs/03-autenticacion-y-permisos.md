@@ -61,6 +61,20 @@ Portal para veterinarias y clínicas que consultan protocolos e informes.
 
 ---
 
+### 1.3 Login del tutor (`/loginTutor`)
+
+Portal del propietario de la mascota. No usa la tabla `usuarios`.
+
+| Campo | Origen |
+|-------|--------|
+| DNI | `pacientes.dni` (no hay contraseña) |
+| Alcance | Protocolos (`tipoRegistro = 1`) de ese DNI en estado `Final` o `Final/Env` |
+
+La sesión guarda `tutor.dni`. No abre el Menú de Laboratorio, Administración ni
+Clientes. Detalle: [modulos/autogestion-tutor.md](modulos/autogestion-tutor.md).
+
+---
+
 ## 2. Manejo de Contraseñas — Texto plano
 
 Las contraseñas se almacenan en **texto plano** en `usuarios.password` (`varchar(10)`),

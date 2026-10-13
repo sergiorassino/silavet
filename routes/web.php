@@ -30,6 +30,7 @@ use App\Http\Controllers\Protocolos\HojaRutaHemogramaPdfController;
 use App\Http\Controllers\Protocolos\InformePacientePdfController;
 use App\Http\Controllers\Protocolos\InformePublicoPdfController;
 use App\Http\Controllers\Tesoreria\MovimientosCajaExcelController;
+use App\Http\Controllers\Tutor\InformeTutorPdfController;
 use App\Http\Controllers\WebManifestController;
 use App\Livewire\Abm\Clientes\ClienteForm;
 use App\Livewire\Abm\Clientes\ClienteIndex;
@@ -57,6 +58,7 @@ use App\Livewire\Admin\EntornoForm;
 use App\Livewire\Admin\ScriptAutomatizacionForm;
 use App\Livewire\AdminDashboard;
 use App\Livewire\Auth\Login;
+use App\Livewire\Auth\LoginTutor;
 use App\Livewire\Cliente\ClienteHome;
 use App\Livewire\Cliente\ListaPrecios;
 use App\Livewire\Cliente\PacienteDeterminacionesDetalle;
@@ -92,6 +94,7 @@ use App\Livewire\Tesoreria\ProveedorForm;
 use App\Livewire\Tesoreria\ProveedorIndex;
 use App\Livewire\Tesoreria\SaldosPorDiaIndex;
 use App\Livewire\Tesoreria\TransferenciaIntercuenta;
+use App\Livewire\Tutor\PacienteIndex as TutorPacienteIndex;
 use App\Support\Auth\CerrarSesionAplicacion;
 use App\Support\Facturacion\FacturacionAfipConfig;
 use App\Support\Tesoreria\TesoreriaConfig;
@@ -109,6 +112,7 @@ Route::get('/', fn () => redirect()->route('login'));
 
 Route::middleware(['login.limpiar-sesion', 'no-store'])->group(function () {
     Route::get('/login', Login::class)->name('login');
+    Route::get('/loginTutor', LoginTutor::class)->name('login.tutor');
 });
 
 Route::post('/logout', function () {
@@ -116,6 +120,20 @@ Route::post('/logout', function () {
 
     return redirect()->route('login');
 })->middleware('auth')->name('logout');
+
+Route::post('/logoutTutor', function () {
+    CerrarSesionAplicacion::ejecutar();
+
+    return redirect()->route('login.tutor');
+})->name('logout.tutor');
+
+Route::middleware(['tutor.context', 'no-store'])->prefix('tutor')->group(function () {
+    Route::get('/pacientes', TutorPacienteIndex::class)->name('tutor.pacientes');
+    Route::get('/pacientes/informe/{ref}', InformeTutorPdfController::class)
+        ->middleware('throttle:20,1')
+        ->where('ref', '[A-Za-z0-9_-]+')
+        ->name('tutor.pacientes.informe');
+});
 
 Route::middleware(['auth', 'lab.context'])->group(function () {
     Route::prefix('cliente')->middleware(['menu.portal:cliente', 'no-store'])->group(function () {
