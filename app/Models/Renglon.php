@@ -66,6 +66,7 @@ class Renglon extends Model
 
     public function imagenes(): HasMany
     {
-        return $this->hasMany(Imagenxrenglon::class, 'idRenglones', 'idRenglones');
+        return $this->hasMany(Imagenxrenglon::class, 'idRenglones', 'idRenglones')
+            ->orderBy('id');
     }
 }

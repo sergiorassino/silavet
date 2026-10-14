@@ -16,6 +16,9 @@ class RenglonImagenes extends Component
 {
     use WithFileUploads;
 
+    /** Máximo de archivos que se aceptan en una sola selección. */
+    public const MAX_POR_VEZ = 10;
+
     public int $idRenglones;
 
     public int $idPacientes;
@@ -62,18 +65,33 @@ class RenglonImagenes extends Component
 
         $this->asegurarRenglonEnAlcance();
 
-        $this->validate([
-            'archivos' => ['required', 'array', 'min:1', 'max:10'],
-            'archivos.*' => [
-                'file',
-                'max:'.RenglonImagenesStorage::MAX_KB,
-                'mimes:'.implode(',', RenglonImagenesStorage::EXTENSIONES),
-            ],
-        ], [
-            'archivos.required' => 'Seleccione al menos una imagen.',
-            'archivos.*.mimes' => 'Solo se permiten JPG, PNG, GIF o WEBP.',
-            'archivos.*.max' => 'Cada imagen no puede superar 5 MB.',
-        ]);
+        $cantidad = is_array($this->archivos) ? count($this->archivos) : 0;
+        if ($cantidad > self::MAX_POR_VEZ) {
+            $this->archivos = [];
+            $this->dispatch('vl-swal-error', mensaje: self::avisoMaxPorVez());
+
+            return;
+        }
+
+        try {
+            $this->validate([
+                'archivos' => ['required', 'array', 'min:1', 'max:'.self::MAX_POR_VEZ],
+                'archivos.*' => [
+                    'file',
+                    'max:'.RenglonImagenesStorage::MAX_KB,
+                    'mimes:'.implode(',', RenglonImagenesStorage::EXTENSIONES),
+                ],
+            ], [
+                'archivos.required' => 'Seleccione al menos una imagen.',
+                'archivos.max' => self::avisoMaxPorVez(),
+                'archivos.*.mimes' => 'Solo se permiten JPG, PNG, GIF o WEBP.',
+                'archivos.*.max' => 'Cada imagen no puede superar 5 MB.',
+            ]);
+        } catch (ValidationException $e) {
+            $this->rechazarSubida($e);
+
+            return;
+        }
 
         try {
             foreach ($this->archivos as $archivo) {
@@ -85,9 +103,7 @@ class RenglonImagenes extends Component
                 ]);
             }
         } catch (ValidationException $e) {
-            $mensaje = collect($e->errors())->flatten()->first() ?: 'No se pudo subir la imagen.';
-            $this->dispatch('vl-swal-error', mensaje: $mensaje);
-            $this->archivos = [];
+            $this->rechazarSubida($e);
 
             return;
         }
@@ -155,7 +171,7 @@ class RenglonImagenes extends Component
 
         $this->imagenes = Imagenxrenglon::query()
             ->where('idRenglones', $this->idRenglones)
-            ->orderByDesc('id')
+            ->orderBy('id')
             ->get(['id', 'nombreImagen', 'observacion'])
             ->map(fn (Imagenxrenglon $img) => [
                 'id' => (int) $img->id,
@@ -184,5 +200,22 @@ class RenglonImagenes extends Component
         }
 
         abort_unless($query->exists(), 404);
+    }
+
+    public static function avisoMaxPorVez(): string
+    {
+        return 'Solo se pueden subir hasta '.self::MAX_POR_VEZ.' fotos a la vez.';
+    }
+
+    private function rechazarSubida(ValidationException $e): void
+    {
+        $this->archivos = [];
+        foreach ($e->errors() as $campo => $mensajes) {
+            foreach ($mensajes as $texto) {
+                $this->addError($campo, $texto);
+            }
+        }
+        $mensaje = collect($e->errors())->flatten()->first() ?: 'No se pudo subir la imagen.';
+        $this->dispatch('vl-swal-error', mensaje: $mensaje);
     }
 }

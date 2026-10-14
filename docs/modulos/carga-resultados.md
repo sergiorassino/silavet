@@ -134,6 +134,16 @@ anterior.
 IDs DOM: el operador edita `#idItems`; el diferencial absoluto vive en `#idItems_2`
 (y se refleja en `#idItems_T` disabled). `formulas()` escribe `_2` y `_T`.
 
+### Imágenes (`tipoItem` 10)
+
+- Cada selección admite como máximo **10** archivos (`RenglonImagenes::MAX_POR_VEZ`).
+  El límite se aplica en el selector (antes de subir) y otra vez en el servidor.
+  Si se eligen más, **no se sube ninguno** y SweetAlert avisa: «Solo se pueden
+  subir hasta 10 fotos a la vez.»
+- En la carga y en el informe PDF las fotos salen por `imagenesxrenglon.id`
+  ascendente: orden de inserción, que es el orden de subida (dentro de un lote,
+  el orden del selector; entre lotes, el lote anterior primero).
+
 ## Flujo principal
 
 ### A. Arranque de la pantalla
@@ -373,6 +383,10 @@ conteo manual).
 - **No** devolver solo la primera fila del Metrolab/Wiener: un protocolo suele
   aparecer dos veces (glucosa `GLUL` en una fila y el resto del perfil en otra).
   Hay que unir todas las apariciones.
+- **No** ordenar `imagenesxrenglon` por `id` descendente en la carga ni en el
+  informe: invierte el orden de subida.
+- **No** dejar pasar más de 10 fotos en una sola selección: el aviso tiene que
+  salir antes de subir, y el lote completo se descarta.
 
 ## Checklist al modificar
 
@@ -391,3 +405,5 @@ conteo manual).
     carga con la leyenda “No se muestra en el informe” y **no** en el PDF?
 11. ¿`renglones.valor2` es `text` (migración `widen_renglones_valor2_to_text`)?
     El tope de validación sigue la columna real de la BD.
+12. ¿Las fotos de tipo 10 se rechazan si la selección pasa de 10, y se listan
+    por `id` ascendente en la carga y en el informe?
