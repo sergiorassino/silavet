@@ -182,7 +182,7 @@ final class InformePacienteConsulta
         $mapa = [];
         $registros = Imagenxrenglon::query()
             ->whereIn('idRenglones', $idsRenglones)
-            ->orderByDesc('id')
+            ->orderBy('id')
             ->get(['idRenglones', 'nombreImagen', 'observacion']);
 
         foreach ($registros as $img) {
